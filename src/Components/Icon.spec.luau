@@ -54,6 +54,17 @@ return function()
 		end
 	end)
 
+	it("takes its slots from Lucy's own sheet, which lucy-icons builds", function()
+		local IconSheet = require(script.Parent.Parent.Core.IconSheet) :: any
+		local names = {}
+		for name in IconSheet do
+			table.insert(names, name)
+		end
+		table.sort(names)
+		expect(#Icon.slots).to.equal(8)
+		expect(table.concat(Icon.slots, " ")).to.equal(table.concat(names, " "))
+	end)
+
 	it("lets a game replace a slot, and puts Lucy's back when it unregisters", function()
 		local default = Icon.resolve("lucy:close")
 		local undo = Icon.register({ ["lucy:close"] = { image = 333 } })

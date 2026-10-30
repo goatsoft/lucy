@@ -46,6 +46,11 @@ Lucy.Icon.register({
 Removing your registration brings Lucy's icon back. Lucy's icons are from the
 Lucide set (ISC licence), on one image owned by GOATsoft.
 
+If you use [lucy-icons](#iconify-icons-with-lucy-icons), the build draws these
+icons into your own sheet too and adds their names to your module, so your game
+loads one image instead of two. To change one, register your own after the
+module. To leave them out, set `"lucy": false` in `lucy-icons.json`.
+
 ## Your own images
 
 Pass an asset id or url to use an image once:
@@ -126,6 +131,7 @@ Add `lucy-icons.json` beside it:
 | `sheet` | `1024` | Sheet size in pixels |
 | `padding` | `4` | Space around each icon in the sheet |
 | `cache` | `.lucy-icons` | Downloaded icon data and sheets waiting for upload. Add it to `.gitignore` |
+| `lucy` | `true` | Draws the [icons Lucy draws](#icons-lucy-draws) into your sheet and adds their names to the module. `false` leaves them out |
 
 For uploads, create an
 [Open Cloud API key](https://create.roblox.com/dashboard/credentials) with the

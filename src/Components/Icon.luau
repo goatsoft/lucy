@@ -19,7 +19,8 @@
 	Lucy's own components draw a few slots, which Lucy fills from its own sheet
 	(Core/IconSheet): lucy:close, lucy:check, lucy:chevron-down / up / left /
 	right, lucy:minus and lucy:plus. Register a slot's name to change it
-	everywhere; unregistering puts Lucy's back.
+	everywhere; unregistering puts Lucy's back. The list lives in lucy-icons,
+	which builds Lucy's sheet and writes the same names into a game's module.
 
 	State keys: icon, size, variant, visible.
 ]]
@@ -83,25 +84,17 @@ local function resolveEntry(name: string, entry: Entry): Resolved
 	}
 end
 
--- Lucy's slots and the sheet icon that fills each by default.
-local slots: { [string]: string } = {
-	["lucy:close"] = "lucide:x",
-	["lucy:check"] = "lucide:check",
-	["lucy:chevron-down"] = "lucide:chevron-down",
-	["lucy:chevron-up"] = "lucide:chevron-up",
-	["lucy:chevron-left"] = "lucide:chevron-left",
-	["lucy:chevron-right"] = "lucide:chevron-right",
-	["lucy:minus"] = "lucide:minus",
-	["lucy:plus"] = "lucide:plus",
-}
-
-Icon.slots = slots
-
--- What a slot shows when no game has registered its name.
+-- Lucy's slots, sorted: every name in Lucy's own sheet. What each shows when
+-- no game has registered its name.
+local slots: { string } = {}
 local defaults: { [string]: Resolved } = {}
-for slot, source in slots do
-	defaults[slot] = resolveEntry(slot, (IconSheet :: any)[source])
+for slot, entry in (IconSheet :: any) :: { [string]: Entry } do
+	table.insert(slots, slot)
+	defaults[slot] = resolveEntry(slot, entry)
 end
+table.sort(slots)
+
+Icon.slots = table.freeze(slots)
 
 -- Adds named icons. Returns a function that removes exactly these (if not replaced since).
 function Icon.register(map: { [string]: Entry }): () -> ()

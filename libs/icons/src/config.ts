@@ -23,6 +23,8 @@ export interface Config {
   creator?: { userId?: string; groupId?: string }
   /** Where downloaded icon data and unuploaded sheets go. */
   cache: string
+  /** Write Lucy's slots (lucy:close and the rest) into the module, drawn on the game's own sheet. */
+  lucy: boolean
 }
 
 export const defaults: Config = {
@@ -35,6 +37,7 @@ export const defaults: Config = {
   sheet: 1024,
   padding: 4,
   cache: '.lucy-icons',
+  lucy: true,
 }
 
 export interface Loaded {
@@ -91,6 +94,11 @@ export function parseConfig(raw: unknown): Config {
   number('size', 8)
   number('sheet', 64)
   number('padding', 0)
+  const lucy = input['lucy']
+  if (lucy !== undefined) {
+    if (typeof lucy !== 'boolean') throw new Error('"lucy" must be true or false')
+    config.lucy = lucy
+  }
   if (config.sheet > 4096) throw new Error('"sheet" can be at most 4096')
   if (config.size + config.padding * 2 > config.sheet) throw new Error('a cell does not fit in a sheet')
   const creator = input['creator']

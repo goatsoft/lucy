@@ -8,12 +8,12 @@
 local sheet1 = "rbxassetid://115710809460715"
 
 return {
-	["lucide:check"] = { image = sheet1, rect = { 4, 4, 64, 64 } },
-	["lucide:chevron-down"] = { image = sheet1, rect = { 76, 4, 64, 64 } },
-	["lucide:chevron-left"] = { image = sheet1, rect = { 148, 4, 64, 64 } },
-	["lucide:chevron-right"] = { image = sheet1, rect = { 220, 4, 64, 64 } },
-	["lucide:chevron-up"] = { image = sheet1, rect = { 292, 4, 64, 64 } },
-	["lucide:minus"] = { image = sheet1, rect = { 436, 4, 64, 64 } },
-	["lucide:plus"] = { image = sheet1, rect = { 4, 76, 64, 64 } },
-	["lucide:x"] = { image = sheet1, rect = { 364, 4, 64, 64 } },
+	["lucy:check"] = { image = sheet1, rect = { 4, 4, 64, 64 } },
+	["lucy:chevron-down"] = { image = sheet1, rect = { 76, 4, 64, 64 } },
+	["lucy:chevron-left"] = { image = sheet1, rect = { 148, 4, 64, 64 } },
+	["lucy:chevron-right"] = { image = sheet1, rect = { 220, 4, 64, 64 } },
+	["lucy:chevron-up"] = { image = sheet1, rect = { 292, 4, 64, 64 } },
+	["lucy:close"] = { image = sheet1, rect = { 364, 4, 64, 64 } },
+	["lucy:minus"] = { image = sheet1, rect = { 436, 4, 64, 64 } },
+	["lucy:plus"] = { image = sheet1, rect = { 4, 76, 64, 64 } },
 }

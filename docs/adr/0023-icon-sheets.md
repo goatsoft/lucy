@@ -64,6 +64,15 @@ uploaded image asset, and uploads are limited per account per month.
   tool. JB (2026-10-31): the docs name Iconify, since supporting it is a
   feature; one guide page, Add icons, covers both ways and the tool's setup.
 
+## Amendment: Lucy's slots in every sheet (lucy-icons 0.2.0, JB 2026-10-31)
+
+The slot list (`lucy:close` and the rest, with the icon that fills each) lives
+in one place, `libs/icons/src/slots.ts`. Every build draws those icons into the
+game's own sheet and writes the `lucy:*` names into its module, so a game using
+lucy-icons loads one sheet, not its own plus GOATsoft's. `"lucy": false` leaves
+them out. Lucy's own sheet is built the same way, so `Core/IconSheet` holds only
+the `lucy:*` names and Icon reads its slot list from it.
+
 ## Alternatives considered
 
 - **Upload each icon on its own.** Simple ids, but an upload per icon against a

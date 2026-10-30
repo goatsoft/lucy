@@ -10,6 +10,7 @@ import { emptyLock, orderFor } from './lock.ts'
 import { luauModule } from './output.ts'
 import { draw, hash, prefixIds, renderPng, sheetSvg } from './render.ts'
 import { namesIn } from './scan.ts'
+import { LUCY_SLOTS } from './slots.ts'
 import { chain, installed, toolDir, type Sources } from './sets.ts'
 
 const layout = { size: 64, sheet: 1024, padding: 4 }
@@ -33,6 +34,9 @@ describe('config', () => {
     assert.throws(() => parseConfig({ include: ['star'] }), /not a set:name/)
     assert.throws(() => parseConfig({ creator: { userId: 1, groupId: 2 } }), /exactly one/)
     assert.throws(() => parseConfig({ size: 2000, sheet: 1024 }), /does not fit/)
+    assert.equal(config.lucy, true)
+    assert.equal(parseConfig({ lucy: false }).lucy, false)
+    assert.throws(() => parseConfig({ lucy: 'no' }), /"lucy" must be true or false/)
   })
 })
 
@@ -113,10 +117,11 @@ describe('output', () => {
   })
 })
 
-// End to end, with installed Lucide data and no network.
+// End to end, with installed Lucide data and no network. Games leave Lucy's
+// slots out unless a test asks (`lucy: undefined` gives the default).
 async function game(files: Record<string, string>, config: Record<string, unknown> = {}) {
   const root = await mkdtemp(join(tmpdir(), 'lucy-icons-'))
-  await writeFile(join(root, 'lucy-icons.json'), JSON.stringify({ output: 'src/Icons.luau', ...config }))
+  await writeFile(join(root, 'lucy-icons.json'), JSON.stringify({ output: 'src/Icons.luau', lucy: false, ...config }))
   for (const [path, text] of Object.entries(files)) {
     await mkdir(join(root, path, '..'), { recursive: true })
     await writeFile(join(root, path), text)
@@ -231,6 +236,60 @@ describe('build', () => {
       assert.deepEqual(result.icons, [])
     } finally {
       await rm(root, { recursive: true, force: true })
+    }
+  })
+})
+
+describe("Lucy's slots", () => {
+  const cell = (module: string, name: string) =>
+    module.match(new RegExp(`\\["${name}"\\] = \\{ (image = sheet\\d+, rect = \\{[^}]*\\}[^}]*)\\},`))?.[1]
+
+  it('writes every slot into the module by default, drawn from the icon that fills it', async () => {
+    const root = await game({ 'src/A.luau': `local i = "lucide:heart"` }, { lucy: undefined })
+    try {
+      const result = await build({ config: join(root, 'lucy-icons.json'), sources: offlineSources, upload: fakeUploads().upload })
+      assert.deepEqual(result.icons, ['lucide:heart', ...Object.keys(LUCY_SLOTS)].sort())
+      const module = await readFile(join(root, 'src/Icons.luau'), 'utf8')
+      for (const slot of Object.keys(LUCY_SLOTS)) assert.ok(cell(module, slot), slot)
+      assert.ok(!module.includes('"lucide:x"'), 'the icon behind a slot is only listed when the game uses it')
+      assert.match(module, /lucide: Lucide, ISC/)
+      const lock = JSON.parse(await readFile(join(root, 'lucy-icons.lock.json'), 'utf8'))
+      assert.deepEqual([...lock.order].sort(), ['lucide:heart', ...Object.values(LUCY_SLOTS)].sort())
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
+  it('shares one cell when the game uses the icon behind a slot', async () => {
+    const root = await game({ 'src/A.luau': `local i = "lucide:x"` }, { lucy: true })
+    try {
+      await build({ config: join(root, 'lucy-icons.json'), sources: offlineSources, upload: fakeUploads().upload })
+      const module = await readFile(join(root, 'src/Icons.luau'), 'utf8')
+      assert.ok(cell(module, 'lucide:x'))
+      assert.equal(cell(module, 'lucy:close'), cell(module, 'lucide:x'))
+      const lock = JSON.parse(await readFile(join(root, 'lucy-icons.lock.json'), 'utf8'))
+      assert.equal(lock.order.filter((n: string) => n === 'lucide:x').length, 1)
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
+  it('leaves them out with "lucy": false', async () => {
+    const root = await game({ 'src/A.luau': `local i = "lucide:heart"` }, { lucy: false })
+    try {
+      const result = await build({ config: join(root, 'lucy-icons.json'), sources: offlineSources, upload: fakeUploads().upload })
+      assert.deepEqual(result.icons, ['lucide:heart'])
+      assert.ok(!(await readFile(join(root, 'src/Icons.luau'), 'utf8')).includes('lucy:'))
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
+  it('names every slot Lucy draws, each filled from a set:name icon', () => {
+    assert.equal(Object.keys(LUCY_SLOTS).length, 8)
+    for (const [slot, source] of Object.entries(LUCY_SLOTS)) {
+      assert.match(slot, /^lucy:[a-z-]+$/)
+      assert.ok(parseConfig({ include: [source] }), source)
     }
   })
 })

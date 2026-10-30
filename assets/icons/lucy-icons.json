@@ -1,15 +1,5 @@
 {
   "src": [],
-  "include": [
-    "lucide:x",
-    "lucide:check",
-    "lucide:chevron-down",
-    "lucide:chevron-up",
-    "lucide:chevron-left",
-    "lucide:chevron-right",
-    "lucide:minus",
-    "lucide:plus"
-  ],
   "output": "../../src/Core/IconSheet.luau",
   "lock": "lucy-icons.lock.json",
   "cache": ".lucy-icons",

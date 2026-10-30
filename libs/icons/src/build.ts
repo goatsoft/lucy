@@ -7,6 +7,7 @@ import { orderFor, readLock, writeLock, type Lock } from './lock.ts'
 import { luauModule, type Entry } from './output.ts'
 import { draw, hash, renderPng, sheetSvg, type Drawn } from './render.ts'
 import { scan } from './scan.ts'
+import { LUCY_SLOTS } from './slots.ts'
 import { api, chain, installed, toolDir, type SetInfo, type Sources } from './sets.ts'
 import { openCloud, type Uploader } from './upload.ts'
 
@@ -90,9 +91,13 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
   }
   log(`found ${used.size} icon${used.size === 1 ? '' : 's'} in ${found.files} files`)
 
+  // Lucy's slots, drawn from the icons that fill them: slot -> icon.
+  const slots = config.lucy ? Object.entries(LUCY_SLOTS) : []
+  const needed = new Set([...used.keys(), ...slots.map(([, source]) => source)])
+
   // 2. Slots: the lock's order, new icons at the end.
   const lock = await readLock(lockPath, layout)
-  const ordered = orderFor(lock, used.keys(), layout, options.repack === true)
+  const ordered = orderFor(lock, needed, layout, options.repack === true)
   if (ordered.repacked && lock.order.length > 0) log('starting the sheets over: every sheet changes')
 
   // 3. Draw every slot, including removed icons that keep theirs (so their sheet stays the same).
@@ -114,6 +119,7 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
       const icon = set ? draw(set, name, index, info.palette) : undefined
       if (icon) drawn.set(name, icon)
       else if (used.has(name)) problems.push(`unknown icon "${name}" (in ${(used.get(name) ?? []).join(', ')})`)
+      else if (needed.has(name)) problems.push(`unknown icon "${name}" (it fills Lucy's slots; set "lucy": false to leave them out)`)
     }
   }
   if (problems.length > 0) throw new Error(problems.join('\n'))
@@ -138,11 +144,16 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
   // 5. Asset ids: the lock's, or new uploads.
   const ids: string[] = pngs.map(p => lock.sheets[p.hash] ?? '')
   const missing = pngs.map((p, i) => ({ ...p, i })).filter(p => ids[p.i] === '')
-  const entries: Entry[] = [...used.keys()].map(name => ({
+  const entry = (name: string, source: string): Entry => ({
     name,
-    index: ordered.order.indexOf(name),
-    tint: (drawn.get(name) as Drawn).tint,
-  }))
+    index: ordered.order.indexOf(source),
+    tint: (drawn.get(source) as Drawn).tint,
+  })
+  const entries: Entry[] = [
+    ...[...used.keys()].map(name => entry(name, name)),
+    ...slots.map(([slot, source]) => entry(slot, source)),
+  ]
+  const sets = () => [...group(needed).keys()].map(p => infos.get(p) as SetInfo)
   const newLock: Lock = {
     version: 1,
     ...layout,
@@ -159,7 +170,7 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
 
   if (options.check) {
     if (missing.length > 0) return { ...base, status: 'outdated' }
-    const text = luauModule(entries, ids, layout, [...group(used.keys()).keys()].map(p => infos.get(p) as SetInfo))
+    const text = luauModule(entries, ids, layout, sets())
     const same = (await readText(output)) === text && JSON.stringify(lock.order) === JSON.stringify(ordered.order)
     return { ...base, status: same ? 'unchanged' : 'outdated' }
   }
@@ -196,7 +207,7 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
     await writeLock(lockPath, newLock)
   }
 
-  const text = luauModule(entries, ids, layout, [...group(used.keys()).keys()].map(p => infos.get(p) as SetInfo))
+  const text = luauModule(entries, ids, layout, sets())
   const before = await readText(output)
   await writeLock(lockPath, newLock)
   if (before === text) return { ...base, uploaded, status: 'unchanged' }
