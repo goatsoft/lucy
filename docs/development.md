@@ -40,6 +40,11 @@ for TestEZ (into `DevPackages/`, gitignored).
    ```
    Press Play for the story browser (`examples/Showcase.client.luau`, mapped into
    StarterPlayerScripts), where every control is clickable.
+5. After a change that could affect speed, run the benchmarks and compare with
+   [the published numbers](benchmarks.md):
+   ```lua
+   require(game.ReplicatedStorage.LucyTests.Bench.Run).run()
+   ```
 
 Keep build output and scratch files outside the repo (for example `~/tmp`).
 

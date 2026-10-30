@@ -103,3 +103,4 @@ app.toast.success("Round won", { description = "+$250" })
 - [Components](components.md): every component's props and state keys
 - [Stories and preview](stories.md): see your UI in Studio without pressing Play
 - [Architecture](architecture.md): how the pieces fit together
+- [Benchmarks](benchmarks.md): what mounting and updating UI costs

@@ -171,6 +171,7 @@ The docs are published at [lucy.goatsoft.io](https://lucy.goatsoft.io) and live 
 | [docs/architecture.md](docs/architecture.md) | How App, AppState, Theme, scenes and input fit together |
 | [docs/components.md](docs/components.md) | Every component's props, state keys and responsive values |
 | [docs/stories.md](docs/stories.md) | Stories, controls and previewing UI in Studio |
+| [docs/benchmarks.md](docs/benchmarks.md) | Mount, update and teardown costs, and how to run the benchmarks |
 | [docs/development.md](docs/development.md) | Toolchain, the TDD loop, writing a component, releasing |
 | [docs/adr/](docs/adr) | Architecture decisions and why they were made |
 

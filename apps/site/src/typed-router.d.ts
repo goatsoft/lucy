@@ -59,6 +59,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/benchmarks': RouteRecordInfo<
+      '/docs/benchmarks',
+      '/docs/benchmarks',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components': RouteRecordInfo<
       '/docs/components',
       '/docs/components',
@@ -127,6 +134,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/architecture.md': {
       routes:
         | '/docs/architecture'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/benchmarks.md': {
+      routes:
+        | '/docs/benchmarks'
       views:
         | never
       pathParamNames:
