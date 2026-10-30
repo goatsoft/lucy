@@ -7,6 +7,7 @@
     "badge": "Small status label",
     "button": "Button with variants, sizes and an optional key hint",
     "checkbox": "Checkbox with optional label",
+    "data-grid": "A table the player can sort by pressing its headers",
     "dialog": "Modal dialog and alert dialog",
     "grid": "Rows of equal cells",
     "icon": "Small picture in the theme's colours, by name or asset id",

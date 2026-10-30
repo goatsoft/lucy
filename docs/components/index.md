@@ -16,6 +16,7 @@ Each component has its own page with its props, usage and examples:
 | [Badge](badge.md) | A small label for a status or count |
 | [Button](button.md) | A button, in six variants and four sizes |
 | [Checkbox](checkbox.md) | A box that can be checked, with an optional label |
+| [DataGrid](data-grid.md) | A table the player can sort by pressing its headers |
 | [Dialog](dialog.md) | A modal window, and alert dialogs that ask for a yes or no |
 | [Grid](grid.md) | Rows of equal cells, such as shop items or emotes |
 | [Icon](icon.md) | A small picture in the theme's colours, by name or asset id |

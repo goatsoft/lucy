@@ -125,6 +125,7 @@ return {
 	Badge = require(Components.Badge),
 	Button = require(Components.Button),
 	Checkbox = require(Components.Checkbox),
+	DataGrid = require(Components.DataGrid),
 	Dialog = require(Components.Dialog),
 	Grid = require(Components.Grid),
 	Icon = require(Components.Icon),

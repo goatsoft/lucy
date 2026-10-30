@@ -108,6 +108,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/data-grid': RouteRecordInfo<
+      '/docs/components/data-grid',
+      '/docs/components/data-grid',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/dialog': RouteRecordInfo<
       '/docs/components/dialog',
       '/docs/components/dialog',
@@ -442,6 +449,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/checkbox.md': {
       routes:
         | '/docs/components/checkbox'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/data-grid.md': {
+      routes:
+        | '/docs/components/data-grid'
       views:
         | never
       pathParamNames:
