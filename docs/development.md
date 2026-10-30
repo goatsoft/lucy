@@ -1,3 +1,9 @@
+---
+title: Contributing
+description: Toolchain, the TDD loop, writing a component and releasing.
+order: 1
+---
+
 # Developing Lucy
 
 ## Toolchain
@@ -100,6 +106,28 @@ stylua --check src tests scripts
 ```
 lune run scripts/gen-palette <path-or-url>   # source URL is in docs/adr/0010
 ```
+
+## The website
+
+The site in `apps/site` renders this `docs/` folder (everything except `adr/`)
+at `/docs/...`, plus a landing page. It needs Node 24 and pnpm.
+
+```sh
+pnpm install
+pnpm site:dev        # local dev server
+pnpm site:build      # prerendered static site in apps/site/dist
+pnpm site:typecheck
+```
+
+- A Markdown file added under `docs/` becomes a page. Frontmatter `title`,
+  `description` and `order` set its sidebar entry; the sidebar groups are in
+  `apps/site/src/lib/docs.ts`.
+- Links between docs files work on GitHub and on the site; links to ADRs go to
+  GitHub.
+- Pushes to `main` that touch the site or docs deploy it via
+  `.github/workflows/pages.yml`. Deploying never publishes the package.
+- If a build logs a hydration mismatch, `LUCY_DEBUG_HYDRATION=1 pnpm site:build`
+  explains it in the browser console.
 
 ## Releasing
 

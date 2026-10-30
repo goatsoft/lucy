@@ -14,3 +14,11 @@ sourcemap.json
 # Editors and OS
 .vscode/*.log
 .DS_Store
+
+# Site workspace (pnpm). JS packages live in libs/, not packages/: on macOS that
+# would be the same folder as Wally's Packages/.
+node_modules/
+dist/
+dist-server/
+*.tsbuildinfo
+.env*

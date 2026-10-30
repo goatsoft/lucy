@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *));
+
+/*
+  Lucy tokens: the same zinc and violet as Lucy's default theme in Roblox
+  (src/Core/Tokens.luau), so the site and the kit look like one thing.
+*/
+:root {
+  color-scheme: dark;
+  --background: oklch(0.141 0.005 285.823);
+  --surface: oklch(0.21 0.006 285.885);
+  --foreground: oklch(0.985 0 0);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --border: oklch(1 0 0 / 0.1);
+  --input: oklch(1 0 0 / 0.15);
+  --accent: oklch(0.274 0.006 286.033);
+  --primary: oklch(0.606 0.25 292.717);
+  --primary-foreground: oklch(0.985 0 0);
+  --spectrum-1: oklch(0.811 0.111 293.571);
+  --spectrum-2: oklch(0.606 0.25 292.717);
+  --spectrum-3: oklch(0.74 0.238 322.16);
+  --ring: oklch(0.811 0.111 293.571);
+  --radius: 0.625rem;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: oklch(1 0 0);
+  --surface: oklch(0.967 0.001 286.375);
+  --foreground: oklch(0.141 0.005 285.823);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --accent: oklch(0.967 0.001 286.375);
+  --primary: oklch(0.541 0.281 293.009);
+  --primary-foreground: oklch(0.985 0 0);
+  --spectrum-1: oklch(0.491 0.27 292.581);
+  --spectrum-2: oklch(0.541 0.281 293.009);
+  --spectrum-3: oklch(0.518 0.253 323.949);
+  --ring: oklch(0.702 0.183 293.541);
+}
+
+/* Fluid type for the landing page. Each size grows with the viewport between
+   a phone and a laptop and stops at both ends. The rem part keeps browser
+   zoom and text-size settings working, which a bare vw size would not. */
+@theme {
+  --text-display: clamp(2.75rem, 1.6rem + 5vw, 4.5rem);
+  --text-display--line-height: 1.05;
+  --text-heading: clamp(2.25rem, 1.5rem + 3vw, 3rem);
+  --text-heading--line-height: 1.1;
+  --text-lead: clamp(1.125rem, 1rem + 0.4vw, 1.25rem);
+  --text-lead--line-height: 1.6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-accent: var(--accent);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-spectrum-1: var(--spectrum-1);
+  --color-spectrum-2: var(--spectrum-2);
+  --color-spectrum-3: var(--spectrum-3);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 12px);
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { scroll-behavior: smooth; }
+  body { @apply bg-background text-foreground font-sans antialiased; text-rendering: optimizeLegibility; }
+  :where(a, button, input, textarea, select, [tabindex]):focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; }
+  ::selection { background: color-mix(in oklab, var(--spectrum-2) 45%, transparent); }
+}
+
+/* Violet headline ink. */
+@utility text-spectrum {
+  background-image: linear-gradient(100deg, var(--foreground) 0%, var(--spectrum-1) 35%, var(--spectrum-2) 70%, var(--spectrum-3) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* The wordmark: the violet drifting slowly through the letters. */
+@utility text-brand {
+  background-image: linear-gradient(95deg, var(--spectrum-1), var(--spectrum-2) 33%, var(--spectrum-3) 66%, var(--spectrum-1));
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: brand-cycle 16s linear infinite;
+}
+@keyframes brand-cycle { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+
+@utility glass {
+  background: color-mix(in oklab, var(--surface) 95%, transparent);
+  backdrop-filter: saturate(160%) blur(18px);
+  -webkit-backdrop-filter: saturate(160%) blur(18px);
+  border: 1px solid var(--border);
+}
+
+@utility mark-glow {
+  filter: drop-shadow(0 0 28px oklch(0.75 0.14 200 / 0.55)) drop-shadow(0 0 80px oklch(0.65 0.2 300 / 0.35));
+}
+
+@utility eyebrow {
+  @apply font-mono text-xs tracking-[0.2em] text-primary uppercase;
+}
+
+/* Documentation prose (gruff output), as components so utilities on components inside it win. */
+@layer components {
+  .prose { @apply max-w-none text-[15px] leading-7 text-foreground/90; }
+  .prose h1 { @apply mb-6 text-4xl font-semibold tracking-tight text-foreground text-balance; }
+  .prose h2 { @apply mt-14 mb-4 scroll-mt-24 border-t border-border pt-8 text-2xl font-semibold tracking-tight text-foreground; }
+  .prose h3 { @apply mt-8 mb-3 scroll-mt-24 text-lg font-semibold text-foreground; }
+  .prose p, .prose ul, .prose ol { @apply my-4; }
+  .prose ul { @apply list-disc pl-6 marker:text-muted-foreground; }
+  .prose ol { @apply list-decimal pl-6 marker:text-muted-foreground; }
+  .prose li { @apply my-1.5; }
+  .prose a { @apply font-medium text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary; }
+  .prose strong { @apply font-semibold text-foreground; }
+  .prose :not(pre) > code { @apply rounded-md bg-surface px-1.5 py-0.5 font-mono text-[0.85em] text-foreground; }
+  .prose img { @apply my-6 w-full rounded-xl border border-border; }
+  .prose table { @apply my-6 w-full border-collapse text-sm; }
+  .prose th { @apply border-b border-border py-2 pr-4 text-left font-semibold text-foreground; }
+  .prose td { @apply border-b border-border/60 py-2 pr-4 align-top; }
+  .prose blockquote { @apply border-l-2 border-spectrum-2 pl-4 text-muted-foreground; }
+  .prose hr { @apply my-10 border-border; }
+  .prose .heading-anchor { @apply absolute -ml-6 w-5 text-muted-foreground/0 no-underline transition-colors; }
+  .prose :is(h2, h3):hover .heading-anchor { @apply text-muted-foreground; }
+  .prose .callout { @apply my-6 rounded-xl border border-border bg-surface/60 px-4 py-3; }
+  .prose .callout > :first-child { @apply mt-0; }
+  .prose .callout > :last-child { @apply mb-0; }
+  .prose .callout-title { @apply mb-1 text-sm font-semibold; }
+  .prose .callout-tip { @apply border-spectrum-1/40; }
+  .prose .callout-tip .callout-title { @apply text-spectrum-1; }
+  .prose .callout-warning { @apply border-amber-400/40; }
+  .prose .callout-warning .callout-title { @apply text-amber-300; }
+  .prose .callout-danger { @apply border-rose-400/40; }
+  .prose .callout-danger .callout-title { @apply text-rose-300; }
+  .prose .callout-note .callout-title { @apply text-spectrum-2; }
+  .prose details > summary { @apply cursor-pointer font-medium text-foreground; }
+  .prose .code-block { @apply relative my-6 overflow-hidden rounded-xl border border-border bg-[oklch(0.12_0.005_286)]; }
+  .prose .code-title { @apply border-b border-border px-4 py-2 font-mono text-xs text-muted-foreground; }
+  .prose .code-block pre { @apply overflow-x-auto p-4 font-mono text-[13px] leading-6; }
+  .prose h1 .heading-anchor { @apply hidden; }
+}
+/* Shiki dual themes: dark is the default here. */
+.shiki, .shiki span { color: var(--shiki-dark); background-color: transparent !important; }
+.shiki .line.highlighted { @apply -mx-4 inline-block w-[calc(100%+2rem)] bg-spectrum-2/12 px-4; }
+.shiki .line.diff.add { @apply -mx-4 inline-block w-[calc(100%+2rem)] bg-emerald-400/10 px-4; }
+.shiki .line.diff.remove { @apply -mx-4 inline-block w-[calc(100%+2rem)] bg-rose-400/10 px-4 opacity-70; }
+.shiki.has-focused .line:not(.focused) { @apply opacity-40 blur-[0.5px]; }
+
+:root[data-theme="light"] .prose .code-block { background: var(--surface); }
+:root[data-theme="light"] .prose .callout-warning .callout-title { color: oklch(0.4 0.08 65); }
+:root[data-theme="light"] .prose .callout-danger .callout-title { color: oklch(0.4 0.14 25); }
+:root[data-theme="light"] .shiki, :root[data-theme="light"] .shiki span { color: var(--shiki-light); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+/* Hero entrance: CSS only, so the prerendered page animates before (and without) JavaScript. */
+@keyframes mark-in { from { opacity: 0; transform: scale(0.7); filter: blur(14px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(22px); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+@utility animate-mark-in { animation: mark-in 1.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@utility animate-rise { animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }

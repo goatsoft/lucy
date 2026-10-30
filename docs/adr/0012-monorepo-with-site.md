@@ -18,7 +18,8 @@ it at the repository root.
 
 - Keep the Luau package at the root (`src/`, `default.project.json`, `wally.toml`).
 - Add the website as `apps/site`, a private pnpm workspace app following Aurora's
-  layout. The root `docs/` folder stays the single source of the docs: the site
+  layout. JS workspace packages live in `libs/`, not `packages/`: macOS is
+  case-insensitive, so `packages/` would be the same folder as Wally's `Packages/`. The root `docs/` folder stays the single source of the docs: the site
   renders it, GitHub renders it, and agents read it. `docs/adr` is not published
   on the site; links to ADRs point at GitHub.
 - The site may also serve `registry.json` so the CLI can install from a URL later.
@@ -30,6 +31,19 @@ it at the repository root.
     in fails the build.
   - The copy-in CLI only copies files listed in `registry.json`, all under `src/`.
   - Deploying the site is a separate workflow and never publishes the package.
+
+## The docs engine (gruff)
+
+The site is built with gruff, Aurora's Markdown-to-Vue static site generator.
+gruff is private to the Aurora repo, so for now `libs/gruff` is a copy of it
+(minus Aurora's live-demo fence). Two copies drift, so this is temporary:
+
+- **Follow-up:** publish gruff as a GOATsoft package (`@goatsoft/gruff`) from
+  one home, consumed by Aurora and Lucy alike. Then delete `libs/gruff` and
+  depend on the published version.
+- The docs layout components copied into `apps/site` (DocPage, DocToc,
+  SearchDialog, CodeGroup, CopyButton, Term) are the same kind of duplicate and
+  should ship with that package (for example as `@goatsoft/gruff/vue`).
 
 ## Consequences
 

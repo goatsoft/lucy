@@ -1,3 +1,9 @@
+---
+title: Architecture
+description: How App, AppState, Theme, scenes and input fit together.
+order: 2
+---
+
 # Lucy architecture
 
 Lucy is a UI kit and small application framework for Roblox. This page is the
@@ -85,5 +91,11 @@ src/
 tests/Runner.luau      runs every spec, returns a summary
 scripts/               add.luau (copy-in CLI), gen-palette.luau, run-tests.server.luau
 registry.json          what the CLI can install and the dependencies
-docs/                  this, development guide, components, ADRs
+docs/                  this, development guide, components, ADRs (the site renders all but the ADRs)
+apps/site/             the website (Vue, prerendered), deployed by .github/workflows/pages.yml
+libs/gruff/            the docs engine the site uses (temporary copy, see ADR 0012)
 ```
+
+Only the Luau package ships: the Wally package is checked in CI to contain
+nothing but `src/` (without specs and test helpers), `default.project.json`,
+`wally.toml`, `README.md` and `LICENSE` (ADR 0012).

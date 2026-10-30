@@ -1,3 +1,9 @@
+---
+title: Components
+description: Props, state keys and responsive values for every Lucy component.
+order: 1
+---
+
 # Components
 
 Every component is `X.new(props)` and returns a handle:

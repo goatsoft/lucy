@@ -130,12 +130,16 @@ Switch, Progress, Skeleton, Separator, Stack. Props and state keys are in
 
 ## Documentation
 
+The docs are published at [lucy.goatsoft.io](https://lucy.goatsoft.io) and live in this repo:
+
 | Doc | What it covers |
 |---|---|
 | [docs/architecture.md](docs/architecture.md) | How App, AppState, Theme, scenes and input fit together |
 | [docs/components.md](docs/components.md) | Every component's props, state keys and responsive values |
 | [docs/development.md](docs/development.md) | Toolchain, the TDD loop, writing a component, releasing |
 | [docs/adr/](docs/adr) | Architecture decisions and why they were made |
+
+The website itself is in `apps/site`; it is never part of the package.
 
 ## Contributing
 
