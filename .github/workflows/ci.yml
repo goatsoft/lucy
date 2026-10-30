@@ -15,7 +15,7 @@ jobs:
         run: wally install
       - name: No em-dashes
         run: |
-          if grep -rn $'\xe2\x80\x94' --exclude-dir=.git --exclude-dir=DevPackages .; then
+          if grep -rnI $'\xe2\x80\x94' --exclude-dir=.git --exclude-dir=DevPackages .; then
             echo "Em-dash found (see AGENTS.md rule 1)"; exit 1
           fi
       - name: Package contains only the library

@@ -7,7 +7,7 @@ and add a new ADR for any structural decision.
 Rules:
 
 - Never use the em-dash character anywhere (code, comments, docs, commits).
-  Check: `grep -rn $'\xe2\x80\x94' --exclude-dir=.git --exclude-dir=DevPackages .` prints nothing.
+  Check: `grep -rnI $'\xe2\x80\x94' --exclude-dir=.git --exclude-dir=DevPackages .` prints nothing.
 - TDD: write the `*.spec.luau` first, see it fail, then implement.
 - Looks belong in style rules with `$Token` values; code sets behaviour and layout only.
 - Components keep state in AppState at `ui.<id>` and work with mouse, keyboard, gamepad and touch.
