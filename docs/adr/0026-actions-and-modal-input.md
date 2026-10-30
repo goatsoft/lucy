@@ -87,17 +87,28 @@ app.actions:enabled("gameplay")                       -- tracked boolean
 ### 3. The built in `movement` set
 
 Lucy does not move characters. `movement` names the keys the default character
-controls use (W, A, S, D, the arrow keys, Space, the left stick). The default
-controls do not use the Input Action System (checked in Studio, below), so an
-InputContext cannot stop them. Disabling `movement` instead binds those keys
-with ContextActionService at a priority above the default controls and sinks
-them, until it is released. A game can redefine the set's keys. Lucy never
-disables it on its own.
+controls use (W, A, S, D, the arrow keys, Space, the left stick). Disabling it
+holds those keys until it is released. A game can redefine the set's keys.
+Lucy never disables it on its own.
 
-A sunk key reaches `UserInputService.InputBegan` marked as processed. InputManager
-skips processed keys, so it treats keys sunk by Lucy's own `movement` block as
-not processed: arrows, Enter and Space keep moving focus and pressing buttons
-inside a modal.
+How it holds them depends on which default controls the game runs, set by
+`Workspace.PlayerScriptsUseInputActionSystem`:
+
+- **New controls** (Enabled; the default from early 2027, the only option from
+  mid 2027): the controls are InputContexts under
+  `StarterPlayer.PlayerModule.InputContexts` (`CharacterContext` at priority
+  150, `CameraContext` at 100). Lucy turns on its own sinking InputContext at
+  priority 2000. Keys still reach `UserInputService.InputBegan` as not
+  processed, so InputManager is unaffected.
+- **Old controls** (Disabled or Default today): an InputContext cannot stop
+  them. Lucy binds the keys with ContextActionService above the default
+  controls and sinks them. Those keys then reach `InputBegan` marked as
+  processed, so InputManager treats keys held by Lucy's own `movement` block as
+  not processed: arrows, Enter and Space keep working inside a modal.
+
+Scripts cannot read the Workspace setting, so Lucy checks for
+`StarterPlayer.PlayerModule.InputContexts.CharacterContext` on the client. The
+old path goes when Roblox removes the old controls.
 
 ### 4. Composables
 
@@ -125,16 +136,32 @@ that overlay is on top, from `overlay.top`).
 
 ### 5. Checked in Studio (2026-10-31)
 
-- The client has no InputContexts of its own: the default character controls
-  still use the older input path.
+Old controls (setting Disabled):
+
+- The client has no InputContexts of its own.
 - A sinking InputContext at priority 2000 bound to W fires its own action but
-  does not stop the character (it walked the same distance), and
-  `InputBegan` sees the keys as not processed.
+  does not stop the character, and `InputBegan` sees the keys as not
+  processed. (Roblox staff on the forum: the old input path wins over
+  InputContexts until the default controls move over.)
 - A ContextActionService sink bound to W, Space and the arrows stops the
-  character (0 studs), and `InputBegan` sees those keys as processed.
+  character, and `InputBegan` sees those keys as processed.
+
+New controls (setting Enabled):
+
+- The default contexts are as listed in section 3, none sinking except
+  `TransformerContext` (300) and the vehicle context (200, off on foot).
+- A sinking InputContext at priority 2000 bound to W, A, S, D, Space and the
+  arrows stops walking and jumping (0 studs, no rise; a control jump rose 7
+  studs), and `InputBegan` sees every key as not processed.
+
+Both:
+
 - Input actions do not fire while a TextBox is focused.
 - Not yet tried: a gamepad stick, and the touch thumbstick held when a modal
-  opens (the catcher covers new touches).
+  opens.
+- Forum reports of the new controls locking the camera over clickable
+  ProximityPrompts and `Active` UI are open with Roblox; games on the new
+  controls should check their prompts.
 
 ## Consequences
 
@@ -158,8 +185,8 @@ that overlay is on top, from `overlay.top`).
   above, and "trap" already means a modal holding focus.
 - **ContextActionService and our own action tables for everything.** Rejected:
   the engine now has sets, priorities, touch buttons and preferred bindings.
-  ContextActionService stays for one job only: holding the movement keys, which
-  the default controls still read that way.
+  ContextActionService stays for one job only: holding the movement keys in
+  games still on the old default controls.
 - **Switching the default character controls off.** Rejected: it fights games
   that already switch them off for dances and cutscenes.
 - **`app.ui:modalOpen()`.** Rejected: a namespace for one method, and
