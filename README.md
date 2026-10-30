@@ -164,7 +164,7 @@ app.toast.success("Round won", { description = "+$250" })
 ## Features
 
 - Button, Pressable, Badge, Text, Panel, Dialog, Toaster, Input, Checkbox,
-  Switch, Progress, Skeleton, Separator and Stack.
+  Switch, Progress, Skeleton, Separator, Stack and Scroll Area.
 - Light and dark themes for each base colour, with an optional primary colour,
   switchable while the game runs.
 - Controls that grow for touch and console, and layout props that change with

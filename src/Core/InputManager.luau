@@ -14,7 +14,8 @@
 		Roblox draws a white selection image around the selected GuiObject. App
 		replaces it with a blank one everywhere and this manager tags the selected
 		object "ui-focus-visible" (a themed UIStroke ring) only while the player is
-		navigating with keyboard or gamepad, like CSS :focus-visible.
+		navigating with keyboard or gamepad, like CSS :focus-visible. It also
+		scrolls any ScrollingFrame above it to show it (Core/Scroll).
 
 	Scopes:
 		pushScope({ root, defaultFocus }) confines Tab/arrow navigation to `root`
@@ -32,6 +33,7 @@ local Workspace = game:GetService("Workspace")
 
 local Adaptive = require(script.Parent.Adaptive)
 local Maid = require(script.Parent.Maid)
+local Scroll = require(script.Parent.Scroll)
 
 local InputManager = {}
 InputManager.__index = InputManager
@@ -212,6 +214,8 @@ function InputManager.markFocus(self: InputManager, object: GuiObject?)
 	self._focused = object
 	if object and self:isNavigating() then
 		object:AddTag("ui-focus-visible")
+		-- The engine scrolls to the gamepad selection, but not to focus Lucy moves.
+		Scroll.reveal(object)
 	end
 end
 

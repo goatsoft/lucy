@@ -18,7 +18,7 @@ import SwatchBook from '~icons/lucide-extended/swatch-book-duotone'
 useHead({ description: SITE.description })
 
 const features = [
-  { icon: Boxes, title: '14 components', text: 'Button, Dialog, Toaster, Input, Checkbox, Switch, Panel, Progress and more.' },
+  { icon: Boxes, title: '15 components', text: 'Button, Dialog, Toaster, Input, Checkbox, Switch, Panel, Progress and more.' },
   { icon: Atom, title: 'Small updates', text: 'When a value changes, only the properties that read it are set again. Nothing is rebuilt.' },
   { icon: SquareCode, title: 'State in plain Luau', text: 'Refs, computed values and reactive tables. Any property can follow any of them.' },
   { icon: Blocks, title: 'Code or Studio', text: 'Write UI in code with Lucy.new, or add behaviour to UI you laid out in Studio.' },
