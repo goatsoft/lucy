@@ -12,6 +12,7 @@
 			Lucy.useFocusScope(h.app, open, { root = content })
 			Lucy.useUiSound(h.app, { activate = playClick })     -- the game's own sounds
 			local gap = Lucy.useResponsive(h.app, { touch = 16, default = 8 })
+			local board = Lucy.useTable({ data = players, columns = columns })
 			...
 		end
 
@@ -22,6 +23,7 @@
 local Component = require(script.Parent.Core.Component)
 local Reactive = require(script.Parent.Core.Reactive)
 local Responsive = require(script.Parent.Core.Responsive)
+local TableModel = require(script.Parent.Core.TableModel)
 local UiEvents = require(script.Parent.Core.UiEvents)
 
 local Composables = {}
@@ -117,6 +119,17 @@ end
 function Composables.useUiSound(app: any, map: UiEvents.Map)
 	requireOwner("useUiSound")
 	UiEvents.listen(app, map)
+end
+
+--[[
+	Sorted rows from data and column definitions, for tables and anything list
+	shaped (ADR 0025). Returns { rows, sorting, toggle, sortedBy, canSort,
+	setSorting, columns }; see Core/TableModel for the options. Its computeds
+	belong to the owner.
+]]
+function Composables.useTable(options: { [string]: any })
+	requireOwner("useTable")
+	return TableModel.new(options)
 end
 
 return Composables

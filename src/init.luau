@@ -93,6 +93,7 @@ return {
 	useFocusScope = Composables.useFocusScope,
 	useResponsive = Composables.useResponsive,
 	useUiSound = Composables.useUiSound,
+	useTable = Composables.useTable,
 
 	-- Animation (Core/Animate)
 	spring = Animate.spring,

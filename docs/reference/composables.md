@@ -21,6 +21,7 @@ To write your own, see [Share logic with composables](../guide/composables.md).
 | [`useBackHandler`](#usebackhandler) | Escape or ButtonB calls your function while active |
 | [`useFocusScope`](#usefocusscope) | Keeps keyboard and gamepad focus inside a frame while active |
 | [`useUiSound`](#useuisound) | Calls your functions when components are clicked, toggled, opened or closed |
+| [`useTable`](#usetable) | Sorted rows from your data and a list of columns |
 
 ## useDensity
 
@@ -93,6 +94,7 @@ handle, and for some events a value:
 | `toggle` | The player turns a Switch or Checkbox on or off | The new checked state |
 | `open` | A Dialog opens | |
 | `close` | A Dialog closes | |
+| `select` | The player picks an option in a RadioGroup, ToggleGroup or Select | The value picked |
 
 Which map a component uses:
 
@@ -109,3 +111,72 @@ Which map a component uses:
 A function that errors is reported in the output and never breaks the click.
 
 Your own components report events the same way, with `h:emit(event, value)`.
+
+## useTable
+
+Turns your data and a list of columns into sorted rows, and keeps them sorted as
+the data changes. It draws nothing: [DataGrid](../components/data-grid.md) uses
+it for its headers, and you can use it for any list you sort yourself.
+
+```lua
+local board = Lucy.useTable({
+    data = players,             -- an array, a ref or a getter
+    rowId = function(player) return player.userId end,
+    columns = {
+        { key = "name", header = "Player" },
+        { key = "score", header = "Score", descFirst = true },
+        { key = "rank", header = "Rank", invert = true },
+        { id = "kd", header = "K/D", get = function(player) return player.kills / math.max(1, player.deaths) end },
+        { id = "invite", sortable = false },
+    },
+    sorting = { id = "score", desc = true },
+})
+
+for _, row in board.rows() do
+    print(row.id, row:value("score"))
+end
+board.toggle("name")            -- what a press on the Name header does
+```
+
+### Options
+
+| Option | Type | Default | What it does |
+|---|---|---|---|
+| `data` | array, ref or getter | | The rows, any tables you like |
+| `columns` | table | | The columns, see below |
+| `rowId` | function | the position | Gives each row an id, so lists update by id |
+| `sorting` | table, ref or `false` | `false` | `{ id = "score", desc = true }`, or a ref to keep it in |
+| `sortable` | boolean | `true` | `false` turns sorting off for every column |
+| `removable` | boolean | `true` | A third press on a header clears the sort |
+| `descFirst` | boolean | `false` | Every column sorts high to low on the first press |
+| `manual` | boolean | `false` | The data comes sorted (by your server): keep its order, only track the sort |
+
+A column has:
+
+| Field | What it does |
+|---|---|
+| `key` | The field to read, and the column's id |
+| `id` | The column's id, when it has no `key` |
+| `get` | A function from the row to the value, instead of `key` |
+| `header` | What the header shows |
+| `sortable` | `false` stops this column sorting. Columns with no `key` or `get` never sort |
+| `sortFn` | `"auto"`, `"number"`, `"text"` or a function `(a, b)` returning a negative number, 0 or a positive number |
+| `descFirst` | The first press sorts high to low |
+| `invert` | For values where lower is better, such as a rank |
+
+`"auto"` compares numbers as numbers and anything else as text. Text sorts the
+way a person reads it: `item2` comes before `item10`, and case does not count.
+Rows with no value for the column always go last, and rows with equal values
+keep the order of your data. One column sorts at a time.
+
+### What it returns
+
+| Name | What it is |
+|---|---|
+| `rows()` | The sorted rows. Each has `id`, `index` (its place in your data), `original` (your table) and `row:value(columnId)` |
+| `sorting()` | The sort, `{ id, desc }`, or `false` |
+| `toggle(columnId)` | Sorts by the column in its first direction, then the other, then not at all |
+| `sortedBy(columnId)` | `"asc"`, `"desc"` or `false` |
+| `canSort(columnId)` | Whether the column sorts |
+| `setSorting(sort)` | Sets the sort directly |
+| `columns` | The columns, with their ids worked out |
