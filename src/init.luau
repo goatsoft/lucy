@@ -125,6 +125,7 @@ return {
 	Dialog = require(Components.Dialog),
 	Grid = require(Components.Grid),
 	Input = require(Components.Input),
+	Item = require(Components.Item),
 	Panel = require(Components.Panel),
 	Pressable = require(Components.Pressable),
 	Progress = require(Components.Progress),
