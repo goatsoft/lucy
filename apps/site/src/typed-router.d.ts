@@ -192,6 +192,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/select': RouteRecordInfo<
+      '/docs/components/select',
+      '/docs/components/select',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/separator': RouteRecordInfo<
       '/docs/components/separator',
       '/docs/components/separator',
@@ -524,6 +531,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/scroll-area.md': {
       routes:
         | '/docs/components/scroll-area'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/select.md': {
+      routes:
+        | '/docs/components/select'
       views:
         | never
       pathParamNames:

@@ -136,6 +136,7 @@ return {
 	Progress = require(Components.Progress),
 	RadioGroup = require(Components.RadioGroup),
 	ScrollArea = require(Components.ScrollArea),
+	Select = require(Components.Select),
 	Separator = require(Components.Separator),
 	Sheet = require(Components.Sheet),
 	Skeleton = require(Components.Skeleton),

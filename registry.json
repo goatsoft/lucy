@@ -19,6 +19,7 @@
     "progress": "Bar that fills from 0 to a maximum",
     "radio-group": "Options where the player picks exactly one",
     "scroll-area": "Region that scrolls when its content does not fit",
+    "select": "A button that opens a list of options to pick one from",
     "separator": "Thin line between items",
     "sheet": "A panel from the side of the screen, a drawer from the bottom on touch",
     "skeleton": "Pulsing placeholder while content loads",
