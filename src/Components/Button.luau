@@ -158,7 +158,7 @@ local rules: { Component.Rule } = {
 	},
 
 	-- The close button of dialogs and sheets: an icon button with a glyph big enough to hit.
-	{ selector = ".ui-button-close", priority = VARIANT + 1, properties = { TextSize = "$Text3xl" } },
+	{ selector = ".ui-button-close", priority = VARIANT + 1, properties = { TextSize = "$Text4xl" } },
 
 	-- Disabled (the component also sets Interactable = false)
 	{ selector = ".ui-button.ui-disabled", priority = DISABLED, properties = { TextTransparency = 0.5 } },

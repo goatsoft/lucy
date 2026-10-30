@@ -25,7 +25,7 @@ return function()
 		close:click()
 		expect(clicked).to.equal(1)
 		Harness.flush()
-		expect(Harness.styled(close.Instance, "TextSize")).to.equal(app.theme:resolve("Text3xl"))
+		expect(Harness.styled(close.Instance, "TextSize")).to.equal(app.theme:resolve("Text4xl"))
 	end)
 
 	it("follows reactive text and disabled", function()

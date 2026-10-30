@@ -174,7 +174,7 @@ function Dialog.new(props: { [string]: any }?)
 						h:close()
 					end,
 				})
-				local inset = Component.space(h.app, "Space2", 8).Offset
+				local inset = Component.space(h.app, "Space1", 4).Offset
 				h.closeButton.Instance.AnchorPoint = Vector2.new(1, 0)
 				h.closeButton.Instance.Position = UDim2.new(1, -inset, 0, inset)
 				h.closeButton.Instance.ZIndex = 3

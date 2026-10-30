@@ -294,7 +294,7 @@ local spec: Component.Spec = {
 			inner,
 		}) :: Frame
 		if h.closeButton then
-			local inset = Component.space(app, "Space2", 8).Offset
+			local inset = Component.space(app, "Space1", 4).Offset
 			local close = h.closeButton.Instance
 			close.AnchorPoint = Vector2.new(1, 0)
 			close.Position = UDim2.new(1, -inset, 0, inset)
