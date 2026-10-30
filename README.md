@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/dist/logo-lockup.png">
+    <img src="assets/brand/dist/logo-lockup-ink.png" alt="Lucy" height="128">
+  </picture>
+</p>
+
 # Lucy
 
 A UI kit and app framework for Roblox, built on

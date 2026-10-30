@@ -13,6 +13,7 @@ exclude = [
 	"**/*.spec.luau",
 	"src/Testing",
 	"apps",
+	"assets",
 	"libs",
 	"types",
 	"tsconfig.base.json",

@@ -31,7 +31,7 @@ const links = [
           aria-label="Lucy home"
         >
           <Mark :size="32" />
-          <span class="text-lg font-bold tracking-tight text-foreground">Lucy</span>
+          <span class="font-display text-xl font-semibold tracking-tight text-foreground">Lucy</span>
         </RouterLink>
         <div
           class="hidden items-center gap-7 text-sm md:flex"

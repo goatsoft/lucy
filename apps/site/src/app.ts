@@ -3,7 +3,8 @@ import { createMemoryHistory, createRouter, createWebHistory } from 'vue-router'
 import { routes } from 'vue-router/auto-routes'
 import App from './App.vue'
 import { createHead } from './head'
-import '@fontsource-variable/inter'
+import '@fontsource-variable/fredoka'
+import '@fontsource-variable/nunito'
 import './main.css'
 
 /** One app for both the prerender (memory history) and the browser (hydrating the same HTML). */

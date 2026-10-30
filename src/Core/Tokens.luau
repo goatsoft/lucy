@@ -53,7 +53,11 @@ function Tokens.oklch(L: number, C: number, H: number): Color3
 	return Oklab.fromOklch(L, C, H)
 end
 
-local sans = "rbxasset://fonts/families/BuilderSans.json"
+-- Lucy's type (ADR 0013): Nunito for text, Fredoka for display. Both ship with Roblox
+-- and are the same faces the website uses. Nunito has no 500, and sets lighter than
+-- Builder Sans, so each named weight maps one step heavier.
+local sans = "rbxasset://fonts/families/Nunito.json"
+local display = "rbxasset://fonts/families/FredokaOne.json"
 
 local function buildPrimitives()
 	local out: { [string]: any } = {
@@ -79,9 +83,10 @@ local function buildPrimitives()
 
 		-- Fonts (FontFace)
 		FontSans = Font.new(sans, Enum.FontWeight.Regular),
-		FontSansMedium = Font.new(sans, Enum.FontWeight.Medium),
-		FontSansSemibold = Font.new(sans, Enum.FontWeight.SemiBold),
-		FontSansBold = Font.new(sans, Enum.FontWeight.Bold),
+		FontSansMedium = Font.new(sans, Enum.FontWeight.SemiBold),
+		FontSansSemibold = Font.new(sans, Enum.FontWeight.Bold),
+		FontSansBold = Font.new(sans, Enum.FontWeight.ExtraBold),
+		FontDisplay = Font.new(display, Enum.FontWeight.Regular),
 
 		StrokeThin = 1,
 		StrokeThick = 2,

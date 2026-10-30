@@ -3,8 +3,9 @@
 @custom-variant dark (&:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *));
 
 /*
-  Lucy tokens: the same zinc and violet as Lucy's default theme in Roblox
-  (src/Core/Tokens.luau), so the site and the kit look like one thing.
+  Lucy tokens: zinc and violet like Lucy's default theme in Roblox
+  (src/Core/Tokens.luau), with the spectrum taken from the mascot herself
+  (magenta, orchid, sky; see assets/brand/build.py).
 */
 :root {
   color-scheme: dark;
@@ -17,9 +18,9 @@
   --accent: oklch(0.274 0.006 286.033);
   --primary: oklch(0.606 0.25 292.717);
   --primary-foreground: oklch(0.985 0 0);
-  --spectrum-1: oklch(0.811 0.111 293.571);
-  --spectrum-2: oklch(0.606 0.25 292.717);
-  --spectrum-3: oklch(0.74 0.238 322.16);
+  --spectrum-1: oklch(0.683 0.265 332.6);
+  --spectrum-2: oklch(0.641 0.233 315.4);
+  --spectrum-3: oklch(0.806 0.119 223.8);
   --ring: oklch(0.811 0.111 293.571);
   --radius: 0.625rem;
 }
@@ -35,9 +36,9 @@
   --accent: oklch(0.967 0.001 286.375);
   --primary: oklch(0.541 0.281 293.009);
   --primary-foreground: oklch(0.985 0 0);
-  --spectrum-1: oklch(0.491 0.27 292.581);
-  --spectrum-2: oklch(0.541 0.281 293.009);
-  --spectrum-3: oklch(0.518 0.253 323.949);
+  --spectrum-1: oklch(0.56 0.25 332.6);
+  --spectrum-2: oklch(0.52 0.23 305);
+  --spectrum-3: oklch(0.55 0.13 235);
   --ring: oklch(0.702 0.183 293.541);
 }
 
@@ -70,7 +71,8 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 12px);
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Nunito Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fredoka Variable", "Nunito Variable", ui-rounded, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 }
 
@@ -119,9 +121,9 @@
 /* Documentation prose (gruff output), as components so utilities on components inside it win. */
 @layer components {
   .prose { @apply max-w-none text-[15px] leading-7 text-foreground/90; }
-  .prose h1 { @apply mb-6 text-4xl font-semibold tracking-tight text-foreground text-balance; }
-  .prose h2 { @apply mt-14 mb-4 scroll-mt-24 border-t border-border pt-8 text-2xl font-semibold tracking-tight text-foreground; }
-  .prose h3 { @apply mt-8 mb-3 scroll-mt-24 text-lg font-semibold text-foreground; }
+  .prose h1 { @apply mb-6 font-display text-4xl font-semibold tracking-tight text-foreground text-balance; }
+  .prose h2 { @apply mt-14 mb-4 scroll-mt-24 border-t border-border pt-8 font-display text-2xl font-semibold tracking-tight text-foreground; }
+  .prose h3 { @apply mt-8 mb-3 scroll-mt-24 font-display text-lg font-semibold text-foreground; }
   .prose p, .prose ul, .prose ol { @apply my-4; }
   .prose ul { @apply list-disc pl-6 marker:text-muted-foreground; }
   .prose ol { @apply list-decimal pl-6 marker:text-muted-foreground; }

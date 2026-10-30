@@ -39,7 +39,7 @@ Panel.rules = {
 		properties = {
 			BackgroundTransparency = 1,
 			TextColor3 = "$CardForeground",
-			FontFace = "$FontSansSemibold",
+			FontFace = "$FontDisplay",
 			TextSize = "$TextLg",
 		},
 	},

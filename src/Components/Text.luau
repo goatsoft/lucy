@@ -15,10 +15,10 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Text = {}
 
 Text.variants = {
-	h1 = { TextSize = "$Text4xl", FontFace = "$FontSansBold" },
-	h2 = { TextSize = "$Text3xl", FontFace = "$FontSansSemibold" },
-	h3 = { TextSize = "$Text2xl", FontFace = "$FontSansSemibold" },
-	h4 = { TextSize = "$TextXl", FontFace = "$FontSansSemibold" },
+	h1 = { TextSize = "$Text4xl", FontFace = "$FontDisplay" },
+	h2 = { TextSize = "$Text3xl", FontFace = "$FontDisplay" },
+	h3 = { TextSize = "$Text2xl", FontFace = "$FontDisplay" },
+	h4 = { TextSize = "$TextXl", FontFace = "$FontDisplay" },
 	p = { TextSize = "$TextBase", FontFace = "$FontSans" },
 	lead = { TextSize = "$TextXl", FontFace = "$FontSans", TextColor3 = "$MutedForeground" },
 	large = { TextSize = "$TextLg", FontFace = "$FontSansSemibold" },

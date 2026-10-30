@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import mark from '@/assets/mark.svg?url'
+import head from '@/assets/lucy-head-256.webp?url'
 
-/** The Lucy mark (placeholder until there is a brand pack). */
+/** Lucy herself: the mascot's head, linework restored (assets/brand). */
 const props = defineProps<{ size: number }>()
 </script>
 
 <template>
   <img
-    :src="mark"
-    :width="props.size"
+    :src="head"
+    :width="Math.round(props.size * 0.886)"
     :height="props.size"
     alt=""
     draggable="false"
+    class="object-contain"
   >
 </template>

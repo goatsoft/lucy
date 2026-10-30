@@ -60,7 +60,7 @@ Dialog.rules = {
 		properties = {
 			BackgroundTransparency = 1,
 			TextColor3 = "$Foreground",
-			FontFace = "$FontSansSemibold",
+			FontFace = "$FontDisplay",
 			TextSize = "$TextLg",
 		},
 	},

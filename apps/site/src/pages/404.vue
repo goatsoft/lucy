@@ -16,7 +16,7 @@ useHead({ title: 'Not found', description: 'There is nothing at this address.' }
       <p class="eyebrow">
         404
       </p>
-      <h1 class="mt-4 text-5xl font-semibold tracking-tight text-balance sm:text-6xl">
+      <h1 class="mt-4 font-display text-5xl font-semibold tracking-tight text-balance sm:text-6xl">
         Page not found
       </h1>
       <p class="mx-auto mt-4 max-w-md text-lg text-pretty text-muted-foreground">

@@ -33,7 +33,7 @@ const columns = [
           aria-label="Lucy home"
         >
           <Mark :size="28" />
-          <span class="text-lg font-bold tracking-tight text-foreground">Lucy</span>
+          <span class="font-display text-xl font-semibold tracking-tight text-foreground">Lucy</span>
         </RouterLink>
         <p class="mt-4 max-w-sm text-sm text-pretty text-muted-foreground">
           {{ SITE.description }}

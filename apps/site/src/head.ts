@@ -41,18 +41,23 @@ export function useHead(meta: { title?: MaybeRefOrGetter<string | undefined>, de
 const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 
 /** The `<head>` tags for a rendered page. */
-export function headTags(head: Head, assets: { favicon: string }): string {
+export function headTags(head: Head): string {
   // GitHub Pages serves each page as a folder, at its path with a trailing slash.
   const url = `${SITE.url}${head.path.replace(/\/?$/, '/')}`
   return [
     `<title>${escape(head.title)}</title>`,
     `<meta name="description" content="${escape(head.description)}">`,
     `<link rel="canonical" href="${url}">`,
-    `<link rel="icon" type="image/svg+xml" href="${assets.favicon}">`,
+    `<link rel="icon" href="/favicon.ico" sizes="48x48">`,
+    `<link rel="icon" type="image/png" href="/favicon-32.png" sizes="32x32">`,
+    `<link rel="apple-touch-icon" href="/apple-touch-icon.png">`,
+    `<link rel="manifest" href="/manifest.webmanifest">`,
     `<meta property="og:type" content="website">`,
     `<meta property="og:site_name" content="${SITE.name}">`,
     `<meta property="og:title" content="${escape(head.title)}">`,
     `<meta property="og:description" content="${escape(head.description)}">`,
     `<meta property="og:url" content="${url}">`,
+    `<meta property="og:image" content="${SITE.url}/og.png">`,
+    `<meta name="twitter:card" content="summary_large_image">`,
   ].join('\n    ')
 }

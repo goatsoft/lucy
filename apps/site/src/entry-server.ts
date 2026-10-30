@@ -1,5 +1,4 @@
 import { renderToString } from 'vue/server-renderer'
-import favicon from '@/assets/mark.svg?url'
 import { createSite } from './app'
 import { headTags } from './head'
 
@@ -11,5 +10,5 @@ export async function render(url: string): Promise<{ html: string, head: string,
   await router.push(url)
   await router.isReady()
   const html = await renderToString(app)
-  return { html, head: headTags(head, { favicon }), htmlAttrs: 'lang="en"' }
+  return { html, head: headTags(head), htmlAttrs: 'lang="en"' }
 }
