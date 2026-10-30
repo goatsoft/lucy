@@ -231,8 +231,7 @@ a Button's text sets its `Text` again and nothing else. See
 
 Coming in 0.1.0, each working with mouse, touch, gamepad and TV:
 
-- **Controls:** Number Field, Accordion, and Input options for several
-  lines, numbers only and a maximum length
+- **Controls:** Number Field and Accordion
 
 Later: Tooltip, Carousel, Field, Empty, Dropdown Menu, `toast.promise`, pausing
 toasts on hover.

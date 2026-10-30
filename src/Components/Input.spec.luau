@@ -85,4 +85,64 @@ return function()
 		app.input:setCaps(Harness.caps.console)
 		expect(field.Instance.Size.Y.Offset).to.equal(52)
 	end)
+
+	describe("filterNumber", function()
+		it("keeps digits, one leading minus and one point", function()
+			expect(Input.filterNumber("12a3")).to.equal("123")
+			expect(Input.filterNumber("-1.5.2")).to.equal("-1.52")
+			expect(Input.filterNumber("1-2")).to.equal("12")
+			expect(Input.filterNumber("--4")).to.equal("-4")
+			expect(Input.filterNumber(" 3 000 ")).to.equal("3000")
+			expect(Input.filterNumber("")).to.equal("")
+		end)
+	end)
+
+	it("cuts typed text to maxLength, counting characters", function()
+		local seen = {}
+		local field = Input.new({
+			app = app,
+			id = "code",
+			Parent = gui,
+			maxLength = 5,
+			onChange = function(value)
+				table.insert(seen, value)
+			end,
+		})
+		field.Instance.Text = "abcdefgh"
+		task.wait()
+		task.wait()
+		expect(field.Instance.Text).to.equal("abcde")
+		expect(app.state:get("ui.code.value")).to.equal("abcde")
+		expect(seen[#seen]).to.equal("abcde")
+		expect(table.find(seen, "abcdefgh")).to.equal(nil)
+		field.Instance.Text = "h\u{e9}llo world"
+		task.wait()
+		task.wait()
+		expect(field.Instance.Text).to.equal("h\u{e9}llo")
+	end)
+
+	it("keeps only a number when numeric", function()
+		local field = Input.new({ app = app, id = "amount", Parent = gui, numeric = true })
+		field.Instance.Text = "-12a.5x"
+		task.wait()
+		task.wait()
+		expect(field.Instance.Text).to.equal("-12.5")
+		expect(app.state:get("ui.amount.value")).to.equal("-12.5")
+	end)
+
+	it("wraps over several rows when multiline", function()
+		local single = Input.new({ app = app, Parent = gui })
+		local three = Input.new({ app = app, Parent = gui, multiline = true })
+		local five = Input.new({ app = app, Parent = gui, multiline = true, rows = 5 })
+		expect(three.Instance.MultiLine).to.equal(true)
+		expect(three.Instance.TextWrapped).to.equal(true)
+		expect(three.Instance.TextYAlignment).to.equal(Enum.TextYAlignment.Top)
+		expect(three.Instance:HasTag("ui-input-multiline")).to.equal(true)
+		expect(single.Instance.MultiLine).to.equal(false)
+		expect(three.Instance.Size.Y.Offset > single.Instance.Size.Y.Offset).to.equal(true)
+		expect(five.Instance.Size.Y.Offset > three.Instance.Size.Y.Offset).to.equal(true)
+		local before = five.Instance.Size.Y.Offset
+		app.input:setCaps(Harness.caps.console)
+		expect(five.Instance.Size.Y.Offset > before).to.equal(true)
+	end)
 end

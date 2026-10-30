@@ -17,6 +17,13 @@ return {
 					return if c.value() == "" then "Nothing typed yet" else `Hello, {c.value()}`
 				end,
 			}),
+			Lucy.Input.new({ placeholder = "Amount", numeric = true, maxLength = 6, disabled = c.disabled }),
+			Lucy.Input.new({
+				placeholder = "Message",
+				multiline = true,
+				maxLength = 200,
+				disabled = c.disabled,
+			}),
 		}
 	end,
 }
