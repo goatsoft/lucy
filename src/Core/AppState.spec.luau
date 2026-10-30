@@ -425,4 +425,76 @@ return function()
 			scope:stop()
 		end)
 	end)
+
+	describe("root", function()
+		local Reactive = require(script.Parent.Reactive)
+
+		it("reads and writes the tree like plain tables, through the store", function()
+			local state = AppState.new({ player = { coins = 1 } })
+			local seen = {}
+			state:subscribe("player.coins", function(new, old)
+				table.insert(seen, `{old}>{new}`)
+			end)
+			local root = state.root
+			root.player.coins += 4
+			expect(state:get("player.coins")).to.equal(5)
+			expect(root.player.coins).to.equal(5)
+			expect(table.concat(seen, ",")).to.equal("1>5")
+			root.settings = { music = true }
+			expect(state:get("settings.music")).to.equal(true)
+			expect(root.missing).to.equal(nil)
+		end)
+
+		it("is tracked per key", function()
+			local state = AppState.new({ player = { coins = 1, name = "A" } })
+			local scope = Reactive.effectScope(true)
+			local runs, last = 0, nil
+			scope:run(function()
+				Reactive.watchEffect(function()
+					runs += 1
+					local player = state.root.player
+					last = player and player.coins
+				end)
+			end)
+			state:set("player.name", "B")
+			expect(runs).to.equal(1)
+			state:set("player.coins", 3)
+			expect(runs).to.equal(2)
+			expect(last).to.equal(3)
+			state:remove("player")
+			expect(last).to.equal(nil)
+			scope:stop()
+		end)
+
+		it("iterates and measures tables, tracking their contents", function()
+			local state = AppState.new({ bag = { "sword", "shield" }, ui = { a = { open = true } } })
+			local scope = Reactive.effectScope(true)
+			local count, names = 0, ""
+			scope:run(function()
+				Reactive.watchEffect(function()
+					count = #state.root.bag
+					local list = {}
+					for _, item in state.root.bag do
+						table.insert(list, item)
+					end
+					names = table.concat(list, ",")
+				end)
+			end)
+			state:set("bag", { "sword", "shield", "bow" })
+			expect(count).to.equal(3)
+			expect(names).to.equal("sword,shield,bow")
+			for _, panel in state.root.ui do
+				expect(panel.open).to.equal(true)
+			end
+			scope:stop()
+		end)
+
+		it("stores a copy when a part of the tree is assigned elsewhere", function()
+			local state = AppState.new({ a = { x = 1 } })
+			state.root.b = state.root.a
+			state.root.a.x = 2
+			expect(state:get("b.x")).to.equal(1)
+			expect(state:get("a.x")).to.equal(2)
+		end)
+	end)
 end

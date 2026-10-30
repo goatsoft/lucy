@@ -29,6 +29,9 @@
 		local coins = state:ref("player.coins") -- a writable ref onto the path's own source
 		coins(coins() + 10)                     -- same as state:set("player.coins", ...)
 
+		state.root.player.coins += 10           -- the tree as tables: tracked per key, writes
+		for id, panel in state.root.ui do end   -- go through set, so everything above holds
+
 	Values you set are copied in, so the store never shares a table with you.
 	Tables with a metatable (handles, classes) are stored as opaque values.
 
@@ -73,9 +76,31 @@ export type AppState = typeof(setmetatable(
 		_flushing: boolean,
 		_hooked: boolean,
 		_afterBatch: () -> (),
+		root: any,
 	},
 	AppState
 ))
+
+-- Views handed out by `state.root` (defined below) keep their data under this
+-- private key on the view itself. Not a weak map from view to data: the data
+-- reaches the store, the store holds its root view, and a weak key that its own
+-- value reaches is never collected.
+type ProxyData = {
+	store: AppState,
+	segments: { any },
+	children: { [any]: any },
+	paths: { [any]: { any } },
+}
+local DATA = table.freeze({})
+
+local function proxyData(value: any): ProxyData?
+	return rawget(value, DATA)
+end
+
+-- The data of a value known to be a view.
+local function dataOf(view: any): ProxyData
+	return rawget(view, DATA) :: any
+end
 
 -- Paths --------------------------------------------------------------------------
 
@@ -218,9 +243,14 @@ local function sameValue(a: any, b: any): boolean
 	return a == b or (a ~= a and b ~= b) -- NaN equals NaN
 end
 
--- Incoming tables may be reactive proxies; store their raw tables.
+-- Incoming tables may be proxies: a `state.root` proxy stands for its snapshot,
+-- a reactive table for its raw table.
 local function unwrap(value: any): any
 	if type(value) == "table" and getmetatable(value) ~= nil then
+		local view = proxyData(value)
+		if view then
+			return (view.store :: any):_read(view.segments)
+		end
 		return Reactive.toRaw(value)
 	end
 	return value
@@ -390,6 +420,109 @@ local function readRaw(root: any, segments: { any }): any
 	return node
 end
 
+-- state.root --------------------------------------------------------------------------
+--[[
+	A view of the tree as tables. Reads are tracked per key (a table read returns
+	another view, cached while in use); `#` and iteration track the whole table.
+	Assignments are `set` on the matching path, so they reconcile, notify
+	subscribers and keep snapshots right. Views are addressed by path.
+]]
+local proxyMeta: { [string]: any } = {}
+
+local function newProxy(store: AppState, segments: { any }): any
+	local data: ProxyData = {
+		store = store,
+		segments = segments,
+		children = setmetatable({}, { __mode = "v" }) :: any,
+		paths = {},
+	}
+	return setmetatable({ [DATA] = data }, proxyMeta)
+end
+
+local function childPath(data: ProxyData, key: any): { any }
+	local path = data.paths[key]
+	if not path then
+		local segments = table.clone(data.segments)
+		table.insert(segments, key)
+		path = table.freeze(segments)
+		data.paths[key] = path
+	end
+	return path :: { any }
+end
+
+-- The tree table a view stands for, tracking every key on the way; nil if gone.
+local function viewNode(data: ProxyData): any
+	local node: any = data.store._root
+	for _, key in data.segments do
+		if not isPlain(node) then
+			return nil
+		end
+		Reactive._trackKey(node, key)
+		node = node[key]
+	end
+	return if isPlain(node) then node else nil
+end
+
+local function childView(data: ProxyData, key: any): any
+	local child = data.children[key]
+	if not child then
+		child = newProxy(data.store, childPath(data, key))
+		data.children[key] = child
+	end
+	return child
+end
+
+function proxyMeta.__index(proxy: any, key: any): any
+	local data = dataOf(proxy)
+	local node = viewNode(data)
+	if node == nil then
+		return nil
+	end
+	Reactive._trackKey(node, key)
+	local value = node[key]
+	if isPlain(value) then
+		return childView(data, key)
+	end
+	return value
+end
+
+function proxyMeta.__newindex(proxy: any, key: any, value: any)
+	local data = dataOf(proxy)
+	data.store:_write(childPath(data, key), value, false)
+end
+
+function proxyMeta.__len(proxy: any): number
+	local node = viewNode(dataOf(proxy))
+	if node == nil then
+		return 0
+	end
+	Reactive._trackKey(node, VERSION)
+	return #node
+end
+
+function proxyMeta.__iter(proxy: any)
+	local data = dataOf(proxy)
+	local node = viewNode(data)
+	if node == nil then
+		return function(): any
+			return nil
+		end
+	end
+	Reactive._trackKey(node, VERSION)
+	return function(_, key): (any, any)
+		local nextKey, value = next(node, key)
+		if nextKey ~= nil and isPlain(value) then
+			return nextKey, childView(data, nextKey)
+		end
+		return nextKey, value
+	end
+end
+
+function proxyMeta.__tostring(proxy: any): string
+	local path = table.concat(dataOf(proxy).segments, ".")
+	return `AppState.root({path})`
+end
+
 -- Notification ---------------------------------------------------------------------
 
 local function bySeq(a: Subscriber, b: Subscriber): boolean
@@ -444,6 +577,7 @@ function AppState.new(initial: { [string]: any }?): AppState
 		self._hooked = false
 		self:_flush()
 	end
+	self.root = newProxy(self, EMPTY)
 	return self
 end
 
