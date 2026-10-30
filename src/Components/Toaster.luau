@@ -34,17 +34,30 @@ Toaster.kinds = { "default", "success", "error", "warning", "info" }
 Toaster.defaults = { duration = 4, visibleToasts = 3, width = 356 }
 
 Toaster.rules = {
-	{ selector = ".ui-toast", priority = 0, properties = { BackgroundColor3 = "$Popover", BorderSizePixel = 0 } },
+	{
+		selector = ".ui-toast",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Popover", BorderSizePixel = 0 },
+	},
 	{ selector = ".ui-toast::UICorner", priority = 0, properties = { CornerRadius = "$RadiusLg" } },
 	{
 		selector = ".ui-toast::UIStroke",
 		priority = 0,
-		properties = { Color = "$Border", Thickness = "$StrokeThin", ApplyStrokeMode = Enum.ApplyStrokeMode.Border },
+		properties = {
+			Color = "$Border",
+			Thickness = "$StrokeThin",
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
 	},
 	{
 		selector = ".ui-toast::UIPadding",
 		priority = 0,
-		properties = { PaddingTop = "$Space4", PaddingBottom = "$Space4", PaddingLeft = "$Space4", PaddingRight = "$Space4" },
+		properties = {
+			PaddingTop = "$Space4",
+			PaddingBottom = "$Space4",
+			PaddingLeft = "$Space4",
+			PaddingRight = "$Space4",
+		},
 	},
 	{
 		selector = ".ui-toast-title",
@@ -66,7 +79,11 @@ Toaster.rules = {
 			TextSize = "$TextSm",
 		},
 	},
-	{ selector = ".ui-toast-accent", priority = 0, properties = { BackgroundTransparency = 1, BorderSizePixel = 0 } },
+	{
+		selector = ".ui-toast-accent",
+		priority = 0,
+		properties = { BackgroundTransparency = 1, BorderSizePixel = 0 },
+	},
 	{ selector = ".ui-toast-accent::UICorner", priority = 0, properties = { CornerRadius = "$RadiusFull" } },
 }
 for kind, token in { success = "$Success", error = "$Destructive", warning = "$Warning", info = "$Info" } do

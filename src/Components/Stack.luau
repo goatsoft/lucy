@@ -53,7 +53,9 @@ function Stack.new(props: { [string]: any }?)
 				local horizontal = Responsive.pick(app, p.direction) == "horizontal"
 				local align = Responsive.pick(app, p.align) or "start"
 				local justify = Responsive.pick(app, p.justify) or "start"
-				layout.FillDirection = if horizontal then Enum.FillDirection.Horizontal else Enum.FillDirection.Vertical
+				layout.FillDirection = if horizontal
+					then Enum.FillDirection.Horizontal
+					else Enum.FillDirection.Vertical
 				layout.Padding = Component.space(app, Responsive.pick(app, p.gap), 0)
 				layout.HorizontalFlex = Enum.UIFlexAlignment.None
 				layout.VerticalFlex = Enum.UIFlexAlignment.None
@@ -75,7 +77,12 @@ function Stack.new(props: { [string]: any }?)
 				local size = Responsive.pick(app, p.size)
 				frame.Size = size or (if horizontal then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0))
 				frame.AutomaticSize = p.automaticSize
-					or (if size then Enum.AutomaticSize.None elseif horizontal then Enum.AutomaticSize.XY else Enum.AutomaticSize.Y)
+					or (
+						if size
+							then Enum.AutomaticSize.None
+							elseif horizontal then Enum.AutomaticSize.XY
+							else Enum.AutomaticSize.Y
+					)
 
 				local padding = Responsive.pick(app, p.padding)
 				local pad = frame:FindFirstChild("StackPadding") :: UIPadding?
@@ -84,7 +91,8 @@ function Stack.new(props: { [string]: any }?)
 						pad = Component.create("UIPadding", { Name = "StackPadding", Parent = frame })
 					end
 					local value = Component.space(app, padding, 0)
-					pad.PaddingTop, pad.PaddingBottom, pad.PaddingLeft, pad.PaddingRight = value, value, value, value
+					pad.PaddingTop, pad.PaddingBottom, pad.PaddingLeft, pad.PaddingRight =
+						value, value, value, value
 				elseif pad then
 					pad:Destroy()
 				end

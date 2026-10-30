@@ -14,9 +14,17 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Skeleton = {}
 
 Skeleton.rules = {
-	{ selector = ".ui-skeleton", priority = 0, properties = { BackgroundColor3 = "$Muted", BorderSizePixel = 0 } },
+	{
+		selector = ".ui-skeleton",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Muted", BorderSizePixel = 0 },
+	},
 	{ selector = ".ui-skeleton::UICorner", priority = 0, properties = { CornerRadius = "$RadiusMd" } },
-	{ selector = ".ui-skeleton-circle::UICorner", priority = 10, properties = { CornerRadius = "$RadiusFull" } },
+	{
+		selector = ".ui-skeleton-circle::UICorner",
+		priority = 10,
+		properties = { CornerRadius = "$RadiusFull" },
+	},
 }
 
 Skeleton.pulse = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
@@ -44,7 +52,8 @@ function Skeleton.new(props: { [string]: any }?)
 		update = function(h, state)
 			h.Instance.Visible = state.visible
 			if state.visible and not tween then
-				local pulse = TweenService:Create(h.Instance, Skeleton.pulse, { BackgroundTransparency = 0.5 })
+				local pulse =
+					TweenService:Create(h.Instance, Skeleton.pulse, { BackgroundTransparency = 0.5 })
 				pulse:Play()
 				tween = pulse
 			elseif not state.visible and tween then

@@ -17,7 +17,9 @@ return function()
 
 		it("can follow one axis", function()
 			expect(Adaptive.computeScale(Vector2.new(2560, 720), { base = base, mode = "width" })).to.equal(2)
-			expect(Adaptive.computeScale(Vector2.new(2560, 720), { base = base, mode = "height" })).to.equal(1)
+			expect(Adaptive.computeScale(Vector2.new(2560, 720), { base = base, mode = "height" })).to.equal(
+				1
+			)
 		end)
 
 		it("clamps to min and max", function()

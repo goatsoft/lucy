@@ -88,12 +88,13 @@ end
 ]]
 function Adaptive.attach(gui: Instance, options: { [string]: any }?)
 	local opts = options or {}
-	local getViewport = opts.getViewport or function()
-		if gui:IsA("ScreenGui") and gui.AbsoluteSize.X > 0 then
-			return gui.AbsoluteSize
+	local getViewport = opts.getViewport
+		or function()
+			if gui:IsA("ScreenGui") and gui.AbsoluteSize.X > 0 then
+				return gui.AbsoluteSize
+			end
+			return cameraViewport()
 		end
-		return cameraViewport()
-	end
 
 	local scale = gui:FindFirstChild("LucyScale")
 	if not scale then
@@ -149,7 +150,11 @@ function Adaptive.attach(gui: Instance, options: { [string]: any }?)
 end
 
 -- Lock a frame to an aspect ratio (width / height).
-function Adaptive.aspect(guiObject: Instance, ratio: number, options: { [string]: any }?): UIAspectRatioConstraint
+function Adaptive.aspect(
+	guiObject: Instance,
+	ratio: number,
+	options: { [string]: any }?
+): UIAspectRatioConstraint
 	local opts = options or {}
 	local constraint = Instance.new("UIAspectRatioConstraint")
 	constraint.AspectRatio = ratio

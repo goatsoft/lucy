@@ -30,7 +30,9 @@ else
 end
 
 local hues, byHue = {}, {}
-for name, shade, l, c, h in string.gmatch(css, "%-%-color%-(%a+)%-(%d+):%s*oklch%(([%d%.]+)%%%s+([%d%.]+)%s+([%w%.]+)%)") do
+for name, shade, l, c, h in
+	string.gmatch(css, "%-%-color%-(%a+)%-(%d+):%s*oklch%(([%d%.]+)%%%s+([%d%.]+)%s+([%w%.]+)%)")
+do
 	if not byHue[name] then
 		byHue[name] = {}
 		table.insert(hues, name)

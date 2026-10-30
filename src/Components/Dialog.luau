@@ -40,19 +40,36 @@ Dialog.rules = {
 	{
 		selector = ".ui-dialog-overlay",
 		priority = 0,
-		properties = { BackgroundColor3 = "$Overlay", BackgroundTransparency = "$OverlayTransparency", BorderSizePixel = 0 },
+		properties = {
+			BackgroundColor3 = "$Overlay",
+			BackgroundTransparency = "$OverlayTransparency",
+			BorderSizePixel = 0,
+		},
 	},
-	{ selector = ".ui-dialog-content", priority = 0, properties = { BackgroundColor3 = "$Background", BorderSizePixel = 0 } },
+	{
+		selector = ".ui-dialog-content",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Background", BorderSizePixel = 0 },
+	},
 	{ selector = ".ui-dialog-content::UICorner", priority = 0, properties = { CornerRadius = "$RadiusLg" } },
 	{
 		selector = ".ui-dialog-content::UIStroke",
 		priority = 0,
-		properties = { Color = "$Border", Thickness = "$StrokeThin", ApplyStrokeMode = Enum.ApplyStrokeMode.Border },
+		properties = {
+			Color = "$Border",
+			Thickness = "$StrokeThin",
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
 	},
 	{
 		selector = ".ui-dialog-content::UIPadding",
 		priority = 0,
-		properties = { PaddingTop = "$Space6", PaddingBottom = "$Space6", PaddingLeft = "$Space6", PaddingRight = "$Space6" },
+		properties = {
+			PaddingTop = "$Space6",
+			PaddingBottom = "$Space6",
+			PaddingLeft = "$Space6",
+			PaddingRight = "$Space6",
+		},
 	},
 	{
 		selector = ".ui-dialog-title",
@@ -144,7 +161,10 @@ function Dialog.new(props: { [string]: any }?)
 				Tags = { "ui-dialog-content" },
 				Parent = root,
 			})
-			Component.create("UISizeConstraint", { MaxSize = Vector2.new(p.maxWidth or 448, math.huge), Parent = content })
+			Component.create(
+				"UISizeConstraint",
+				{ MaxSize = Vector2.new(p.maxWidth or 448, math.huge), Parent = content }
+			)
 			Component.list({ Padding = Component.space(h.app, "Space4", 16), Parent = content })
 
 			local header = Component.box({ Name = "Header", LayoutOrder = 1, Parent = content })

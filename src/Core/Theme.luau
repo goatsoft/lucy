@@ -56,7 +56,10 @@ local GUI_CLASSES = {
 
 Theme.baseRules = {}
 for _, className in GUI_CLASSES do
-	table.insert(Theme.baseRules, { selector = className, priority = RESET, properties = { BorderSizePixel = 0 } })
+	table.insert(
+		Theme.baseRules,
+		{ selector = className, priority = RESET, properties = { BorderSizePixel = 0 } }
+	)
 end
 for _, className in { "TextLabel", "TextButton", "TextBox" } do
 	table.insert(Theme.baseRules, {
@@ -66,7 +69,10 @@ for _, className in { "TextLabel", "TextButton", "TextBox" } do
 	})
 end
 for _, className in { "TextButton", "ImageButton" } do
-	table.insert(Theme.baseRules, { selector = className, priority = RESET, properties = { AutoButtonColor = false } })
+	table.insert(
+		Theme.baseRules,
+		{ selector = className, priority = RESET, properties = { AutoButtonColor = false } }
+	)
 end
 table.insert(Theme.baseRules, {
 	selector = "TextBox",
@@ -106,7 +112,10 @@ local function validateSets(sets: { [string]: { [string]: any } }, what: string)
 		if reference == nil then
 			reference, referenceName = keys, name
 		elseif keys ~= reference then
-			error(`[Lucy] {what} "{name}" has different tokens to "{referenceName}"; they must share a token set`, 4)
+			error(
+				`[Lucy] {what} "{name}" has different tokens to "{referenceName}"; they must share a token set`,
+				4
+			)
 		end
 	end
 	if reference == nil then

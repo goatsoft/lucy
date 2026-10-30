@@ -21,17 +21,30 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Panel = {}
 
 Panel.rules = {
-	{ selector = ".ui-panel", priority = 0, properties = { BackgroundColor3 = "$Card", BorderSizePixel = 0 } },
+	{
+		selector = ".ui-panel",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Card", BorderSizePixel = 0 },
+	},
 	{ selector = ".ui-panel::UICorner", priority = 0, properties = { CornerRadius = "$RadiusXl" } },
 	{
 		selector = ".ui-panel::UIStroke",
 		priority = 0,
-		properties = { Color = "$Border", Thickness = "$StrokeThin", ApplyStrokeMode = Enum.ApplyStrokeMode.Border },
+		properties = {
+			Color = "$Border",
+			Thickness = "$StrokeThin",
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
 	},
 	{
 		selector = ".ui-panel::UIPadding",
 		priority = 0,
-		properties = { PaddingTop = "$Space6", PaddingBottom = "$Space6", PaddingLeft = "$Space6", PaddingRight = "$Space6" },
+		properties = {
+			PaddingTop = "$Space6",
+			PaddingBottom = "$Space6",
+			PaddingLeft = "$Space6",
+			PaddingRight = "$Space6",
+		},
 	},
 	{
 		selector = ".ui-panel-title",
@@ -75,7 +88,9 @@ function Panel.new(props: { [string]: any }?)
 		render = function(h)
 			local frame = Component.create("Frame", {
 				Size = p.size or UDim2.fromScale(1, 0),
-				AutomaticSize = if p.size and p.size.Y.Offset ~= 0 then Enum.AutomaticSize.None else Enum.AutomaticSize.Y,
+				AutomaticSize = if p.size and p.size.Y.Offset ~= 0
+					then Enum.AutomaticSize.None
+					else Enum.AutomaticSize.Y,
 				Tags = { "ui-panel" },
 			})
 			Component.list({ Padding = Component.space(h.app, "Space6", 24), Parent = frame })

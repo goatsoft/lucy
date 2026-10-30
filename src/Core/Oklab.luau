@@ -70,7 +70,12 @@ function Oklab.oklabToOklch(L: number, a: number, b: number): (number, number, n
 end
 
 local function inGamut(r: number, g: number, b: number): boolean
-	return r >= -EPSILON and r <= 1 + EPSILON and g >= -EPSILON and g <= 1 + EPSILON and b >= -EPSILON and b <= 1 + EPSILON
+	return r >= -EPSILON
+		and r <= 1 + EPSILON
+		and g >= -EPSILON
+		and g <= 1 + EPSILON
+		and b >= -EPSILON
+		and b <= 1 + EPSILON
 end
 
 function Oklab.inGamut(L: number, C: number, H: number): boolean

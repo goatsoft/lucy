@@ -26,7 +26,11 @@ local TRACK = {
 }
 
 Switch.rules = {
-	{ selector = ".ui-switch", priority = 0, properties = { BackgroundColor3 = "$Input", BorderSizePixel = 0 } },
+	{
+		selector = ".ui-switch",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Input", BorderSizePixel = 0 },
+	},
 	{ selector = ".ui-switch::UICorner", priority = 0, properties = { CornerRadius = "$RadiusFull" } },
 	{
 		selector = ".ui-switch.ui-checked",
@@ -34,7 +38,11 @@ Switch.rules = {
 		properties = { BackgroundColor3 = "$Primary" },
 		transitions = { BackgroundColor3 = TweenInfo.new(0.15) },
 	},
-	{ selector = ".ui-switch-thumb", priority = 0, properties = { BackgroundColor3 = "$Background", BorderSizePixel = 0 } },
+	{
+		selector = ".ui-switch-thumb",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Background", BorderSizePixel = 0 },
+	},
 	{ selector = ".ui-switch-thumb::UICorner", priority = 0, properties = { CornerRadius = "$RadiusFull" } },
 	{
 		selector = ".ui-switch-label",
@@ -72,7 +80,10 @@ function Switch.new(props: { [string]: any }?)
 				Padding = UDim.new(0, 8),
 				Parent = root,
 			})
-			local track = Component.create("Frame", { Name = "Track", LayoutOrder = 1, Tags = { "ui-switch" }, Parent = root })
+			local track = Component.create(
+				"Frame",
+				{ Name = "Track", LayoutOrder = 1, Tags = { "ui-switch" }, Parent = root }
+			)
 			local thumb = Component.create("Frame", {
 				Name = "Thumb",
 				AnchorPoint = Vector2.new(0, 0.5),
@@ -118,12 +129,15 @@ function Switch.new(props: { [string]: any }?)
 		local knob = size.Y - 4
 		handle.track.Size = UDim2.fromOffset(size.X, size.Y)
 		handle.thumb.Size = UDim2.fromOffset(knob, knob)
-		handle.Instance.Size = UDim2.fromOffset(0, math.max(Component.metric(handle.app, "ControlSm"), size.Y))
+		handle.Instance.Size =
+			UDim2.fromOffset(0, math.max(Component.metric(handle.app, "ControlSm"), size.Y))
 		local target = if handle:get("checked")
 			then UDim2.new(0, size.X - knob - 2, 0.5, 0)
 			else UDim2.new(0, 2, 0.5, 0)
 		if animate and handle.Instance.Parent then
-			TweenService:Create(handle.thumb, TweenInfo.new(0.15, Enum.EasingStyle.Quad), { Position = target }):Play()
+			TweenService
+				:Create(handle.thumb, TweenInfo.new(0.15, Enum.EasingStyle.Quad), { Position = target })
+				:Play()
 		else
 			handle.thumb.Position = target
 		end

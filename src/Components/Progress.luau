@@ -12,10 +12,22 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Progress = {}
 
 Progress.rules = {
-	{ selector = ".ui-progress", priority = 0, properties = { BackgroundColor3 = "$Secondary", BorderSizePixel = 0 } },
+	{
+		selector = ".ui-progress",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Secondary", BorderSizePixel = 0 },
+	},
 	{ selector = ".ui-progress::UICorner", priority = 0, properties = { CornerRadius = "$RadiusFull" } },
-	{ selector = ".ui-progress-indicator", priority = 0, properties = { BackgroundColor3 = "$Primary", BorderSizePixel = 0 } },
-	{ selector = ".ui-progress-indicator::UICorner", priority = 0, properties = { CornerRadius = "$RadiusFull" } },
+	{
+		selector = ".ui-progress-indicator",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Primary", BorderSizePixel = 0 },
+	},
+	{
+		selector = ".ui-progress-indicator::UICorner",
+		priority = 0,
+		properties = { CornerRadius = "$RadiusFull" },
+	},
 }
 
 function Progress.fraction(value: number, max: number): number

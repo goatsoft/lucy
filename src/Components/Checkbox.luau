@@ -21,7 +21,11 @@ local Checkbox = {}
 local BOX = { default = 16, touch = 20, tv = 24 }
 
 Checkbox.rules = {
-	{ selector = ".ui-checkbox", priority = 0, properties = { BackgroundColor3 = "$Background", BorderSizePixel = 0 } },
+	{
+		selector = ".ui-checkbox",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Background", BorderSizePixel = 0 },
+	},
 	{ selector = ".ui-checkbox::UICorner", priority = 0, properties = { CornerRadius = "$RadiusSm" } },
 	{
 		selector = ".ui-checkbox::UIStroke",
@@ -75,7 +79,10 @@ function Checkbox.new(props: { [string]: any }?)
 				Padding = UDim.new(0, 8),
 				Parent = root,
 			})
-			local box = Component.create("Frame", { Name = "Box", LayoutOrder = 1, Tags = { "ui-checkbox" }, Parent = root })
+			local box = Component.create(
+				"Frame",
+				{ Name = "Box", LayoutOrder = 1, Tags = { "ui-checkbox" }, Parent = root }
+			)
 			local check = Component.create("TextLabel", {
 				Name = "Check",
 				Text = "✓",

@@ -51,7 +51,11 @@ Button.rules = {
 	},
 
 	-- Variants
-	{ selector = ".ui-button-variant-default:Hover", priority = STATE, properties = { BackgroundColor3 = "$PrimaryHover" } },
+	{
+		selector = ".ui-button-variant-default:Hover",
+		priority = STATE,
+		properties = { BackgroundColor3 = "$PrimaryHover" },
+	},
 	{
 		selector = ".ui-button-variant-destructive",
 		priority = VARIANT,
@@ -70,7 +74,11 @@ Button.rules = {
 	{
 		selector = ".ui-button-variant-outline::UIStroke",
 		priority = VARIANT,
-		properties = { Color = "$Input", Thickness = "$StrokeThin", ApplyStrokeMode = Enum.ApplyStrokeMode.Border },
+		properties = {
+			Color = "$Input",
+			Thickness = "$StrokeThin",
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
 	},
 	{
 		selector = ".ui-button-variant-outline:Hover",
@@ -109,19 +117,31 @@ Button.rules = {
 	},
 
 	-- Sizes
-	{ selector = ".ui-button-size-sm", priority = VARIANT, properties = { Size = "$ControlSm", TextSize = "$TextXs" } },
+	{
+		selector = ".ui-button-size-sm",
+		priority = VARIANT,
+		properties = { Size = "$ControlSm", TextSize = "$TextXs" },
+	},
 	{
 		selector = ".ui-button-size-sm::UIPadding",
 		priority = VARIANT,
 		properties = { PaddingLeft = "$Space3", PaddingRight = "$Space3" },
 	},
-	{ selector = ".ui-button-size-lg", priority = VARIANT, properties = { Size = "$ControlLg", TextSize = "$TextBase" } },
+	{
+		selector = ".ui-button-size-lg",
+		priority = VARIANT,
+		properties = { Size = "$ControlLg", TextSize = "$TextBase" },
+	},
 	{
 		selector = ".ui-button-size-lg::UIPadding",
 		priority = VARIANT,
 		properties = { PaddingLeft = "$Space6", PaddingRight = "$Space6" },
 	},
-	{ selector = ".ui-button-size-icon", priority = VARIANT, properties = { Size = "$ControlIcon", TextSize = "$TextBase" } },
+	{
+		selector = ".ui-button-size-icon",
+		priority = VARIANT,
+		properties = { Size = "$ControlIcon", TextSize = "$TextBase" },
+	},
 	{
 		selector = ".ui-button-size-icon::UIPadding",
 		priority = VARIANT,
@@ -173,7 +193,9 @@ function Button.new(props: { [string]: any }?)
 			button.Visible = state.visible
 			button.Interactable = not state.disabled
 			button.Selectable = not state.disabled
-			button.AutomaticSize = if state.size == "icon" then Enum.AutomaticSize.None else Enum.AutomaticSize.X
+			button.AutomaticSize = if state.size == "icon"
+				then Enum.AutomaticSize.None
+				else Enum.AutomaticSize.X
 			Component.setVariant(button, "ui-button", "variant", state.variant)
 			Component.setVariant(button, "ui-button", "size", state.size)
 			Component.setFlag(button, "ui-disabled", state.disabled)

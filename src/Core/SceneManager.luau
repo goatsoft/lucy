@@ -200,7 +200,9 @@ function SceneManager:_enter(name: string, displayOrder: number?)
 		scene.popScope = self.app.input:pushScope({
 			root = scene.gui,
 			defaultFocus = def.defaultFocus and function()
-				return if type(def.defaultFocus) == "function" then def.defaultFocus(scene) else def.defaultFocus
+				return if type(def.defaultFocus) == "function"
+					then def.defaultFocus(scene)
+					else def.defaultFocus
 			end,
 		})
 	end

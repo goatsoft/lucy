@@ -15,17 +15,27 @@ return function()
 
 	describe("deviceFor", function()
 		it("treats the 10-foot interface as console", function()
-			expect(InputManager.deviceFor({ tenFoot = true, gamepad = true, viewport = Vector2.new(1920, 1080) })).to.equal("console")
+			expect(
+				InputManager.deviceFor({ tenFoot = true, gamepad = true, viewport = Vector2.new(1920, 1080) })
+			).to.equal("console")
 		end)
 
 		it("splits touch-only screens into mobile and tablet", function()
-			expect(InputManager.deviceFor({ touch = true, viewport = Vector2.new(844, 390) })).to.equal("mobile")
-			expect(InputManager.deviceFor({ touch = true, viewport = Vector2.new(1180, 820) })).to.equal("tablet")
+			expect(InputManager.deviceFor({ touch = true, viewport = Vector2.new(844, 390) })).to.equal(
+				"mobile"
+			)
+			expect(InputManager.deviceFor({ touch = true, viewport = Vector2.new(1180, 820) })).to.equal(
+				"tablet"
+			)
 		end)
 
 		it("calls anything with a keyboard or mouse a desktop", function()
-			expect(InputManager.deviceFor({ keyboard = true, mouse = true, viewport = Vector2.new(1920, 1080) })).to.equal("desktop")
-			expect(InputManager.deviceFor({ touch = true, keyboard = true, viewport = Vector2.new(1280, 800) })).to.equal("desktop")
+			expect(
+				InputManager.deviceFor({ keyboard = true, mouse = true, viewport = Vector2.new(1920, 1080) })
+			).to.equal("desktop")
+			expect(
+				InputManager.deviceFor({ touch = true, keyboard = true, viewport = Vector2.new(1280, 800) })
+			).to.equal("desktop")
 		end)
 	end)
 

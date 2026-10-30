@@ -11,7 +11,11 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Separator = {}
 
 Separator.rules = {
-	{ selector = ".ui-separator", priority = 0, properties = { BackgroundColor3 = "$Border", BorderSizePixel = 0 } },
+	{
+		selector = ".ui-separator",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Border", BorderSizePixel = 0 },
+	},
 }
 
 function Separator.new(props: { [string]: any }?)

@@ -184,7 +184,11 @@ return function()
 			theme = Theme.new(config)
 			theme:addRules("prio", {
 				{ selector = ".test-prio", priority = 0, properties = { BackgroundColor3 = "$Primary" } },
-				{ selector = ".test-prio.test-alt", priority = 10, properties = { BackgroundColor3 = Color3.new(0, 1, 0) } },
+				{
+					selector = ".test-prio.test-alt",
+					priority = 10,
+					properties = { BackgroundColor3 = Color3.new(0, 1, 0) },
+				},
 			})
 			local gui = Instance.new("ScreenGui")
 			gui.Name = "LucyTest_PrioGui"
@@ -195,7 +199,9 @@ return function()
 			frame.Parent = gui
 			gui.Parent = Harness.guiParent()
 			Harness.flush()
-			expect(Harness.colorEq(Harness.styled(frame, "BackgroundColor3"), Color3.new(0, 1, 0))).to.equal(true)
+			expect(Harness.colorEq(Harness.styled(frame, "BackgroundColor3"), Color3.new(0, 1, 0))).to.equal(
+				true
+			)
 			gui:Destroy()
 		end)
 	end)

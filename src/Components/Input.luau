@@ -38,7 +38,11 @@ Input.rules = {
 	{
 		selector = ".ui-input::UIStroke",
 		priority = 0,
-		properties = { Color = "$Input", Thickness = "$StrokeThin", ApplyStrokeMode = Enum.ApplyStrokeMode.Border },
+		properties = {
+			Color = "$Input",
+			Thickness = "$StrokeThin",
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
 	},
 	{
 		selector = ".ui-input::UIPadding",
@@ -50,7 +54,11 @@ Input.rules = {
 		priority = 20,
 		properties = { Color = "$Ring", Thickness = "$FocusRing" },
 	},
-	{ selector = ".ui-input.ui-disabled", priority = 30, properties = { TextTransparency = 0.5, BackgroundTransparency = 0.5 } },
+	{
+		selector = ".ui-input.ui-disabled",
+		priority = 30,
+		properties = { TextTransparency = 0.5, BackgroundTransparency = 0.5 },
+	},
 }
 
 function Input.new(props: { [string]: any }?)

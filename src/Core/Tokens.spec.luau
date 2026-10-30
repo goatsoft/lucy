@@ -75,7 +75,8 @@ return function()
 		end)
 
 		it("mixes in Oklab", function()
-			local mixed = Tokens.resolveTheme({ M = Tokens.mix("$Black", "$White", 0.5) }, Tokens.primitives).M
+			local mixed =
+				Tokens.resolveTheme({ M = Tokens.mix("$Black", "$White", 0.5) }, Tokens.primitives).M
 			local L = Oklab.toOklch(mixed)
 			expect(math.abs(L - 0.5) < 0.01).to.equal(true)
 		end)

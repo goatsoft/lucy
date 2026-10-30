@@ -404,7 +404,11 @@ function InputManager:_watch()
 			elseif key == Enum.KeyCode.Return or key == Enum.KeyCode.Space then
 				self:activate()
 			end
-		elseif self._mode == "gamepad" and GuiService.SelectedObject == nil and input.UserInputType.Name:find("Gamepad") then
+		elseif
+			self._mode == "gamepad"
+			and GuiService.SelectedObject == nil
+			and input.UserInputType.Name:find("Gamepad")
+		then
 			self:focusDefault()
 		end
 	end))

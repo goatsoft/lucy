@@ -37,11 +37,10 @@ function Harness.app(config: { [string]: any }?)
 	options.setCurrent = false
 	options.namePrefix = options.namePrefix or "LucyTest_"
 	-- Deterministic desktop with no engine listeners unless a spec asks otherwise.
-	options.input = options.input
-		or {
-			watch = false,
-			caps = Harness.caps.desktop,
-		}
+	options.input = options.input or {
+		watch = false,
+		caps = Harness.caps.desktop,
+	}
 	local app = App.new(options)
 	return app, function()
 		app:destroy()

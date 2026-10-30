@@ -53,7 +53,11 @@ Badge.rules = {
 	{
 		selector = ".ui-badge-variant-outline::UIStroke",
 		priority = 10,
-		properties = { Color = "$Border", Thickness = "$StrokeThin", ApplyStrokeMode = Enum.ApplyStrokeMode.Border },
+		properties = {
+			Color = "$Border",
+			Thickness = "$StrokeThin",
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
 	},
 }
 
