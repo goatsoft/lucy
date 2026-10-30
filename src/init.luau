@@ -1,6 +1,6 @@
 --!strict
 --[[
-	Lucy: a UI kit and app framework for Roblox.
+	Lucy: a UI and app framework for Roblox.
 
 		local Lucy = require(ReplicatedStorage.Packages.Lucy)
 		local app = Lucy.App.new({ theme = "dark", baseColor = "zinc" })

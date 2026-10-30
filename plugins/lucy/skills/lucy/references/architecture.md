@@ -1,7 +1,7 @@
 <!-- Made by scripts/skills.ts from docs/architecture.md. Edit the doc, not this file. -->
 # Lucy architecture
 
-Lucy is a UI kit and app framework for Roblox. This page shows how its parts
+Lucy is a UI and app framework for Roblox. This page shows how its parts
 fit together.
 
 ## The pieces

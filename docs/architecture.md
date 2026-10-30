@@ -6,7 +6,7 @@ order: 2
 
 # Lucy architecture
 
-Lucy is a UI kit and app framework for Roblox. This page shows how its parts
+Lucy is a UI and app framework for Roblox. This page shows how its parts
 fit together.
 
 ## The pieces

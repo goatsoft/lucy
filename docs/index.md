@@ -6,7 +6,7 @@ order: 1
 
 # Getting started
 
-Lucy is a UI kit and app framework for Roblox, built on
+Lucy is a UI and app framework for Roblox, built on
 [Universal Styling](https://create.roblox.com/docs/ui/styling). It gives you
 themeable components, scenes and one app state, and works with mouse, keyboard,
 gamepad and touch on desktop, console, tablet and phone.

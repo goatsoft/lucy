@@ -15,7 +15,7 @@
   <a href="https://lucy.goatsoft.io/docs/benchmarks/">Benchmarks</a>
 </p>
 
-<p align="center">A UI kit and app framework for Roblox, built on Universal Styling.</p>
+<p align="center">A UI and app framework for Roblox, built on Universal Styling.</p>
 
 <p align="center">
   <a href="https://github.com/goatsoft/lucy/actions/workflows/ci.yml"><img src="https://github.com/goatsoft/lucy/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -26,8 +26,9 @@
 
 ## Overview
 
-All components have one place to keep their UI state. Change a value and the UI
-updates to match. Works with mouse, keyboard, gamepad and touch.
+One source of truth for your UI and app state. Change a value and only what
+shows it updates. Themed components that work with mouse, keyboard, gamepad and
+touch.
 
 The components (buttons, dialogs, toasts, inputs, switches, panels and more)
 come with light and dark themes and work on desktop, console, tablet and phone.

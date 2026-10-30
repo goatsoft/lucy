@@ -1,11 +1,11 @@
 ---
 name: lucy
-description: Build Roblox game UI with Lucy, the UI kit and app framework (Luau). Use when a game requires or installs Lucy (`require(...Lucy)`, `goatsoft/lucy` in wally.toml, a `Lucy` folder of components), or when asked to build menus, HUDs, shops, settings, dialogs, hotkeys or any screen in a Lucy game. Covers the App, scenes, app state, components, styling, input and focus, and hotkeys.
+description: Build Roblox game UI with Lucy, the UI and app framework (Luau). Use when a game requires or installs Lucy (`require(...Lucy)`, `goatsoft/lucy` in wally.toml, a `Lucy` folder of components), or when asked to build menus, HUDs, shops, settings, dialogs, hotkeys or any screen in a Lucy game. Covers the App, scenes, app state, components, styling, input and focus, and hotkeys.
 ---
 
 # Building UI with Lucy
 
-Lucy is a UI kit and app framework for Roblox. A game makes one `Lucy.App` on
+Lucy is a UI and app framework for Roblox. A game makes one `Lucy.App` on
 the client. The app owns the state, theme, input, scenes, overlays and toasts.
 Every component works with mouse, keyboard, gamepad and touch, on desktop,
 console, tablet and phone, as long as you build with Lucy's pieces.

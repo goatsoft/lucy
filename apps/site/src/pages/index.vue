@@ -55,7 +55,7 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
         class="animate-mark-in mx-auto shadow-2xl"
       />
       <h1 class="animate-rise mx-auto mt-8 max-w-3xl font-display text-display font-semibold tracking-loose text-balance">
-        A UI kit and app framework for Roblox
+        Lucy, a UI and app framework for Roblox
       </h1>
       <p class="animate-rise mx-auto mt-6 max-w-2xl text-lead text-pretty tracking-tight leading-8 text-muted-foreground [animation-delay:120ms]">
         {{ SITE.description }}
