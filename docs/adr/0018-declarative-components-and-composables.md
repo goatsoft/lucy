@@ -1,6 +1,6 @@
 # 0018: Declarative components and composables; watchers for side effects only
 
-- Status: proposed
+- Status: accepted (2026-10-30, after plan step 3)
 - Date: 2026-10-30
 - Amends: 0002 (components still build plain instances, now through Element), 0017 (removes `spec.watch`)
 
@@ -222,6 +222,34 @@ most of it the per-key store source created the first time the key is read. That
 source is what ADR 0017 trades for: writes and toggles stay at 0 KB and touch
 only their readers. Mount Switches stays about 1.2x on time and 1.4x on heap
 against the phase 1 baseline (11.8 ms, 1.4 MB).
+
+### Updates: where the cost pays back (2026-10-30)
+
+Mount is one-off; updates run for the life of the component. Writing one key on
+each of 100 mounted components, `update` versions (commit d619635, just before
+step 3) against declarative ones on the same core:
+
+| Write, 100 components | `update` | Declarative |
+|---|---:|---:|
+| Button text | 1.86 ms, 48 KB | 0.47 ms, 0 KB |
+| Button visible | 1.51 ms, 52 KB | 0.71 ms, 0 KB |
+| Button disabled | 1.69 ms, 49 KB | 1.49 ms, 0 KB |
+| Button variant | 1.46 ms, 48 KB | 1.09 ms, 19 KB |
+| Text text | 0.89 ms, 25 KB | 0.43 ms, 0 KB |
+| Text variant | 0.86 ms, 25 KB | 0.89 ms, 8 KB |
+
+`update` rebuilt the component's snapshot and re-set every property and tag on
+any write, about 0.5 KB of garbage each time. A binding touches only what reads
+the key: text and visibility writes are 2x to 4x faster and allocate nothing.
+Variant writes still allocate a little (the tag binding builds its list), and
+variants rarely change. The bench now carries `Set Button text` (0.42 ms, 0 KB)
+and `Set Button disabled` (0.91 ms, 0 KB).
+
+**Accepted.** The mount budget above is missed on heap (1.4x) and met on time
+(about 1.2x). That is the right place for the cost: paid once at mount, in
+exchange for faster, allocation-free updates. One effect per element (instead
+of per property) was considered to cut mount cost and rejected: it would move
+the cost back into every update.
 
 ## Alternatives considered
 

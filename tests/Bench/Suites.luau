@@ -98,6 +98,24 @@ end
 local STORE_OPS = 100
 
 -- A table of n numeric keys, "k1" .. "kn".
+-- n Buttons mounted in an owned scope, for the update suites.
+local function mountButtons(ctx: Context, n: number): State
+	local scope = ctx.Lucy.effectScope(true)
+	local root = holder(ctx)
+	local buttons = {}
+	scope:run(function()
+		for i = 1, n do
+			local button = ctx.Lucy.Button.new({ app = ctx.app, Parent = root, text = "Buy" })
+			-- A key's first write builds its write path once; warm it so runs measure
+			-- steady-state writes, as in a live app.
+			button:set("text", "Buy")
+			button:set("disabled", false)
+			buttons[i] = button
+		end
+	end)
+	return { scope = scope, root = root, buttons = buttons, flip = false }
+end
+
 local function keyed(n: number): { [string]: number }
 	local t = {}
 	for i = 1, n do
@@ -390,6 +408,39 @@ local suites: { Suite } = {
 		end,
 		run = function(state)
 			state.on(not state.on())
+		end,
+		teardown = stop,
+	},
+	{
+		name = "Set Button text",
+		group = "Components",
+		size = 100,
+		description = "One text write to each mounted Button.",
+		setup = function(ctx, n)
+			return mountButtons(ctx, n)
+		end,
+		run = function(state)
+			state.flip = not state.flip
+			local text = if state.flip then "Sell" else "Buy"
+			for _, button in state.buttons do
+				button:set("text", text)
+			end
+		end,
+		teardown = stop,
+	},
+	{
+		name = "Set Button disabled",
+		group = "Components",
+		size = 100,
+		description = "One disabled write to each mounted Button (tag, Interactable, Selectable).",
+		setup = function(ctx, n)
+			return mountButtons(ctx, n)
+		end,
+		run = function(state)
+			state.flip = not state.flip
+			for _, button in state.buttons do
+				button:set("disabled", state.flip)
+			end
 		end,
 		teardown = stop,
 	},
