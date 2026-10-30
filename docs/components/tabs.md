@@ -28,6 +28,7 @@ Lucy.Tabs.new({
 | `variant` | string | `"default"` | yes | The tab bar's look: `default` or `outline` |
 | `size` | string | `"md"` | yes | The tab bar's size: `sm`, `md` or `lg` |
 | `gap` | spacing | `"Space2"` | | Space between the tab bar and the panels |
+| `shoulderButtons` | boolean | `true` | | LB and RB switch tabs while focus is inside |
 | `disabled` | boolean | `false` | yes | Greys every tab out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `onValueChange` | function | | | Called with `(value, handle)` when it changes |
@@ -51,6 +52,14 @@ long content.
 
 When the player picks a tab, it reports `select` with the tab's value for
 [useUiSound](../reference/composables.md#useuisound).
+
+## Gamepad
+
+While focus is anywhere inside the tabs, on the tab bar or in a panel, LB and RB
+move to the previous and next tab, skipping disabled ones and wrapping around at
+the ends. If focus was in the old panel, it moves to the first thing the player
+can select in the new one, otherwise to the new tab. With tabs inside tabs, the
+inner ones switch.
 
 `handle.list` is the tab bar and `handle.panels` maps each tab's value to its
 panel frame.

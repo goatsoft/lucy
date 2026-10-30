@@ -103,7 +103,10 @@ otherwise desktop) and drives density and the adaptive profile.
 
 Focus scopes stack: screens and modal scenes push one on enter, dialogs push one
 while open. Keyboard Tab/arrows, gamepad selection and `defaultFocus` all work
-inside the top scope. Escape / ButtonB call `app.input:back()`.
+inside the top scope. Escape / ButtonB call `app.input:back()`. LB / RB call
+`app.input:shoulder(-1 / 1)`: from the focused object up, the first component with
+a `shoulder(step)` method that returns true handles them, so only the tabs around
+the focus switch. Focus that Lucy moves (Tab, arrows) scrolls into view.
 
 Roblox's own selection image is replaced with a blank frame; Lucy draws its own
 ring with the `ui-focus-visible` tag only while navigating with keys or a pad.

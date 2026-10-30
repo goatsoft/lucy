@@ -13,6 +13,7 @@
 			gap = "Space2",        -- between the tab bar and the panels
 			disabled = false,
 			visible = true,
+			shoulderButtons = true, -- LB / RB switch tabs while focus is inside
 			onValueChange = function(value, tabs) end,
 			Parent = panel,
 		})
@@ -131,6 +132,47 @@ function Tabs.new(props: { [string]: any }?)
 	-- The player picked a tab (the tab bar sends "select").
 	function handle.select(h, picked: any)
 		h.list:select(picked)
+	end
+
+	-- LB / RB while focus is inside (InputManager.shoulder): the next or previous
+	-- enabled tab, wrapping. Focus follows: into the new panel if it was in the
+	-- old one, otherwise to the new tab.
+	function handle.shoulder(h, step: number): boolean
+		if h.destroyed or h.props.shoulderButtons == false or h:get("disabled") then
+			return false
+		end
+		local entries = h.list.entries
+		local count = #entries
+		local current = h:get("value")
+		local index = 1
+		for i, item in entries do
+			if item.value == current then
+				index = i
+			end
+		end
+		local target: number? = nil
+		for offset = 1, count - 1 do
+			local i = ((index - 1 + offset * step) % count) + 1
+			if not entries[i].disabled then
+				target = i
+				break
+			end
+		end
+		if not target then
+			return false
+		end
+		local input = h.app.input
+		local focused = input:focused()
+		local oldPanel: Frame? = h.panels[current]
+		local inPanel = focused ~= nil and oldPanel ~= nil and focused:IsDescendantOf(oldPanel)
+		local value = entries[target].value
+		h.list:select(value)
+		local focus: GuiObject = h.list.items[target]
+		if inPanel then
+			focus = input:selectables(h.panels[value])[1] or focus
+		end
+		input:focus(focus)
+		return true
 	end
 	return handle
 end

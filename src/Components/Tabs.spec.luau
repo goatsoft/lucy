@@ -117,6 +117,96 @@ return function()
 		scope:stop()
 	end)
 
+	describe("shoulder buttons", function()
+		local Button = require(script.Parent.Button)
+
+		local function withButtons(extra: { [string]: any }?)
+			local first, second =
+				Button.new({ app = app, text = "One" }), Button.new({ app = app, text = "Two" })
+			local items = {
+				{ value = "a", text = "A", content = first },
+				{ value = "b", text = "B", content = second },
+				{ value = "c", text = "C" },
+			}
+			local props = { app = app, Parent = gui, items = items }
+			local more: { [string]: any } = extra or {}
+			for key, value in more do
+				props[key] = value
+			end
+			return Tabs.new(props), first, second
+		end
+
+		beforeEach(function()
+			app.input:setMode("gamepad")
+		end)
+
+		it("moves to the next and previous tab, wrapping, when focus is on the tab bar", function()
+			local tabs = withButtons()
+			app.input:markFocus(tabs.list.items[1])
+			expect(app.input:shoulder(1)).to.equal(true)
+			expect(tabs:get("value")).to.equal("b")
+			expect(app.input:focused()).to.equal(tabs.list.items[2])
+			app.input:shoulder(-1)
+			app.input:shoulder(-1)
+			expect(tabs:get("value")).to.equal("c")
+			app.input:shoulder(1)
+			expect(tabs:get("value")).to.equal("a")
+		end)
+
+		it("moves focus into the new panel when focus was in the old one", function()
+			local tabs, first, second = withButtons()
+			app.input:markFocus(first.Instance)
+			app.input:shoulder(1)
+			expect(tabs:get("value")).to.equal("b")
+			expect(app.input:focused()).to.equal(second.Instance)
+			app.input:shoulder(1)
+			expect(app.input:focused()).to.equal(tabs.list.items[3])
+		end)
+
+		it("skips disabled tabs", function()
+			local tabs = Tabs.new({
+				app = app,
+				Parent = gui,
+				items = { "a", { value = "b", disabled = true }, "c" },
+			})
+			app.input:markFocus(tabs.list.items[1])
+			app.input:shoulder(1)
+			expect(tabs:get("value")).to.equal("c")
+		end)
+
+		it("ignores them when focus is outside, or the tabs are disabled", function()
+			local tabs = withButtons()
+			local outside = Button.new({ app = app, Parent = gui })
+			app.input:markFocus(outside.Instance)
+			expect(app.input:shoulder(1)).to.equal(false)
+			expect(tabs:get("value")).to.equal("a")
+			app.input:markFocus(tabs.list.items[1])
+			tabs:set("disabled", true)
+			app.input:shoulder(1)
+			expect(tabs:get("value")).to.equal("a")
+		end)
+
+		it("switches only the innermost tabs around the focus", function()
+			local inner = Tabs.new({ app = app, items = { "x", "y" } })
+			local outer = Tabs.new({
+				app = app,
+				Parent = gui,
+				items = { { value = "a", content = inner }, "b" },
+			})
+			app.input:markFocus(inner.list.items[1])
+			app.input:shoulder(1)
+			expect(inner:get("value")).to.equal("y")
+			expect(outer:get("value")).to.equal("a")
+		end)
+
+		it("can be turned off", function()
+			local tabs = withButtons({ shoulderButtons = false })
+			app.input:markFocus(tabs.list.items[1])
+			expect(app.input:shoulder(1)).to.equal(false)
+			expect(tabs:get("value")).to.equal("a")
+		end)
+	end)
+
 	it("destroys its tab bar with it", function()
 		local _, _, items = panels()
 		local tabs = Tabs.new({ app = app, Parent = gui, items = items })

@@ -22,6 +22,10 @@
 		(dialogs and modal scenes push one). When the player picks up a gamepad or
 		presses Tab with nothing selected, the top scope's defaultFocus is selected.
 
+	Shoulder buttons:
+		LB / RB call app.input:shoulder(-1 / 1): the nearest component around the
+		focus with a shoulder method handles them (Tabs switch tab).
+
 	Back:
 		Escape / ButtonB call app.input:back(): the newest pushBack handler runs
 		(an open dialog closes), otherwise the SceneManager pops or calls onBack.
@@ -337,6 +341,30 @@ function InputManager.move(self: InputManager, step: number)
 	self:focus(all[nextIndex])
 end
 
+-- The object focus was last moved to, if any.
+function InputManager.focused(self: InputManager): GuiObject?
+	return self._focused
+end
+
+--[[
+	The shoulder buttons (LB / RB): from the focused object up, the first
+	component with a `shoulder(step)` method that returns true handles them, so
+	only the tabs around the focus switch, the innermost first. Returns whether
+	anything did.
+]]
+function InputManager.shoulder(self: InputManager, step: number): boolean
+	local node: Instance? = self._focused
+	while node do
+		local id = node:GetAttribute("LucyId")
+		local handle: any = id and self.app:handle(id)
+		if handle and handle.shoulder and handle:shoulder(step) then
+			return true
+		end
+		node = node.Parent
+	end
+	return false
+end
+
 -- Activates the focused element (Enter / Space on keyboard).
 function InputManager.activate(self: InputManager)
 	local focused = self._focused
@@ -408,6 +436,11 @@ function InputManager._watch(self: InputManager)
 		local key = input.KeyCode
 		if key == Enum.KeyCode.ButtonB or key == Enum.KeyCode.Escape then
 			if self:back() then
+				return
+			end
+		end
+		if key == Enum.KeyCode.ButtonL1 or key == Enum.KeyCode.ButtonR1 then
+			if self:shoulder(if key == Enum.KeyCode.ButtonL1 then -1 else 1) then
 				return
 			end
 		end
