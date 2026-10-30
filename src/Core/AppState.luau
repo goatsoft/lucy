@@ -15,9 +15,14 @@
 		state:batch(function() ... end) -- one notification per subscriber
 		stop()
 
+		local coins = state:ref("player.coins") -- a writable ref onto a path (ADR 0014)
+		coins(coins() + 10)                     -- same as state:set("player.coins", ...)
+
 	Components keep their props under "ui.<id>", the SceneManager under "scenes",
 	toasts under "toasts" and the theme name under "theme". See docs/architecture.md.
 ]]
+
+local Reactive = require(script.Parent.Reactive)
 
 local AppState = {}
 AppState.__index = AppState
@@ -156,6 +161,26 @@ function AppState:subscribe(path: string?, fn: (new: any, old: any) -> ()): () -
 			table.remove(self._subscribers, index)
 		end
 	end
+end
+
+--[[
+	A writable ref onto `path`: reading tracks the value at the path, writing sets it.
+	The subscription ends with the current effect / scope (or lives with the store).
+]]
+function AppState:ref(path: string?): Reactive.Ref<any>
+	local value = Reactive.ref(self:get(path))
+	local stop = self:subscribe(path, function(new)
+		value(new)
+	end)
+	Reactive.onCleanup(stop)
+	return Reactive.computed({
+		get = function()
+			return value()
+		end,
+		set = function(new: any)
+			self:set(path, new)
+		end,
+	}) :: any
 end
 
 -- Runs `fn` and delivers at most one notification per subscriber afterwards.

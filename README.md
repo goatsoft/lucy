@@ -10,6 +10,7 @@
 A UI kit and app framework for Roblox, built on
 [Universal Styling](https://create.roblox.com/docs/ui/styling).
 
+- **Reactive**: `ref`, `computed`, `reactive` and `watch`, with fine-grained updates and no re-renders. Build any UI declaratively with `Lucy.new`, animate with springs and tweens.
 - **Components you own**: copy them into your game with one command, or install the Wally package.
 - **Themes as data**: light and dark themes per base colour, an optional primary hue, switchable at runtime. Colours are defined in OKLCH.
 - **Every platform**: mouse, keyboard, gamepad and touch on desktop, console, tablet and phone, with densities, adaptive scaling and responsive props built in.
@@ -80,6 +81,24 @@ app.scenes:register("Game", {
 app.scenes:goTo("Title")
 ```
 
+### Reactive UI
+
+```lua
+local coins = app.state:ref("player.coins")
+local open = Lucy.ref(false)
+local x = Lucy.spring(function() return if open() then 0 else -320 end)
+
+Lucy.new "TextButton" {
+	Text = function() return `Coins: {coins()}` end,
+	Position = function() return UDim2.fromOffset(x(), 16) end,
+	[Lucy.on "Activated"] = function() open(not open()) end,
+	Parent = scene.gui,
+}
+```
+
+Only the properties that read a changed ref update. See
+[docs/reactivity.md](docs/reactivity.md).
+
 ### Drive anything from app state
 
 ```lua
@@ -141,6 +160,7 @@ The docs are published at [lucy.goatsoft.io](https://lucy.goatsoft.io) and live 
 
 | Doc | What it covers |
 |---|---|
+| [docs/reactivity.md](docs/reactivity.md) | ref, computed, reactive, watch, `Lucy.new`, springs and tweens |
 | [docs/architecture.md](docs/architecture.md) | How App, AppState, Theme, scenes and input fit together |
 | [docs/components.md](docs/components.md) | Every component's props, state keys and responsive values |
 | [docs/development.md](docs/development.md) | Toolchain, the TDD loop, writing a component, releasing |

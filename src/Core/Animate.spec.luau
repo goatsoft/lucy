@@ -1,0 +1,105 @@
+return function()
+	local Reactive = require(script.Parent.Reactive)
+	local Animate = require(script.Parent.Animate)
+	local ref = Reactive.ref
+
+	local scope
+	beforeEach(function()
+		Animate.manual = true
+		scope = Reactive.effectScope(true)
+	end)
+	afterEach(function()
+		scope:stop()
+		Animate.manual = false
+	end)
+
+	local function run(fn)
+		return scope:run(fn)
+	end
+
+	local function settle(seconds: number)
+		for _ = 1, math.ceil(seconds * 60) do
+			Animate.step(1 / 60)
+		end
+	end
+
+	describe("spring", function()
+		it("starts at the source value and moves toward a new target", function()
+			local target = ref(0)
+			local value = run(function()
+				return Animate.spring(target, 4, 1)
+			end)
+			expect(value()).to.equal(0)
+			target(100)
+			expect(value()).to.equal(0) -- nothing moves until a frame passes
+			Animate.step(1 / 60)
+			local early = value()
+			expect(early > 0 and early < 100).to.equal(true)
+			settle(3)
+			expect(value()).to.equal(100)
+		end)
+
+		it("animates UDim2 and Color3 (in Oklab)", function()
+			local size = ref(UDim2.fromOffset(0, 0))
+			local color = ref(Color3.new(0, 0, 0))
+			local s, c = run(function()
+				return Animate.spring(size, 6), Animate.spring(color, 6)
+			end)
+			size(UDim2.new(1, 20, 0, 40))
+			color(Color3.new(1, 1, 1))
+			settle(3)
+			expect(s()).to.equal(UDim2.new(1, 20, 0, 40))
+			local final = c()
+			expect(math.abs(final.R - 1) < 1e-3 and math.abs(final.B - 1) < 1e-3).to.equal(true)
+		end)
+
+		it("snaps when the value type changes or cannot be animated", function()
+			local value = ref(1 :: any)
+			local out = run(function()
+				return Animate.spring(value)
+			end)
+			value("text")
+			expect(out()).to.equal("text")
+		end)
+
+		it("drives bindings like any other source", function()
+			local target = ref(0)
+			local seen
+			run(function()
+				local value = Animate.spring(target, 8)
+				Reactive.watchEffect(function()
+					seen = value()
+				end)
+			end)
+			target(10)
+			settle(2)
+			expect(seen).to.equal(10)
+		end)
+	end)
+
+	describe("tween", function()
+		it("follows the TweenInfo curve and lands exactly on the target", function()
+			local target = ref(0)
+			local value = run(function()
+				return Animate.tween(target, TweenInfo.new(1, Enum.EasingStyle.Linear))
+			end)
+			target(10)
+			settle(0.5)
+			expect(math.abs(value() - 5) < 0.2).to.equal(true)
+			settle(0.6)
+			expect(value()).to.equal(10)
+		end)
+
+		it("retargets from where it is", function()
+			local target = ref(0)
+			local value = run(function()
+				return Animate.tween(target, TweenInfo.new(1, Enum.EasingStyle.Linear))
+			end)
+			target(10)
+			settle(0.5)
+			target(0)
+			Animate.step(1 / 60)
+			expect(value() > 4 and value() < 6).to.equal(true)
+		end)
+	end)
+end

@@ -2,17 +2,20 @@
   "$schema": "./docs/registry.md",
   "name": "lucy",
   "core": {
-    "description": "App, AppState, Theme, Tokens, Oklab, Palette, SceneManager, InputManager, Adaptive, Responsive and helpers. Always installed.",
+    "description": "App, AppState, reactivity (ref, computed, reactive, watch), Lucy.new, springs and tweens, Theme, Tokens, Oklab, Palette, SceneManager, InputManager, Adaptive, Responsive and helpers. Always installed.",
     "files": [
       "Core/Adaptive.luau",
+      "Core/Animate.luau",
       "Core/App.luau",
       "Core/AppState.luau",
       "Core/Component.luau",
       "Core/Context.luau",
+      "Core/Element.luau",
       "Core/InputManager.luau",
       "Core/Maid.luau",
       "Core/Oklab.luau",
       "Core/Palette.luau",
+      "Core/Reactive.luau",
       "Core/Responsive.luau",
       "Core/SceneManager.luau",
       "Core/Signal.luau",
@@ -22,11 +25,14 @@
     ],
     "specs": [
       "Core/Adaptive.spec.luau",
+      "Core/Animate.spec.luau",
       "Core/App.spec.luau",
       "Core/AppState.spec.luau",
       "Core/Component.spec.luau",
+      "Core/Element.spec.luau",
       "Core/InputManager.spec.luau",
       "Core/Oklab.spec.luau",
+      "Core/Reactive.spec.luau",
       "Core/Responsive.spec.luau",
       "Core/SceneManager.spec.luau",
       "Core/Theme.spec.luau",
@@ -34,18 +40,74 @@
     ]
   },
   "components": {
-    "badge": { "module": "Badge", "description": "Small status label", "dependencies": [] },
-    "button": { "module": "Button", "description": "Button with variants and sizes", "dependencies": [] },
-    "checkbox": { "module": "Checkbox", "description": "Checkbox with optional label", "dependencies": [] },
-    "dialog": { "module": "Dialog", "description": "Modal dialog and alert dialog", "dependencies": ["button"] },
-    "input": { "module": "Input", "description": "Single-line text field", "dependencies": [] },
-    "panel": { "module": "Panel", "description": "Card with header, content and footer", "dependencies": [] },
-    "progress": { "module": "Progress", "description": "Progress bar", "dependencies": [] },
-    "separator": { "module": "Separator", "description": "Horizontal or vertical rule", "dependencies": [] },
-    "skeleton": { "module": "Skeleton", "description": "Pulsing loading placeholder", "dependencies": [] },
-    "stack": { "module": "Stack", "description": "Responsive flex row or column", "dependencies": [] },
-    "switch": { "module": "Switch", "description": "Toggle switch with optional label", "dependencies": [] },
-    "text": { "module": "Text", "description": "Typography: headings, body, muted, label", "dependencies": [] },
-    "toaster": { "module": "Toaster", "description": "Toast notifications (app.toast)", "dependencies": ["button"] }
+    "badge": {
+      "module": "Badge",
+      "description": "Small status label",
+      "dependencies": []
+    },
+    "button": {
+      "module": "Button",
+      "description": "Button with variants and sizes",
+      "dependencies": []
+    },
+    "checkbox": {
+      "module": "Checkbox",
+      "description": "Checkbox with optional label",
+      "dependencies": []
+    },
+    "dialog": {
+      "module": "Dialog",
+      "description": "Modal dialog and alert dialog",
+      "dependencies": [
+        "button"
+      ]
+    },
+    "input": {
+      "module": "Input",
+      "description": "Single-line text field",
+      "dependencies": []
+    },
+    "panel": {
+      "module": "Panel",
+      "description": "Card with header, content and footer",
+      "dependencies": []
+    },
+    "progress": {
+      "module": "Progress",
+      "description": "Progress bar",
+      "dependencies": []
+    },
+    "separator": {
+      "module": "Separator",
+      "description": "Horizontal or vertical rule",
+      "dependencies": []
+    },
+    "skeleton": {
+      "module": "Skeleton",
+      "description": "Pulsing loading placeholder",
+      "dependencies": []
+    },
+    "stack": {
+      "module": "Stack",
+      "description": "Responsive flex row or column",
+      "dependencies": []
+    },
+    "switch": {
+      "module": "Switch",
+      "description": "Toggle switch with optional label",
+      "dependencies": []
+    },
+    "text": {
+      "module": "Text",
+      "description": "Typography: headings, body, muted, label",
+      "dependencies": []
+    },
+    "toaster": {
+      "module": "Toaster",
+      "description": "Toast notifications (app.toast)",
+      "dependencies": [
+        "button"
+      ]
+    }
   }
 }
