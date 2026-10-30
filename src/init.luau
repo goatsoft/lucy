@@ -90,6 +90,7 @@ return {
 	useMetric = Composables.useMetric,
 	useBackHandler = Composables.useBackHandler,
 	useFocusScope = Composables.useFocusScope,
+	useResponsive = Composables.useResponsive,
 
 	-- Animation (Core/Animate)
 	spring = Animate.spring,

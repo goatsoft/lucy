@@ -10,6 +10,7 @@
 			local height = Lucy.useMetric(h.app, "ControlMd")     -- pixels, follows density
 			Lucy.useBackHandler(h.app, open, function() h:close() return true end)
 			Lucy.useFocusScope(h.app, open, { root = content })
+			local gap = Lucy.useResponsive(h.app, { touch = 16, default = 8 })
 			...
 		end
 
@@ -19,6 +20,7 @@
 
 local Component = require(script.Parent.Core.Component)
 local Reactive = require(script.Parent.Core.Reactive)
+local Responsive = require(script.Parent.Core.Responsive)
 
 local Composables = {}
 
@@ -58,6 +60,25 @@ function Composables.useMetric(app: any, token: string): Reactive.Computed<numbe
 	return Reactive.computed(function()
 		density()
 		return Component.metric(app, token)
+	end)
+end
+
+--[[
+	A responsive value ({ touch = 16, default = 8 }, see Responsive) resolved
+	against the app's input state, as a getter that follows it. A plain value is
+	returned as a getter too, so callers bind either the same way.
+]]
+function Composables.useResponsive(app: any, value: any): () -> any
+	requireOwner("useResponsive")
+	if not Responsive.isResponsive(value) then
+		return function(): any
+			return value
+		end
+	end
+	local state = app.state
+	local segments = state:_segments("input")
+	return Reactive.computed(function(): any
+		return Responsive.pick(state:_tracked(segments) or {}, value)
 	end)
 end
 
