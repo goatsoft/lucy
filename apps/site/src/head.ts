@@ -7,7 +7,7 @@ export const SITE = {
   repo: 'https://github.com/goatsoft/lucy',
   wally: 'https://wally.run/package/goatsoft/lucy',
   goatsoft: 'https://goatsoft.io',
-  description: 'One source of truth for your UI and app state. Change a value and only what shows it updates. Themed components that work with mouse, keyboard, gamepad and touch.',
+  description: 'One source of truth for your UI and app state. Lucy tracks changes and updates the UI for you. Themed components that work with mouse, keyboard, gamepad and touch.',
 }
 
 export interface Head {
