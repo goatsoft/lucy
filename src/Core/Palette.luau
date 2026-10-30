@@ -1,6 +1,5 @@
 --[[
-	Tailwind CSS v4 colour palette in OKLCH, generated from
-	tailwindcss/packages/tailwindcss/theme.css (https://tailwindcss.com/docs/colors).
+	Lucy colour palette in OKLCH. Source: docs/adr/0010.
 
 	Palette[hue][shade] = { L, C, H }  -- L 0..1, C chroma, H degrees
 	Convert with Oklab.fromOklch(L, C, H). Do not edit: run `lune run scripts/gen-palette`.

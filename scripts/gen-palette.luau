@@ -1,26 +1,32 @@
 --[[
-	Regenerates src/Core/Palette.luau from Tailwind's theme.css.
+	Regenerates src/Core/Palette.luau from a CSS file of OKLCH colour variables
+	(`--color-<hue>-<shade>: oklch(L% C H);`). The upstream source is recorded
+	in docs/adr/0010.
 
-		lune run scripts/gen-palette                 -- fetch from GitHub (main)
-		lune run scripts/gen-palette path/to/theme.css
+		lune run scripts/gen-palette <path-or-url>
 
-	Tailwind v4 declares every colour as oklch(L% C H); "none" hue (greys) becomes 0.
+	A "none" hue (greys) becomes 0.
 ]]
 
 local fs = require("@lune/fs")
 local net = require("@lune/net")
 local process = require("@lune/process")
 
-local SOURCE = "https://raw.githubusercontent.com/tailwindlabs/tailwindcss/main/packages/tailwindcss/theme.css"
 local OUT = "src/Core/Palette.luau"
 
+local source = process.args[1]
+if not source then
+	print("usage: lune run scripts/gen-palette <path-or-url>   (source: see docs/adr/0010)")
+	process.exit(1)
+end
+
 local css
-if process.args[1] then
-	css = fs.readFile(process.args[1])
-else
-	local response = net.request(SOURCE)
+if string.match(source, "^https?://") then
+	local response = net.request(source)
 	assert(response.ok, `fetch failed: {response.statusCode}`)
 	css = response.body
+else
+	css = fs.readFile(source)
 end
 
 local hues, byHue = {}, {}
@@ -41,8 +47,7 @@ end
 
 local out = {
 	"--[[",
-	"\tTailwind CSS v4 colour palette in OKLCH, generated from",
-	"\ttailwindcss/packages/tailwindcss/theme.css (https://tailwindcss.com/docs/colors).",
+	"\tLucy colour palette in OKLCH. Source: docs/adr/0010.",
 	"",
 	"\tPalette[hue][shade] = { L, C, H }  -- L 0..1, C chroma, H degrees",
 	"\tConvert with Oklab.fromOklch(L, C, H). Do not edit: run `lune run scripts/gen-palette`.",

@@ -39,7 +39,7 @@ app.scenes:register("Title", {
 			align = "center",
 			children = {
 				Lucy.Text.new({ text = "Lucy", variant = "h1", align = "center" }),
-				Lucy.Text.new({ text = "shadcn for Roblox", variant = "muted", align = "center" }),
+				Lucy.Text.new({ text = "A UI kit for Roblox", variant = "muted", align = "center" }),
 				Lucy.Stack.new({
 					direction = { mobile = "vertical", default = "horizontal" },
 					gap = "Space2",

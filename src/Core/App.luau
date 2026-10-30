@@ -8,12 +8,12 @@
 		app.theme   Theme, Universal Styling sheets (ADR 0003)
 		app.input   InputManager, mouse/keyboard/gamepad/touch and device class (ADR 0007)
 		app.scenes  SceneManager, title screen / game / menus (ADR 0005)
-		app.toast   sonner-style toasts, if the Toaster component is present
+		app.toast   toast notifications, if the Toaster component is present
 
 	config:
 		theme         initial theme name ("dark")
-		baseColor     shadcn base colour for the default themes ("zinc", "slate", ...)
-		primary       Tailwind hue to tint Primary ("blue", "rose", ...)
+		baseColor     base colour for the default themes ("zinc", "slate", ...)
+		primary       palette hue to tint Primary ("blue", "rose", ...)
 		primitives    token overrides (see Core/Tokens)
 		themes        theme overrides (replaces baseColor/primary)
 		densities     density overrides

@@ -1,5 +1,5 @@
 --[[
-	Input (shadcn: Input), a single-line text field.
+	Input: a single-line text field.
 
 		local name = Input.new({
 			id = "playerName",
@@ -13,7 +13,7 @@
 		app.state:get("ui.playerName.value")
 
 	Height follows the density token ControlMd (36 desktop, 44 touch, 52 console).
-	The focus ring shows whenever the field is being typed in, as in shadcn.
+	The focus ring shows whenever the field is being typed in.
 	State keys: value, placeholder, disabled, visible.
 ]]
 

@@ -1,5 +1,5 @@
 --[[
-	Dialog (shadcn: Dialog and Alert Dialog)
+	Dialog and alert dialog
 
 		local dialog = Dialog.new({
 			id = "quit",

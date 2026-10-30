@@ -46,6 +46,6 @@
     "stack": { "module": "Stack", "description": "Responsive flex row or column", "dependencies": [] },
     "switch": { "module": "Switch", "description": "Toggle switch with optional label", "dependencies": [] },
     "text": { "module": "Text", "description": "Typography: headings, body, muted, label", "dependencies": [] },
-    "toaster": { "module": "Toaster", "description": "Sonner-style toasts (app.toast)", "dependencies": ["button"] }
+    "toaster": { "module": "Toaster", "description": "Toast notifications (app.toast)", "dependencies": ["button"] }
   }
 }

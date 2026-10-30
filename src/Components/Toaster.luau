@@ -1,5 +1,5 @@
 --[[
-	Toaster (shadcn: Sonner)
+	Toaster: toast notifications.
 
 	Installed on every App automatically, so game code just calls:
 

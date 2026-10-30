@@ -1,5 +1,5 @@
 --[[
-	Text (shadcn: Typography + Label)
+	Text: headings, body copy and labels.
 
 		Text.new({ text = "Turf Heist", variant = "h1", align = "center" })
 

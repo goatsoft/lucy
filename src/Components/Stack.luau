@@ -1,5 +1,5 @@
 --[[
-	Stack: a flex row or column (shadcn uses Tailwind flex utilities for this).
+	Stack: a flex row or column.
 
 		Stack.new({
 			direction = "vertical",   -- vertical | horizontal

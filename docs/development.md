@@ -98,8 +98,7 @@ stylua --check src tests scripts
 ## Regenerating the palette
 
 ```
-lune run scripts/gen-palette            # fetches Tailwind's theme.css
-lune run scripts/gen-palette theme.css  # or from a local copy
+lune run scripts/gen-palette <path-or-url>   # source URL is in docs/adr/0010
 ```
 
 ## Releasing

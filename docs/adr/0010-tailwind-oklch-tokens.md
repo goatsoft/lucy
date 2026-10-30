@@ -12,8 +12,10 @@ shadcn also uses translucent values (dark border `white/10%`, hover
 
 ## Decision
 
-- `Core/Palette.luau` is generated from Tailwind's `theme.css`
-  (`lune run scripts/gen-palette`): 26 hues x 11 shades as `{ L, C, H }`.
+- `Core/Palette.luau` is generated from Tailwind's `theme.css`:
+  `lune run scripts/gen-palette https://raw.githubusercontent.com/tailwindlabs/tailwindcss/main/packages/tailwindcss/theme.css`
+  gives 26 hues x 11 shades as `{ L, C, H }`. This ADR is the only place the
+  upstream source is named; code and docs call it "the palette".
 - `Core/Oklab.luau` converts OKLCH/Oklab to sRGB. Out-of-gamut colours are
   clipped by default, which reproduces Tailwind's published sRGB values exactly
   (red-500 `#fb2c36`, blue-500 `#2b7fff`); `Oklab.gamut = "chroma"` lowers chroma

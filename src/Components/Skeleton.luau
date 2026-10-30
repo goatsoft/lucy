@@ -1,5 +1,5 @@
 --[[
-	Skeleton (shadcn: Skeleton), a pulsing placeholder while content loads.
+	Skeleton: a pulsing placeholder while content loads.
 
 		Skeleton.new({ size = UDim2.fromOffset(250, 16) })
 		Skeleton.new({ size = UDim2.fromOffset(48, 48), circle = true })

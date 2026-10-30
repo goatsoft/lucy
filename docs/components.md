@@ -10,21 +10,21 @@ Every component is `X.new(props)` and returns a handle:
 
 Any state key can be driven from the app: `app.state:set("ui.<id>.<key>", value)`.
 
-| Component | shadcn | State keys | Notes |
-|---|---|---|---|
-| Button | Button | text, variant, size, disabled, visible | variants: default, destructive, outline, secondary, ghost, link. sizes: sm, md, lg, icon. `onClick`, `Activated`, `:click()` |
-| Badge | Badge | text, variant, visible | default, secondary, destructive, outline |
-| Text | Typography, Label | text, variant, align, visible | h1 to h4, p, lead, large, small, muted, label. `autoWidth`, `richText` |
-| Panel | Card | title, description, visible | `children`, `footer`, `size`, `maxWidth`, `aspectRatio`; `.header .content .footer` |
-| Dialog | Dialog, Alert Dialog | open, title, description | `actions`, `dismissible`, `closeOnOverlay`, `showClose`, `onOpenChange`, `:open() :close() :toggle()`, `Dialog.alert{}` |
-| Toaster | Sonner | (list in `toasts`) | `app.toast(msg, opts)`, `.success .error .warning .info`, `.dismiss(id?)`, update by `id`, `action` |
-| Input | Input | value, placeholder, disabled, visible | `onChange`, `onSubmit`, `width`, `:focus()` |
-| Checkbox | Checkbox | checked, label, disabled, visible | `onCheckedChange`, `:toggle()`, row is the hit area |
-| Switch | Switch | checked, label, disabled, visible | `onCheckedChange`, `:toggle()` |
-| Progress | Progress | value, max, visible | clamped |
-| Skeleton | Skeleton | visible | `size`, `circle`; pulses while visible |
-| Separator | Separator | orientation, visible | horizontal, vertical |
-| Stack | (flex utilities) | visible | `direction`, `gap`, `align`, `justify`, `padding`, `wrap`, `size`, `children`; all layout props accept responsive values |
+| Component | State keys | Notes |
+|---|---|---|
+| Button | text, variant, size, disabled, visible | variants: default, destructive, outline, secondary, ghost, link. sizes: sm, md, lg, icon. `onClick`, `Activated`, `:click()` |
+| Badge | text, variant, visible | default, secondary, destructive, outline |
+| Text | text, variant, align, visible | h1 to h4, p, lead, large, small, muted, label. `autoWidth`, `richText` |
+| Panel | title, description, visible | `children`, `footer`, `size`, `maxWidth`, `aspectRatio`; `.header .content .footer` |
+| Dialog | open, title, description | `actions`, `dismissible`, `closeOnOverlay`, `showClose`, `onOpenChange`, `:open() :close() :toggle()`, `Dialog.alert{}` |
+| Toaster | (list in `toasts`) | `app.toast(msg, opts)`, `.success .error .warning .info`, `.dismiss(id?)`, update by `id`, `action` |
+| Input | value, placeholder, disabled, visible | `onChange`, `onSubmit`, `width`, `:focus()` |
+| Checkbox | checked, label, disabled, visible | `onCheckedChange`, `:toggle()`, row is the hit area |
+| Switch | checked, label, disabled, visible | `onCheckedChange`, `:toggle()` |
+| Progress | value, max, visible | clamped |
+| Skeleton | visible | `size`, `circle`; pulses while visible |
+| Separator | orientation, visible | horizontal, vertical |
+| Stack | visible | `direction`, `gap`, `align`, `justify`, `padding`, `wrap`, `size`, `children`; all layout props accept responsive values |
 
 ## Responsive values
 

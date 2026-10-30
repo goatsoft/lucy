@@ -12,7 +12,7 @@ return function()
 	end
 
 	describe("palette", function()
-		it("exposes every Tailwind colour as a primitive", function()
+		it("exposes every palette colour as a primitive", function()
 			expect(Tokens.primitives.Zinc950:ToHex()).to.equal("09090b")
 			expect(Tokens.primitives.Red500:ToHex()).to.equal("fb2c36")
 			expect(Tokens.primitives.Blue500:ToHex()).to.equal("2b7fff")
@@ -69,7 +69,7 @@ return function()
 	end)
 
 	describe("derived tokens", function()
-		it("composites over like CSS alpha (shadcn dark border is white/10%)", function()
+		it("composites over like CSS alpha (dark border is white at 10%)", function()
 			local resolved = Tokens.resolveTheme(Tokens.themes.dark, Tokens.primitives)
 			expect(resolved.Border:ToHex()).to.equal("222224")
 		end)

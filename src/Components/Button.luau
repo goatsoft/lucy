@@ -1,5 +1,5 @@
 --[[
-	Button (shadcn: Button)
+	Button
 
 		Button.new({
 			text = "Play",

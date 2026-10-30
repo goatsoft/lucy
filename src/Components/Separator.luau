@@ -1,5 +1,5 @@
 --[[
-	Separator (shadcn: Separator)
+	Separator
 
 		Separator.new({ orientation = "horizontal" }) -- horizontal | vertical
 

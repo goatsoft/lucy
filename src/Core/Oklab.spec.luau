@@ -6,7 +6,7 @@ return function()
 	end
 
 	describe("fromOklch", function()
-		it("matches Tailwind's published sRGB values", function()
+		it("matches the reference sRGB values", function()
 			expect(hex(Oklab.palette("red", 500))).to.equal("fb2c36")
 			expect(hex(Oklab.palette("blue", 500))).to.equal("2b7fff")
 			expect(hex(Oklab.palette("amber", 500))).to.equal("fe9a00")

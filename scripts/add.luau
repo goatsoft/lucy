@@ -1,5 +1,5 @@
 --[[
-	Lucy component installer, in the spirit of `npx shadcn add`.
+	Lucy component installer.
 
 	Copies components (and what they depend on) into your project as plain source
 	you own and can edit. Core is always copied. An init.luau index listing what

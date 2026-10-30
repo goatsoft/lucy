@@ -2,7 +2,7 @@
 	Adaptive: proportional scaling and responsive helpers (ADR 0006).
 
 	Components are authored in pixels at a base resolution (1280x720 by default),
-	the way shadcn is authored in CSS px. Each ScreenGui gets one UIScale that
+	the way web UI is authored in CSS px. Each ScreenGui gets one UIScale that
 	scales the whole tree to the device, so layouts keep their proportions from
 	phone to TV without every component doing Scale-based maths.
 

@@ -1,5 +1,5 @@
 --[[
-	Panel (shadcn: Card)
+	Panel: a card with header, content and footer.
 
 		local panel = Panel.new({
 			title = "Loadout",

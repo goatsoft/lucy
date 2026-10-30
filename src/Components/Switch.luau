@@ -1,5 +1,5 @@
 --[[
-	Switch (shadcn: Switch)
+	Switch
 
 		Switch.new({
 			label = "Music",

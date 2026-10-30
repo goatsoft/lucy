@@ -1,5 +1,5 @@
 --[[
-	Progress (shadcn: Progress)
+	Progress
 
 		local bar = Progress.new({ id = "reload", value = 30, max = 100 })
 		app.state:set("ui.reload.value", 75)

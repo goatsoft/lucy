@@ -1,13 +1,13 @@
 --[[
 	Oklab / OKLCH colour maths (Björn Ottosson, https://bottosson.github.io/posts/oklab/).
 
-	Tailwind v4 and shadcn define colours in OKLCH. Roblox renders sRGB Color3, so
+	Lucy defines colours in OKLCH. Roblox renders sRGB Color3, so
 	tokens are authored in OKLCH and converted here. Vivid shades (blue-500,
 	green-500 ...) sit outside sRGB; Oklab.gamut decides how they are brought in:
-		"clip"   clamp each channel (default; matches Tailwind's published sRGB values)
+		"clip"   clamp each channel (default; matches the palette's reference sRGB values)
 		"chroma" lower chroma at constant lightness and hue (closer to CSS Color 4 mapping)
 
-		Oklab.fromOklch(0.637, 0.237, 25.33)  --> Color3 (Tailwind red-500)
+		Oklab.fromOklch(0.637, 0.237, 25.33)  --> Color3 (red-500)
 		Oklab.palette("zinc", 900)            --> Color3
 		Oklab.mix(a, b, 0.1)                  --> perceptual mix, 10% of b
 		Oklab.adjust(color, { l = -0.05 })    --> shift lightness / chroma / hue
@@ -152,11 +152,11 @@ function Oklab.distance(a: Color3, b: Color3): number
 	return math.sqrt((L2 - L1) ^ 2 + (a2 - a1) ^ 2 + (b2 - b1) ^ 2)
 end
 
--- A Tailwind palette colour: Oklab.palette("blue", 500)
+-- A palette colour: Oklab.palette("blue", 500)
 function Oklab.palette(hue: string, shade: number): Color3
 	local swatch = Palette[hue] and Palette[hue][shade]
 	if not swatch then
-		error(`[Lucy] no Tailwind colour {hue}-{shade}`, 2)
+		error(`[Lucy] no palette colour {hue}-{shade}`, 2)
 	end
 	return Oklab.fromOklch(swatch[1], swatch[2], swatch[3])
 end

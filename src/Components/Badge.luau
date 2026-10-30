@@ -1,5 +1,5 @@
 --[[
-	Badge (shadcn: Badge)
+	Badge
 
 		Badge.new({ text = "New", variant = "default" }) -- default | secondary | destructive | outline
 

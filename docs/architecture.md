@@ -1,7 +1,7 @@
 # Lucy architecture
 
-Lucy is a shadcn-style UI kit and small application framework for Roblox. This
-page is the map; the ADRs in `docs/adr/` hold the reasoning.
+Lucy is a UI kit and small application framework for Roblox. This page is the
+map; the ADRs in `docs/adr/` hold the reasoning.
 
 ## The pieces
 
@@ -9,12 +9,12 @@ page is the map; the ADRs in `docs/adr/` hold the reasoning.
 App ─────────────── one per client, owns everything below
 ├─ AppState         single store: ui.<id>, scenes, toasts, input, theme, density   (ADR 0004)
 ├─ Theme            Universal Styling sheet graph + all StyleRules                 (ADR 0003)
-│   └─ Tokens       Tailwind palette (OKLCH via Oklab), shadcn themes, densities   (ADR 0010)
+│   └─ Tokens       OKLCH palette (via Oklab), light/dark themes, densities        (ADR 0010)
 ├─ InputManager     mode, device, focus ring, focus scopes, Tab nav, back          (ADR 0007)
 ├─ SceneManager     one ScreenGui per scene, layers, stack, overlays               (ADR 0005)
 ├─ Adaptive         UIScale per gui with device profiles, constraints, StyleQuery  (ADR 0006)
 ├─ portals          shared ScreenGuis: "modal" (900), "toast" (1000)
-└─ toast            sonner-style API, installed when Components/Toaster exists
+└─ toast            toast API, installed when Components/Toaster exists
 ```
 
 Components (`src/Components`) are built on `Core/Component` (ADR 0002).

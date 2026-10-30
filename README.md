@@ -1,82 +1,157 @@
 # Lucy
 
-A [shadcn](https://www.shadcn-vue.com/)-style UI kit and app framework for Roblox, built on
-[Universal Styling](https://create.roblox.com/docs/ui/styling) with the
-[Tailwind v4 palette](https://tailwindcss.com/docs/colors) in OKLCH.
+A UI kit and app framework for Roblox, built on
+[Universal Styling](https://create.roblox.com/docs/ui/styling).
 
 - **Components you own**: copy them into your game with one command, or install the Wally package.
-- **Themes as data**: light and dark per shadcn base colour (zinc, slate, stone ...), tinted primary, swap at runtime.
-- **Every platform**: mouse, keyboard, gamepad and touch; desktop, console, tablet and phone. Densities, adaptive scaling and responsive props out of the box.
-- **Lucy owns focus**: no Roblox selection rings or default borders; a themed focus ring only while navigating with keys or a pad.
+- **Themes as data**: light and dark themes per base colour, an optional primary hue, switchable at runtime. Colours are defined in OKLCH.
+- **Every platform**: mouse, keyboard, gamepad and touch on desktop, console, tablet and phone, with densities, adaptive scaling and responsive props built in.
+- **Lucy owns focus**: no Roblox selection rings or default borders; a themed focus ring only while navigating with keys or a gamepad.
 - **App state**: one store drives every component, scene and toast.
 - **Scenes**: title screen, game, menus and modals that never overlap or steal input.
 
-```lua
-local Lucy = require(ReplicatedStorage.Packages.Lucy)
-local app = Lucy.App.new({ theme = "dark", baseColor = "zinc", primary = "violet" })
-
-app.scenes:register("Title", {
-    build = function(scene)
-        scene.play = Lucy.Button.new({
-            id = "play", text = "Play", size = "lg", Parent = scene.gui,
-            onClick = function() app.scenes:goTo("Game") end,
-        })
-    end,
-    defaultFocus = function(scene) return scene.play end,
-})
-app.scenes:goTo("Title")
-
-app.state:set("ui.play.disabled", true)            -- control any component from anywhere
-app.toast.success("Welcome back", { description = "Daily reward ready" })
-```
-
 ## Install
 
-**Copy in (shadcn style)** with [Lune](https://lune-org.github.io/docs):
+### Copy in (recommended)
 
+Components are copied into your project as source you own. You need
+[Lune](https://lune-org.github.io/docs) and a checkout of Lucy.
+
+```sh
+git clone https://github.com/goatsoft/lucy ~/Projects/Lucy
+cd your-game
+lune run ~/Projects/Lucy/scripts/add -- button dialog --from ~/Projects/Lucy --out src/shared/Lucy
 ```
-LUCY_HOME=~/Projects/roblox-ui-kit lune run ~/Projects/roblox-ui-kit/scripts/add -- button dialog --out src/shared/Lucy
-lune run ~/Projects/roblox-ui-kit/scripts/add -- --list --from ~/Projects/roblox-ui-kit
-```
 
-Core is always copied; dependencies come along (Dialog brings Button). Files you have
-edited are kept unless you pass `--overwrite`.
+- Core is always copied; dependencies come along (Dialog brings Button).
+- Files you have edited are kept unless you pass `--overwrite`.
+- `--list` shows every component, `--all` installs them all, `--specs` copies the tests too.
+- Set `LUCY_HOME=~/Projects/Lucy` to skip `--from`.
 
-**Wally**:
+### Wally
 
 ```toml
 [dependencies]
 Lucy = "goatsoft/lucy@0.1.0"
 ```
 
+## Usage
+
+Create one App on the client, then build scenes from components.
+
+```lua
+-- StarterPlayerScripts/UI.client.luau
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lucy = require(ReplicatedStorage.Shared.Lucy) -- or ReplicatedStorage.Packages.Lucy
+
+local app = Lucy.App.new({ theme = "dark", baseColor = "zinc", primary = "violet" })
+
+app.scenes:register("Title", {
+	build = function(scene)
+		scene.play = Lucy.Button.new({
+			id = "play",
+			text = "Play",
+			size = "lg",
+			Parent = scene.gui,
+			onClick = function()
+				app.scenes:goTo("Game")
+			end,
+		})
+	end,
+	defaultFocus = function(scene)
+		return scene.play -- selected first on keyboard or gamepad
+	end,
+})
+
+app.scenes:register("Game", {
+	build = function(scene) --[[ HUD ]] end,
+	onBack = function()
+		app.scenes:goTo("Title") -- Escape or ButtonB
+	end,
+})
+
+app.scenes:goTo("Title")
+```
+
+### Drive anything from app state
+
+```lua
+app.state:set("ui.play.disabled", true)       -- any component, by id
+app.state:set("theme", "light")               -- switch theme
+app.state:set("scenes.current", "Game")       -- navigate
+app.state:subscribe("input.device", print)    -- "desktop" | "console" | "tablet" | "mobile"
+```
+
+### Dialogs and toasts
+
+```lua
+local quit = Lucy.Dialog.new({
+	id = "quit",
+	title = "Leave match?",
+	description = "You will drop your cash.",
+	actions = {
+		{ text = "Stay", variant = "outline" },
+		{ text = "Leave", variant = "destructive", onClick = leaveMatch },
+	},
+})
+quit:open() -- or app.state:set("ui.quit.open", true)
+
+app.toast.success("Round won", { description = "+$250" })
+app.toast("Invite from JB", { action = { label = "Join", onClick = join } })
+```
+
+### Layout that adapts
+
+```lua
+Lucy.Panel.new({
+	title = "Loadout",
+	maxWidth = 480,
+	Parent = scene.gui,
+	children = {
+		Lucy.Stack.new({
+			direction = { mobile = "vertical", default = "horizontal" },
+			gap = { console = "Space6", default = "Space2" },
+			children = {
+				Lucy.Button.new({ text = "Pistol", variant = "outline" }),
+				Lucy.Button.new({ text = "Rifle", variant = "outline" }),
+			},
+		}),
+	},
+})
+```
+
+A full runnable example is in [examples/Showcase.client.luau](examples/Showcase.client.luau).
+
 ## Components
 
-Button, Badge, Text, Panel (Card), Dialog and Alert Dialog, Toaster (Sonner), Input,
-Checkbox, Switch, Progress, Skeleton, Separator, Stack. See [docs/components.md](docs/components.md).
+Button, Badge, Text, Panel, Dialog (and alert dialog), Toaster, Input, Checkbox,
+Switch, Progress, Skeleton, Separator, Stack. Props and state keys are in
+[docs/components.md](docs/components.md).
 
-## Docs
+## Documentation
 
-- [Architecture](docs/architecture.md): how App, AppState, Theme, scenes and input fit together
-- [Development](docs/development.md): toolchain, TDD loop, writing a component
-- [Components](docs/components.md): props, state keys, responsive values
-- [Decisions](docs/adr): why things are the way they are
+| Doc | What it covers |
+|---|---|
+| [docs/architecture.md](docs/architecture.md) | How App, AppState, Theme, scenes and input fit together |
+| [docs/components.md](docs/components.md) | Every component's props, state keys and responsive values |
+| [docs/development.md](docs/development.md) | Toolchain, the TDD loop, writing a component, releasing |
+| [docs/adr/](docs/adr) | Architecture decisions and why they were made |
 
-## Develop
+## Contributing
 
-```
+```sh
 rokit install && wally install
-rojo serve test.project.json        # port 38574; connect the Rojo plugin in Studio
+rojo serve test.project.json   # port 38574; connect the Rojo plugin in Studio
 ```
 
-Then in the Studio command bar: `require(game.ReplicatedStorage.LucyTests.Runner).run()`.
+Then run the tests from the Studio command bar:
 
-## Credits
+```lua
+require(game.ReplicatedStorage.LucyTests.Runner).run()
+```
 
-Lucy by GOATsoft. Design language from [shadcn/ui](https://ui.shadcn.com) and
-[shadcn-vue](https://www.shadcn-vue.com); colours from [Tailwind CSS](https://tailwindcss.com);
-Oklab by Björn Ottosson; tests with [TestEZ](https://roblox.github.io/testez/).
-Co-authored with Claude.
+See [docs/development.md](docs/development.md) before adding a component.
 
 ## License
 
-MIT
+MIT · by GOATsoft

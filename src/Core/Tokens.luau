@@ -1,33 +1,30 @@
 --[[
-	Design tokens: the Tailwind v4 palette, shadcn's semantic colours and
-	per-device densities.
+	Design tokens: the colour palette, semantic colours and per-device densities.
 
-	primitives  every Tailwind colour as a Color3 attribute ("Red500", "Zinc950",
+	primitives  every palette colour as a Color3 attribute ("Red500", "Zinc950",
 	            "White", "Black") plus radius, spacing, font and stroke tokens.
 
 	themes      semantic colours per theme ("Primary", "Border", ...). A value is
 	              a raw value              0.5, UDim.new(0, 8)
 	              an alias                 "$Zinc900"
 	              Tokens.over(fg, bg, a)   fg at opacity `a` over bg, composited like CSS
-	                                       (shadcn's border white/10%, hover primary/90)
+	                                       (e.g. a white/10% border, a primary/90 hover)
 	              Tokens.mix(a, b, t)      perceptual Oklab mix, t = 0 gives a, 1 gives b
 	              Tokens.oklch(L, C, H)    a literal OKLCH colour
 	            Every theme must define the same keys (Universal Styling requires it).
 
 	densities   control heights and the type scale per device class:
-	              default  desktop, mouse and keyboard (shadcn's sizes)
+	              default  desktop, mouse and keyboard
 	              touch    phones and tablets, 44px minimum touch targets
 	              tv       consoles, 10-foot sizes
 	            Every density must define the same keys too.
 
-	Tokens.themesFor(base, options) builds light and dark themes the way shadcn
-	does for its base colours: base = "zinc" | "slate" | "gray" | "neutral" |
-	"stone" | "mauve" | "olive" | "mist" | "taupe"; options.primary = any Tailwind
+	Tokens.themesFor(base, options) builds light and dark themes for a base colour: base = "zinc" | "slate" | "gray" | "neutral" |
+	"stone" | "mauve" | "olive" | "mist" | "taupe"; options.primary = any palette
 	hue ("blue", "rose", ...) to tint the primary colour.
 
-	Values follow shadcn's OKLCH theme (ui.shadcn.com/docs/theming). A Color3 has
-	no alpha, so shadcn's translucent values are pre-composited with Tokens.over,
-	which blends in sRGB exactly as a browser does, so they look the same.
+	A Color3 has no alpha, so translucent values are pre-composited with
+	Tokens.over, which blends in sRGB exactly as a browser does. See ADR 0010.
 ]]
 
 local Oklab = require(script.Parent.Oklab)
@@ -63,14 +60,14 @@ local function buildPrimitives()
 		White = Color3.new(1, 1, 1),
 		Black = Color3.new(0, 0, 0),
 
-		-- Radius (UICorner.CornerRadius); shadcn --radius is 0.625rem = 10px
+		-- Radius (UICorner.CornerRadius); base radius 10px
 		RadiusSm = UDim.new(0, 6),
 		RadiusMd = UDim.new(0, 8),
 		RadiusLg = UDim.new(0, 10),
 		RadiusXl = UDim.new(0, 14),
 		RadiusFull = UDim.new(0.5, 0),
 
-		-- Spacing, Tailwind's 4px scale (UIPadding / UIListLayout.Padding)
+		-- Spacing on a 4px scale (UIPadding / UIListLayout.Padding)
 		Space0 = UDim.new(0, 0),
 		Space1 = UDim.new(0, 4),
 		Space2 = UDim.new(0, 8),
@@ -88,7 +85,7 @@ local function buildPrimitives()
 
 		StrokeThin = 1,
 		StrokeThick = 2,
-		FocusRing = 3, -- shadcn ring-[3px]
+		FocusRing = 3, -- focus ring stroke in px
 	}
 	for _, hue in Palette.hues do
 		for shade, swatch in Palette[hue] do
@@ -118,7 +115,7 @@ local function density(controls: { number }, text: { number })
 end
 
 Tokens.densities = {
-	-- shadcn: h-8 / h-9 / h-10 / size-9 and Tailwind's type scale
+	-- 32 / 36 / 40 px controls and the base type scale
 	default = density({ 32, 36, 40, 36 }, { 12, 14, 16, 18, 20, 24, 30, 36 }),
 	-- Apple HIG / Material: 44px minimum touch targets
 	touch = density({ 40, 44, 48, 44 }, { 12, 14, 16, 18, 20, 24, 30, 36 }),
@@ -130,8 +127,8 @@ Tokens.defaultDensity = "default"
 Tokens.bases = { "zinc", "slate", "gray", "neutral", "stone", "mauve", "olive", "mist", "taupe" }
 
 --[[
-	Light and dark semantic themes for a base colour, following shadcn v4.
-	options.primary: a Tailwind hue for Primary/Ring (default: the base colour).
+	Light and dark semantic themes for a base colour (see ADR 0010).
+	options.primary: a palette hue for Primary/Ring (default: the base colour).
 ]]
 function Tokens.themesFor(base: string?, options: { primary: string? }?)
 	local b = base or "zinc"
@@ -199,7 +196,7 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Destructive = "$Red400",
 		DestructiveForeground = "$White",
 		DestructiveHover = Tokens.over("$Destructive", "$Background", 0.9),
-		-- shadcn: border white/10%, input white/15% over the background
+		-- border white/10%, input white/15% over the background
 		Border = Tokens.over("$White", "$Background", 0.1),
 		Input = Tokens.over("$White", "$Background", 0.15),
 		-- Lighter than Primary so the ring stays visible around a focused primary button.

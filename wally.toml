@@ -1,6 +1,6 @@
 [package]
 name = "goatsoft/lucy"
-description = "A shadcn-style UI kit and app framework for Roblox, built on Universal Styling"
+description = "Lucy: a UI kit and app framework for Roblox, built on Universal Styling"
 version = "0.1.0"
 license = "MIT"
 authors = ["JB (GOATsoft)"]

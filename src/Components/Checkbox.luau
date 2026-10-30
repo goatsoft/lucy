@@ -1,5 +1,5 @@
 --[[
-	Checkbox (shadcn: Checkbox)
+	Checkbox
 
 		Checkbox.new({
 			label = "Mute music",          -- optional; the whole row is the hit area
