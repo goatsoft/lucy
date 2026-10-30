@@ -229,8 +229,6 @@ a Button's text sets its `Text` again and nothing else. See
 Coming in 0.1.0, each working with mouse, touch, gamepad and TV:
 
 - **Layout and display:** Table
-- **Overlays:** Dialog with a size and a
-  scrolling body
 - **Controls:** Slider, Number Field, Accordion, and Input options for several
   lines, numbers only and a maximum length
 
