@@ -137,6 +137,7 @@ return {
 	RadioGroup = require(Components.RadioGroup),
 	ScrollArea = require(Components.ScrollArea),
 	Separator = require(Components.Separator),
+	Sheet = require(Components.Sheet),
 	Skeleton = require(Components.Skeleton),
 	Spinner = require(Components.Spinner),
 	Stack = require(Components.Stack),

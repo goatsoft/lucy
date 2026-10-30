@@ -20,6 +20,7 @@
     "radio-group": "Options where the player picks exactly one",
     "scroll-area": "Region that scrolls when its content does not fit",
     "separator": "Thin line between items",
+    "sheet": "A panel from the side of the screen, a drawer from the bottom on touch",
     "skeleton": "Pulsing placeholder while content loads",
     "spinner": "Turning ring while something loads",
     "stack": "Row or column that lays out its children",

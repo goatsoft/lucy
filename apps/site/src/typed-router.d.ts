@@ -199,6 +199,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/sheet': RouteRecordInfo<
+      '/docs/components/sheet',
+      '/docs/components/sheet',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/skeleton': RouteRecordInfo<
       '/docs/components/skeleton',
       '/docs/components/skeleton',
@@ -525,6 +532,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/separator.md': {
       routes:
         | '/docs/components/separator'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/sheet.md': {
+      routes:
+        | '/docs/components/sheet'
       views:
         | never
       pathParamNames:

@@ -165,8 +165,8 @@ app.toast.success("Round won", { description = "+$250" })
 
 - Button, Pressable, Badge, Text, Panel, Dialog, Toaster, Input, Checkbox,
   Switch, Toggle, Toggle Group, Tabs, Radio Group, Progress, Skeleton,
-  Separator, Stack, Scroll Area, Grid, Item, Spinner, Alert, Image, Avatar, Icon
-  and Kbd.
+  Separator, Stack, Scroll Area, Grid, Item, Spinner, Alert, Image, Avatar,
+  Icon, Kbd and Sheet.
 - Light and dark themes for each base colour, with an optional primary colour,
   switchable while the game runs.
 - Controls that grow for touch and console, and layout props that change with

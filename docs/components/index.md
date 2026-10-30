@@ -29,6 +29,7 @@ Each component has its own page with its props, usage and examples:
 | [Radio Group](radio-group.md) | A list of options where the player picks exactly one |
 | [Scroll Area](scroll-area.md) | A region that scrolls when its content does not fit |
 | [Separator](separator.md) | A thin line between items |
+| [Sheet](sheet.md) | A panel from the side of the screen, a drawer from the bottom on touch |
 | [Skeleton](skeleton.md) | A pulsing placeholder while content loads |
 | [Spinner](spinner.md) | A turning ring while something loads |
 | [Stack](stack.md) | A row or column that lays out its children |
@@ -228,7 +229,7 @@ Coming in 0.1.0, each working with mouse, touch, gamepad and TV:
 
 - **Layout and display:** Table
 - **Selection:** Select
-- **Overlays:** Sheet (a bottom drawer on touch), and Dialog with a size and a
+- **Overlays:** Dialog with a size and a
   scrolling body
 - **Controls:** Slider, Number Field, Accordion, and Input options for several
   lines, numbers only and a maximum length

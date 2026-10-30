@@ -256,7 +256,7 @@ end
 
 -- The first selectable object under `root` in tree order, judged only by its own
 -- visibility up to `root`: the overlay may not be shown yet when focus is pushed.
-local function firstSelectable(root: Instance): GuiObject?
+function Overlay.firstSelectable(root: Instance): GuiObject?
 	for _, descendant in root:GetDescendants() do
 		if descendant:IsA("GuiObject") and descendant.Selectable and descendant.Interactable then
 			local visible = true
@@ -355,6 +355,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		scrim,
 	}) :: Frame
 
+	local natural = content.Size
 	content.ZIndex = math.max(content.ZIndex, 2)
 	if modal then
 		content.SelectionGroup = true
@@ -417,16 +418,14 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		})
 		content.AnchorPoint = at.anchorPoint
 		content.Position = at.position
-		local size = content.Size
-		if at.width then
-			size = UDim2.new(0, at.width, size.Y.Scale, size.Y.Offset)
-		elseif at.widthScale then
-			size = UDim2.new(at.widthScale, 0, size.Y.Scale, size.Y.Offset)
-		end
-		if at.fullHeight then
-			size = UDim2.new(size.X.Scale, size.X.Offset, 1, 0)
-		end
-		content.Size = size
+		-- Whatever this presentation does not set comes from the content's own size,
+		-- so a drawer opened after a panel is not left full height.
+		local x = if at.width
+			then UDim.new(0, at.width)
+			elseif at.widthScale then UDim.new(at.widthScale, 0)
+			else natural.X
+		local y = if at.fullHeight then UDim.new(1, 0) else natural.Y
+		content.Size = UDim2.new(x, y)
 		maxHeight(at.maxHeight)
 		placing = false
 	end
@@ -447,6 +446,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 
 		place()
 		live:give(root:GetPropertyChangedSignal("AbsoluteSize"):Connect(place))
+		live:give(root.AncestryChanged:Connect(place))
 		live:give(content:GetPropertyChangedSignal("AbsoluteSize"):Connect(place))
 		local anchor = anchorObject
 		if anchor then
@@ -520,7 +520,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 				if type(target) == "function" then
 					target = target()
 				end
-				return target or firstSelectable(content)
+				return target or Overlay.firstSelectable(content)
 			end,
 			returnFocus = function()
 				return opener
