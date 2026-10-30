@@ -33,6 +33,7 @@ Each component has its own page with its props, usage and examples:
 | [Separator](separator.md) | A thin line between items |
 | [Sheet](sheet.md) | A panel from the side of the screen, a drawer from the bottom on touch |
 | [Skeleton](skeleton.md) | A pulsing placeholder while content loads |
+| [Slider](slider.md) | Picks a number in a range by dragging or with the arrows |
 | [Spinner](spinner.md) | A turning ring while something loads |
 | [Stack](stack.md) | A row or column that lays out its children |
 | [Switch](switch.md) | An on and off switch, with an optional label |
@@ -230,7 +231,7 @@ a Button's text sets its `Text` again and nothing else. See
 
 Coming in 0.1.0, each working with mouse, touch, gamepad and TV:
 
-- **Controls:** Slider, Number Field, Accordion, and Input options for several
+- **Controls:** Number Field, Accordion, and Input options for several
   lines, numbers only and a maximum length
 
 Later: Tooltip, Carousel, Field, Empty, Dropdown Menu, `toast.promise`, pausing

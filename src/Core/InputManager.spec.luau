@@ -203,4 +203,23 @@ return function()
 			removeA()
 		end)
 	end)
+
+	describe("nudge", function()
+		it("is not taken with nothing focused, and release is then harmless", function()
+			local app, cleanup = Harness.app()
+			expect(app.input:nudge(1, 0)).to.equal(false)
+			app.input:release()
+			cleanup()
+		end)
+
+		it("is not taken by a focused object with no nudge method", function()
+			local app, cleanup = Harness.app()
+			local gui = Harness.mount(app)
+			local frame = Instance.new("TextButton")
+			frame.Parent = gui
+			app.input:focus(frame)
+			expect(app.input:nudge(0, 1)).to.equal(false)
+			cleanup()
+		end)
+	end)
 end

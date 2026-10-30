@@ -24,6 +24,7 @@
     "separator": "Thin line between items",
     "sheet": "A panel from the side of the screen, a drawer from the bottom on touch",
     "skeleton": "Pulsing placeholder while content loads",
+    "slider": "Picks a number in a range by dragging or with the arrows",
     "spinner": "Turning ring while something loads",
     "stack": "Row or column that lays out its children",
     "switch": "On and off switch with optional label",

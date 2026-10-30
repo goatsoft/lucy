@@ -227,6 +227,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/slider': RouteRecordInfo<
+      '/docs/components/slider',
+      '/docs/components/slider',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/spinner': RouteRecordInfo<
       '/docs/components/spinner',
       '/docs/components/spinner',
@@ -585,6 +592,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/skeleton.md': {
       routes:
         | '/docs/components/skeleton'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/slider.md': {
+      routes:
+        | '/docs/components/slider'
       views:
         | never
       pathParamNames:

@@ -29,6 +29,13 @@
 		LB / RB call app.input:shoulder(-1 / 1): the nearest component around the
 		focus with a shoulder method handles them (Tabs switch tab).
 
+	Arrows:
+		Arrow keys (keyboard), the D-pad and the left stick (gamepad) first call
+		app.input:nudge(dx, dy, count): the nearest component around the focus
+		with a nudge method that returns true takes them (a Slider changes its
+		value), repeating while held, faster with `count`; letting go calls its
+		release method. Otherwise arrows move focus as before.
+
 	Back:
 		Escape / ButtonB call app.input:back(): the newest pushBack handler runs
 		(an open dialog closes), otherwise the SceneManager pops or calls onBack.
@@ -56,6 +63,9 @@ export type InputManager = typeof(setmetatable(
 		_focused: GuiObject?,
 		_caps: { [string]: any },
 		_mode: string,
+		_nudged: any,
+		_held: { key: Enum.KeyCode, token: {} }?,
+		_stick: Vector2,
 	},
 	InputManager
 ))
@@ -71,6 +81,36 @@ local MODES: { [Enum.UserInputType]: string } = {
 }
 for i = 1, 8 do
 	MODES[(Enum.UserInputType :: any)["Gamepad" .. i]] = "gamepad"
+end
+
+-- How long an arrow is held before it repeats, and how often it then does.
+InputManager.repeatDelay = 0.35
+InputManager.repeatRate = 0.06
+
+local ARROWS: { [Enum.KeyCode]: Vector2 } = {
+	[Enum.KeyCode.Left] = Vector2.new(-1, 0),
+	[Enum.KeyCode.Right] = Vector2.new(1, 0),
+	[Enum.KeyCode.Up] = Vector2.new(0, -1),
+	[Enum.KeyCode.Down] = Vector2.new(0, 1),
+	[Enum.KeyCode.DPadLeft] = Vector2.new(-1, 0),
+	[Enum.KeyCode.DPadRight] = Vector2.new(1, 0),
+	[Enum.KeyCode.DPadUp] = Vector2.new(0, -1),
+	[Enum.KeyCode.DPadDown] = Vector2.new(0, 1),
+}
+
+-- The left stick as an arrow: the stronger axis past 0.6, nothing under 0.3.
+local function stickDirection(position: Vector3, current: Vector2): Vector2
+	local x, y = position.X, position.Y
+	if math.max(math.abs(x), math.abs(y)) < 0.3 then
+		return Vector2.zero
+	end
+	if math.max(math.abs(x), math.abs(y)) < 0.6 then
+		return current
+	end
+	if math.abs(x) >= math.abs(y) then
+		return Vector2.new(math.sign(x), 0)
+	end
+	return Vector2.new(0, -math.sign(y))
 end
 
 -- Shorter side below this (in Roblox screen points) is a phone.
@@ -147,6 +187,9 @@ function InputManager.new(app: any, options: { [string]: any }?): InputManager
 		_focused = nil :: GuiObject?,
 		_caps = caps,
 		_mode = (opts.mode or InputManager.defaultModeFor(InputManager.deviceFor(caps))) :: string,
+		_nudged = false,
+		_held = nil :: { key: Enum.KeyCode, token: {} }?,
+		_stick = Vector2.zero,
 	}, InputManager)
 	self:_publish()
 
@@ -394,6 +437,61 @@ function InputManager.shoulder(self: InputManager, step: number): boolean
 	return false
 end
 
+--[[
+	An arrow (dx, dy of -1, 0 or 1; dy = -1 is up), `count` times while held:
+	from the focused object up, the first component with a `nudge(dx, dy, count)`
+	method that returns true takes it. Returns whether anything did.
+]]
+function InputManager.nudge(self: InputManager, dx: number, dy: number, count: number?): boolean
+	local node: Instance? = self._focused
+	while node do
+		local id = node:GetAttribute("LucyId")
+		local handle: any = id and self.app:handle(id)
+		if handle and handle.nudge and handle:nudge(dx, dy, count or 1) then
+			self._nudged = handle
+			return true
+		end
+		node = node.Parent
+	end
+	return false
+end
+
+-- The held arrow was let go: the component that took it hears `release()`.
+function InputManager.release(self: InputManager)
+	local handle = self._nudged
+	self._nudged = false
+	if handle and handle.release and not handle.destroyed then
+		handle:release()
+	end
+end
+
+-- Nudges once; if taken, repeats until `key` is let go (see _watch).
+function InputManager._hold(self: InputManager, key: Enum.KeyCode, direction: Vector2): boolean
+	if not self:nudge(direction.X, direction.Y, 1) then
+		return false
+	end
+	local token = {}
+	self._held = { key = key, token = token }
+	task.delay(InputManager.repeatDelay, function()
+		local count = 1
+		while self._held and self._held.token == token do
+			count += 1
+			if not self:nudge(direction.X, direction.Y, count) then
+				break
+			end
+			task.wait(InputManager.repeatRate)
+		end
+	end)
+	return true
+end
+
+function InputManager._letGo(self: InputManager)
+	if self._held then
+		self._held = nil
+		self:release()
+	end
+end
+
 -- Activates the focused element (Enter / Space on keyboard).
 function InputManager.activate(self: InputManager)
 	local focused = self._focused
@@ -473,6 +571,12 @@ function InputManager._watch(self: InputManager)
 				return
 			end
 		end
+		-- Arrows go to a component around the focus first (a Slider), even when the
+		-- engine already used them to move gamepad selection.
+		local arrow = ARROWS[key]
+		if arrow and self._focused and self:isNavigating() and self:_hold(key, arrow) then
+			return
+		end
 		if processed and key ~= Enum.KeyCode.Tab then
 			return
 		end
@@ -497,9 +601,36 @@ function InputManager._watch(self: InputManager)
 			self:focusDefault()
 		end
 	end))
+
+	maid:give(UserInputService.InputEnded:Connect(function(input)
+		local held = self._held
+		if held and input.KeyCode == held.key then
+			self:_letGo()
+		end
+	end))
+
+	maid:give(UserInputService.InputChanged:Connect(function(input)
+		if input.KeyCode ~= Enum.KeyCode.Thumbstick1 then
+			return
+		end
+		local direction = stickDirection(input.Position, self._stick)
+		if direction == self._stick then
+			return
+		end
+		self._stick = direction
+		local held = self._held
+		if held and held.key == Enum.KeyCode.Thumbstick1 then
+			self:_letGo()
+		end
+		if direction ~= Vector2.zero and self._focused and self:isNavigating() then
+			self:_hold(Enum.KeyCode.Thumbstick1, direction)
+		end
+	end))
 end
 
 function InputManager.destroy(self: InputManager)
+	self._held = nil
+	self._nudged = false
 	self:_clearRing()
 	self.maid:clean()
 	self._scopes = {}

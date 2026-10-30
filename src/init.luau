@@ -142,6 +142,7 @@ return {
 	Separator = require(Components.Separator),
 	Sheet = require(Components.Sheet),
 	Skeleton = require(Components.Skeleton),
+	Slider = require(Components.Slider),
 	Spinner = require(Components.Spinner),
 	Stack = require(Components.Stack),
 	Switch = require(Components.Switch),
