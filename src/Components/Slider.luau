@@ -117,6 +117,12 @@ local rules: { Component.Rule } = {
 		priority = 20,
 		properties = { Transparency = 0 },
 	},
+	-- The same ring while the mouse is over it, and while dragging.
+	{
+		selector = ".ui-slider.ui-slider-hover >> .ui-slider-ring",
+		priority = 20,
+		properties = { Transparency = 0 },
+	},
 	{
 		selector = ".ui-slider-value",
 		priority = 0,
@@ -257,6 +263,12 @@ local spec: Component.Spec = {
 		end
 		local function enabled(): boolean
 			return not disabled()
+		end
+		-- Pointer over it (mouse only, set by _pointer) or dragging it.
+		local hovered, pressing = Reactive.ref(false), Reactive.ref(false)
+		h._hovered, h._pressing = hovered, pressing
+		local function hover(): boolean
+			return not disabled() and (hovered() or pressing())
 		end
 		-- The control's thickness across its axis: the thumb with room for the
 		-- focus ring, at least a small control's height.
@@ -429,7 +441,14 @@ local spec: Component.Spec = {
 					return variantTags(o, s)
 				end,
 				["ui-disabled"] = disabled,
+				["ui-slider-hover"] = hover,
 			},
+			[Element.on("MouseEnter")] = function()
+				h:_pointer(true)
+			end :: any,
+			[Element.on("MouseLeave")] = function()
+				h:_pointer(false)
+			end :: any,
 			[Element.on("InputBegan")] = function(input: InputObject)
 				local kind = input.UserInputType
 				if kind ~= Enum.UserInputType.MouseButton1 and kind ~= Enum.UserInputType.Touch then
@@ -490,6 +509,15 @@ function Slider.new(props: { [string]: any }?)
 		end
 	end
 
+	-- The mouse came over it (true) or left (false). Ignored on other input, so a
+	-- tap does not leave a ring behind. Called by the engine's events and specs.
+	function handle._pointer(h, on: boolean)
+		if on and (h.app.input:mode() ~= "mouse" or h:get("disabled")) then
+			on = false
+		end
+		h._hovered(on)
+	end
+
 	-- Writes `value`, snapped to the step and range.
 	function handle.setValue(h, value: number)
 		h:set("value", Slider.snap(value, h:get("min"), h:get("max"), h:get("step")))
@@ -515,6 +543,7 @@ function Slider.new(props: { [string]: any }?)
 			return
 		end
 		dragFrom = h:get("value")
+		h._pressing(true)
 		h:set("value", h:valueAt(point))
 	end
 
@@ -528,6 +557,9 @@ function Slider.new(props: { [string]: any }?)
 	function handle.pointerUp(h)
 		local from = dragFrom
 		dragFrom = nil
+		if not h.destroyed then
+			h._pressing(false)
+		end
 		if from ~= nil and not h.destroyed then
 			commit(h, from)
 		end
