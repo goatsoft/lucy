@@ -8,6 +8,7 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Element = require(script.Parent.Parent.Core.Element)
 
 local Separator = {}
 
@@ -26,14 +27,22 @@ function Separator.new(props: { [string]: any }?)
 		props = props,
 		defaults = { orientation = "horizontal", visible = true },
 		rules = Separator.rules,
-		render = function()
-			return Component.create("Frame", { Tags = { "ui-separator" } })
-		end,
-		update = function(h, state)
-			local vertical = state.orientation == "vertical"
-			h.Instance.Size = if vertical then UDim2.new(0, 1, 1, 0) else UDim2.new(1, 0, 0, 1)
-			h.Instance.Visible = state.visible
-			Component.setVariant(h.Instance, "ui-separator", "orientation", state.orientation)
+		render = function(h)
+			local orientation = h:ref("orientation")
+			return Element.new("Frame", {
+				Size = function()
+					return if orientation() == "vertical"
+						then UDim2.new(0, 1, 1, 0)
+						else UDim2.new(1, 0, 0, 1)
+				end,
+				Visible = h:ref("visible"),
+				Tags = {
+					"ui-separator" :: any,
+					function()
+						return "ui-separator-orientation-" .. orientation()
+					end,
+				},
+			})
 		end,
 	})
 end

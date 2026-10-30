@@ -12,6 +12,7 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Element = require(script.Parent.Parent.Core.Element)
 
 local Text = {}
 
@@ -54,6 +55,12 @@ for name, properties in Text.variants do
 	)
 end
 
+local function check(variant: string)
+	if Text.variants[variant] == nil then
+		error(`[Lucy] unknown Text variant "{variant}"`, 0)
+	end
+end
+
 function Text.new(props: { [string]: any }?)
 	local p: Component.Props = props or {}
 	return Component.mount({
@@ -61,23 +68,28 @@ function Text.new(props: { [string]: any }?)
 		props = p,
 		defaults = { text = "", variant = "p", align = "left", visible = true },
 		rules = Text.rules,
-		render = function()
-			return Component.create("TextLabel", {
+		render = function(h)
+			check(h:get("variant")) -- an unknown variant fails the mount
+			local variant, align = h:ref("variant"), h:ref("align")
+			return Element.new("TextLabel", {
 				Size = if p.autoWidth then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0),
 				AutomaticSize = if p.autoWidth then Enum.AutomaticSize.XY else Enum.AutomaticSize.Y,
 				TextWrapped = not p.autoWidth,
 				RichText = p.richText == true,
-				Tags = { "ui-text" },
+				Text = h:ref("text"),
+				Visible = h:ref("visible"),
+				TextXAlignment = function()
+					return ALIGN[align()] or Enum.TextXAlignment.Left
+				end,
+				Tags = {
+					"ui-text" :: any,
+					function()
+						local name = variant()
+						check(name)
+						return "ui-text-variant-" .. name
+					end,
+				},
 			})
-		end,
-		update = function(h, state)
-			if Text.variants[state.variant] == nil then
-				error(`[Lucy] unknown Text variant "{state.variant}"`, 3)
-			end
-			h.Instance.Text = state.text
-			h.Instance.Visible = state.visible
-			h.Instance.TextXAlignment = ALIGN[state.align] or Enum.TextXAlignment.Left
-			Component.setVariant(h.Instance, "ui-text", "variant", state.variant)
 		end,
 	})
 end

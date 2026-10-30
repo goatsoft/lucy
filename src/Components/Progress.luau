@@ -9,6 +9,7 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Element = require(script.Parent.Parent.Core.Element)
 
 local Progress = {}
 
@@ -47,22 +48,21 @@ function Progress.new(props: { [string]: any }?)
 		defaults = { value = 0, max = 100, visible = true },
 		rules = Progress.rules,
 		render = function(h)
-			local track = Component.create("Frame", {
+			local value, max = h:ref("value"), h:ref("max")
+			h.indicator = Element.new("Frame", {
+				Name = "Indicator",
+				Size = function()
+					return UDim2.fromScale(Progress.fraction(value(), max()), 1)
+				end,
+				Tags = { "ui-progress-indicator" },
+			})
+			return Element.new("Frame", {
 				Size = UDim2.new(1, 0, 0, p.height or 8),
 				ClipsDescendants = true,
+				Visible = h:ref("visible"),
 				Tags = { "ui-progress" },
+				h.indicator,
 			})
-			h.indicator = Component.create("Frame", {
-				Name = "Indicator",
-				Size = UDim2.fromScale(0, 1),
-				Tags = { "ui-progress-indicator" },
-				Parent = track,
-			})
-			return track
-		end,
-		update = function(h, state)
-			h.Instance.Visible = state.visible
-			h.indicator.Size = UDim2.fromScale(Progress.fraction(state.value, state.max), 1)
 		end,
 	})
 end

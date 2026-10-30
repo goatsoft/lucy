@@ -27,9 +27,8 @@
 
 	The rule: derive with computed, bind with refs and getters, share logic with
 	composables (Lucy.useDensity ...), and keep Lucy.watch for side effects such as
-	tweens and callbacks. Everything render creates is owned by the component.
-	`update(handle, state, previous)` still works for components not yet
-	declarative; it is deprecated (ADR 0018).
+	tweens and callbacks. Everything render creates is owned by the component, and
+	elements made in render share its scope.
 
 	Reactive props: any state key may be given a ref, a computed or a getter
 	function instead of a plain value. A writable source (a ref, a computed with
@@ -298,11 +297,13 @@ function Handle.ref(self: Handle, key: string): Reactive.Ref<any>
 	end
 	local state = self.app.state
 	local segments = self.segments
-	local path = keyPath(self, key)
-	local ref = Reactive._accessor(function(): any
-		return (state:_trackedKey(segments, key))
-	end, function(value: any)
-		state:_write(path, value, false)
+	-- One closure per ref; the key's write path is built on the first write.
+	local ref = Reactive._markAccessor(function(...: any): any
+		if select("#", ...) == 0 then
+			return (state:_trackedKey(segments, key))
+		end
+		state:_write(keyPath(self, key), (...), false)
+		return nil
 	end)
 	self.refs[key] = ref
 	return ref
@@ -340,7 +341,6 @@ export type Spec = {
 	rules: { Rule }?,
 	ruleKey: string?,
 	render: (handle: Handle) -> any,
-	update: ((handle: Handle, state: State, previous: State?) -> ())?, -- deprecated (ADR 0018)
 	mounted: ((handle: Handle) -> ())?,
 }
 
@@ -429,50 +429,19 @@ function Component.mount(spec: Spec): Handle
 		scope:stop()
 	end)
 
-	-- The first run of `update` happens inside mount: its error (say, an unknown
-	-- variant) is mount's error. Later runs report like any effect.
-	local mountError: any = nil
-	local function firstRun(fn: (...any) -> (), ...: any)
-		local ok, err = pcall(Reactive._untracked, fn, ...)
-		if not ok and mountError == nil then
-			mountError = err
-		end
-	end
-	scope:run(function()
-		-- Each source drives its key; for a bound source this is the only copy, and
-		-- the store skips equal values, so nothing ping-pongs.
-		for key, source in sources do
-			Reactive.watchEffect(function()
-				local value = Reactive.toValue(source)
-				if not handle.destroyed and app.state:_readKey(segments, key) ~= value then
-					Reactive._untracked(handle.set, handle, key, value)
-				end
-			end)
-		end
-
-		-- `update`: the whole state, re-run when anything in it changes.
-		local update = spec.update
-		if update then
-			local previous: State? = nil
-			local mounting = true
-			Reactive.watchEffect(function()
-				local state = app.state:_tracked(segments)
-				if state == nil or handle.destroyed then
-					return
-				end
-				local before = previous
-				previous = state
-				if mounting then
-					mounting = false
-					firstRun(update, handle, state, before)
-				else
-					Reactive._untracked(update, handle, state, before)
-				end
-			end)
-		end
-	end)
-	if mountError ~= nil then
-		error(mountError, 0)
+	-- Each source drives its key; for a bound source this is the only copy, and the
+	-- store skips equal values, so nothing ping-pongs.
+	if next(sources) ~= nil then
+		scope:run(function()
+			for key, source in sources do
+				Reactive.watchEffect(function()
+					local value = Reactive.toValue(source)
+					if not handle.destroyed and app.state:_readKey(segments, key) ~= value then
+						Reactive._untracked(handle.set, handle, key, value)
+					end
+				end)
+			end
+		end)
 	end
 
 	local parent = props.Parent or props.parent

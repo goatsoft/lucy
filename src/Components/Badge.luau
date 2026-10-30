@@ -8,6 +8,7 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Element = require(script.Parent.Parent.Core.Element)
 
 local Badge = {}
 
@@ -63,26 +64,35 @@ local rules: { Component.Rule } = {
 }
 Badge.rules = rules
 
+local function check(variant: string)
+	if not table.find(Badge.variants, variant) then
+		error(`[Lucy] unknown Badge variant "{variant}"`, 0)
+	end
+end
+
 function Badge.new(props: { [string]: any }?)
 	return Component.mount({
 		kind = "badge",
 		props = props,
 		defaults = { text = "Badge", variant = "default", visible = true },
 		rules = Badge.rules,
-		render = function()
-			return Component.create("TextLabel", {
+		render = function(h)
+			check(h:get("variant")) -- an unknown variant fails the mount
+			local variant = h:ref("variant")
+			return Element.new("TextLabel", {
 				AutomaticSize = Enum.AutomaticSize.XY,
 				Size = UDim2.fromOffset(0, 0),
-				Tags = { "ui-badge" },
+				Text = h:ref("text"),
+				Visible = h:ref("visible"),
+				Tags = {
+					"ui-badge" :: any,
+					function()
+						local name = variant()
+						check(name)
+						return "ui-badge-variant-" .. name
+					end,
+				},
 			})
-		end,
-		update = function(h, state)
-			if not table.find(Badge.variants, state.variant) then
-				error(`[Lucy] unknown Badge variant "{state.variant}"`, 3)
-			end
-			h.Instance.Text = state.text
-			h.Instance.Visible = state.visible
-			Component.setVariant(h.Instance, "ui-badge", "variant", state.variant)
 		end,
 	})
 end

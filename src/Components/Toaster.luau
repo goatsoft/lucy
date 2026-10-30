@@ -27,7 +27,9 @@ local RunService = game:GetService("RunService")
 
 local Button = require(script.Parent.Button)
 local Component = require(script.Parent.Parent.Core.Component)
-local Responsive = require(script.Parent.Parent.Core.Responsive)
+local Composables = require(script.Parent.Parent.Composables)
+local Element = require(script.Parent.Parent.Core.Element)
+local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Toaster = {}
 
@@ -214,118 +216,153 @@ end
 
 -- Rendering ------------------------------------------------------------------
 
-local function buildToast(h, toast)
-	local frame = Component.create("Frame", {
-		Name = toast.id,
-		Size = UDim2.fromScale(1, 0),
-		AutomaticSize = Enum.AutomaticSize.Y,
-		Tags = { "ui-toast" },
-	})
-	local row = Component.box({ Name = "Row", Parent = frame })
-	Component.list({
-		FillDirection = Enum.FillDirection.Horizontal,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
-		Padding = Component.space(h.app, "Space3", 12),
-		Parent = row,
-	})
+local EMPTY = table.freeze({})
 
-	local accent = Component.create("Frame", {
-		Name = "Accent",
-		Size = UDim2.fromOffset(4, 32),
-		LayoutOrder = 1,
-		Tags = { "ui-toast-accent" },
-		Parent = row,
-	})
-
-	local body = Component.box({ Name = "Body", Size = UDim2.fromScale(0, 0), LayoutOrder = 2, Parent = row })
-	body.AutomaticSize = Enum.AutomaticSize.Y
-	Component.create("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill, Parent = body })
-	Component.list({ Padding = UDim.new(0, 2), Parent = body })
-	local title = Component.create("TextLabel", {
-		Name = "Title",
+local function label(name: string, order: number, tag: string, text: () -> string, visible: any?): TextLabel
+	return Element.new("TextLabel", {
+		Name = name,
 		Size = UDim2.fromScale(1, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		LayoutOrder = 1,
-		Tags = { "ui-toast-title" },
-		Parent = body,
+		LayoutOrder = order,
+		Text = text,
+		Visible = visible,
+		Tags = { tag },
 	})
-	local description = Component.create("TextLabel", {
-		Name = "Description",
-		Size = UDim2.fromScale(1, 0),
-		AutomaticSize = Enum.AutomaticSize.Y,
-		TextWrapped = true,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		LayoutOrder = 2,
-		Tags = { "ui-toast-description" },
-		Parent = body,
-	})
+end
 
-	local entry = { frame = frame, accent = accent, title = title, description = description, buttons = {} }
+--[[
+	One toast. `item` is the toast as first seen; `toast()` follows it by id, so an
+	update in place (same id) re-binds only what changed. A row stops, destroying
+	its buttons, when its toast leaves the list.
+]]
+local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, index: () -> number)
+	local app = h.app
+	local id = item.id
+	local visibleCount = h.props.visibleToasts or Toaster.defaults.visibleToasts
+	local toast = Reactive.computed(function(): { [string]: any }
+		for _, candidate in toasts() do
+			if candidate.id == id then
+				return candidate
+			end
+		end
+		return item
+	end)
 
-	local close = Button.new({
-		app = h.app,
+	local entry: { [string]: any } = {}
+	h.entries[id] = entry
+	Reactive.onCleanup(function()
+		if h.entries[id] == entry then
+			h.entries[id] = nil
+		end
+	end)
+
+	entry.close = Button.new({
+		app = app,
 		name = "Close",
-		text = "×",
+		text = "\u{00D7}",
 		variant = "ghost",
 		size = "icon",
 		layoutOrder = 4,
 		onClick = function()
-			h.app.toast.dismiss(toast.id)
+			app.toast.dismiss(id)
 		end,
 	})
-	close.Instance.Parent = row
-	table.insert(entry.buttons, close)
-	entry.close = close
-	return entry
-end
 
-local function applyToast(h, entry, toast)
-	entry.title.Text = toast.title or ""
-	entry.description.Text = toast.description or ""
-	entry.description.Visible = toast.description ~= nil and toast.description ~= ""
-	for _, kind in Toaster.kinds do
-		entry.accent:RemoveTag("ui-toast-accent-" .. kind)
-	end
-	entry.accent:AddTag("ui-toast-accent-" .. toast.kind)
-	entry.accent.Visible = toast.kind ~= "default"
-
-	local hasAction = toast.action ~= nil
-	if hasAction and not entry.action then
-		entry.action = Button.new({
-			app = h.app,
+	local action = Element.show(function()
+		return toast().action ~= nil
+	end, function()
+		local button = Button.new({
+			app = app,
 			name = "Action",
 			size = "sm",
 			layoutOrder = 3,
+			text = function()
+				local current = toast().action
+				return if current then current.label else ""
+			end,
 			onClick = function()
-				local action = entry.toast.action
-				if action and action.onClick then
-					action.onClick(entry.toast)
+				local current = toast()
+				if current.action and current.action.onClick then
+					current.action.onClick(current)
 				end
-				h.app.toast.dismiss(entry.toast.id)
+				app.toast.dismiss(id)
 			end,
 		})
-		entry.action.Instance.Parent = entry.frame.Row
-		table.insert(entry.buttons, entry.action)
-	end
-	if entry.action then
-		entry.action:set({ text = if hasAction then toast.action.label else "", visible = hasAction })
-	end
-	entry.toast = toast
-end
+		entry.action = button
+		Reactive.onCleanup(function()
+			if entry.action == button then
+				entry.action = nil
+			end
+		end)
+		return button
+	end)
 
-local function destroyEntry(entry)
-	for _, button in entry.buttons do
-		button:destroy()
-	end
-	entry.frame:Destroy()
+	local frame = Element.new("Frame", {
+		Name = id,
+		Size = UDim2.fromScale(1, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		-- Only the newest visibleToasts show.
+		Visible = function()
+			return index() > #toasts() - visibleCount
+		end,
+		Tags = { "ui-toast" },
+		Element.new("Frame", {
+			Name = "Row",
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Size = UDim2.fromScale(1, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			Component.list({
+				FillDirection = Enum.FillDirection.Horizontal,
+				VerticalAlignment = Enum.VerticalAlignment.Center,
+				Padding = Component.space(app, "Space3", 12),
+			}) :: any,
+			Element.new("Frame", {
+				Name = "Accent",
+				Size = UDim2.fromOffset(4, 32),
+				LayoutOrder = 1,
+				Visible = function()
+					return toast().kind ~= "default"
+				end,
+				Tags = {
+					"ui-toast-accent" :: any,
+					function()
+						return "ui-toast-accent-" .. toast().kind
+					end,
+				},
+			}),
+			Element.new("Frame", {
+				Name = "Body",
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Size = UDim2.fromScale(0, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				LayoutOrder = 2,
+				Component.create("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill }) :: any,
+				Component.list({ Padding = UDim.new(0, 2) }) :: any,
+				label("Title", 1, "ui-toast-title", function()
+					return toast().title or ""
+				end),
+				label("Description", 2, "ui-toast-description", function()
+					return toast().description or ""
+				end, function()
+					local description = toast().description
+					return description ~= nil and description ~= ""
+				end),
+			}),
+			action,
+			entry.close,
+		}),
+	})
+	Component.claimSelection(app, frame)
+	entry.frame = frame
+	return frame
 end
 
 function Toaster.new(props: { [string]: any }?)
 	local p: Component.Props = props or {}
-	local entries = {}
-	local heartbeat: RBXScriptConnection? = nil
 
 	return Component.mount({
 		kind = "toaster",
@@ -333,91 +370,73 @@ function Toaster.new(props: { [string]: any }?)
 		defaults = { visible = true },
 		rules = Toaster.rules,
 		render = function(h)
-			local container = Component.box({ Name = "Toaster", AutomaticSize = Enum.AutomaticSize.None })
-			local layout = Component.list({
-				VerticalAlignment = Enum.VerticalAlignment.Bottom,
-				HorizontalAlignment = Enum.HorizontalAlignment.Right,
-				Padding = Component.space(h.app, "Space2", 8),
-				Parent = container,
-			})
-			local padding = Component.create("UIPadding", { Parent = container })
-			h.container, h.layout = container, layout
-
-			-- Desktop: a 356px column bottom-right. Touch: full width at the bottom.
-			local function place()
-				local touch = Responsive.pick(h.app, { mobile = true, default = false })
-				local inset = if touch then 12 else 24
-				container.AnchorPoint = Vector2.new(1, 1)
-				container.Position = UDim2.fromScale(1, 1)
-				container.Size = if touch
-					then UDim2.fromScale(1, 1)
-					else UDim2.new(0, (p.width or Toaster.defaults.width) + inset * 2, 1, 0)
-				padding.PaddingBottom = UDim.new(0, inset)
-				padding.PaddingRight = UDim.new(0, inset)
-				padding.PaddingLeft = UDim.new(0, inset)
+			local app = h.app
+			h.entries = {}
+			local list = app.state:ref("toasts")
+			local function toasts(): { any }
+				return list() or EMPTY
 			end
-			place()
-			h.maid:give(h.app.state:subscribe("input.device", place))
 
-			-- Render from state.
-			local function render(state: { any }?)
-				local list: { any } = state or {}
-				local visibleCount = p.visibleToasts or Toaster.defaults.visibleToasts
-				local seen = {}
-				for index, toast in list do
-					seen[toast.id] = true
-					local entry = entries[toast.id]
-					if not entry then
-						entry = buildToast(h, toast)
-						entries[toast.id] = entry
-						entry.frame.Parent = container
-						Component.claimSelection(h.app, entry.frame)
-					end
-					applyToast(h, entry, toast)
-					entry.frame.LayoutOrder = index
-					entry.frame.Visible = index > #list - visibleCount
-				end
-				for id, entry in entries do
-					if not seen[id] then
-						destroyEntry(entry)
-						entries[id] = nil
-					end
-				end
-
-				-- Only tick while something can expire.
-				local needsClock = false
-				for _, toast in list do
+			-- Side effect: tick the clock only while something can expire.
+			local needsClock = Reactive.computed(function(): boolean
+				for _, toast in toasts() do
 					if toast.duration ~= math.huge then
-						needsClock = true
-						break
+						return true
 					end
 				end
-				if needsClock and not heartbeat and not h.app.clock then
-					heartbeat = RunService.Heartbeat:Connect(function()
-						h.app.toast.tick()
+				return false
+			end)
+			Reactive.watchEffect(function(onCleanup)
+				if needsClock() and not app.clock then
+					local heartbeat = RunService.Heartbeat:Connect(function()
+						app.toast.tick()
 					end)
-				elseif not needsClock and heartbeat then
-					heartbeat:Disconnect()
-					heartbeat = nil
-				end
-			end
-			h.render = render
-			h.maid:give(h.app.state:subscribe("toasts", render))
-			h.maid:give(function()
-				if heartbeat then
-					heartbeat:Disconnect()
-				end
-				for id, entry in entries do
-					destroyEntry(entry)
-					entries[id] = nil
+					onCleanup(function()
+						heartbeat:Disconnect()
+					end)
 				end
 			end)
-			h.entries = entries
-			render(h.app.state:get("toasts"))
+
+			-- Desktop: a 356px column bottom-right. Touch: full width at the bottom.
+			local touch = Composables.useResponsive(app, { mobile = true, default = false })
+			local width = p.width or Toaster.defaults.width
+			local function inset(): UDim
+				return UDim.new(0, if touch() then 12 else 24)
+			end
+
+			h.layout = Component.list({
+				VerticalAlignment = Enum.VerticalAlignment.Bottom,
+				HorizontalAlignment = Enum.HorizontalAlignment.Right,
+				Padding = Component.space(app, "Space2", 8),
+			})
+			local container = Element.new("Frame", {
+				Name = "Toaster",
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				AnchorPoint = Vector2.new(1, 1),
+				Position = UDim2.fromScale(1, 1),
+				Size = function()
+					return if touch()
+						then UDim2.fromScale(1, 1)
+						else UDim2.new(0, width + inset().Offset * 2, 1, 0)
+				end,
+				Visible = h:ref("visible"),
+				h.layout,
+				Element.new("UIPadding", {
+					PaddingBottom = inset,
+					PaddingRight = inset,
+					PaddingLeft = inset,
+				}),
+				Element.each(toasts, function(item, index)
+					return renderToast(h, toasts, item, index)
+				end, {
+					key = function(item)
+						return item.id
+					end,
+				}),
+			})
+			h.container = container
 			return container
-		end,
-		update = function(h, state)
-			h.Instance.Visible = state.visible
 		end,
 	})
 end

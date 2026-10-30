@@ -1,5 +1,6 @@
 return function()
 	local Component = require(script.Parent.Component)
+	local Element = require(script.Parent.Element)
 	local Harness = require(script.Parent.Parent.Testing.Harness)
 
 	describe("create", function()
@@ -58,13 +59,16 @@ return function()
 				props = props,
 				defaults = { text = "", visible = true },
 				rules = { { selector = ".ui-thing", properties = { BackgroundTransparency = 1 } } },
-				render = function()
-					return Component.create("TextLabel", { Tags = { "ui-thing" } })
-				end,
-				update = function(h, state)
-					renders += 1
-					h.Instance.Text = state.text
-					h.Instance.Visible = state.visible
+				render = function(h)
+					local text = h:ref("text")
+					return Element.new("TextLabel", {
+						Text = function()
+							renders += 1
+							return text()
+						end,
+						Visible = h:ref("visible"),
+						Tags = { "ui-thing" },
+					})
 				end,
 			})
 			return handle, function()
@@ -158,13 +162,15 @@ return function()
 				kind = "thing",
 				props = props,
 				defaults = { text = "", visible = true },
-				render = function()
-					return Component.create("TextLabel", {})
-				end,
-				update = function(h, state)
-					renders += 1
-					h.Instance.Text = state.text
-					h.Instance.Visible = state.visible
+				render = function(h)
+					local text = h:ref("text")
+					return Element.new("TextLabel", {
+						Text = function()
+							renders += 1
+							return text()
+						end,
+						Visible = h:ref("visible"),
+					})
 				end,
 			})
 			return handle, function()
@@ -349,7 +355,6 @@ return function()
 
 	describe("declarative render", function()
 		local Reactive = require(script.Parent.Reactive)
-		local Element = require(script.Parent.Element)
 		local app, cleanup
 		beforeEach(function()
 			app, cleanup = Harness.app()

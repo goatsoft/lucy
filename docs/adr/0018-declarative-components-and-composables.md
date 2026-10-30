@@ -189,6 +189,40 @@ in one effect per bound property (about 0.5 KB each). Scopes were not the time.
 Teardown heap rose by about 80 bytes per row while getting faster; it is a
 `gcinfo` delta and moves with GC timing, so it is noted, not chased.
 
+### Results (plan step 3, 2026-10-30)
+
+Badge, Button, Panel, Text, Progress, Separator, Skeleton, Stack and Toaster are
+declarative, and `update` is gone from `Component.mount` (with its first-run
+error path). Component specs pass unchanged; only Component.spec's own test
+components moved from `update` to `render`. Notes:
+
+- Badge, Button and Text check their variant (and size) in render, so an unknown
+  one still fails the mount; the tag binding checks later writes.
+- Button binds variant and size as one tag getter: one effect, not two.
+- Stack and Toaster resolve responsive values through a new composable,
+  `useResponsive(app, value)`. Stack binds its layout only when some prop is
+  responsive and otherwise resolves it once.
+- Toaster renders `Lucy.each` over `app.state:ref("toasts")`, keyed by id. Each
+  row follows its toast by id, so an update in place re-binds only what changed;
+  the action button is a `show` branch. Skeleton's pulse and Toaster's clock are
+  the only effects, and both are side effects.
+- `h:ref` is now one closure with a shared descriptor, and the key's write path
+  is built on first write (about 560 B to about 300 B per ref).
+
+| Suite | Before step 3 | After |
+|---|---:|---:|
+| Mount 100 Buttons | 4.97 ms (4.77 to 5.46), 755 KB | 5.7 to 6.4 ms (5.25 to 7.2), 1,334 KB |
+| Mount 100 Switches | 15.4 ms, 2,142 KB | 14.2 to 15.1 ms, 1,999 KB |
+| Toggle 100 Switches | 0.94 ms, 0 KB | 0.94 ms, 0 KB |
+| Mount 1,000 keyed rows | 19.6 ms, 2,536 KB | 20.1 ms, 2,536 KB |
+
+Button mount costs more heap than its single `update` effect did. Profiling one
+Button: the base mount is about 2.6 KB, and each bound key adds about 1.4 KB,
+most of it the per-key store source created the first time the key is read. That
+source is what ADR 0017 trades for: writes and toggles stay at 0 KB and touch
+only their readers. Mount Switches stays about 1.2x on time and 1.4x on heap
+against the phase 1 baseline (11.8 ms, 1.4 MB).
+
 ## Alternatives considered
 
 - **Keep `spec.watch` and document restraint.** The shape of the API decides

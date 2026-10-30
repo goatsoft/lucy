@@ -912,6 +912,8 @@ end
 	(isRef, isWritable) but adds no node of its own to the graph: cheaper than a
 	writable computed when get is already a cheap read of tracked sources.
 ]]
+local ACCESSOR = table.freeze({ kind = "accessor", writable = true })
+
 function Reactive._accessor<T>(get: () -> T, set: (value: T) -> ()): Ref<T>
 	local function accessor(...: any): any
 		if select("#", ...) == 0 then
@@ -920,8 +922,15 @@ function Reactive._accessor<T>(get: () -> T, set: (value: T) -> ()): Ref<T>
 		set((...))
 		return nil
 	end
-	nodeOf[accessor] = { kind = "accessor", writable = true }
+	nodeOf[accessor] = ACCESSOR
 	return accessor :: any
+end
+
+-- Marks `fn` (called with no argument it reads, with one it writes) as an accessor
+-- ref, for callers that build the single closure themselves. Returns `fn`.
+function Reactive._markAccessor(fn: (...any) -> any): any
+	nodeOf[fn] = ACCESSOR
+	return fn
 end
 
 -- `untrack` for hot paths: one result, no allocation.

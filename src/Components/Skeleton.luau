@@ -11,6 +11,8 @@
 local TweenService = game:GetService("TweenService")
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Element = require(script.Parent.Parent.Core.Element)
+local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Skeleton = {}
 
@@ -33,36 +35,33 @@ Skeleton.pulse = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.In
 
 function Skeleton.new(props: { [string]: any }?)
 	local p: Component.Props = props or {}
-	local tween: Tween? = nil
 	return Component.mount({
 		kind = "skeleton",
 		props = p,
 		defaults = { visible = true },
 		rules = Skeleton.rules,
 		render = function(h)
-			local frame = Component.create("Frame", {
+			local visible = h:ref("visible")
+			local frame = Element.new("Frame", {
 				Size = p.size or UDim2.new(1, 0, 0, 16),
+				Visible = visible,
 				Tags = if p.circle then { "ui-skeleton", "ui-skeleton-circle" } else { "ui-skeleton" },
 			})
-			h.maid:give(function()
-				if tween then
-					tween:Cancel()
+			-- Side effect: the pulse plays while visible.
+			local pulse = TweenService:Create(frame, Skeleton.pulse, { BackgroundTransparency = 0.5 })
+			Reactive.watchEffect(function()
+				local on = visible() == true
+				if on then
+					pulse:Play()
+				else
+					pulse:Cancel()
 				end
+				h.pulsing = on
+			end)
+			Reactive.onCleanup(function()
+				pulse:Cancel()
 			end)
 			return frame
-		end,
-		update = function(h, state)
-			h.Instance.Visible = state.visible
-			if state.visible and not tween then
-				local pulse =
-					TweenService:Create(h.Instance, Skeleton.pulse, { BackgroundTransparency = 0.5 })
-				pulse:Play()
-				tween = pulse
-			elseif not state.visible and tween then
-				tween:Cancel()
-				tween = nil
-			end
-			h.pulsing = tween ~= nil
 		end,
 	})
 end

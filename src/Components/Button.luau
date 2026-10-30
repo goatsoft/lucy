@@ -21,12 +21,15 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Element = require(script.Parent.Parent.Core.Element)
 local Signal = require(script.Parent.Parent.Core.Signal)
 
 local Button = {}
 
 Button.variants = { "default", "destructive", "outline", "secondary", "ghost", "link" }
 Button.sizes = { "sm", "md", "lg", "icon" }
+
+local ACTIVATED = Element.on("Activated") -- built once, not per button
 
 local BASE, VARIANT, STATE, DISABLED = 0, 10, 20, 30
 
@@ -164,7 +167,7 @@ end
 
 local function check(list: { string }, value: string, what: string)
 	if not table.find(list, value) then
-		error(`[Lucy] unknown Button {what} "{value}" (expected {table.concat(list, ", ")})`, 4)
+		error(`[Lucy] unknown Button {what} "{value}" (expected {table.concat(list, ", ")})`, 0)
 	end
 end
 
@@ -178,29 +181,37 @@ function Button.new(props: { [string]: any }?)
 		defaults = { text = "Button", variant = "default", size = "md", disabled = false, visible = true },
 		rules = Button.rules,
 		render = function(h)
-			local button = Component.create("TextButton", {
+			-- An unknown variant or size fails the mount; later writes report like any effect.
+			check(Button.variants, h:get("variant"), "variant")
+			check(Button.sizes, h:get("size"), "size")
+			local variant, size, disabled = h:ref("variant"), h:ref("size"), h:ref("disabled")
+			local function enabled(): boolean
+				return not disabled()
+			end
+			return Element.new("TextButton", {
 				AutoButtonColor = false,
-				Tags = { "ui-button" },
+				Text = h:ref("text"),
+				Visible = h:ref("visible"),
+				Interactable = enabled,
+				Selectable = enabled,
+				AutomaticSize = function()
+					return if size() == "icon" then Enum.AutomaticSize.None else Enum.AutomaticSize.X
+				end,
+				Tags = {
+					"ui-button" :: any,
+					-- Variant and size in one binding: they rarely change, so one effect, not two.
+					function()
+						local v, s = variant(), size()
+						check(Button.variants, v, "variant")
+						check(Button.sizes, s, "size")
+						return { "ui-button-variant-" .. v, "ui-button-size-" .. s }
+					end,
+					["ui-disabled"] = disabled,
+				},
+				[ACTIVATED] = function()
+					h:click()
+				end,
 			})
-			h.maid:give(button.Activated:Connect(function()
-				h:click()
-			end))
-			return button
-		end,
-		update = function(h, state)
-			check(Button.variants, state.variant, "variant")
-			check(Button.sizes, state.size, "size")
-			local button = h.Instance
-			button.Text = state.text
-			button.Visible = state.visible
-			button.Interactable = not state.disabled
-			button.Selectable = not state.disabled
-			button.AutomaticSize = if state.size == "icon"
-				then Enum.AutomaticSize.None
-				else Enum.AutomaticSize.X
-			Component.setVariant(button, "ui-button", "variant", state.variant)
-			Component.setVariant(button, "ui-button", "size", state.size)
-			Component.setFlag(button, "ui-disabled", state.disabled)
 		end,
 	})
 

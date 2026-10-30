@@ -22,6 +22,8 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Composables = require(script.Parent.Parent.Composables)
+local Element = require(script.Parent.Parent.Core.Element)
 local Responsive = require(script.Parent.Parent.Core.Responsive)
 
 local Stack = {}
@@ -36,6 +38,7 @@ local V = {
 	center = Enum.VerticalAlignment.Center,
 	["end"] = Enum.VerticalAlignment.Bottom,
 }
+local RESPONSIVE_KEYS = { "direction", "gap", "align", "justify", "padding", "size" }
 
 function Stack.new(props: { [string]: any }?)
 	local p: Component.Props = props or {}
@@ -44,77 +47,103 @@ function Stack.new(props: { [string]: any }?)
 		props = p,
 		defaults = { visible = true },
 		render = function(h)
-			local frame = Component.box({})
-			local layout = Component.list({ Wraps = p.wrap == true })
-			layout.Parent = frame
-			h.layout = layout
-
-			local function layoutNow()
-				local app = h.app
-				local horizontal = Responsive.pick(app, p.direction) == "horizontal"
-				local align = Responsive.pick(app, p.align) or "start"
-				local justify = Responsive.pick(app, p.justify) or "start"
-				layout.FillDirection = if horizontal
-					then Enum.FillDirection.Horizontal
-					else Enum.FillDirection.Vertical
-				layout.Padding = Component.space(app, Responsive.pick(app, p.gap), 0)
-				layout.HorizontalFlex = Enum.UIFlexAlignment.None
-				layout.VerticalFlex = Enum.UIFlexAlignment.None
-				if horizontal then
-					layout.VerticalAlignment = V[align] or V.start
-					if justify == "between" then
-						layout.HorizontalFlex = Enum.UIFlexAlignment.SpaceBetween
-					else
-						layout.HorizontalAlignment = H[justify] or H.start
-					end
-				else
-					layout.HorizontalAlignment = H[align] or H.start
-					if justify == "between" then
-						layout.VerticalFlex = Enum.UIFlexAlignment.SpaceBetween
-					else
-						layout.VerticalAlignment = V[justify] or V.start
-					end
-				end
-				local size = Responsive.pick(app, p.size)
-				frame.Size = size or (if horizontal then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0))
-				frame.AutomaticSize = p.automaticSize
-					or (
-						if size
-							then Enum.AutomaticSize.None
-							elseif horizontal then Enum.AutomaticSize.XY
-							else Enum.AutomaticSize.Y
-					)
-
-				local padding = Responsive.pick(app, p.padding)
-				local pad = frame:FindFirstChild("StackPadding") :: UIPadding?
-				if padding ~= nil then
-					local target: UIPadding = pad
-						or Component.create("UIPadding", { Name = "StackPadding", Parent = frame })
-					local value = Component.space(app, padding, 0)
-					target.PaddingTop, target.PaddingBottom, target.PaddingLeft, target.PaddingRight =
-						value, value, value, value
-				elseif pad then
-					pad:Destroy()
-				end
-			end
-			layoutNow()
-
-			-- Re-layout when the device, input mode or breakpoint changes.
+			local app = h.app
 			local responsive = false
-			for _, key in { "direction", "gap", "align", "justify", "padding", "size" } do
+			for _, key in RESPONSIVE_KEYS do
 				if Responsive.isResponsive(p[key]) then
 					responsive = true
 				end
 			end
-			if responsive then
-				h.maid:give(h.app.state:subscribe("input", layoutNow))
+			local direction = Composables.useResponsive(app, p.direction)
+			local gap = Composables.useResponsive(app, p.gap)
+			local align = Composables.useResponsive(app, p.align)
+			local justify = Composables.useResponsive(app, p.justify)
+			local padding = Composables.useResponsive(app, p.padding)
+			local size = Composables.useResponsive(app, p.size)
+			-- A layout value: bound when anything is responsive, otherwise resolved once.
+			local function layout(fn: () -> any): any
+				return if responsive then fn else fn()
+			end
+			local function horizontal(): boolean
+				return direction() == "horizontal"
+			end
+			local function between(): boolean
+				return justify() == "between"
 			end
 
+			h.layout = Element.new("UIListLayout", {
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				Wraps = p.wrap == true,
+				FillDirection = layout(function()
+					return if horizontal() then Enum.FillDirection.Horizontal else Enum.FillDirection.Vertical
+				end),
+				Padding = layout(function()
+					return Component.space(app, gap(), 0)
+				end),
+				HorizontalFlex = layout(function()
+					return if horizontal() and between()
+						then Enum.UIFlexAlignment.SpaceBetween
+						else Enum.UIFlexAlignment.None
+				end),
+				VerticalFlex = layout(function()
+					return if not horizontal() and between()
+						then Enum.UIFlexAlignment.SpaceBetween
+						else Enum.UIFlexAlignment.None
+				end),
+				-- Cross axis follows align, main axis follows justify ("between" is a flex).
+				HorizontalAlignment = layout(function()
+					local key = if horizontal() then (if between() then "start" else justify()) else align()
+					return H[key or "start"] or H.start
+				end),
+				VerticalAlignment = layout(function()
+					local key = if horizontal() then align() else (if between() then "start" else justify())
+					return V[key or "start"] or V.start
+				end),
+			})
+
+			local function pad(): UDim
+				return Component.space(app, padding(), 0)
+			end
+			local function makePadding(): UIPadding
+				local value = layout(pad)
+				return Element.new("UIPadding", {
+					Name = "StackPadding",
+					PaddingTop = value,
+					PaddingBottom = value,
+					PaddingLeft = value,
+					PaddingRight = value,
+				})
+			end
+			local paddingChild: any = nil
+			if responsive then
+				paddingChild = Element.show(function()
+					return padding() ~= nil
+				end, makePadding)
+			elseif padding() ~= nil then
+				paddingChild = makePadding()
+			end
+
+			local frame = Element.new("Frame", {
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Size = layout(function()
+					return size() or (if horizontal() then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0))
+				end),
+				AutomaticSize = layout(function()
+					return p.automaticSize
+						or (
+							if size()
+								then Enum.AutomaticSize.None
+								elseif horizontal() then Enum.AutomaticSize.XY
+								else Enum.AutomaticSize.Y
+						)
+				end),
+				Visible = h:ref("visible"),
+				h.layout,
+				paddingChild,
+			})
 			Component.adopt(frame, p.children)
 			return frame
-		end,
-		update = function(h, state)
-			h.Instance.Visible = state.visible
 		end,
 	})
 end
