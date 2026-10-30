@@ -35,7 +35,7 @@ const hero = ref<HTMLElement>()
 const features = [
   { icon: Boxes, title: '35 components', text: 'Buttons, dialogs, selects, tables, sliders, tabs and more, ready for menus, HUDs and shops.' },
   { icon: Atom, title: 'One source of truth', text: 'All UI and app state in one store. Change a value and only the properties that read it are set again.' },
-  { icon: Gamepad, title: 'Every input, every device', text: 'Mouse, keyboard, gamepad and touch, on desktop, console, tablet and phone. Controls grow for touch and TV.' },
+  { icon: Gamepad, title: 'Any input, any device', text: 'Mouse, keyboard, gamepad and touch, on desktop, console, tablet and phone. Controls grow for touch and TV.' },
   { icon: SwatchBook, title: 'Themes', text: 'Light and dark themes for every base colour, switched while the game runs. Hover and theme changes run no Luau.' },
 ] as const
 
@@ -134,26 +134,24 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
           <article
             v-for="feature in features"
             :key="feature.title"
-            class="group relative isolate flex min-h-64 flex-col justify-end overflow-hidden rounded-2xl border border-white/10 bg-[oklch(0.13_0.02_290)] p-5 shadow-[0_24px_60px_-30px_var(--primary)] transition duration-300 hover:border-primary/60 motion-safe:hover:-translate-y-0.5"
+            class="group relative isolate min-h-64 overflow-hidden rounded-2xl border border-white/10 bg-[oklch(0.13_0.02_290)] p-5 shadow-[0_24px_60px_-30px_var(--primary)] transition duration-300 hover:border-primary/60 motion-safe:hover:-translate-y-0.5"
           >
             <!-- A screen in both themes: the same dark glass, light text. -->
             <ThemedBackground :dark="cardRadar" />
             <div
               aria-hidden="true"
-              class="absolute inset-x-0 bottom-0 -z-10 h-2/3 bg-linear-to-t from-[oklch(0.13_0.02_290)] to-transparent"
+              class="absolute inset-x-0 top-0 -z-10 h-3/4 bg-linear-to-b from-[oklch(0.13_0.02_290)] to-transparent"
             />
-            <div class="flex items-center gap-3">
-              <div class="grid size-11 shrink-0 place-items-center rounded-xl bg-linear-to-br from-primary/25 to-primary/5 text-primary ring-1 ring-primary/25 ring-inset shadow-[0_8px_24px_-12px_var(--primary)] transition-transform duration-300 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6 [&_svg]:size-6">
-                <component
-                  :is="feature.icon"
-                  aria-hidden="true"
-                />
-              </div>
-              <h3 class="font-display text-base leading-snug font-semibold text-balance text-white">
-                {{ feature.title }}
-              </h3>
+            <div class="grid size-11 place-items-center rounded-xl bg-linear-to-br from-primary/25 to-primary/5 text-primary ring-1 ring-primary/25 ring-inset shadow-[0_8px_24px_-12px_var(--primary)] transition-transform duration-300 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6 [&_svg]:size-6">
+              <component
+                :is="feature.icon"
+                aria-hidden="true"
+              />
             </div>
-            <p class="mt-3 text-sm leading-6 text-pretty text-white/70">
+            <h3 class="mt-4 font-display text-base leading-snug font-semibold text-balance text-white">
+              {{ feature.title }}
+            </h3>
+            <p class="mt-2 text-sm leading-6 text-pretty text-white/70">
               {{ feature.text }}
             </p>
           </article>
