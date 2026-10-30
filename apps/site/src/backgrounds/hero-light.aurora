@@ -1,0 +1,77 @@
+{
+  "$schema": "https://aurora.goatsoft.io/schema/v1.json",
+  "format": "aurora",
+  "version": 1,
+  "name": "Lucy Signal Light",
+  "canvas": { "fade": "y" },
+  "motion": { "speed": 1, "reduced": "still" },
+  "modifiers": {
+    "signal": {
+      "amount": 0.18,
+      "shake": 0.3,
+      "tearSize": 0.1,
+      "separation": 0.45,
+      "tracking": 0.2,
+      "frequency": 0.3,
+      "seed": 9
+    }
+  },
+  "interactions": [
+    {
+      "type": "follow",
+      "smoothing": 0.6,
+      "decay": 0.9,
+      "bindings": [
+        { "layer": 0, "parameter": "offsetX", "input": "x", "amount": 0.04 },
+        { "layer": 0, "parameter": "offsetY", "input": "y", "amount": 0.03 },
+        { "parameter": "signal.amount", "input": "strength", "amount": 0.3 }
+      ]
+    },
+    {
+      "type": "impulse",
+      "decay": 2.4,
+      "bindings": [
+        { "layer": 3, "parameter": "x", "input": "x", "slot": 0 },
+        { "layer": 3, "parameter": "y", "input": "y", "slot": 0 },
+        { "layer": 3, "parameter": "time", "input": "travel", "slot": 0 },
+        { "layer": 3, "parameter": "opacity", "input": "strength", "slot": 0 }
+      ]
+    }
+  ],
+  "palette": [
+    "oklch(0.985 0.008 295)",
+    "oklch(0.78 0.12 293)",
+    "oklch(0.541 0.281 293)",
+    "oklch(1 0 0)",
+    "oklch(0.8 0.1 224)",
+    "oklch(0.75 0.17 333)"
+  ],
+  "layers": [
+    {
+      "type": "digital-rain",
+      "colors": [0, 1, 2],
+      "params": { "density": 26, "speed": 0.16, "trail": 0.5, "rate": 1.5, "glow": 0.2, "seed": 7 }
+    },
+    {
+      "type": "glitch",
+      "blend": "multiply",
+      "opacity": 0.35,
+      "colors": [3, 4, 5],
+      "params": { "frequency": 0.25, "strength": 0.5, "bands": 28, "density": 0.18, "separation": 0.6, "seed": 3 }
+    },
+    {
+      "type": "scanlines",
+      "blend": "multiply",
+      "opacity": 0.2,
+      "colors": [3, 1, 2],
+      "params": { "spacing": 4, "strength": 0.3, "speed": 0.04, "roll": 0.3 }
+    },
+    {
+      "type": "ping",
+      "blend": "multiply",
+      "opacity": 0,
+      "colors": [3, 2, 1],
+      "params": { "background": 0, "repeat": 0, "speed": 0.3, "spacing": 0.6, "width": 1.4, "glow": 0.5, "decay": 2.6 }
+    }
+  ]
+}

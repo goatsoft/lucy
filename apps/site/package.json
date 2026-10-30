@@ -11,6 +11,8 @@
   "dependencies": {
     "@fontsource-variable/fredoka": "^5.3.0",
     "@fontsource-variable/nunito": "^5.3.0",
+    "@goatsoft/aurora": "^0.3.0",
+    "@goatsoft/aurora-vue": "^0.3.0",
     "@goatsoft/gruff": "workspace:^",
     "@vueuse/core": "^15.0.0",
     "class-variance-authority": "^0.7.1",
@@ -22,6 +24,7 @@
     "vue-router": "^5.4.0"
   },
   "devDependencies": {
+    "@goatsoft/aurora-unplugin": "^0.3.0",
     "@iconify-json/lucide": "^1.2.149",
     "@iconify-json/lucide-extended": "^1.2.2",
     "@iconify-json/simple-icons": "^1.2.100",

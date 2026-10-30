@@ -1,0 +1,86 @@
+{
+  "$schema": "https://aurora.goatsoft.io/schema/v1.json",
+  "format": "aurora",
+  "version": 1,
+  "name": "Lucy Signal",
+  "canvas": { "fade": "y" },
+  "motion": { "speed": 1, "reduced": "still" },
+  "modifiers": {
+    "signal": {
+      "amount": 0.22,
+      "shake": 0.3,
+      "tearSize": 0.1,
+      "separation": 0.5,
+      "tracking": 0.2,
+      "frequency": 0.3,
+      "seed": 9
+    },
+    "vignette": { "amount": 0.55, "radius": 0.45, "softness": 0.5 }
+  },
+  "interactions": [
+    {
+      "type": "follow",
+      "smoothing": 0.6,
+      "decay": 0.9,
+      "bindings": [
+        { "layer": 0, "parameter": "offsetX", "input": "x", "amount": 0.04 },
+        { "layer": 0, "parameter": "offsetY", "input": "y", "amount": 0.03 },
+        { "parameter": "signal.amount", "input": "strength", "amount": 0.3 }
+      ]
+    },
+    {
+      "type": "impulse",
+      "decay": 2.4,
+      "bindings": [
+        { "layer": 4, "parameter": "x", "input": "x", "slot": 0 },
+        { "layer": 4, "parameter": "y", "input": "y", "slot": 0 },
+        { "layer": 4, "parameter": "time", "input": "travel", "slot": 0 },
+        { "layer": 4, "parameter": "opacity", "input": "strength", "slot": 0 }
+      ]
+    }
+  ],
+  "palette": [
+    "oklch(0.12 0.03 290)",
+    "oklch(0.606 0.25 292.7)",
+    "oklch(0.9 0.08 300)",
+    "oklch(0.806 0.119 223.8)",
+    "oklch(0.683 0.265 332.6)",
+    "oklch(0.3 0.1 292)"
+  ],
+  "layers": [
+    {
+      "type": "digital-rain",
+      "colors": [0, 1, 2],
+      "opacity": 0.9,
+      "params": { "density": 26, "speed": 0.16, "trail": 0.5, "rate": 1.5, "glow": 0.45, "seed": 7 }
+    },
+    {
+      "type": "glitch",
+      "blend": "screen",
+      "opacity": 0.3,
+      "colors": [0, 3, 4],
+      "params": { "frequency": 0.25, "strength": 0.5, "bands": 28, "density": 0.18, "separation": 0.6, "seed": 3 }
+    },
+    {
+      "type": "static",
+      "blend": "screen",
+      "opacity": 0.1,
+      "colors": [0, 5, 1],
+      "params": { "size": 1, "rate": 10, "contrast": 0.4, "interference": 0.35, "dropout": 0.3, "seed": 4 }
+    },
+    {
+      "type": "scanlines",
+      "blend": "screen",
+      "opacity": 0.25,
+      "colors": [0, 5, 1],
+      "params": { "spacing": 4, "strength": 0.35, "speed": 0.04, "roll": 0.4 }
+    },
+    {
+      "type": "ping",
+      "blend": "screen",
+      "opacity": 0,
+      "colors": [0, 1, 2],
+      "params": { "background": 0, "repeat": 0, "speed": 0.3, "spacing": 0.6, "width": 1.4, "glow": 0.7, "decay": 2.6 }
+    }
+  ]
+}

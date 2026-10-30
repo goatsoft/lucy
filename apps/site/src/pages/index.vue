@@ -1,7 +1,14 @@
 <script setup lang="ts">
+import { AuroraBackground } from '@goatsoft/aurora-vue'
+import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import heroDark from '@/backgrounds/hero-dark.aurora'
+import heroLight from '@/backgrounds/hero-light.aurora'
+import terminalDark from '@/backgrounds/terminal-dark.aurora'
+import terminalLight from '@/backgrounds/terminal-light.aurora'
 import Quickstart from '@/content/quickstart.md'
 import { SITE, useHead } from '@/head'
+import { useSitePreferences } from '@/lib/preferences'
 import Atom from '~icons/lucide-extended/atom-duotone'
 import Blocks from '~icons/lucide-extended/blocks-duotone'
 import Bot from '~icons/lucide-extended/bot-duotone'
@@ -17,6 +24,15 @@ import Shapes from '~icons/lucide-extended/shapes-duotone'
 import SwatchBook from '~icons/lucide-extended/swatch-book-duotone'
 
 useHead({ description: SITE.description })
+
+// Both backgrounds are in the server HTML, shown by CSS for the theme, so the first paint is
+// right. Once mounted, only the one for the current theme stays, so only one renders.
+const { light } = useSitePreferences()
+const mounted = ref(false)
+onMounted(() => {
+  mounted.value = true
+})
+const hero = ref<HTMLElement>()
 
 // The four that matter most, as cards.
 const features = [
@@ -47,12 +63,37 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
     id="main-content"
     tabindex="-1"
   >
-    <section class="relative isolate overflow-hidden px-6 pt-40 pb-24 text-center">
-      <div class="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,color-mix(in_oklab,var(--primary)_28%,transparent),transparent_60%)]" />
-      <Mark
-        :size="256"
-        class="animate-mark-in mx-auto shadow-2xl"
-      />
+    <section
+      ref="hero"
+      class="relative isolate overflow-hidden px-6 pt-40 pb-24 text-center"
+    >
+      <div
+        v-if="!mounted || !light"
+        class="absolute inset-0 -z-10 hidden dark:block"
+      >
+        <AuroraBackground
+          :src="heroDark"
+          :interaction-target="hero"
+        />
+      </div>
+      <div
+        v-if="!mounted || light"
+        class="absolute inset-0 -z-10 dark:hidden"
+      >
+        <AuroraBackground
+          :src="heroLight"
+          :interaction-target="hero"
+        />
+      </div>
+      <!-- A soft pool of the page colour behind the text, so the rain never runs through it. -->
+      <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_48%_42%_at_50%_62%,var(--background)_35%,transparent_100%)] opacity-85" />
+      <!-- The shadow follows her outline (a box shadow would draw the image's square). -->
+      <div class="drop-shadow-2xl">
+        <Mark
+          :size="256"
+          class="animate-mark-in mx-auto"
+        />
+      </div>
       <h1 class="animate-rise mx-auto mt-8 max-w-3xl font-display text-display font-semibold tracking-loose text-balance">
         The UI and app framework for Roblox
       </h1>
@@ -142,24 +183,38 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
       </ul>
     </section>
 
-    <section class="mx-auto max-w-4xl px-6 py-20">
-      <p class="eyebrow text-center">
-        Quick start
-      </p>
-      <h2 class="mx-auto mt-4 max-w-2xl text-center font-display text-heading font-semibold tracking-tight text-balance">
-        A settings menu
-      </h2>
-      <div class="prose mt-10">
-        <Quickstart />
+    <section class="relative isolate overflow-hidden">
+      <div
+        v-if="!mounted || !light"
+        class="absolute inset-0 -z-10 hidden dark:block"
+      >
+        <AuroraBackground :src="terminalDark" />
       </div>
-      <div class="mt-8 flex justify-center">
-        <Button
-          variant="glass"
-          :as="RouterLink"
-          to="/docs/"
-        >
-          <ILxBookOpenDuotone /> Read the docs
-        </Button>
+      <div
+        v-if="!mounted || light"
+        class="absolute inset-0 -z-10 dark:hidden"
+      >
+        <AuroraBackground :src="terminalLight" />
+      </div>
+      <div class="mx-auto max-w-4xl px-6 py-20">
+        <p class="eyebrow text-center">
+          Quick start
+        </p>
+        <h2 class="mx-auto mt-4 max-w-2xl text-center font-display text-heading font-semibold tracking-tight text-balance">
+          A settings menu
+        </h2>
+        <div class="prose mt-10">
+          <Quickstart />
+        </div>
+        <div class="mt-8 flex justify-center">
+          <Button
+            variant="glass"
+            :as="RouterLink"
+            to="/docs/"
+          >
+            <ILxBookOpenDuotone /> Read the docs
+          </Button>
+        </div>
       </div>
     </section>
 

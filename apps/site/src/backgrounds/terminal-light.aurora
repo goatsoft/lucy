@@ -1,0 +1,52 @@
+{
+  "$schema": "https://aurora.goatsoft.io/schema/v1.json",
+  "format": "aurora",
+  "version": 1,
+  "name": "Lucy Terminal Light",
+  "canvas": {
+    "fade": "y"
+  },
+  "motion": {
+    "speed": 1,
+    "reduced": "still"
+  },
+  "palette": [
+    "oklch(0.99 0.004 295)",
+    "oklch(0.9 0.04 293)",
+    "oklch(0.72 0.14 293)"
+  ],
+  "layers": [
+    {
+      "type": "static",
+      "colors": [
+        0,
+        1,
+        2
+      ],
+      "params": {
+        "size": 2,
+        "rate": 6,
+        "contrast": 0.2,
+        "interference": 0.4,
+        "dropout": 0.15,
+        "seed": 11
+      }
+    },
+    {
+      "type": "scanlines",
+      "blend": "multiply",
+      "opacity": 0.3,
+      "colors": [
+        0,
+        1,
+        2
+      ],
+      "params": {
+        "spacing": 5,
+        "strength": 0.3,
+        "speed": 0.03,
+        "roll": 0.3
+      }
+    }
+  ]
+}
