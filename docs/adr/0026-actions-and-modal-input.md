@@ -71,8 +71,8 @@ app.actions:enabled("gameplay")                       -- tracked boolean
   gamepad codes (`Button*`, `DPad*`, `Thumbstick*`) are told apart by name for
   `keys`.
 - **`on(name, handler)`** runs on press and returns a stop function; it is
-  cleaned up with the current owner when there is one. Handlers do not run
-  while a TextBox is focused.
+  cleaned up with the current owner when there is one. Actions do not fire
+  while a TextBox is focused (the engine already does this).
 - **`disable(...)`** is counted per set: two disables of one set need two
   releases. The set's `Enabled` is bound to the count, never set by hand.
 - **`bind(name, keys)`** replaces an action's bindings; `bind({ [name] = keys })`
@@ -87,10 +87,17 @@ app.actions:enabled("gameplay")                       -- tracked boolean
 ### 3. The built in `movement` set
 
 Lucy does not move characters. `movement` names the keys the default character
-controls use (W, A, S, D, Space, the left stick). Disabling it turns on a
-sinking context at a priority above the default player scripts, with no
-handlers, so those keys go nowhere until it is released. A game can redefine
-the set's keys. Lucy never disables it on its own.
+controls use (W, A, S, D, the arrow keys, Space, the left stick). The default
+controls do not use the Input Action System (checked in Studio, below), so an
+InputContext cannot stop them. Disabling `movement` instead binds those keys
+with ContextActionService at a priority above the default controls and sinks
+them, until it is released. A game can redefine the set's keys. Lucy never
+disables it on its own.
+
+A sunk key reaches `UserInputService.InputBegan` marked as processed. InputManager
+skips processed keys, so it treats keys sunk by Lucy's own `movement` block as
+not processed: arrows, Enter and Space keep moving focus and pressing buttons
+inside a modal.
 
 ### 4. Composables
 
@@ -116,16 +123,18 @@ end)
 The dance menu case is the game's own condition (disable only `gameplay` while
 that overlay is on top, from `overlay.top`).
 
-### 5. To check in Studio before building
+### 5. Checked in Studio (2026-10-31)
 
-- How a sinking context affects `UserInputService.InputBegan`. If it marks the
-  input as processed, InputManager's keyboard navigation (arrows, Enter, Space)
-  would stop inside a modal; InputManager would then read those keys through a
-  Lucy owned context above `movement` instead.
-- That the default player scripts' contexts sit below the priority Lucy picks,
-  on keyboard and gamepad.
-- The touch jump button and thumbstick: modal overlays cover them with the
-  catcher, but a stick already held when a modal opens may keep moving.
+- The client has no InputContexts of its own: the default character controls
+  still use the older input path.
+- A sinking InputContext at priority 2000 bound to W fires its own action but
+  does not stop the character (it walked the same distance), and
+  `InputBegan` sees the keys as not processed.
+- A ContextActionService sink bound to W, Space and the arrows stops the
+  character (0 studs), and `InputBegan` sees those keys as processed.
+- Input actions do not fire while a TextBox is focused.
+- Not yet tried: a gamepad stick, and the touch thumbstick held when a modal
+  opens (the catcher covers new touches).
 
 ## Consequences
 
@@ -147,8 +156,10 @@ that overlay is on top, from `overlay.top`).
   overlay needs different answers.
 - **A `useInputTrap` composable.** Rejected for now: it would wrap the one line
   above, and "trap" already means a modal holding focus.
-- **ContextActionService sinks and our own action tables.** Rejected: the
-  engine now has sets, priorities, sinking, touch buttons and preferred bindings.
+- **ContextActionService and our own action tables for everything.** Rejected:
+  the engine now has sets, priorities, touch buttons and preferred bindings.
+  ContextActionService stays for one job only: holding the movement keys, which
+  the default controls still read that way.
 - **Switching the default character controls off.** Rejected: it fights games
   that already switch them off for dances and cutscenes.
 - **`app.ui:modalOpen()`.** Rejected: a namespace for one method, and
