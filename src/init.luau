@@ -130,6 +130,7 @@ return {
 	Image = require(Components.Image),
 	Input = require(Components.Input),
 	Item = require(Components.Item),
+	Kbd = require(Components.Kbd),
 	Panel = require(Components.Panel),
 	Pressable = require(Components.Pressable),
 	Progress = require(Components.Progress),

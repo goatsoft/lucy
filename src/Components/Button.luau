@@ -8,12 +8,16 @@
 			size = "md",           -- sm | md | lg | icon
 			disabled = false,
 			visible = true,
+			hint = { keyboard = Enum.KeyCode.E, gamepad = Enum.KeyCode.DPadUp }, -- optional key cap
 			onClick = function(button) end,
 			id = "play",           -- state lives at ui.play
 			Parent = frame,
 		})
 
 	State keys: text, variant, size, disabled, visible.
+	With `hint` (Kbd props), the text moves into button.label and button.hint (a
+	Kbd) follows it: the key for the player's input, hidden on touch. The label's
+	rules are made from the button's own text rules, so it looks the same.
 	Events: button.Activated (Signal). button:click() runs the click path in code/tests
 	(Component.clickable).
 
@@ -23,6 +27,7 @@
 
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
+local Kbd = require(script.Parent.Kbd)
 
 local Button = {}
 
@@ -165,6 +170,47 @@ for _, variant in { "default", "destructive", "outline", "secondary" } do
 	})
 end
 
+-- A hinted button carries its text in a child label. Every rule that sets text
+-- properties on the button gets a twin for that label, so variants, sizes,
+-- hover and disabled read the same.
+local TEXT_PROPERTIES = { "TextColor3", "TextTransparency", "FontFace", "TextSize" }
+local labelRules: { Component.Rule } = {
+	{ selector = ".ui-button-label", priority = BASE, properties = { BackgroundTransparency = 1 } },
+}
+for _, rule in Button.rules do
+	if not string.find(rule.selector, "::", 1, true) then
+		local properties: { [string]: any } = {}
+		local any = false
+		for _, name in TEXT_PROPERTIES do
+			local value = (rule.properties :: any)[name]
+			if value ~= nil then
+				properties[name] = value
+				any = true
+			end
+		end
+		if any then
+			table.insert(labelRules, {
+				selector = rule.selector .. " > .ui-button-label",
+				priority = rule.priority,
+				properties = properties,
+			})
+		end
+		-- A controller picture in the hint takes the button's text colour; one above
+		-- the button's own priority so it beats the key cap's default.
+		local colour = (rule.properties :: any).TextColor3
+		if colour ~= nil then
+			table.insert(labelRules, {
+				selector = rule.selector .. " >> .ui-kbd-image",
+				priority = (rule.priority or 0) + 1,
+				properties = { ImageColor3 = colour },
+			})
+		end
+	end
+end
+for _, rule in labelRules do
+	table.insert(Button.rules, rule)
+end
+
 local function check(list: { string }, value: string, what: string)
 	if not table.find(list, value) then
 		error(`[Lucy] unknown Button {what} "{value}" (expected {table.concat(list, ", ")})`, 0)
@@ -197,13 +243,35 @@ local spec: Component.Spec = {
 		-- An unknown variant or size fails the mount; later writes report like any effect.
 		check(Button.variants, h:get("variant"), "variant")
 		check(Button.sizes, h:get("size"), "size")
+		local p: Component.Props = h.props
 		local variant, size, disabled = h:ref("variant"), h:ref("size"), h:ref("disabled")
 		local function enabled(): boolean
 			return not disabled()
 		end
-		return Element.new("TextButton", {
+		local hint: { [string]: any }? = p.hint
+		local label: TextLabel? = nil
+		local layout: UIListLayout? = nil
+		if hint then
+			label = Element.new("TextLabel", {
+				Name = "Label",
+				LayoutOrder = 1,
+				Size = UDim2.fromScale(0, 1),
+				AutomaticSize = Enum.AutomaticSize.X,
+				Text = h:ref("text"),
+				Tags = { "ui-button-label" },
+			})
+			layout = Element.new("UIListLayout", {
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				FillDirection = Enum.FillDirection.Horizontal,
+				HorizontalAlignment = Enum.HorizontalAlignment.Center,
+				VerticalAlignment = Enum.VerticalAlignment.Center,
+				Padding = UDim.new(0, 8),
+			})
+			h.label = label
+		end
+		local root = Element.new("TextButton", {
 			AutoButtonColor = false,
-			Text = h:ref("text"),
+			Text = if hint then "" else h:ref("text"),
 			Visible = h:ref("visible"),
 			Interactable = enabled,
 			Selectable = enabled,
@@ -224,7 +292,18 @@ local spec: Component.Spec = {
 			[ACTIVATED] = function()
 				h:click()
 			end,
+			layout :: any,
+			label :: any,
 		})
+		if hint then
+			-- Made in render, so it is the button's and goes with it.
+			local kbdProps = table.clone(hint)
+			kbdProps.app = h.app
+			kbdProps.layoutOrder = 2
+			kbdProps.Parent = root
+			h.hint = Kbd.new(kbdProps)
+		end
+		return root
 	end,
 }
 

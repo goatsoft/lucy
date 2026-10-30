@@ -1,0 +1,231 @@
+--!strict
+--[[
+	Kbd: the key to press, for the input the player is using.
+
+		Kbd.new({
+			keyboard = Enum.KeyCode.E,      -- a KeyCode or text
+			gamepad = Enum.KeyCode.DPadUp,  -- shown as the controller's own picture
+			touch = "Hold",                 -- optional; hidden on touch without it
+			Parent = row,
+		})
+
+	Keyboard and mouse players see the keyboard key, gamepad players the
+	controller's button (the engine's picture for their controller, or text),
+	touch players the touch label or nothing. It hides itself when there is no
+	key for the current input.
+
+	State keys: keyboard, gamepad, touch, visible.
+	Parts: kbd.text (the label), kbd.glyph (the controller picture).
+	Kbd.label(key) and Kbd.glyph(keyCode) are the helpers it uses.
+]]
+
+local UserInputService = game:GetService("UserInputService")
+
+local Component = require(script.Parent.Parent.Core.Component)
+local Composables = require(script.Parent.Parent.Composables)
+local Element = require(script.Parent.Parent.Core.Element)
+
+local Kbd = {}
+
+-- Names for keys the engine has no printable text for, and short gamepad names.
+Kbd.names = {
+	Escape = "Esc",
+	Return = "Enter",
+	KeypadEnter = "Enter",
+	Space = "Space",
+	Tab = "Tab",
+	Backspace = "Backspace",
+	Delete = "Del",
+	LeftShift = "Shift",
+	RightShift = "Shift",
+	LeftControl = "Ctrl",
+	RightControl = "Ctrl",
+	LeftAlt = "Alt",
+	RightAlt = "Alt",
+	LeftSuper = "Cmd",
+	RightSuper = "Cmd",
+	Up = "Up",
+	Down = "Down",
+	Left = "Left",
+	Right = "Right",
+	ButtonA = "A",
+	ButtonB = "B",
+	ButtonX = "X",
+	ButtonY = "Y",
+	ButtonL1 = "LB",
+	ButtonR1 = "RB",
+	ButtonL2 = "LT",
+	ButtonR2 = "RT",
+	ButtonL3 = "LS",
+	ButtonR3 = "RS",
+	ButtonSelect = "View",
+	ButtonStart = "Menu",
+	DPadUp = "D-Pad Up",
+	DPadDown = "D-Pad Down",
+	DPadLeft = "D-Pad Left",
+	DPadRight = "D-Pad Right",
+	MouseLeftButton = "Click",
+	MouseRightButton = "Right click",
+}
+
+Kbd.glyphSize = 20
+Kbd.scale = { default = 1, touch = 1, tv = 1.25 }
+
+Kbd.rules = {
+	{
+		selector = ".ui-kbd",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Muted", BorderSizePixel = 0 },
+	},
+	{ selector = ".ui-kbd::UICorner", priority = 0, properties = { CornerRadius = "$RadiusSm" } },
+	{
+		selector = ".ui-kbd::UIPadding",
+		priority = 0,
+		properties = { PaddingLeft = "$Space1", PaddingRight = "$Space1" },
+	},
+	-- A controller picture brings its own shape.
+	{ selector = ".ui-kbd.ui-kbd-glyph", priority = 10, properties = { BackgroundTransparency = 1 } },
+	{
+		selector = ".ui-kbd.ui-kbd-glyph::UIPadding",
+		priority = 10,
+		properties = { PaddingLeft = "$Space0", PaddingRight = "$Space0" },
+	},
+	{
+		selector = ".ui-kbd-text",
+		priority = 0,
+		properties = {
+			BackgroundTransparency = 1,
+			TextColor3 = "$MutedForeground",
+			FontFace = "$FontSansMedium",
+			TextSize = "$TextXs",
+		},
+	},
+	-- Controller pictures are one colour, so they take the text colour.
+	{
+		selector = ".ui-kbd-image",
+		priority = 0,
+		properties = { BackgroundTransparency = 1, ImageColor3 = "$Foreground" },
+	},
+} :: { Component.Rule }
+
+local function keyCode(value: any): EnumItem?
+	if typeof(value) == "EnumItem" and value.EnumType == Enum.KeyCode then
+		return value
+	end
+	return nil
+end
+
+-- Plain text for a key: the name above, the engine's text for the key on this
+-- keyboard layout, or the KeyCode's name. Text passes through; nil gives "".
+function Kbd.label(value: any): string
+	if type(value) == "string" then
+		return value
+	end
+	local code = keyCode(value)
+	if code == nil then
+		return ""
+	end
+	local named = Kbd.names[code.Name]
+	if named then
+		return named
+	end
+	local ok, text = pcall(UserInputService.GetStringForKeyCode, UserInputService, code :: any)
+	if ok and type(text) == "string" and string.match(text, "%S") then
+		return string.upper(text)
+	end
+	return code.Name
+end
+
+-- The engine's picture of a gamepad button for the player's controller, or "".
+function Kbd.glyph(value: any): string
+	local code = keyCode(value)
+	if code == nil or string.sub(code.Name, 1, 6) ~= "Button" and string.sub(code.Name, 1, 4) ~= "DPad" then
+		return ""
+	end
+	local ok, image = pcall(UserInputService.GetImageForKeyCode, UserInputService, code :: any)
+	return if ok and type(image) == "string" then image else ""
+end
+
+-- Built once and shared by every mount (h.props holds each mount's props).
+local spec: Component.Spec = {
+	kind = "kbd",
+	defaults = { keyboard = "", gamepad = "", touch = "", visible = true },
+	rules = Kbd.rules,
+	render = function(h)
+		local keyboard, gamepad, touch, visible =
+			h:ref("keyboard"), h:ref("gamepad"), h:ref("touch"), h:ref("visible")
+		local mode = h.app.state:ref("input.mode")
+		local density = Composables.useDensity(h.app)
+
+		-- The key for the current input, and its picture when it has one.
+		local function key(): any
+			local m = mode()
+			if m == "gamepad" then
+				return gamepad()
+			elseif m == "touch" then
+				return touch()
+			end
+			return keyboard()
+		end
+		local function image(): string
+			return if mode() == "gamepad" then Kbd.glyph(gamepad()) else ""
+		end
+		local function hasImage(): boolean
+			return image() ~= ""
+		end
+
+		local text = Element.new("TextLabel", {
+			Name = "Key",
+			Size = UDim2.fromOffset(0, 0),
+			AutomaticSize = Enum.AutomaticSize.XY,
+			Text = function()
+				return Kbd.label(key())
+			end,
+			Visible = function()
+				return not hasImage()
+			end,
+			Tags = { "ui-kbd-text" },
+		})
+		local glyph = Element.new("ImageLabel", {
+			Name = "Glyph",
+			Size = function()
+				local px = math.round(Kbd.glyphSize * (Kbd.scale[density()] or 1))
+				return UDim2.fromOffset(px, px)
+			end,
+			ScaleType = Enum.ScaleType.Fit,
+			Image = image,
+			Visible = hasImage,
+			Tags = { "ui-kbd-image" },
+		})
+		h.text, h.glyph = text, glyph
+
+		return Element.new("Frame", {
+			Size = UDim2.fromOffset(0, 0),
+			AutomaticSize = Enum.AutomaticSize.XY,
+			Visible = function()
+				return visible() and Kbd.label(key()) ~= ""
+			end,
+			Tags = { "ui-kbd" :: any, ["ui-kbd-glyph"] = hasImage },
+			Element.new("UIListLayout", {
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				FillDirection = Enum.FillDirection.Horizontal,
+				HorizontalAlignment = Enum.HorizontalAlignment.Center,
+				VerticalAlignment = Enum.VerticalAlignment.Center,
+			}),
+			Element.new("UISizeConstraint", {
+				MinSize = function()
+					local px = math.round(Kbd.glyphSize * (Kbd.scale[density()] or 1))
+					return Vector2.new(px, px)
+				end,
+			}),
+			text,
+			glyph,
+		})
+	end,
+}
+
+function Kbd.new(props: { [string]: any }?)
+	return Component.mount(spec, props)
+end
+
+return Kbd

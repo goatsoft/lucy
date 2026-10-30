@@ -173,4 +173,73 @@ return function()
 			expect(size.Y.Offset).to.equal(app.theme:resolve("ControlLg").Y.Offset)
 		end)
 	end)
+
+	describe("hint", function()
+		it("shows a key cap after the text", function()
+			app.input:setMode("keyboard")
+			local button = Button.new({
+				app = app,
+				Parent = gui,
+				text = "Join",
+				hint = { keyboard = Enum.KeyCode.E, gamepad = Enum.KeyCode.DPadUp },
+			})
+			local root = button.Instance
+			expect(root.Text).to.equal("")
+			expect(button.label.Parent).to.equal(root)
+			expect(button.label.Text).to.equal("Join")
+			expect(button.hint.Instance.Parent).to.equal(root)
+			expect(button.label.LayoutOrder < button.hint.Instance.LayoutOrder).to.equal(true)
+			expect(button.hint.text.Text).to.equal("E")
+			button:set("text", "Leave")
+			expect(button.label.Text).to.equal("Leave")
+			app.input:setMode("touch")
+			expect(button.hint.Instance.Visible).to.equal(false)
+			button:destroy()
+			expect(button.hint.destroyed).to.equal(true)
+		end)
+
+		it("keeps its text on the button without one", function()
+			local button = Button.new({ app = app, Parent = gui, text = "Play" })
+			expect(button.Instance.Text).to.equal("Play")
+			expect(button.label).to.equal(nil)
+			expect(button.hint).to.equal(nil)
+		end)
+
+		it("colours the label like the button's own text", function()
+			local button = Button.new({
+				app = app,
+				Parent = gui,
+				variant = "destructive",
+				hint = { keyboard = Enum.KeyCode.E },
+			})
+			Harness.flush()
+			expect(
+				Harness.colorEq(
+					Harness.styled(button.label, "TextColor3"),
+					app.theme:resolve("DestructiveForeground")
+				)
+			).to.equal(true)
+			expect(Harness.styled(button.label, "TextSize")).to.equal(app.theme:resolve("TextSm"))
+		end)
+
+		it("colours a controller picture like the button's text", function()
+			app.input:setMode("gamepad")
+			local button = Button.new({ app = app, Parent = gui, hint = { gamepad = Enum.KeyCode.ButtonA } })
+			Harness.flush()
+			expect(button.hint.glyph.Visible).to.equal(true)
+			expect(
+				Harness.colorEq(
+					Harness.styled(button.hint.glyph, "ImageColor3"),
+					app.theme:resolve("PrimaryForeground")
+				)
+			).to.equal(true)
+		end)
+
+		it("fades the label when disabled", function()
+			local button =
+				Button.new({ app = app, Parent = gui, disabled = true, hint = { keyboard = Enum.KeyCode.E } })
+			Harness.flush()
+			expect(Harness.styled(button.label, "TextTransparency")).to.equal(0.5)
+		end)
+	end)
 end

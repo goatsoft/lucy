@@ -27,6 +27,7 @@ Lucy.Button.new({
 | `size` | string | `"md"` | yes | `sm`, `md`, `lg` or `icon` |
 | `disabled` | boolean | `false` | yes | Greys the button out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides the button |
+| `hint` | table | | | A key to show after the text: the props of a [Kbd](kbd.md). See below |
 | `onClick` | function | | | Called with the handle when the button is clicked |
 
 It also takes the [props every component takes](index.md#using-a-component).
@@ -40,6 +41,28 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 A disabled button ignores clicks. Clicks within 50 ms of the last one are ignored
 too, so one press of Enter never counts twice.
+
+## Key hints
+
+`hint` puts a key cap after the text, showing the right key for the player's
+input: the keyboard key, the controller's button, and nothing on touch.
+
+```lua
+Lucy.Button.new({
+    text = "Join",
+    hint = { keyboard = Enum.KeyCode.E, gamepad = Enum.KeyCode.DPadUp },
+    onClick = join,
+    Parent = hud,
+})
+```
+
+It takes the same fields as [Kbd](kbd.md): `keyboard`, `gamepad` and `touch`,
+each a value, a ref or a getter. The hint only shows the key; binding the key
+to the button's action is up to your game.
+
+With a hint, the text sits in `button.label` and the key cap is `button.hint`
+(a Kbd handle). Both follow the button's variant, size and disabled state.
+Without one, the button is a single TextButton as usual.
 
 ## Examples
 

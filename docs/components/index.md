@@ -22,6 +22,7 @@ Each component has its own page with its props, usage and examples:
 | [Image](image.md) | A picture from an asset id or a thumbnail |
 | [Input](input.md) | A text field on one line |
 | [Item](item.md) | A row in a list, with media, a title, a description and actions |
+| [Kbd](kbd.md) | The key to press, for the player's keyboard or controller |
 | [Panel](panel.md) | A card with a header, content and footer |
 | [Pressable](pressable.md) | A surface the player can click that holds anything |
 | [Progress](progress.md) | A bar that fills from 0 to a maximum |
@@ -225,7 +226,7 @@ a Button's text sets its `Text` again and nothing else. See
 
 Coming in 0.1.0, each working with mouse, touch, gamepad and TV:
 
-- **Layout and display:** Kbd and key hints, Table
+- **Layout and display:** Table
 - **Selection:** Select
 - **Overlays:** Sheet (a bottom drawer on touch), and Dialog with a size and a
   scrolling body
