@@ -6,7 +6,7 @@
 		Lucy.new "TextButton" {
 			Size = UDim2.fromOffset(200, 40),
 			Text = function() return `Clicked {count()}` end,   -- any getter, ref or computed
-			Tags = { "card", ["card-active"] = isActive },      -- Vue :class style
+			Tags = { "card", ["card-active"] = isActive },      -- toggled by a boolean
 			Attributes = { Health = hp },
 			[Lucy.on "Activated"] = function() count(count() + 1) end,
 			[Lucy.changed "AbsoluteSize"] = function(size) end,
@@ -57,7 +57,7 @@ function Element.out(property: string): any
 	return key("out", property)
 end
 
--- [Lucy.model "Text"] = someRef: two-way, like v-model.
+-- [Lucy.model "Text"] = someRef: two-way binding.
 function Element.model(property: string): any
 	return key("model", property)
 end

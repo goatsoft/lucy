@@ -10,13 +10,17 @@
 A UI kit and app framework for Roblox, built on
 [Universal Styling](https://create.roblox.com/docs/ui/styling).
 
-- **Reactive**: `ref`, `computed`, `reactive` and `watch`, with fine-grained updates and no re-renders. Build any UI declaratively with `Lucy.new`, animate with springs and tweens.
-- **Components you own**: copy them into your game with one command, or install the Wally package.
-- **Themes as data**: light and dark themes per base colour, an optional primary hue, switchable at runtime. Colours are defined in OKLCH.
-- **Every platform**: mouse, keyboard, gamepad and touch on desktop, console, tablet and phone, with densities, adaptive scaling and responsive props built in.
+- **Fine-grained by design**: change a value and only the properties that read it update. Nothing re-renders and nothing is diffed, so long lists and busy HUDs stay cheap.
+- **State that reads like Luau**: refs you call like functions (`count()`, `count(5)`), cached `computed` values, `reactive` tables you write as fields, and `watch`. No dependency lists, no boilerplate.
+- **Cleans up after itself**: effects, bindings and instances belong to whatever created them and go away with it. No cleanup bookkeeping, no leaks.
+- **Declarative, or built in Studio**: describe UI with `Lucy.new`, `show` and `each`, or `hydrate` a ScreenGui built in Studio and just add the behaviour.
+- **Motion is a value**: springs and tweens bind like any other state. Colours glide through Oklab, and nothing runs while everything is at rest.
+- **Components you own**: buttons, dialogs, toasts, inputs, panels and more. Copy them into your game with one command, or install the Wally package.
+- **Styling runs in the engine**: themes are Universal Styling sheets, light and dark per base colour with an optional primary hue, switched at runtime. Hover and theme changes cost no Lua. Colours are defined in OKLCH.
+- **Every input, every screen**: mouse, keyboard, gamepad and touch on desktop, console, tablet and phone, with densities, adaptive scaling and responsive props built in.
 - **Lucy owns focus**: no Roblox selection rings or default borders; a themed focus ring only while navigating with keys or a gamepad.
-- **App state**: one store drives every component, scene and toast.
-- **Scenes**: title screen, game, menus and modals that never overlap or steal input.
+- **One app, clean scenes**: one store drives every component, scene and toast. Title screen, game, menus and modals each own a layer and never steal input.
+- **Light and dependable**: one package with no runtime dependencies, a typed Luau API, and hundreds of specs run in Studio.
 
 ## Install
 

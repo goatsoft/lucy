@@ -6,7 +6,7 @@ order: 0
 
 # Reactivity
 
-Lucy's state primitives use Vue's names with Luau call syntax. A ref is a function:
+Lucy's state is plain Luau. A ref is a function:
 call it to read, call it with a value to write. There is no `.value` and no
 unwrapping magic.
 
@@ -143,11 +143,11 @@ Lucy.new "TextButton" {
 | Key | Does |
 |---|---|
 | `Property = value` | sets it; a ref or getter keeps it bound |
-| `Tags = { "a", ["b"] = ref }` | static tags, plus tags toggled by a boolean (Vue `:class` style); or a getter returning the whole set |
+| `Tags = { "a", ["b"] = ref }` | static tags, plus tags toggled by a boolean; or a getter returning the whole set |
 | `Attributes = { Name = value }` | attributes, bound the same way |
 | `[Lucy.on "Event"] = fn` | connects an event |
 | `[Lucy.changed "Prop"] = fn` | calls `fn(newValue)` when a property changes |
-| `[Lucy.model "Text"] = ref` | two-way binding, like `v-model` |
+| `[Lucy.model "Text"] = ref` | two-way binding |
 | `[Lucy.out "AbsoluteSize"] = ref` | the ref follows the property |
 | `[Lucy.instance] = ref` | the instance, for later |
 | array items | children: instances, component handles, arrays, `show` and `each` |
@@ -221,23 +221,3 @@ local fade = Lucy.tween(target, TweenInfo.new(0.25, Enum.EasingStyle.Quad))
   Oklab, so red to blue passes through a clean purple. Other types snap.
 - One Heartbeat connection drives every animation, and it disconnects when all of
   them are at rest.
-
-## Coming from other libraries
-
-| Fusion | Lucy |
-|---|---|
-| `scope:Value(0)`, `:get()`, `:set(x)` | `Lucy.ref(0)`, `count()`, `count(x)` |
-| `scope:Computed(function(use) ... use(x) end)` | `Lucy.computed(function() ... x() end)` |
-| `scope:New "Frame" { }` | `Lucy.new "Frame" { }` |
-| `[OnEvent "Activated"]`, `[OnChange "Text"]`, `[Out "Text"]`, `[Ref]` | `[Lucy.on ...]`, `[Lucy.changed ...]`, `[Lucy.out ...]`, `[Lucy.instance]` |
-| `scope:ForValues(list, fn)` | `Lucy.each(list, fn)` |
-| `scope:Spring(x, speed, damping)` | `Lucy.spring(x, speed, damping)` |
-| scopes and `doCleanup` | automatic: owned by whatever created them |
-
-| React (react-lua) | Lucy |
-|---|---|
-| `useState` | `Lucy.ref` |
-| `useMemo` | `Lucy.computed` (no dependency arrays) |
-| `useEffect` | `Lucy.watchEffect` / `Lucy.watch` |
-| re-render and reconcile | none: only changed bindings run |
-| `createContext` | `app.state` and plain module state |

@@ -249,7 +249,7 @@ function App:activeGuis(): { ScreenGui }
 	return out
 end
 
--- A shared, lazily created ScreenGui layer ("modal", "toast", ...), like a Vue Teleport target.
+-- A shared, lazily created ScreenGui layer ("modal", "toast", ...) that components render into.
 function App:portal(name: string, options: { [string]: any }?): ScreenGui
 	local existing = self._portals[name]
 	if existing and existing.Parent then

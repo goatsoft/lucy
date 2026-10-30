@@ -75,7 +75,7 @@ return function()
 	end)
 
 	describe("tags and attributes", function()
-		it("adds static tags and toggles keyed tags, Vue class style", function()
+		it("adds static tags and toggles keyed tags by a boolean", function()
 			local active = ref(false)
 			local frame = new("Frame")({
 				Tags = { "card", ["card-active"] = active, ["card-big"] = true },

@@ -1,6 +1,6 @@
 --[[
-	Reactive: Lucy's fine-grained reactivity (ADR 0014). Vue's vocabulary with Luau
-	call syntax: a ref is a function, call it to read, call it with a value to write.
+	Reactive: Lucy's fine-grained reactivity (ADR 0014), in plain Luau call
+	syntax: a ref is a function, call it to read, call it with a value to write.
 	No `.value`, no unwrapping magic.
 
 		local count = Lucy.ref(0)

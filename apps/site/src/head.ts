@@ -7,7 +7,7 @@ export const SITE = {
   repo: 'https://github.com/goatsoft/lucy',
   wally: 'https://wally.run/package/goatsoft/lucy',
   goatsoft: 'https://goatsoft.io',
-  description: 'A UI kit and app framework for Roblox: themeable components, scenes, app state and first-class mouse, keyboard, gamepad and touch.',
+  description: 'A UI kit and app framework for Roblox: fine-grained reactive state, declarative UI, themeable components and first-class mouse, keyboard, gamepad and touch.',
 }
 
 export interface Head {

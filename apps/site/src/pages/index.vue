@@ -6,12 +6,18 @@ import { SITE, useHead } from '@/head'
 useHead({ description: SITE.description })
 
 const features = [
-  { icon: 'components', title: 'Components you own', text: 'Copy components into your game with one command, or install the Wally package. Buttons, dialogs, toasts, inputs, panels and more.' },
-  { icon: 'themes', title: 'Themes as data', text: 'Light and dark themes per base colour with an optional primary hue, built on Universal Styling and switched at runtime.' },
+  { icon: 'fast', title: 'Fine-grained by design', text: 'Change a value and only the properties that read it update. Nothing re-renders and nothing is diffed, so long lists and busy HUDs stay cheap.' },
+  { icon: 'code', title: 'State that reads like Luau', text: 'Refs you call like functions, cached computed values, reactive tables you write as fields, and watchers. No dependency lists, no boilerplate.' },
+  { icon: 'clean', title: 'Cleans up after itself', text: 'Effects, bindings and instances belong to whatever created them and go away with it. No cleanup bookkeeping, no leaks.' },
+  { icon: 'declarative', title: 'Declarative, or built in Studio', text: 'Describe UI with Lucy.new, show and each, or hydrate a ScreenGui built in Studio and just add the behaviour.' },
+  { icon: 'motion', title: 'Motion is a value', text: 'Springs and tweens bind like any other state. Colours glide through Oklab, and nothing runs while everything is at rest.' },
+  { icon: 'components', title: 'Components you own', text: 'Buttons, dialogs, toasts, inputs, panels and more. Copy them into your game with one command, or install the Wally package.' },
+  { icon: 'themes', title: 'Styling runs in the engine', text: 'Themes are Universal Styling sheets: light and dark per base colour, switched at runtime, with hover and theme changes costing no Lua.' },
   { icon: 'input', title: 'Every input', text: 'Mouse, keyboard, gamepad and touch, with Tab and arrow navigation, focus that stays inside dialogs and back on Escape or B.' },
+  { icon: 'focus', title: 'Lucy owns focus', text: 'No default selection rings or borders. A themed focus ring shows only while navigating with keys or a gamepad.' },
   { icon: 'devices', title: 'Every screen', text: 'Desktop, console, tablet and phone. Adaptive scaling, 44px touch targets, 10-foot sizes and responsive props.' },
-  { icon: 'state', title: 'One app state', text: 'Every component, scene and toast reads from one store. Set ui.play.disabled from anywhere and the button follows.' },
-  { icon: 'scenes', title: 'Scenes that never clash', text: 'Title screen, game, menus and modals each own a layer, so screens never overlap or steal each other’s input.' },
+  { icon: 'scenes', title: 'One app, clean scenes', text: 'One store drives every component, scene and toast. Title screen, game, menus and modals each own a layer and never steal input.' },
+  { icon: 'light', title: 'Light and dependable', text: 'One package with no runtime dependencies, a typed Luau API, and hundreds of specs run in Studio.' },
 ] as const
 
 const install = 'lune run ~/Projects/Lucy/scripts/add -- button dialog --out src/shared/Lucy'
@@ -32,8 +38,8 @@ const install = 'lune run ~/Projects/Lucy/scripts/add -- button dialog --out src
         A UI kit for <span class="text-spectrum">Roblox</span>
       </h1>
       <p class="animate-rise mx-auto mt-6 max-w-2xl text-lead text-pretty text-muted-foreground [animation-delay:120ms]">
-        Themeable components, scenes and app state, with first-class mouse, keyboard, gamepad and
-        touch on desktop, console, tablet and phone.
+        Fine-grained reactive state, declarative UI and themeable components, with first-class mouse,
+        keyboard, gamepad and touch on desktop, console, tablet and phone.
       </p>
       <div class="animate-rise mt-10 flex flex-col justify-center gap-3 sm:flex-row [animation-delay:200ms]">
         <Button
@@ -76,11 +82,17 @@ const install = 'lune run ~/Projects/Lucy/scripts/add -- button dialog --out src
           class="rounded-2xl border border-border bg-surface/60 p-6"
         >
           <div class="grid size-10 place-items-center rounded-xl bg-primary/15 text-primary [&_svg]:size-5">
-            <IHgPackage v-if="feature.icon === 'components'" />
+            <IHgFlash v-if="feature.icon === 'fast'" />
+            <IHgCode v-else-if="feature.icon === 'code'" />
+            <IHgSparkles v-else-if="feature.icon === 'clean'" />
+            <IHgStructure03 v-else-if="feature.icon === 'declarative'" />
+            <IHgWave v-else-if="feature.icon === 'motion'" />
+            <IHgPackage v-else-if="feature.icon === 'components'" />
             <IHgPaintBoard v-else-if="feature.icon === 'themes'" />
             <IHgGameController03 v-else-if="feature.icon === 'input'" />
+            <IHgFocusPoint v-else-if="feature.icon === 'focus'" />
             <IHgComputerPhoneSync v-else-if="feature.icon === 'devices'" />
-            <IHgDatabase01 v-else-if="feature.icon === 'state'" />
+            <IHgFeather v-else-if="feature.icon === 'light'" />
             <IHgLayers01 v-else />
           </div>
           <h3 class="mt-5 font-display text-lg font-semibold text-foreground">
