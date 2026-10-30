@@ -271,6 +271,30 @@ local function copyIn(value: any): any
 	return raw
 end
 
+--[[
+	Aliases (ADR 0017 section 5): a key bound to a writable ref. Any write to the
+	key, from anywhere, writes the ref inside the same store write, before
+	subscribers run. Writes are queued while the tree is mid-change and delivered
+	right after it, so a ref setter that writes the store sees a whole tree.
+]]
+local aliases: { [any]: { [any]: any } } = setmetatable({}, { __mode = "k" }) :: any -- raw -> key -> ref
+local aliasRefs: { any } = {}
+local aliasRaws: { any } = {}
+local aliasKeys: { any } = {}
+local aliasCount = 0
+local drainingAliases = false
+
+local function queueAlias(raw: any, key: any)
+	local bound = aliases[raw]
+	local ref = bound and bound[key]
+	if ref then
+		aliasCount += 1
+		aliasRefs[aliasCount] = ref
+		aliasRaws[aliasCount] = raw
+		aliasKeys[aliasCount] = key
+	end
+end
+
 local reconcile: (raw: { [any]: any }, incoming: { [any]: any }) -> boolean
 
 -- Writes `value` at raw[key], reconciling into an existing table. Returns true if
@@ -280,10 +304,15 @@ local function assign(raw: { [any]: any }, key: any, value: any): boolean
 	local current = raw[key]
 	if isPlain(value) then
 		if isPlain(current) then
-			return reconcile(current, value)
+			if reconcile(current, value) then
+				queueAlias(raw, key)
+				return true
+			end
+			return false
 		end
 		raw[key] = copyIn(value)
 		Reactive._changedKey(raw, key, current == nil)
+		queueAlias(raw, key)
 		return true
 	end
 	if sameValue(current, value) then
@@ -291,6 +320,7 @@ local function assign(raw: { [any]: any }, key: any, value: any): boolean
 	end
 	raw[key] = value
 	Reactive._changedKey(raw, key, (current == nil) ~= (value == nil))
+	queueAlias(raw, key)
 	return true
 end
 
@@ -310,10 +340,42 @@ reconcile = function(raw: { [any]: any }, incoming: { [any]: any }): boolean
 			raw[key] = nil -- clearing a field during traversal is allowed
 			Reactive._changedKey(raw, key, true)
 			invalidate(raw, key)
+			queueAlias(raw, key)
 			changed = true
 		end
 	end
 	return changed
+end
+
+local function writeRef(ref: any, value: any)
+	if ref() ~= value then
+		ref(value)
+	end
+end
+
+-- Writes queued aliases: each ref gets its key's current value (a snapshot for a
+-- table). A ref that already holds it is not written, so nothing ping-pongs.
+local function drainAliases()
+	if drainingAliases then
+		return -- the outer drain picks up aliases queued meanwhile
+	end
+	drainingAliases = true
+	local i = 1
+	while i <= aliasCount do
+		local ref, raw, key = aliasRefs[i], aliasRaws[i], aliasKeys[i]
+		aliasRefs[i], aliasRaws[i], aliasKeys[i] = nil, nil, nil
+		i += 1
+		local value = raw[key]
+		if isPlain(value) then
+			value = snapshot(value)
+		end
+		local ok: boolean, err: any = pcall(Reactive._untracked, writeRef, ref, value)
+		if not ok then
+			warn(`[Lucy] writing a bound ref failed: {err}`)
+		end
+	end
+	aliasCount = 0
+	drainingAliases = false
 end
 
 -- The raw value at `segments`, or nil if the path runs through a non-table.
@@ -550,6 +612,9 @@ function AppState._write(self: AppState, segments: { any }, value: any, merge: b
 			assign(raw, key, value)
 		end
 	end
+	if aliasCount > 0 then
+		drainAliases()
+	end
 	Reactive._finish()
 
 	self:_settle()
@@ -557,6 +622,62 @@ end
 
 function AppState.set(self: AppState, path: string?, value: any)
 	self:_write(split(path), value, false)
+end
+
+-- Internal, for component handles (ADR 0017 section 5): pre-split paths, so a
+-- handle never parses a path again.
+function AppState._segments(_self: AppState, path: string?): { any }
+	return split(path)
+end
+
+-- The value at `key` of the table at `segments` (a snapshot for a table). No allocation.
+function AppState._readKey(self: AppState, segments: { any }, key: any): any
+	local node = readRaw(self._root, segments)
+	if not isPlain(node) then
+		return nil
+	end
+	return valueOf(node[key])
+end
+
+-- `_readKey`, tracked: re-runs the reader when that key or a table above it changes.
+-- The second result says whether the table at `segments` exists.
+function AppState._trackedKey(self: AppState, segments: { any }, key: any): (any, boolean)
+	local node: any = self._root
+	for _, segment in segments do
+		if not isPlain(node) then
+			return nil, false
+		end
+		Reactive._trackKey(node, segment)
+		node = node[segment]
+	end
+	if not isPlain(node) then
+		return nil, false
+	end
+	Reactive._trackKey(node, key)
+	return valueOf(node[key]), true
+end
+
+-- Binds `key` of the table at `segments` to a writable ref. Returns the unbind.
+function AppState._alias(self: AppState, segments: { any }, key: any, ref: any): () -> ()
+	local node = readRaw(self._root, segments)
+	if not isPlain(node) then
+		error("[Lucy] can only bind a key of an existing table", 2)
+	end
+	local bound = aliases[node]
+	if not bound then
+		bound = {}
+		aliases[node] = bound
+	end
+	(bound :: any)[key] = ref
+	return function()
+		local current = aliases[node]
+		if current and current[key] == ref then
+			current[key] = nil
+			if next(current) == nil then
+				aliases[node] = nil
+			end
+		end
+	end
 end
 
 function AppState.update(self: AppState, path: string?, fn: (any) -> any)

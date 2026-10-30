@@ -83,7 +83,7 @@ function Input.new(props: { [string]: any }?)
 				if box.Text == h:get("value") then
 					return
 				end
-				h:set({ value = box.Text })
+				h:set("value", box.Text)
 				if p.onChange then
 					p.onChange(box.Text, h)
 				end
@@ -103,17 +103,24 @@ function Input.new(props: { [string]: any }?)
 			end)
 			return box
 		end,
-		update = function(h, state)
-			local box = h.Instance
-			if box.Text ~= state.value then
-				box.Text = state.value
-			end
-			box.PlaceholderText = state.placeholder
-			box.TextEditable = not state.disabled
-			box.Interactable = not state.disabled
-			box.Visible = state.visible
-			Component.setFlag(box, "ui-disabled", state.disabled)
-		end,
+		watch = {
+			value = function(h, value)
+				if h.Instance.Text ~= value then
+					h.Instance.Text = value
+				end
+			end,
+			placeholder = function(h, placeholder)
+				h.Instance.PlaceholderText = placeholder
+			end,
+			disabled = function(h, disabled)
+				h.Instance.TextEditable = not disabled
+				h.Instance.Interactable = not disabled
+				Component.setFlag(h.Instance, "ui-disabled", disabled)
+			end,
+			visible = function(h, visible)
+				h.Instance.Visible = visible
+			end,
+		},
 	})
 
 	-- Focus the field from code (opens the keyboard on touch).

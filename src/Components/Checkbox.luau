@@ -112,27 +112,35 @@ function Checkbox.new(props: { [string]: any }?)
 			end)
 			return root
 		end,
-		update = function(h, state, previous)
-			h.Instance.Visible = state.visible
-			h.Instance.Interactable = not state.disabled
-			h.Instance.Selectable = not state.disabled
-			h.check.Visible = state.checked
-			h.label.Text = state.label
-			h.label.Visible = state.label ~= ""
-			Component.setFlag(h.box, "ui-checked", state.checked)
-			Component.setFlag(h.box, "ui-disabled", state.disabled)
-			Component.setFlag(h.label, "ui-disabled", state.disabled)
-			if previous and previous.checked ~= state.checked and p.onCheckedChange then
-				p.onCheckedChange(state.checked, h)
-			end
-		end,
+		watch = {
+			visible = function(h, visible)
+				h.Instance.Visible = visible
+			end,
+			disabled = function(h, disabled)
+				h.Instance.Interactable = not disabled
+				h.Instance.Selectable = not disabled
+				Component.setFlag(h.box, "ui-disabled", disabled)
+				Component.setFlag(h.label, "ui-disabled", disabled)
+			end,
+			label = function(h, label)
+				h.label.Text = label
+				h.label.Visible = label ~= ""
+			end,
+			checked = function(h, checked, _, initial)
+				h.check.Visible = checked
+				Component.setFlag(h.box, "ui-checked", checked)
+				if not initial and p.onCheckedChange then
+					p.onCheckedChange(checked, h)
+				end
+			end,
+		},
 	})
 
 	function handle.toggle(h)
 		if h:get("disabled") then
 			return
 		end
-		h:set({ checked = not h:get("checked") })
+		h:set("checked", not h:get("checked"))
 	end
 	return handle
 end

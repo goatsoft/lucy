@@ -132,7 +132,7 @@ local function writeProbe(state: State)
 	local base = state.tick * STORE_OPS
 	local target = state.target
 	for i = 1, STORE_OPS do
-		target:set({ value = base + i })
+		target:set("value", base + i)
 	end
 end
 

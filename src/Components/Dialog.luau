@@ -235,54 +235,59 @@ function Dialog.new(props: { [string]: any }?)
 			Component.claimSelection(h.app, root)
 			return root
 		end,
-		update = function(h, state, previous)
-			h.titleLabel.Text = state.title
-			h.titleLabel.Visible = state.title ~= ""
-			h.descriptionLabel.Text = state.description
-			h.descriptionLabel.Visible = state.description ~= ""
-
-			local wasOpen = previous ~= nil and previous.open
-			h.Instance.Visible = state.open
-			if state.open and not wasOpen then
-				layer += 1
-				h.Instance.ZIndex = 10 + layer
-				popBack = h.app.input:pushBack(function()
-					if dismissible then
-						h:close()
+		watch = {
+			title = function(h, title)
+				h.titleLabel.Text = title
+				h.titleLabel.Visible = title ~= ""
+			end,
+			description = function(h, description)
+				h.descriptionLabel.Text = description
+				h.descriptionLabel.Visible = description ~= ""
+			end,
+			open = function(h, open, previous, initial)
+				local wasOpen = not initial and previous == true
+				h.Instance.Visible = open
+				if open and not wasOpen then
+					layer += 1
+					h.Instance.ZIndex = 10 + layer
+					popBack = h.app.input:pushBack(function()
+						if dismissible then
+							h:close()
+						end
+						return true
+					end)
+					popScope = h.app.input:pushScope({
+						root = h.content,
+						defaultFocus = function()
+							local last = actionHandles[#actionHandles]
+							return if last then last.Instance else (h.closeButton and h.closeButton.Instance)
+						end,
+					})
+				elseif not open and wasOpen then
+					if popBack then
+						popBack()
+						popBack = nil
 					end
-					return true
-				end)
-				popScope = h.app.input:pushScope({
-					root = h.content,
-					defaultFocus = function()
-						local last = actionHandles[#actionHandles]
-						return if last then last.Instance else (h.closeButton and h.closeButton.Instance)
-					end,
-				})
-			elseif not state.open and wasOpen then
-				if popBack then
-					popBack()
-					popBack = nil
+					if popScope then
+						popScope()
+						popScope = nil
+					end
 				end
-				if popScope then
-					popScope()
-					popScope = nil
+				if open ~= wasOpen and p.onOpenChange then
+					p.onOpenChange(open, h)
 				end
-			end
-			if state.open ~= (previous and previous.open or false) and p.onOpenChange then
-				p.onOpenChange(state.open, h)
-			end
-		end,
+			end,
+		},
 	})
 
 	function handle.open(h)
-		h:set({ open = true })
+		h:set("open", true)
 	end
 	function handle.close(h)
-		h:set({ open = false })
+		h:set("open", false)
 	end
 	function handle.toggle(h)
-		h:set({ open = not h:get("open") })
+		h:set("open", not h:get("open"))
 	end
 	handle.maid:give(function()
 		if popBack then

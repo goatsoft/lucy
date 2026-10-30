@@ -232,6 +232,19 @@ One component write: 5.5 µs and 1.2 KB with 10 mounted, 163 µs and 33 KB with
   an identity check.
 - **Batching.** `state:batch` is `Lucy.batch`; store notifications queued inside
   either run when the outermost batch ends, after effects.
+- **How aliasing is built (phase 3).** The value lives in the tree, so snapshots,
+  store subscribers and `get` stay uniform. A writable ref is registered on the
+  component's node: any write to that key (handle, app, reconcile, merge) writes
+  the ref inside the same store write, before subscribers run, so the two never
+  disagree outside a batch. The ref drives the key through one effect. Both
+  directions skip equal values, so there are no ping-pong guards, and the old
+  store-to-ref subscription is gone. Sharing the ref's source object with the
+  key outright would still need that effect, to keep snapshots and store
+  subscribers current when the ref changes, so it would not save anything.
+- **Watchers.** `spec.watch = { key = fn(handle, value, previous, initial) }`:
+  one effect per key, reading only that key's source. `handle:set(key, value)`
+  writes one key through a path split once per handle, allocating nothing.
+  Errors in the first `update` or watcher run surface from `mount`, as before.
 
 ## Alternatives considered
 

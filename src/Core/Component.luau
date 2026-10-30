@@ -7,26 +7,35 @@
 	setFlag(inst, tag, on)              boolean tags such as "ui-disabled"
 	mount(spec)                         state-bound handle, see below
 
-	A mounted component keeps its stateful props in AppState at "ui.<id>". The app
-	controls it by writing there; the component re-renders through `update`.
+	A mounted component keeps its stateful props in AppState at "ui.<id>" (ADR 0004,
+	0017). The app controls it by writing there; the component reacts per key.
 
 		local handle = Component.mount({
-			kind = "button",
+			kind = "switch",
 			props = props,                 -- may include app, id, Parent, persist
-			defaults = { text = "", ... }, -- the keys that live in state
-			rules = Button.rules,          -- registered on the theme once per kind
+			defaults = { checked = false, ... }, -- the keys that live in state
+			rules = Switch.rules,          -- registered on the theme once per kind
 			render = function(handle) return rootInstance end,
-			update = function(handle, state, previous) ... end,
+			watch = {                      -- one function per key: runs on mount, then on change
+				checked = function(handle, checked, previous, initial) ... end,
+			},
+			update = function(handle, state, previous) ... end, -- or: whole state, any change
 		})
-		handle:set({ text = "Go" }) ; handle:get("text") ; handle:destroy()
+		handle:set("checked", true) ; handle:set({ label = "Go" }) ; handle:get("checked")
+		handle:destroy()
+
+	`watch` is incremental by construction and allocates nothing per change; prefer
+	it. `update` gets frozen snapshots of the whole state (`previous` is nil on the
+	first run), which costs a small table per change.
 
 	Reactive props: any state key may be given a ref, a computed or a getter
-	function instead of a plain value. The component follows it, writing each new
-	value to "ui.<id>" as usual. Writable sources (a ref, or a computed with
-	{ get, set }) are two-way: when the component or the app changes that key, the
-	source is written too, so `checked = isOn` keeps a Switch and a ref in step.
-	A read-only source wins on its next change. A component created inside an
-	effect, a scope or an `each` item is destroyed when that owner stops.
+	function instead of a plain value. A writable source (a ref, a computed with
+	{ get, set }, or app.state:ref) is bound to the key: any write to the key, by
+	the component, the app or the source's owner, is a write to the source, so
+	`checked = isOn` keeps a Switch and a ref in step. A read-only source is a
+	derived key: it follows the source, a local write overrides it, and the
+	source's next change wins. A component created inside an effect, a scope or an
+	`each` item is destroyed when that owner stops.
 ]]
 
 local CollectionService = game:GetService("CollectionService")
@@ -250,6 +259,8 @@ type HandleFields = {
 	kind: string,
 	id: string,
 	path: string,
+	segments: { any }, -- `path`, split once
+	keyPaths: { [string]: { any } }, -- `path`.<key>, split on first use
 	props: { [string]: any },
 	maid: Maid.Maid,
 	destroyed: boolean,
@@ -259,16 +270,33 @@ type HandleFields = {
 }
 export type Handle = typeof(setmetatable({} :: HandleFields, Handle))
 
+-- One key's value, or the whole state as a frozen snapshot. A key read allocates nothing.
 function Handle.get(self: Handle, key: string?): any
-	local state = self.app.state:get(self.path)
 	if key == nil then
-		return state
+		return self.app.state:_read(self.segments)
 	end
-	return if state then state[key] else nil
+	return self.app.state:_readKey(self.segments, key)
 end
 
-function Handle.set(self: Handle, patch: { [string]: any })
-	self.app.state:merge(self.path, patch)
+-- The pre-split path of one state key, built once per handle and key.
+local function keyPath(self: Handle, key: string): { any }
+	local path = self.keyPaths[key]
+	if not path then
+		local segments = table.clone(self.segments)
+		table.insert(segments, key)
+		path = table.freeze(segments)
+		self.keyPaths[key] = path
+	end
+	return path :: { any }
+end
+
+-- set(key, value) writes one key (allocates nothing); set(patch) merges a table.
+function Handle.set(self: Handle, patch: { [string]: any } | string, value: any?)
+	if type(patch) == "string" then
+		self.app.state:_write(keyPath(self, patch), value, false)
+	else
+		self.app.state:_write(self.segments, patch, true)
+	end
 end
 
 function Handle.destroy(self: Handle)
@@ -295,6 +323,8 @@ export type Spec = {
 	ruleKey: string?,
 	render: (handle: Handle) -> any,
 	update: ((handle: Handle, state: State, previous: State?) -> ())?,
+	-- key -> fn(handle, value, previous, initial); watchers may take fewer arguments
+	watch: { [string]: (...any) -> () }?,
 	mounted: ((handle: Handle) -> ())?,
 }
 
@@ -312,11 +342,14 @@ function Component.mount(spec: Spec): Handle
 		error(`[Lucy] component id "{id}" must not contain "."`, 2)
 	end
 
+	local path = "ui." .. id
 	local fields: HandleFields = {
 		app = app,
 		kind = kind,
 		id = id,
-		path = "ui." .. id,
+		path = path,
+		segments = app.state:_segments(path),
+		keyPaths = {},
 		props = props,
 		maid = Maid.new(),
 		destroyed = false,
@@ -351,32 +384,17 @@ function Component.mount(spec: Spec): Handle
 	Component.claimSelection(app, root)
 	app:registerHandle(handle)
 
-	local previous: { [string]: any }? = nil
-	local function apply(state: { [string]: any }?)
-		if handle.destroyed or state == nil then
-			return
-		end
-		if spec.update then
-			spec.update(handle, state, previous)
-		end
-		local before = previous
-		previous = state
-		-- Two-way: a state change on a key bound to a writable source writes it back.
-		if before then
-			for key, source in sources do
-				local value = state[key]
-				if value ~= nil and value ~= before[key] and Reactive.isWritable(source) then
-					if Reactive.peek(source) ~= value then
-						source(value)
-					end
-				end
-			end
+	-- Writable sources are bound to their key (ADR 0017): a write to the key writes
+	-- the source within the same store write. Unbound on destroy; the source lives on.
+	local segments = handle.segments
+	for key, source in sources do
+		keyPath(handle, key) -- built now, so the first write from the source is free
+		if Reactive.isWritable(source) then
+			handle.maid:give(app.state:_alias(segments, key, source))
 		end
 	end
-	apply(app.state:get(handle.path))
-	handle.maid:give(app.state:subscribe(handle.path, apply))
 
-	-- Ownership and reactive props. The scope belongs to whatever effect, scope or
+	-- Ownership and reactivity. The scope belongs to whatever effect, scope or
 	-- `each` item is running now; stopping it destroys the component, and
 	-- destroying the component stops the scope.
 	local scope = Reactive.effectScope()
@@ -387,18 +405,72 @@ function Component.mount(spec: Spec): Handle
 	handle.maid:give(function()
 		scope:stop()
 	end)
+	-- The first run of update / watch happens inside mount: its error (say, an
+	-- unknown variant) is mount's error. Later runs report like any effect.
+	local mountError: any = nil
+	local function firstRun(fn: (...any) -> (), ...: any)
+		local ok, err = pcall(Reactive._untracked, fn, ...)
+		if not ok and mountError == nil then
+			mountError = err
+		end
+	end
 	scope:run(function()
+		-- Each source drives its key; for a bound source this is the only copy, and
+		-- the store skips equal values, so nothing ping-pongs.
 		for key, source in sources do
 			Reactive.watchEffect(function()
 				local value = Reactive.toValue(source)
-				Reactive.untrack(function()
-					if not handle.destroyed and handle:get(key) ~= value then
-						handle:set({ [key] = value })
-					end
-				end)
+				if not handle.destroyed and app.state:_readKey(segments, key) ~= value then
+					Reactive._untracked(handle.set, handle, key, value)
+				end
 			end)
 		end
+
+		-- `update`: the whole state, re-run when anything in it changes.
+		local update = spec.update
+		if update then
+			local previous: State? = nil
+			local mounting = true
+			Reactive.watchEffect(function()
+				local state = app.state:_tracked(segments)
+				if state == nil or handle.destroyed then
+					return
+				end
+				local before = previous
+				previous = state
+				if mounting then
+					mounting = false
+					firstRun(update, handle, state, before)
+				else
+					Reactive._untracked(update, handle, state, before)
+				end
+			end)
+		end
+
+		-- `watch`: one effect per key, re-run only when that key changes.
+		if spec.watch then
+			for key, fn in spec.watch do
+				local previous: any = nil
+				local initial = true
+				Reactive.watchEffect(function()
+					local value, present = app.state:_trackedKey(segments, key)
+					if not present or handle.destroyed then
+						return -- the app removed ui.<id>; wait for it to come back
+					end
+					local before, first = previous, initial
+					previous, initial = value, false
+					if first then
+						firstRun(fn, handle, value, before, first)
+					else
+						Reactive._untracked(fn, handle, value, before, first)
+					end
+				end)
+			end
+		end
 	end)
+	if mountError ~= nil then
+		error(mountError, 0)
+	end
 
 	local parent = props.Parent or props.parent
 	if parent then

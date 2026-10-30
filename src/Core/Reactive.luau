@@ -824,6 +824,18 @@ function Reactive._inBatch(): boolean
 	return userBatch > 0
 end
 
+-- `untrack` for hot paths: one result, no allocation.
+function Reactive._untracked(fn: (...any) -> any, ...: any): any
+	local previous = tracking
+	tracking = nil
+	local ok, result = pcall(fn, ...)
+	tracking = previous
+	if not ok then
+		error(result, 0)
+	end
+	return result
+end
+
 -- Runs `hook` once, when the outermost Lucy.batch ends.
 function Reactive._afterBatch(hook: () -> ())
 	endHookCount += 1

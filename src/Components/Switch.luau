@@ -106,34 +106,31 @@ function Switch.new(props: { [string]: any }?)
 			end))
 			return root
 		end,
-		-- Incremental: only keys that changed touch the instances. A toggle is a tag
-		-- flip plus replaying one of two prebuilt thumb tweens.
-		update = function(h, state, previous)
-			local first = previous == nil
-			local before: Component.State = previous or {}
-			if first or before.visible ~= state.visible then
-				h.Instance.Visible = state.visible
-			end
-			if first or before.disabled ~= state.disabled then
-				h.Instance.Interactable = not state.disabled
-				h.Instance.Selectable = not state.disabled
-				Component.setFlag(h.track, "ui-disabled", state.disabled)
-				Component.setFlag(h.label, "ui-disabled", state.disabled)
-			end
-			if first or before.label ~= state.label then
-				h.label.Text = state.label
-				h.label.Visible = state.label ~= ""
-			end
-			if first or before.checked ~= state.checked then
-				Component.setFlag(h.track, "ui-checked", state.checked)
+		-- Per key: a toggle is a tag flip plus replaying one of two prebuilt thumb tweens.
+		watch = {
+			visible = function(h, visible)
+				h.Instance.Visible = visible
+			end,
+			disabled = function(h, disabled)
+				h.Instance.Interactable = not disabled
+				h.Instance.Selectable = not disabled
+				Component.setFlag(h.track, "ui-disabled", disabled)
+				Component.setFlag(h.label, "ui-disabled", disabled)
+			end,
+			label = function(h, label)
+				h.label.Text = label
+				h.label.Visible = label ~= ""
+			end,
+			checked = function(h, checked, _, initial)
+				Component.setFlag(h.track, "ui-checked", checked)
 				if h.placeThumb then
-					h.placeThumb(not first)
+					h.placeThumb(not initial)
 				end
-			end
-			if not first and before.checked ~= state.checked and p.onCheckedChange then
-				p.onCheckedChange(state.checked, h)
-			end
-		end,
+				if not initial and p.onCheckedChange then
+					p.onCheckedChange(checked, h)
+				end
+			end,
+		},
 	})
 
 	-- Size from density: runs once and on density changes, and rebuilds the two
@@ -176,7 +173,7 @@ function Switch.new(props: { [string]: any }?)
 		if h:get("disabled") then
 			return
 		end
-		h:set({ checked = not h:get("checked") })
+		h:set("checked", not h:get("checked"))
 	end
 	return handle
 end

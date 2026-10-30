@@ -283,6 +283,49 @@ return function()
 			expect(handle.destroyed).to.equal(true)
 		end)
 
+		it("aliases a writable ref: every write to the key is a write to the ref, at once", function()
+			local on = Reactive.ref("a")
+			local handle = mountThing({ app = app, id = "alias", text = on })
+			local seenByStore
+			app.state:subscribe("ui.alias.text", function()
+				seenByStore = on() -- the ref already holds the new value when subscribers run
+			end)
+			app.state:merge("ui.alias", { text = "merged" })
+			expect(on()).to.equal("merged")
+			expect(seenByStore).to.equal("merged")
+			app.state:set("ui.alias", { text = "replaced", visible = true })
+			expect(on()).to.equal("replaced")
+			handle:set("text", "key form")
+			expect(on()).to.equal("key form")
+			on("from ref")
+			expect(handle:get("text")).to.equal("from ref")
+			expect(handle.Instance.Text).to.equal("from ref")
+			handle:destroy()
+		end)
+
+		it("shares one ref between many components without ping-pong", function()
+			local on = Reactive.ref("x")
+			local a, rendersA = mountThing({ app = app, text = on })
+			local b, rendersB = mountThing({ app = app, text = on })
+			a:set("text", "y")
+			expect(on()).to.equal("y")
+			expect(b.Instance.Text).to.equal("y")
+			expect(rendersA()).to.equal(2)
+			expect(rendersB()).to.equal(2)
+			a:destroy()
+			b:destroy()
+		end)
+
+		it("lets an aliased ref outlive the component, unbound", function()
+			local on = Reactive.ref("a")
+			local handle = mountThing({ app = app, id = "owner", persist = true, text = on })
+			handle:destroy()
+			on("after")
+			expect(app.state:get("ui.owner.text")).to.equal("a")
+			app.state:set("ui.owner.text", "store only")
+			expect(on()).to.equal("after")
+		end)
+
 		it("leaves callback props alone", function()
 			local called = false
 			local handle = Component.mount({
@@ -300,6 +343,75 @@ return function()
 			})
 			expect(handle:get("onClick")).to.equal(nil)
 			expect(called).to.equal(false)
+			handle:destroy()
+		end)
+	end)
+
+	describe("watch", function()
+		local Reactive = require(script.Parent.Reactive)
+		local app, cleanup
+		beforeEach(function()
+			app, cleanup = Harness.app()
+		end)
+		afterEach(function()
+			cleanup()
+		end)
+
+		local function mountWatched(props, log)
+			return Component.mount({
+				kind = "watched",
+				props = props,
+				defaults = { text = "", count = 0 },
+				render = function()
+					return Component.create("TextLabel", {})
+				end,
+				watch = {
+					text = function(h, value, previous, initial)
+						h.Instance.Text = value
+						table.insert(log, `text:{previous}>{value}{if initial then "!" else ""}`)
+					end,
+					count = function(_, value, previous)
+						table.insert(log, `count:{previous}>{value}`)
+					end,
+				},
+			})
+		end
+
+		it("runs each key once on mount, then only for the key that changed", function()
+			local log = {}
+			local handle = mountWatched({ app = app, id = "w", text = "a" }, log)
+			table.sort(log)
+			expect(table.concat(log, ",")).to.equal("count:nil>0,text:nil>a!")
+			table.clear(log)
+			handle:set("text", "b")
+			app.state:set("ui.w.text", "c")
+			handle:set({ text = "c" })
+			expect(table.concat(log, ",")).to.equal("text:a>b,text:b>c")
+			expect(handle.Instance.Text).to.equal("c")
+			handle:destroy()
+		end)
+
+		it("follows a ref and stops after destroy", function()
+			local log = {}
+			local count = Reactive.ref(1)
+			local handle = mountWatched({ app = app, count = count }, log)
+			table.clear(log)
+			count(2)
+			expect(table.concat(log, ",")).to.equal("count:1>2")
+			handle:destroy()
+			count(3)
+			expect(#log).to.equal(1)
+		end)
+
+		it("batches: one run per key per Lucy.batch", function()
+			local log = {}
+			local handle = mountWatched({ app = app }, log)
+			table.clear(log)
+			Reactive.batch(function()
+				handle:set("count", 1)
+				handle:set("count", 2)
+			end)
+			expect(table.concat(log, ",")).to.equal("count:0>2")
 			handle:destroy()
 		end)
 	end)
