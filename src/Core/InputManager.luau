@@ -596,7 +596,7 @@ function InputManager._watch(self: InputManager)
 		then
 			return
 		end
-		if processed and key ~= Enum.KeyCode.Tab then
+		if processed and key ~= Enum.KeyCode.Tab and not self:_heldByLucy(key) then
 			return
 		end
 		if key == Enum.KeyCode.Tab then
@@ -650,6 +650,18 @@ function InputManager._watch(self: InputManager)
 			self:_hold(Enum.KeyCode.Thumbstick1, direction)
 		end
 	end))
+end
+
+--[[
+	True if `key` arrives processed only because Lucy's own movement block sinks it
+	(app.actions), so navigation still reads it inside a modal. Old default controls
+	only. TODO(remove): delete with the old default controls (the
+	Workspace.PlayerScriptsUseInputActionSystem setting, due mid 2027); see
+	Actions._defineMovement.
+]]
+function InputManager._heldByLucy(self: InputManager, key: Enum.KeyCode): boolean
+	local actions = self.app.actions
+	return actions ~= nil and actions:_sinks(key)
 end
 
 function InputManager.destroy(self: InputManager)

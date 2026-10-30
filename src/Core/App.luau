@@ -8,8 +8,10 @@
 		app.state   AppState, the single source of truth for UI (ADR 0004)
 		app.theme   Theme, Universal Styling sheets (ADR 0003)
 		app.input   InputManager, mouse/keyboard/gamepad/touch and device class (ADR 0007)
+		app.actions Actions, named keys in sets switched on and off together (ADR 0026)
 		app.scenes  SceneManager, title screen / game / menus (ADR 0005)
 		app.toast   toast notifications, if the Toaster component is present
+		app:modalOpen()  true while a modal dialog, sheet or popup is open (tracked)
 
 	config:
 		theme         initial theme name ("dark")
@@ -23,6 +25,7 @@
 		styleParent   where the StyleSheet folder goes (ReplicatedStorage)
 		adaptive      false to disable scaling, or Adaptive options merged over the device profile
 		input         InputManager options ({ caps, mode, watch } for tests)
+		actions       Actions options ({ parent, controls, contextActions })
 		state         initial AppState tree
 		namePrefix    prefix for created instances ("Lucy_")
 		setCurrent    make this the default app for components (true)
@@ -32,6 +35,7 @@ local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 
 local Adaptive = require(script.Parent.Adaptive)
+local Actions = require(script.Parent.Actions)
 local AppState = require(script.Parent.AppState)
 local Context = require(script.Parent.Context)
 local InputManager = require(script.Parent.InputManager)
@@ -44,6 +48,9 @@ local Tokens = require(script.Parent.Tokens)
 local App = {}
 App.__index = App
 
+-- Where Core/Overlay publishes how many modal overlays are open.
+local MODAL_PATH = table.freeze({ "overlay", "modal" })
+
 -- Optional services (app.toast, a test clock) are added later, hence the indexer.
 export type App = typeof(setmetatable(
 	{} :: {
@@ -55,6 +62,7 @@ export type App = typeof(setmetatable(
 		theme: Theme.Theme,
 		state: AppState.AppState,
 		input: InputManager.InputManager,
+		actions: Actions.Actions,
 		scenes: SceneManager.SceneManager,
 		destroyed: boolean?,
 		_ids: { [string]: number },
@@ -137,6 +145,9 @@ function App.new(config: { [string]: any }?): App
 	self.input = InputManager.new(self, options.input)
 	self.maid:give(self.input)
 
+	self.actions = Actions.new(self, options.actions)
+	self.maid:give(self.actions)
+
 	-- Density and scaling follow the device unless pinned in config.
 	local function onDevice(device: string?)
 		if device == nil then
@@ -197,6 +208,12 @@ function App._adaptiveOptions(self: App, getViewport: (() -> Vector2)?): { [stri
 	end
 	merged.getViewport = getViewport
 	return merged
+end
+
+-- True while any modal overlay is open. Non modal ones never count. Tracked, so a
+-- computed or effect that reads it runs again when it changes.
+function App.modalOpen(self: App): boolean
+	return (self.state:_tracked(MODAL_PATH) or 0) > 0
 end
 
 function App.nextId(self: App, kind: string): string
