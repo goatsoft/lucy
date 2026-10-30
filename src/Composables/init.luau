@@ -13,6 +13,8 @@
 			Lucy.useUiSound(h.app, { activate = playClick })     -- the game's own sounds
 			local gap = Lucy.useResponsive(h.app, { touch = 16, default = 8 })
 			local board = Lucy.useTable({ data = players, columns = columns })
+			Lucy.useWhile(open, function() return signal:Connect(onFire) end)  -- only while open
+			local timer = Lucy.useCountdown(endsAt)              -- timer.remaining(), timer.done()
 			...
 		end
 
@@ -130,6 +132,102 @@ end
 function Composables.useTable(options: { [string]: any })
 	requireOwner("useTable")
 	return TableModel.new(options)
+end
+
+--[[
+	Runs `setup` each time `condition` (a ref, getter or value) turns true, and
+	cleans up what it made when it turns false or the owner stops. `setup` may
+	return a cleanup function or an RBXScriptConnection, and may call onCleanup or
+	make effects of its own. Its reads are not tracked, so only `condition` reruns
+	it.
+
+		Lucy.useWhile(function() return app:modalOpen() end, function()
+			return app.actions:disable("gameplay", "movement")
+		end)
+]]
+function Composables.useWhile(condition: Reactive.MaybeRef<boolean>, setup: () -> any)
+	requireOwner("useWhile")
+	Reactive.watchEffect(function(onCleanup)
+		if not Reactive.toValue(condition) then
+			return
+		end
+		local scope = Reactive.effectScope(true)
+		local result = Reactive.untrack(function()
+			return scope:run(setup)
+		end)
+		if result ~= nil and type(result) ~= "function" and typeof(result) ~= "RBXScriptConnection" then
+			scope:stop()
+			error("[Lucy] useWhile: setup returns a cleanup function, a connection or nothing", 0)
+		end
+		onCleanup(function()
+			scope:stop()
+			if type(result) == "function" then
+				result()
+			elseif typeof(result) == "RBXScriptConnection" then
+				result:Disconnect()
+			end
+		end)
+	end)
+end
+
+--[[
+	Whole seconds left until `endsAt` (a number, ref or getter in
+	workspace:GetServerTimeNow() time, so every player sees the same count). Returns
+	{ remaining, done }: `remaining` never goes below 0 and ticks once a second, on
+	the second; `done` is true once it reaches 0. With no end time, remaining is 0
+	and done is false. Follows `endsAt` when it changes. options.now replaces the
+	clock (tests).
+]]
+function Composables.useCountdown(
+	endsAt: Reactive.MaybeRef<number?>,
+	options: { now: (() -> number)? }?
+): { remaining: Reactive.Computed<number>, done: Reactive.Computed<boolean> }
+	requireOwner("useCountdown")
+	local now: () -> number = (options and options.now)
+		or function()
+			return workspace:GetServerTimeNow()
+		end
+	local left = Reactive.ref(0)
+	local ended = Reactive.ref(false)
+	Reactive.watchEffect(function(onCleanup)
+		local target: number? = Reactive.toValue(endsAt) :: any
+		local thread: thread? = nil
+		local function update()
+			thread = nil
+			if target == nil then
+				Reactive.batch(function()
+					left(0)
+					ended(false)
+				end)
+				return
+			end
+			local seconds = target - now()
+			local whole = math.max(math.ceil(seconds), 0)
+			Reactive.batch(function()
+				left(whole)
+				ended(whole == 0)
+			end)
+			if whole > 0 then
+				-- Until the count drops by one.
+				thread = task.delay(seconds - (whole - 1), update)
+			end
+		end
+		Reactive.untrack(update)
+		onCleanup(function()
+			if thread then
+				task.cancel(thread)
+				thread = nil
+			end
+		end)
+	end)
+	return {
+		remaining = Reactive.computed(function()
+			return left()
+		end),
+		done = Reactive.computed(function()
+			return ended()
+		end),
+	}
 end
 
 return Composables

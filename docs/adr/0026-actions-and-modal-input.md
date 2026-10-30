@@ -81,8 +81,10 @@ app.actions:enabled("gameplay")                       -- tracked boolean
   itself.
 - Calls that change things take several at once (`disable`, `bind`, `define`);
   calls that read take one name (`keys`, `enabled`), and `on` takes one action.
-- **`keys(name)`** reads `PreferredBinding` and follows `input.device`, so
-  Button `hint` and Kbd can show an action later without the game listing keys.
+- **`keys(name)`** splits the action's keys by `input.mode`, the mode Lucy's
+  focus ring and navigation already follow (gamepad keys on a gamepad, none on
+  touch, the rest otherwise), so Button `hint` and Kbd can show an action later
+  without the game listing keys.
 
 ### 3. The built in `movement` set
 
@@ -123,16 +125,18 @@ condition turns false or the owner stops. It replaces Dance Lab's
 seconds left (never below 0) and a boolean. It ticks on each second boundary,
 not every frame, and follows `endsAt` when it changes.
 
-Modal input in a game is then one line, and the docs show it:
+Modal input in a game is then a few lines, and the docs show it:
 
 ```luau
-Lucy.useWhile(app.modalOpen, function()
+Lucy.useWhile(function()
+	return app:modalOpen()
+end, function()
 	return app.actions:disable("gameplay", "movement")
 end)
 ```
 
 The dance menu case is the game's own condition (disable only `gameplay` while
-that overlay is on top, from `overlay.top`).
+that overlay is on top, from `app.state:ref("overlay.top")`).
 
 ### 5. Checked in Studio (2026-10-31)
 

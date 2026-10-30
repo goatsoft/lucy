@@ -120,6 +120,12 @@ method that returns true takes it.
 Roblox's own selection image is replaced with a blank frame; Lucy draws its own
 ring with the `ui-focus-visible` tag only while navigating with keys or a pad.
 
+Hotkeys go through `app.actions`: named actions in sets, built as Roblox
+InputContexts, that a game switches off together (the built in `movement` set
+stops the character). `app:modalOpen()` says whether a modal overlay is open; a
+game decides what to switch off while one is. See
+[Hotkeys and modal input](./guide/actions.md).
+
 ## Folder layout
 
 ```

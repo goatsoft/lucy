@@ -147,6 +147,8 @@ Lucy.useBackHandler(app, isOpen, function() close() return true end)
 Lucy.useFocusScope(app, isOpen, { root = panel })
 Lucy.useUiSound(app, { activate = playClick })           -- the game's own sounds
 local board = Lucy.useTable({ data = players, columns = columns })  -- sorted rows
+Lucy.useWhile(isOpen, function() return signal:Connect(onFire) end)  -- only while open
+local timer = Lucy.useCountdown(endsAt)                    -- timer.remaining(), timer.done()
 ```
 
 Write your own the same way: take refs or getters, return refs or computeds, and

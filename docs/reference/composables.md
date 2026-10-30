@@ -22,6 +22,8 @@ To write your own, see [Share logic with composables](../guide/composables.md).
 | [`useFocusScope`](#usefocusscope) | Keeps keyboard and gamepad focus inside a frame while active |
 | [`useUiSound`](#useuisound) | Calls your functions when components are clicked, toggled, opened or closed |
 | [`useTable`](#usetable) | Sorted rows from your data and a list of columns |
+| [`useWhile`](#usewhile) | Sets something up while a condition is true and cleans it up when it turns false |
+| [`useCountdown`](#usecountdown) | Whole seconds left until a time, for round and event timers |
 
 ## useDensity
 
@@ -180,3 +182,54 @@ keep the order of your data. One column sorts at a time.
 | `canSort(columnId)` | Whether the column sorts |
 | `setSorting(sort)` | Sets the sort directly |
 | `columns` | The columns, with their ids worked out |
+
+## useWhile
+
+```lua
+Lucy.useWhile(isOpen, function()
+    return UserInputService.InputBegan:Connect(onInput)
+end)
+```
+
+Runs the function each time the condition turns true, and cleans up what it made
+when the condition turns false or the owner stops. The condition is a ref, a
+getter or a value. The function can return a cleanup function or a connection,
+call `Lucy.onCleanup`, or make effects of its own; all of it is cleaned up.
+
+Only the condition starts it again: values the function reads along the way do
+not.
+
+A common use is switching gameplay keys and movement off while a menu is open
+(see [Hotkeys and modal input](../guide/actions.md)):
+
+```lua
+Lucy.useWhile(function()
+    return app:modalOpen()
+end, function()
+    return app.actions:disable("gameplay", "movement")
+end)
+```
+
+## useCountdown
+
+```lua
+local timer = Lucy.useCountdown(roundEndsAt)
+
+Lucy.Text.new({
+    text = function()
+        return `{timer.remaining()}s left`
+    end,
+})
+```
+
+Counts the whole seconds left until `endsAt`, a number, ref or getter in
+`workspace:GetServerTimeNow()` time, so every player sees the same count. Send
+the end time from your server once; there is no need to send every second.
+
+| Name | What it is |
+|---|---|
+| `remaining` | Seconds left, never below 0. Changes once a second, on the second |
+| `done` | `true` once `remaining` reaches 0 |
+
+With no end time (`nil`), `remaining` is 0 and `done` is `false`. When the end
+time changes, the count follows it.

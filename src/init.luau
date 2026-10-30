@@ -94,6 +94,8 @@ return {
 	useResponsive = Composables.useResponsive,
 	useUiSound = Composables.useUiSound,
 	useTable = Composables.useTable,
+	useWhile = Composables.useWhile,
+	useCountdown = Composables.useCountdown,
 
 	-- Animation (Core/Animate)
 	spring = Animate.spring,
