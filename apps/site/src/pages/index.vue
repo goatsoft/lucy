@@ -4,8 +4,7 @@ import { AuroraScene } from '@goatsoft/aurora-vue'
 import { RouterLink } from 'vue-router'
 import heroDark from '@/backgrounds/hero-dark.aurora'
 import cardRadar from '@/backgrounds/card-radar.aurora'
-import sectionRadarDark from '@/backgrounds/section-radar-dark.aurora'
-import sectionRadarLight from '@/backgrounds/section-radar-light.aurora'
+import featuresScene from '@/backgrounds/features-scene.aurora'
 import heroLight from '@/backgrounds/hero-light.aurora'
 import terminalDark from '@/backgrounds/terminal-dark.aurora'
 import terminalLight from '@/backgrounds/terminal-light.aurora'
@@ -108,22 +107,15 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
       </p>
     </section>
 
-    <!-- One scene: a faint radar behind the section, seen brighter through each card. The
-         sweep crosses the section and lights each card in turn, all on one clock. -->
+    <!-- One scene the size of the section: one radar, seen only through the cards. The
+         sweep crosses them in turn, all on one clock. -->
     <AuroraScene name="features">
       <section
         id="features"
         class="relative isolate mx-auto max-w-6xl scroll-mt-24 px-6 py-20"
       >
-        <div
-          aria-hidden="true"
-          class="pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(closest-side,black_55%,transparent)]"
-        >
-          <ThemedBackground
-            :dark="sectionRadarDark"
-            :light="sectionRadarLight"
-          />
-        </div>
+        <!-- Draws nothing: it only gives the scene the section's size, so the radar is big. -->
+        <ThemedBackground :dark="featuresScene" />
         <p class="eyebrow text-center">
           Features
         </p>

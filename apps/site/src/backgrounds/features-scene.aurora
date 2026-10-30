@@ -2,7 +2,7 @@
   "$schema": "https://aurora.goatsoft.io/schema/v1.json",
   "format": "aurora",
   "version": 1,
-  "name": "Lucy Section Radar",
+  "name": "Lucy Features Scene",
   "motion": {
     "speed": 1,
     "reduced": "still"
@@ -15,7 +15,7 @@
   "layers": [
     {
       "type": "radar",
-      "opacity": 0.35,
+      "opacity": 0,
       "colors": [
         0,
         1,
