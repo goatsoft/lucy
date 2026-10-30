@@ -31,8 +31,11 @@ return function()
 	describe("measure", function()
 		local function busy(seconds: number)
 			local stop = os.clock() + seconds
+			local spins = 0
 			while os.clock() < stop do
+				spins += 1
 			end
+			return spins
 		end
 
 		it("runs setup, run and teardown for warmup plus iterations", function()

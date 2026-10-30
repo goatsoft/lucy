@@ -3,3 +3,5 @@ std = "roblox+testez"
 [lints]
 # Specs use describe/it/expect globals provided by TestEZ.
 shadowing = "allow"
+# Lucy.new takes properties and children in one table, by design (docs/reactivity.md).
+mixed_table = "allow"

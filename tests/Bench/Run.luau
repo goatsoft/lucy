@@ -88,6 +88,7 @@ function Run.run(options: { [string]: any }?): Report
 		markdown = markdown,
 		environment = {
 			date = os.date("!%Y-%m-%d"),
+			-- selene: allow(undefined_variable)
 			studio = version(),
 			iterations = iterations,
 			warmup = warmup,

@@ -370,7 +370,7 @@ local suites: { Suite } = {
 					sink.total = total
 				end)
 			end)
-			return { source = source, scope = scope }
+			return { source = source, scope = scope, sink = sink }
 		end,
 		run = function(state)
 			state.source(state.source() + 1)
