@@ -70,7 +70,6 @@ export type App = typeof(setmetatable(
 -- Display orders for shared portals. Scenes use 10-299 (see SceneManager).
 App.portalOrder = {
 	test = 400,
-	popover = 800,
 	modal = 900,
 	toast = 1000,
 }

@@ -33,13 +33,21 @@ quit:open()
 | `actions` | table | | | Buttons along the bottom, see [Actions](#actions) |
 | `children` | table | | | Instances or handles to put in the content area |
 | `dismissible` | boolean | `true` | | Whether Escape, ButtonB, the overlay and the close button can close it |
-| `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it |
+| `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it (off by default when `modal` is `false`) |
+| `modal` | boolean | `true` | | `false` lets clicks reach what is behind it and lets focus move out of it |
+| `scrim` | boolean | `true` | | `false` drops the dimmed backdrop |
 | `showClose` | boolean | `true` | | Shows the close button in the corner |
 | `maxWidth` | number | `448` | | The widest it gets, in pixels |
 | `onOpenChange` | function | | | Called with `(open, handle)` when it opens or closes |
 
 It also takes the [props every component takes](index.md#using-a-component).
-Without a `Parent`, it goes into the app's modal layer, above every scene.
+Without a `Parent`, it goes into the app's modal layer, above every scene. A
+dialog opened later shows above one opened earlier.
+
+While a modal dialog is open, keyboard and gamepad focus stay inside it. When
+it closes, focus goes back to whatever had it before. A dialog with
+`modal = false` is still on top, but the rest of the screen keeps working,
+and Escape or ButtonB still closes it.
 
 ### Actions
 

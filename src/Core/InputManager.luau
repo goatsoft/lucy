@@ -18,9 +18,12 @@
 		scrolls any ScrollingFrame above it to show it (Core/Scroll).
 
 	Scopes:
-		pushScope({ root, defaultFocus }) confines Tab/arrow navigation to `root`
-		(dialogs and modal scenes push one). When the player picks up a gamepad or
-		presses Tab with nothing selected, the top scope's defaultFocus is selected.
+		pushScope({ root, defaultFocus, returnFocus }) confines Tab/arrow navigation
+		to `root` (dialogs and modal scenes push one). When the player picks up a
+		gamepad or presses Tab with nothing selected, the top scope's defaultFocus
+		is selected. When the scope pops with focus inside it, focus goes back to
+		returnFocus (an object or a function returning one), or else to what had
+		focus when the scope was pushed, if it is still shown.
 
 	Shoulder buttons:
 		LB / RB call app.input:shoulder(-1 / 1): the nearest component around the
@@ -42,7 +45,7 @@ local Scroll = require(script.Parent.Scroll)
 local InputManager = {}
 InputManager.__index = InputManager
 
-export type Scope = { root: GuiObject | LayerCollector, defaultFocus: any? }
+export type Scope = { root: GuiObject | LayerCollector, defaultFocus: any?, returnFocus: any? }
 
 export type InputManager = typeof(setmetatable(
 	{} :: {
@@ -234,6 +237,7 @@ end
 -- Scopes ---------------------------------------------------------------------
 
 function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
+	local previous = self._focused
 	table.insert(self._scopes, scope)
 	if self:isNavigating() then
 		self:focusDefault()
@@ -247,7 +251,12 @@ function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
 		if focused and scope.root and focused:IsDescendantOf(scope.root) then
 			self:focus(nil)
 			if self:isNavigating() then
-				self:focusDefault()
+				local back = self:_usable(scope.returnFocus) or self:_usable(previous)
+				if back then
+					self:focus(back)
+				else
+					self:focusDefault()
+				end
 			end
 		end
 	end
@@ -269,6 +278,26 @@ local function isShown(object: GuiObject): boolean
 		node = node.Parent
 	end
 	return true
+end
+
+-- `target` (an object, a handle or a function returning either) if it can take
+-- focus now: selectable, interactable and shown.
+-- selene: allow(unused_variable)
+function InputManager._usable(self: InputManager, target: any): GuiObject?
+	if type(target) == "function" then
+		target = target()
+	end
+	if type(target) == "table" and target.Instance then
+		target = target.Instance
+	end
+	if typeof(target) ~= "Instance" or not target:IsA("GuiObject") or not target.Parent then
+		return nil
+	end
+	local object = target :: GuiObject
+	if object.Selectable and object.Interactable and isShown(object) then
+		return object
+	end
+	return nil
 end
 
 -- Selectable, visible, interactable GuiObjects under `root`, in reading order.

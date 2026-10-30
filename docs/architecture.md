@@ -92,7 +92,7 @@ unstyled value. Styles apply a few frames after a change.
 | screen | 10 | exactly one (`scenes.current`) | Title, Lobby, Game |
 | overlay | 100+ | any, independent (`scenes.visible`) | HUD, chat |
 | modal | 200+ | stacked (`scenes.stack`) | Pause, Settings |
-| portal: modal | 900 | dialogs | Dialog, Dialog.alert |
+| portal: modal | 900 | dialogs and anything else floating, newest on top | Dialog, Dialog.alert |
 | portal: toast | 1000 | toasts | app.toast |
 
 ## Input and focus

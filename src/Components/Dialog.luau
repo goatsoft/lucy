@@ -13,6 +13,8 @@
 			},
 			dismissible = true,       -- Escape / ButtonB / overlay / close button
 			closeOnOverlay = true,
+			modal = true,             -- false: no focus trap, presses reach what is behind
+			scrim = true,             -- false: no dimmed backdrop
 			showClose = true,
 			maxWidth = 448,
 			onOpenChange = function(open, dialog) end,
@@ -23,33 +25,26 @@
 		Dialog.alert({ title, description, confirmText, cancelText, destructive, onConfirm, onCancel })
 
 	An action closes the dialog after its onClick unless onClick returns false.
-	Dialogs mount into the app's "modal" portal (above every scene) unless Parent is given.
+	Dialogs mount into the app's "modal" portal (above every scene) unless Parent is given,
+	and stack with sheets and popups by the order they open (Core/Overlay).
 
-	Input: while open the dialog is a focus scope (Tab/arrows/gamepad stay inside,
-	the first action is selected when navigating), registers a back handler, and
-	its content is a SelectionGroup so the gamepad cannot wander out.
+	Input: while open a modal dialog is a focus scope (Tab/arrows/gamepad stay inside,
+	the primary action is selected when navigating), registers a back handler, and
+	its content is a SelectionGroup so the gamepad cannot wander out. Focus goes
+	back to whatever had it when the dialog closes.
 
 	State keys: open, title, description.
 ]]
 
 local Button = require(script.Parent.Button)
 local Component = require(script.Parent.Parent.Core.Component)
-local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
+local Overlay = require(script.Parent.Parent.Core.Overlay)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Dialog = {}
 
 local rules: { Component.Rule } = {
-	{
-		selector = ".ui-dialog-overlay",
-		priority = 0,
-		properties = {
-			BackgroundColor3 = "$Overlay",
-			BackgroundTransparency = "$OverlayTransparency",
-			BorderSizePixel = 0,
-		},
-	},
 	{
 		selector = ".ui-dialog-content",
 		priority = 0,
@@ -98,8 +93,6 @@ local rules: { Component.Rule } = {
 }
 Dialog.rules = rules
 
-local layer = 0
-
 -- A wrapped label bound to a text key; hidden while empty.
 local function label(tag: string, order: number, text: () -> string)
 	return Element.new("TextLabel", {
@@ -119,7 +112,10 @@ end
 function Dialog.new(props: { [string]: any }?)
 	local p: Component.Props = props or {}
 	local dismissible = p.dismissible ~= false
-	local closeOnOverlay = dismissible and p.closeOnOverlay ~= false
+	local modal = p.modal ~= false
+	-- A modal closes on an outside press unless told not to; a non modal one only when asked.
+	local closeOnOverlay = dismissible
+		and (if modal then p.closeOnOverlay ~= false else p.closeOnOverlay == true)
 	local showClose = dismissible and p.showClose ~= false
 	local actionHandles = {}
 
@@ -131,46 +127,12 @@ function Dialog.new(props: { [string]: any }?)
 		rules = Dialog.rules,
 		render = function(h)
 			local open = h:ref("open")
-			local root = Element.new("Frame", {
-				Name = "Dialog",
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				Size = UDim2.fromScale(1, 1),
-				Visible = open,
-				Tags = { "ui-dialog" },
-			})
-
-			local overlay = Component.create("TextButton", {
-				Name = "Overlay",
-				Text = "",
-				AutoButtonColor = false,
-				Selectable = false,
-				Size = UDim2.fromScale(1, 1),
-				ZIndex = 1,
-				Tags = { "ui-dialog-overlay" },
-				Parent = root,
-			})
-			h.maid:give(overlay.Activated:Connect(function()
-				if closeOnOverlay then
-					h:close()
-				end
-			end))
-
 			local content = Component.create("Frame", {
 				Name = "Content",
-				AnchorPoint = Vector2.new(0.5, 0.5),
-				Position = UDim2.fromScale(0.5, 0.5),
 				Size = UDim2.new(1, -32, 0, 0),
 				AutomaticSize = Enum.AutomaticSize.Y,
 				Active = true,
-				ZIndex = 2,
-				SelectionGroup = true,
-				SelectionBehaviorUp = Enum.SelectionBehavior.Stop,
-				SelectionBehaviorDown = Enum.SelectionBehavior.Stop,
-				SelectionBehaviorLeft = Enum.SelectionBehavior.Stop,
-				SelectionBehaviorRight = Enum.SelectionBehavior.Stop,
 				Tags = { "ui-dialog-content" },
-				Parent = root,
 			})
 			Component.create(
 				"UISizeConstraint",
@@ -240,31 +202,32 @@ function Dialog.new(props: { [string]: any }?)
 			end
 			footer.Visible = #actionHandles > 0
 
-			h.overlay, h.content, h.body, h.footer, h.actions = overlay, content, body, footer, actionHandles
-			Component.claimSelection(h.app, root)
-
-			-- While open: a back handler and a focus scope (owned, so destroy pops them).
-			Composables.useBackHandler(h.app, open, function()
-				if dismissible then
-					h:close()
-				end
-				return true
-			end)
-			Composables.useFocusScope(h.app, open, {
-				root = content,
+			-- Stacking, back, focus and the dimmed backdrop (owned, so destroy pops them).
+			local overlay = Overlay.use(h.app, {
+				open = open,
+				content = content,
+				presentation = "center",
+				modal = modal,
+				scrim = if p.scrim == false then false else nil,
+				dismissible = dismissible,
+				closeOnOutside = closeOnOverlay,
+				parent = false,
+				id = h.id,
+				name = "Dialog",
+				tags = { "ui-dialog" },
 				defaultFocus = function()
 					local last = actionHandles[#actionHandles]
 					return if last then last.Instance else (h.closeButton and h.closeButton.Instance)
 				end,
 			})
+			local root = overlay.root
+			h.overlay, h.content, h.body, h.footer, h.actions =
+				overlay.scrim, content, body, footer, actionHandles
+			Component.claimSelection(h.app, root)
 
-			-- Side effects of opening: the newest dialog goes on top, and the owner hears.
+			-- Side effects of opening: the owner hears.
 			Reactive.watch(open, function(isOpen, previous)
 				local wasOpen = previous == true
-				if isOpen and not wasOpen then
-					layer += 1
-					root.ZIndex = 10 + layer
-				end
 				if (isOpen == true) ~= wasOpen then
 					if previous ~= nil then -- not at mount
 						h:emit(if isOpen then "open" else "close")

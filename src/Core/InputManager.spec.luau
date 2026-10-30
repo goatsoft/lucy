@@ -108,6 +108,61 @@ return function()
 			expect(app.input:topScope()).to.equal(nil)
 		end)
 
+		it("returns focus to returnFocus when a scope pops", function()
+			local gui = Harness.mount(app)
+			local opener = Instance.new("TextButton")
+			opener.Position = UDim2.fromOffset(0, 300)
+			opener.Parent = gui
+			local panel = Instance.new("Frame")
+			panel.Parent = gui
+			local inside = Instance.new("TextButton")
+			inside.Parent = panel
+			app.input:setMode("gamepad")
+			app.input:focus(opener)
+			local pop = app.input:pushScope({ root = panel, defaultFocus = inside, returnFocus = opener })
+			expect(app.input:focused()).to.equal(inside)
+			pop()
+			expect(app.input:focused()).to.equal(opener)
+		end)
+
+		it("returns focus to what had it when the scope was pushed", function()
+			local gui = Harness.mount(app)
+			local opener = Instance.new("TextButton")
+			opener.Position = UDim2.fromOffset(0, 300)
+			opener.Parent = gui
+			local panel = Instance.new("Frame")
+			panel.Parent = gui
+			local inside = Instance.new("TextButton")
+			inside.Parent = panel
+			app.input:setMode("gamepad")
+			app.input:focus(opener)
+			local pop = app.input:pushScope({ root = panel, defaultFocus = inside })
+			pop()
+			expect(app.input:focused()).to.equal(opener)
+		end)
+
+		it("takes returnFocus as a function and skips it when hidden", function()
+			local gui = Harness.mount(app)
+			local opener = Instance.new("TextButton")
+			opener.Parent = gui
+			local panel = Instance.new("Frame")
+			panel.Parent = gui
+			local inside = Instance.new("TextButton")
+			inside.Parent = panel
+			app.input:setMode("gamepad")
+			local pop = app.input:pushScope({
+				root = panel,
+				defaultFocus = inside,
+				returnFocus = function()
+					return opener
+				end,
+			})
+			opener.Visible = false
+			panel.Visible = false
+			pop()
+			expect(app.input:focused()).never.to.equal(opener)
+		end)
+
 		it("orders selectables in reading order for keyboard navigation", function()
 			local gui = Harness.mount(app)
 			local root = Instance.new("Frame")
