@@ -17,7 +17,7 @@ Lucy.Image.new({
 })
 ```
 
-For icons that should follow the theme's colours, use Icon (coming soon).
+For icons that should follow the theme's colours, use [Icon](icon.md).
 
 ## Props
 

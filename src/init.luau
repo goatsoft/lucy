@@ -126,6 +126,7 @@ return {
 	Checkbox = require(Components.Checkbox),
 	Dialog = require(Components.Dialog),
 	Grid = require(Components.Grid),
+	Icon = require(Components.Icon),
 	Image = require(Components.Image),
 	Input = require(Components.Input),
 	Item = require(Components.Item),

@@ -18,6 +18,7 @@ Each component has its own page with its props, usage and examples:
 | [Checkbox](checkbox.md) | A box that can be checked, with an optional label |
 | [Dialog](dialog.md) | A modal window, and alert dialogs that ask for a yes or no |
 | [Grid](grid.md) | Rows of equal cells, such as shop items or emotes |
+| [Icon](icon.md) | A small picture in the theme's colours, by name or asset id |
 | [Image](image.md) | A picture from an asset id or a thumbnail |
 | [Input](input.md) | A text field on one line |
 | [Item](item.md) | A row in a list, with media, a title, a description and actions |
@@ -224,7 +225,7 @@ a Button's text sets its `Text` again and nothing else. See
 
 Coming in 0.1.0, each working with mouse, touch, gamepad and TV:
 
-- **Layout and display:** Icon, Kbd and key hints, Table
+- **Layout and display:** Kbd and key hints, Table
 - **Selection:** Select
 - **Overlays:** Sheet (a bottom drawer on touch), and Dialog with a size and a
   scrolling body
