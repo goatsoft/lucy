@@ -35,7 +35,7 @@ only its actions take input.
 | `selected` | boolean | `false` | yes | Shows it as picked |
 | `disabled` | boolean | `false` | yes | Fades the text and, when clickable, ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |
-| `media` | Instance or handle | | | What goes before the text: an icon, a cover or a player headshot |
+| `media` | Instance or handle | | | What goes before the text: an icon, a cover or an [Avatar](avatar.md) |
 | `actions` | table | | | Instances or handles after the text, in a row |
 | `onClick` | function | | | Makes the whole row clickable; called with the handle |
 

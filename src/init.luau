@@ -120,11 +120,13 @@ return {
 
 	-- Components
 	Alert = require(Components.Alert),
+	Avatar = require(Components.Avatar),
 	Badge = require(Components.Badge),
 	Button = require(Components.Button),
 	Checkbox = require(Components.Checkbox),
 	Dialog = require(Components.Dialog),
 	Grid = require(Components.Grid),
+	Image = require(Components.Image),
 	Input = require(Components.Input),
 	Item = require(Components.Item),
 	Panel = require(Components.Panel),
