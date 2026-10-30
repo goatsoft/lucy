@@ -222,9 +222,13 @@ return function()
 			expect(Harness.styled(button.label, "TextSize")).to.equal(app.theme:resolve("TextSm"))
 		end)
 
-		it("colours a controller picture like the button's text", function()
+		it("colours a mono controller picture like the button's text", function()
 			app.input:setMode("gamepad")
-			local button = Button.new({ app = app, Parent = gui, hint = { gamepad = Enum.KeyCode.ButtonA } })
+			local button = Button.new({
+				app = app,
+				Parent = gui,
+				hint = { gamepad = Enum.KeyCode.ButtonA, variant = "mono" },
+			})
 			Harness.flush()
 			expect(button.hint.glyph.Visible).to.equal(true)
 			expect(

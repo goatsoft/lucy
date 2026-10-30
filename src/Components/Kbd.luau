@@ -6,15 +6,18 @@
 			keyboard = Enum.KeyCode.E,      -- a KeyCode or text
 			gamepad = Enum.KeyCode.DPadUp,  -- shown as the controller's own picture
 			touch = "Hold",                 -- optional; hidden on touch without it
+			variant = "color",              -- color | mono
 			Parent = row,
 		})
 
 	Keyboard and mouse players see the keyboard key, gamepad players the
 	controller's button (the engine's picture for their controller, or text),
 	touch players the touch label or nothing. It hides itself when there is no
-	key for the current input.
+	key for the current input. With variant "color" (the default) the face
+	buttons take their controller's colours (Xbox A green, PlayStation cross
+	blue...); "mono" draws every button in the text colour.
 
-	State keys: keyboard, gamepad, touch, visible.
+	State keys: keyboard, gamepad, touch, variant, visible.
 	Parts: kbd.text (the label), kbd.glyph (the controller picture).
 	Kbd.label(key) and Kbd.glyph(keyCode) are the helpers it uses.
 ]]
@@ -68,6 +71,24 @@ Kbd.names = {
 	MouseRightButton = "Right click",
 }
 
+Kbd.variants = { "color", "mono" }
+
+-- Face buttons by controller, and the colour each is printed in.
+Kbd.faces = {
+	xbox = { ButtonA = "a", ButtonB = "b", ButtonX = "x", ButtonY = "y" },
+	playstation = { ButtonA = "cross", ButtonB = "circle", ButtonX = "square", ButtonY = "triangle" },
+}
+Kbd.faceColours = {
+	["xbox-a"] = "$Green500",
+	["xbox-b"] = "$Red500",
+	["xbox-x"] = "$Blue500",
+	["xbox-y"] = "$Amber400",
+	["playstation-cross"] = "$Blue400",
+	["playstation-circle"] = "$Red500",
+	["playstation-square"] = "$Pink400",
+	["playstation-triangle"] = "$Emerald400",
+}
+
 Kbd.glyphSize = 20
 Kbd.scale = { default = 1, touch = 1, tv = 1.25 }
 
@@ -107,6 +128,14 @@ Kbd.rules = {
 		properties = { BackgroundTransparency = 1, ImageColor3 = "$Foreground" },
 	},
 } :: { Component.Rule }
+-- Above every rule a Button hint adds, so a coloured face stays coloured there.
+for face, colour in Kbd.faceColours do
+	table.insert(Kbd.rules, {
+		selector = `.ui-kbd-face-{face}`,
+		priority = 40,
+		properties = { ImageColor3 = colour },
+	})
+end
 
 local function keyCode(value: any): EnumItem?
 	if typeof(value) == "EnumItem" and value.EnumType == Enum.KeyCode then
@@ -146,14 +175,48 @@ function Kbd.glyph(value: any): string
 	return if ok and type(image) == "string" then image else ""
 end
 
+-- The player's controller family, from the engine's own button names and pictures.
+function Kbd.platform(): string
+	local ok, name = pcall(UserInputService.GetStringForKeyCode, UserInputService, Enum.KeyCode.ButtonA)
+	if ok and type(name) == "string" and string.find(name, "Cross", 1, true) then
+		return "playstation"
+	end
+	local image = string.lower(Kbd.glyph(Enum.KeyCode.ButtonA))
+	for _, mark in { "playstation", "ps4", "ps5" } do
+		if string.find(image, mark, 1, true) then
+			return "playstation"
+		end
+	end
+	return "xbox"
+end
+
+-- "xbox-a", "playstation-cross"...: the face a button has on a controller, or nil.
+function Kbd.face(value: any, platform: string): string?
+	local code = keyCode(value)
+	local faces = Kbd.faces[platform]
+	if code == nil or faces == nil then
+		return nil
+	end
+	local face = faces[code.Name]
+	return if face then `{platform}-{face}` else nil
+end
+
+local function checkVariant(variant: string)
+	if not table.find(Kbd.variants, variant) then
+		error(`[Lucy] unknown Kbd variant "{variant}" (expected color or mono)`, 0)
+	end
+end
+
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "kbd",
-	defaults = { keyboard = "", gamepad = "", touch = "", visible = true },
+	defaults = { keyboard = "", gamepad = "", touch = "", variant = "color", visible = true },
 	rules = Kbd.rules,
 	render = function(h)
+		checkVariant(h:get("variant"))
 		local keyboard, gamepad, touch, visible =
 			h:ref("keyboard"), h:ref("gamepad"), h:ref("touch"), h:ref("visible")
+		local variant = h:ref("variant")
 		local mode = h.app.state:ref("input.mode")
 		local density = Composables.useDensity(h.app)
 
@@ -195,7 +258,18 @@ local spec: Component.Spec = {
 			ScaleType = Enum.ScaleType.Fit,
 			Image = image,
 			Visible = hasImage,
-			Tags = { "ui-kbd-image" },
+			Tags = {
+				"ui-kbd-image" :: any,
+				function(): string?
+					local v = variant()
+					checkVariant(v)
+					if v ~= "color" then
+						return nil
+					end
+					local face = Kbd.face(gamepad(), Kbd.platform())
+					return if face then "ui-kbd-face-" .. face else nil
+				end,
+			},
 		})
 		h.text, h.glyph = text, glyph
 

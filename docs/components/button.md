@@ -62,6 +62,8 @@ to the button's action is up to your game.
 
 With a hint, the text sits in `button.label` and the key cap is `button.hint`
 (a Kbd handle). Both follow the button's variant, size and disabled state.
+Face buttons keep their controller colours on any button; pass
+`variant = "mono"` in the hint to draw them in the button's text colour.
 Without one, the button is a single TextButton as usual.
 
 ## Examples

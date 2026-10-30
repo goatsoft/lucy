@@ -33,6 +33,12 @@ return {
 						"Dance",
 						{ keyboard = Enum.KeyCode.Space, gamepad = Enum.KeyCode.ButtonA, touch = "Tap" }
 					),
+					row("Emote", { keyboard = Enum.KeyCode.G, gamepad = Enum.KeyCode.ButtonX }),
+					row("Items", { keyboard = Enum.KeyCode.I, gamepad = Enum.KeyCode.ButtonY }),
+					row(
+						"Map, one colour",
+						{ keyboard = Enum.KeyCode.M, gamepad = Enum.KeyCode.ButtonY, variant = "mono" }
+					),
 					Lucy.Button.new({
 						text = "Join",
 						hint = { keyboard = Enum.KeyCode.E, gamepad = Enum.KeyCode.DPadUp },

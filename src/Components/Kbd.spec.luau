@@ -86,4 +86,41 @@ return function()
 		visible(false)
 		expect(kbd.Instance.Visible).to.equal(false)
 	end)
+
+	it("names the face of a gamepad button for its controller", function()
+		expect(Kbd.face(Enum.KeyCode.ButtonA, "xbox")).to.equal("xbox-a")
+		expect(Kbd.face(Enum.KeyCode.ButtonY, "xbox")).to.equal("xbox-y")
+		expect(Kbd.face(Enum.KeyCode.ButtonA, "playstation")).to.equal("playstation-cross")
+		expect(Kbd.face(Enum.KeyCode.ButtonX, "playstation")).to.equal("playstation-square")
+		expect(Kbd.face(Enum.KeyCode.ButtonL1, "xbox")).to.equal(nil)
+		expect(Kbd.face("A", "xbox")).to.equal(nil)
+		expect(Kbd.platform() == "xbox" or Kbd.platform() == "playstation").to.equal(true)
+	end)
+
+	it("colours the face buttons by default", function()
+		app.input:setMode("gamepad")
+		local kbd = Kbd.new({ app = app, Parent = gui, gamepad = Enum.KeyCode.ButtonA })
+		local face = "ui-kbd-face-" .. (Kbd.face(Enum.KeyCode.ButtonA, Kbd.platform()) :: string)
+		expect(kbd.glyph:HasTag(face)).to.equal(true)
+		kbd:set("variant", "mono")
+		expect(kbd.glyph:HasTag(face)).to.equal(false)
+		local bumper = Kbd.new({ app = app, Parent = gui, gamepad = Enum.KeyCode.ButtonR1 })
+		for _, tag in bumper.glyph:GetTags() do
+			local found = string.find(tag, "ui-kbd-face-", 1, true)
+			expect(found).to.equal(nil)
+		end
+		expect(function()
+			Kbd.new({ app = app, Parent = gui, variant = "neon" })
+		end).to.throw()
+	end)
+
+	it("uses the controller colour for a face button", function()
+		app.input:setMode("gamepad")
+		local kbd = Kbd.new({ app = app, Parent = gui, gamepad = Enum.KeyCode.ButtonB })
+		Harness.flush()
+		local token = Kbd.faceColours[Kbd.face(Enum.KeyCode.ButtonB, Kbd.platform()) :: string]
+		expect(
+			Harness.colorEq(Harness.styled(kbd.glyph, "ImageColor3"), app.theme:resolve(string.sub(token, 2)))
+		).to.equal(true)
+	end)
 end

@@ -18,7 +18,10 @@ Lucy.Kbd.new({
 ```
 
 Controller buttons show the engine's own picture for the player's controller,
-so PlayStation players see PlayStation buttons. To put a key on a button, use
+so PlayStation players see PlayStation buttons. The face buttons are in their
+controller's colours: on Xbox A is green, B red, X blue and Y yellow; on
+PlayStation the cross is blue, the circle red, the square pink and the triangle
+green. Other buttons, and the `mono` variant, use the text colour. To put a key on a button, use
 the Button's [`hint`](button.md#key-hints) prop.
 
 Kbd only shows the key. Binding the key to an action is up to your game.
@@ -30,6 +33,7 @@ Kbd only shows the key. Binding the key to an action is up to your game.
 | `keyboard` | KeyCode or string | | yes | Shown for keyboard and mouse |
 | `gamepad` | KeyCode or string | | yes | Shown for a controller, as its picture when it has one |
 | `touch` | string | | yes | Shown on touch, such as `"Tap"`. Without it, nothing shows on touch |
+| `variant` | string | `"color"` | yes | `color` gives face buttons their controller colours; `mono` draws every button in the text colour |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
 It also takes the [props every component takes](index.md#using-a-component).
@@ -43,7 +47,8 @@ get short names: `Esc`, `Enter`, `Space`, `Tab`, `Shift`, `Ctrl`, `Alt`, `Up`,
 
 Its parts are on the handle: `kbd.text` is the label and `kbd.glyph` the
 controller picture. `Lucy.Kbd.label(key)` gives a key's text, and
-`Lucy.Kbd.glyph(keyCode)` its controller picture.
+`Lucy.Kbd.glyph(keyCode)` its controller picture. `Lucy.Kbd.platform()` says
+whether the player's controller is `"xbox"` or `"playstation"` style.
 
 ## Examples
 
