@@ -15,6 +15,7 @@ Each component has its own page with its props, usage and examples:
 | [Button](button.md) | A button, in six variants and four sizes |
 | [Checkbox](checkbox.md) | A box that can be checked, with an optional label |
 | [Dialog](dialog.md) | A modal window, and alert dialogs that ask for a yes or no |
+| [Grid](grid.md) | Rows of equal cells, such as shop items or emotes |
 | [Input](input.md) | A text field on one line |
 | [Panel](panel.md) | A card with a header, content and footer |
 | [Pressable](pressable.md) | A surface the player can click that holds anything |
@@ -218,7 +219,7 @@ a Button's text sets its `Text` again and nothing else. See
 
 Coming in 0.1.0, each working with mouse, touch, gamepad and TV:
 
-- **Layout and display:** Grid, Item, Image and Icon, Avatar, Kbd
+- **Layout and display:** Item, Image and Icon, Avatar, Kbd
   and key hints, Alert, Spinner, Table
 - **Selection:** Select
 - **Overlays:** Sheet (a bottom drawer on touch), and Dialog with a size and a

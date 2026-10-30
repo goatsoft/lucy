@@ -123,6 +123,7 @@ return {
 	Button = require(Components.Button),
 	Checkbox = require(Components.Checkbox),
 	Dialog = require(Components.Dialog),
+	Grid = require(Components.Grid),
 	Input = require(Components.Input),
 	Panel = require(Components.Panel),
 	Pressable = require(Components.Pressable),
