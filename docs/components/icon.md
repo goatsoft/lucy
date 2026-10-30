@@ -14,7 +14,13 @@ Lucy.Icon.new({ icon = "lucide:heart", variant = "destructive", Parent = row })
 
 ## Registering icons
 
-Lucy ships no icons. Your game registers its own once, before it builds any UI:
+Lucy ships no icons. Your game registers its own once, before it builds any UI.
+
+The easiest way is the icon build,
+[lucy-icons](https://github.com/goatsoft/lucy/tree/main/libs/icons): name any
+of thousands of open icons in your code, such as `"lucide:heart"`, and it packs
+the ones you use into a few uploaded sheets and writes this map for you. Or
+write the map yourself:
 
 ```lua
 Lucy.Icon.register({

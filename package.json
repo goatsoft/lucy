@@ -10,7 +10,9 @@
     "site:dev": "pnpm --filter @goatsoft/gruff build && pnpm --filter lucy-site dev",
     "site:build": "pnpm --filter @goatsoft/gruff build && pnpm --filter lucy-site build",
     "site:preview": "pnpm --filter lucy-site preview",
-    "site:typecheck": "pnpm --filter lucy-site typecheck"
+    "site:typecheck": "pnpm --filter lucy-site typecheck",
+    "icons:typecheck": "pnpm --filter @goatsoft/lucy-icons typecheck",
+    "icons:test": "pnpm --filter @goatsoft/lucy-icons test"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

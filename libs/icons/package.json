@@ -1,0 +1,33 @@
+{
+  "name": "@goatsoft/lucy-icons",
+  "version": "0.0.0",
+  "description": "Packs the icons a Roblox game uses into uploaded sprite sheets for Lucy's Icon component.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "lucy-icons": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "icons": "node src/cli.ts"
+  },
+  "dependencies": {
+    "@iconify/types": "^2.0.0",
+    "@iconify/utils": "^3.1.7",
+    "@resvg/resvg-js": "^2.6.2"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "^1.2.149",
+    "@types/node": "^24.19.2",
+    "typescript": "~5.9.3"
+  }
+}

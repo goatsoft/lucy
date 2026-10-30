@@ -61,6 +61,19 @@ jobs:
       - run: pnpm site:typecheck
       - run: pnpm site:build
 
+  icons:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm icons:typecheck
+      - run: pnpm icons:test
+
   # Engine tests need Roblox Studio installed and signed in on the runner.
   # Enable once a self-hosted runner with Studio is available.
   tests:
