@@ -144,6 +144,37 @@ return function()
 				mountThing({ app = app, id = "a.b" })
 			end).to.throw()
 		end)
+
+		it("keeps a mounted component small", function()
+			local Reactive = require(script.Parent.Reactive)
+			local spec = {
+				kind = "small",
+				props = { app = app },
+				defaults = { value = 0, label = "" },
+				render = function(h)
+					local value = h:ref("value")
+					Reactive._effect(function()
+						value()
+					end)
+					return Instance.new("Frame")
+				end,
+			}
+			local least = math.huge
+			for _ = 1, 5 do
+				local scope = Reactive.effectScope(true)
+				local before = gcinfo()
+				scope:run(function()
+					for _ = 1, 1000 do
+						Component.mount(spec)
+					end
+				end)
+				least = math.min(least, gcinfo() - before)
+				scope:stop()
+			end
+			-- Under 2,400 bytes per component, everything included (gcinfo is in KB,
+			-- 1,000 mounts): the handle, its scope and maid, its state table, one bound key.
+			expect(least < 2400).to.equal(true)
+		end)
 	end)
 
 	describe("reactive props", function()

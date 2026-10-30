@@ -618,10 +618,12 @@ function AppState.get(self: AppState, path: string?): any
 	return self:_read(split(path))
 end
 
--- Queues the subscribers a write at `segments` can affect: those on ancestors
--- (with their snapshot from before the write), on the path, and below it.
-function AppState._mark(self: AppState, segments: { any })
-	local depth = #segments
+-- Queues the subscribers a write at `segments` (then `last`, if given) can affect:
+-- those on ancestors (with their snapshot from before the write), on the path,
+-- and below it.
+function AppState._mark(self: AppState, segments: { any }, last: any?)
+	local count = #segments
+	local depth = if last == nil then count else count + 1
 	local node: WatchNode = self._watch
 	if node.total == 0 then
 		return
@@ -641,7 +643,7 @@ function AppState._mark(self: AppState, segments: { any })
 			return
 		end
 		i += 1
-		local key = segments[i]
+		local key = if i <= count then segments[i] else last
 		local child = children[key]
 		if not child then
 			return
@@ -702,11 +704,24 @@ function AppState._settle(self: AppState)
 end
 
 --[[
-	The one write path. `merge` shallow-merges a patch into the table at the path
-	instead of replacing it. Equal values change nothing and notify nobody.
+	The one write path. The path is `segments`, then `last` if given, so a caller
+	holding a table's path can write one of its keys without building a path for
+	it. `merge` shallow-merges a patch into the table at the path instead of
+	replacing it. `owned` places a table handed over by `_place` as it is, where
+	no table is yet. Equal values change nothing and notify nobody.
 ]]
-function AppState._write(self: AppState, segments: { any }, value: any, merge: boolean)
+local function write(
+	self: AppState,
+	segments: { any },
+	last: any,
+	value: any,
+	merge: boolean,
+	owned: boolean?
+)
 	local current = readRaw(self._root, segments)
+	if last ~= nil then
+		current = if isPlain(current) then current[last] else nil
+	end
 	if merge then
 		if isPlain(current) then
 			local same = true
@@ -724,12 +739,13 @@ function AppState._write(self: AppState, segments: { any }, value: any, merge: b
 		return
 	end
 
-	local depth = #segments
+	local count = #segments
+	local depth = if last == nil then count else count + 1
 	if depth == 0 and not merge and not isPlain(unwrap(value)) then
-		error("[Lucy] the state root must be a table", 3)
+		error("[Lucy] the state root must be a table", 4)
 	end
 
-	self:_mark(segments)
+	self:_mark(segments, last)
 
 	Reactive._begin()
 	local raw = self._root
@@ -746,7 +762,7 @@ function AppState._write(self: AppState, segments: { any }, value: any, merge: b
 	else
 		-- Every table on the path changes at the next key down.
 		for i = 1, depth - 1 do
-			local key = segments[i]
+			local key = segments[i] -- i < depth, so never past `segments`
 			invalidate(raw, key)
 			local child = raw[key]
 			if not isPlain(child) then
@@ -756,7 +772,7 @@ function AppState._write(self: AppState, segments: { any }, value: any, merge: b
 			end
 			raw = child
 		end
-		local key = segments[depth]
+		local key = if last == nil then segments[depth] else last
 		invalidate(raw, key)
 		if merge then
 			local target = raw[key]
@@ -770,6 +786,11 @@ function AppState._write(self: AppState, segments: { any }, value: any, merge: b
 					invalidate(target, patchKey)
 				end
 			end
+		elseif owned and not isPlain(raw[key]) then
+			local current = raw[key]
+			raw[key] = value
+			Reactive._changedKey(raw, key, current == nil)
+			queueAlias(raw, key)
 		else
 			assign(raw, key, value)
 		end
@@ -780,6 +801,25 @@ function AppState._write(self: AppState, segments: { any }, value: any, merge: b
 	Reactive._finish()
 
 	self:_settle()
+end
+
+function AppState._write(self: AppState, segments: { any }, value: any, merge: boolean)
+	write(self, segments, nil, value, merge)
+end
+
+-- Internal: writes `fields`, a fresh table the caller gives up, at `segments`.
+-- Where no table is yet, the store keeps `fields` itself rather than a copy; the
+-- tables inside it are still copied in. Otherwise it is `_write`.
+function AppState._place(self: AppState, segments: { any }, fields: { [any]: any })
+	for key, item in fields do
+		fields[key] = copyIn(item)
+	end
+	write(self, segments, nil, fields, false, true)
+end
+
+-- Writes `key` of the table at `segments`; builds nothing, even on the first write.
+function AppState._writeKey(self: AppState, segments: { any }, key: any, value: any)
+	write(self, segments, key, value, false)
 end
 
 function AppState.set(self: AppState, path: string?, value: any)

@@ -10,8 +10,8 @@ Maid.__index = Maid
 
 -- Spelled out rather than inferred: a generic method inside an inferred
 -- metatable type does not survive being copied into other modules' types.
+-- A maid keeps its tasks in its own array part: one table per maid.
 export type Maid = {
-	_tasks: { any },
 	give: <T>(self: Maid, item: T) -> T,
 	clean: (self: Maid) -> (),
 	destroy: (self: Maid) -> (),
@@ -19,11 +19,11 @@ export type Maid = {
 }
 
 function Maid.new(): Maid
-	return setmetatable({ _tasks = {} }, Maid) :: any
+	return setmetatable({}, Maid) :: any
 end
 
 function Maid.give<T>(self: Maid, item: T): T
-	table.insert(self._tasks, item)
+	table.insert(self :: any, item)
 	return item
 end
 
@@ -50,16 +50,34 @@ local function cleanup(item: any)
 	end
 end
 
+-- Tasks being cleaned wait here, so cleaning builds no table. A clean started
+-- by a cleanup stacks its tasks above the ones still waiting.
+local stack: { any } = {}
+local top = 0
+
 function Maid.clean(self: Maid)
-	-- Clean in reverse so things are torn down in the opposite order they were made.
-	local tasks = self._tasks
-	self._tasks = {}
-	for i = #tasks, 1, -1 do
-		local ok: boolean, err: any = pcall(cleanup, tasks[i])
+	local tasks: { any } = self :: any
+	local count = #tasks
+	if count == 0 then
+		return
+	end
+	-- Moved out first: anything given during the clean waits for the next one.
+	local base = top
+	for i = 1, count do
+		stack[base + i] = tasks[i]
+		tasks[i] = nil
+	end
+	top = base + count
+	-- In reverse, so things are torn down in the opposite order they were made.
+	for i = base + count, base + 1, -1 do
+		local item = stack[i]
+		stack[i] = nil
+		local ok: boolean, err: any = pcall(cleanup, item)
 		if not ok then
 			warn("[Lucy] maid cleanup error: " .. tostring(err))
 		end
 	end
+	top = base
 end
 
 Maid.Destroy = Maid.clean

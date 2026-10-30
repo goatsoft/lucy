@@ -106,10 +106,6 @@ local function mountButtons(ctx: Context, n: number): State
 	scope:run(function()
 		for i = 1, n do
 			local button = ctx.Lucy.Button.new({ app = ctx.app, Parent = root, text = "Buy" })
-			-- A key's first write builds its write path once; warm it so runs measure
-			-- steady-state writes, as in a live app.
-			button:set("text", "Buy")
-			button:set("disabled", false)
 			-- The first tag change makes the second tag set; flip once so runs don't pay it.
 			button:set("variant", "secondary")
 			button:set("variant", "default")

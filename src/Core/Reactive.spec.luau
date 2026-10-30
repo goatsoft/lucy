@@ -431,6 +431,38 @@ return function()
 			local frozen = table.freeze({ a = 1 })
 			expect(reactive(frozen)).to.equal(frozen)
 		end)
+
+		it("keeps each tracked key to one small table", function()
+			local least = math.huge
+			for _ = 1, 5 do
+				local raw = table.create(1000, 0)
+				local scope = Reactive.effectScope(true)
+				local before = 0
+				scope:run(function()
+					Reactive._effect(function()
+						before = gcinfo()
+						for i = 1, 1000 do
+							Reactive._trackKey(raw, i)
+						end
+					end)
+				end)
+				least = math.min(least, gcinfo() - before)
+				local runs = 0
+				scope:run(function()
+					Reactive._effect(function()
+						Reactive._trackKey(raw, 500)
+						runs += 1
+					end)
+				end)
+				Reactive._changedKey(raw, 500, false)
+				Reactive._changedKey(raw, 501, false)
+				scope:stop()
+				expect(runs).to.equal(2)
+			end
+			-- Under 150 bytes per key: the key's set of readers, its map entry and its
+			-- place in the reader's sources (gcinfo is in KB, 1,000 keys).
+			expect(least < 150).to.equal(true)
+		end)
 	end)
 
 	describe("watch", function()

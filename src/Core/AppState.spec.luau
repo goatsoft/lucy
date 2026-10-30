@@ -584,4 +584,93 @@ return function()
 			expect(state:get("a.x")).to.equal(2)
 		end)
 	end)
+
+	describe("writing one key", function()
+		it("writes a key of the table at a path, like set on the full path", function()
+			local Reactive = require(script.Parent.Reactive)
+			local state = AppState.new({ ui = { play = { text = "Go" } } })
+			local segments = state:_segments("ui.play")
+			local seen = {}
+			state:subscribe("ui.play.text", function(new, old)
+				table.insert(seen, `text {old}>{new}`)
+			end)
+			state:subscribe("ui", function()
+				table.insert(seen, "ui")
+			end)
+			state:subscribe("ui.play.disabled", function(new)
+				table.insert(seen, `disabled {new}`)
+			end)
+			local read
+			local scope = Reactive.effectScope(true)
+			scope:run(function()
+				Reactive.watchEffect(function()
+					read = state:_trackedKey(segments, "text")
+				end)
+			end)
+			local before = state:get("ui")
+			state:_writeKey(segments, "text", "Stop")
+			expect(state:get("ui.play.text")).to.equal("Stop")
+			expect(read).to.equal("Stop")
+			expect(before.play.text).to.equal("Go")
+			state:_writeKey(segments, "text", "Stop") -- equal: nobody hears it
+			state:_writeKey(segments, "disabled", true)
+			expect(table.concat(seen, ",")).to.equal("text Go>Stop,ui,ui,disabled true")
+			scope:stop()
+		end)
+
+		it("creates the tables on the way when they are missing", function()
+			local state = AppState.new()
+			state:_writeKey(state:_segments("ui.dialog"), "open", true)
+			expect(state:get("ui.dialog.open")).to.equal(true)
+		end)
+
+		it("keeps a placed table itself and copies the tables inside it", function()
+			local Reactive = require(script.Parent.Reactive)
+			local state = AppState.new({ ui = {} })
+			local segments = state:_segments("ui.panel")
+			local seen, read = {}, nil
+			state:subscribe("ui.panel.title", function(new)
+				table.insert(seen, new)
+			end)
+			local scope = Reactive.effectScope(true)
+			scope:run(function()
+				Reactive.watchEffect(function()
+					read = state:_trackedKey(state:_segments("ui"), "panel")
+				end)
+			end)
+			local inner = { size = 1 }
+			state:_place(segments, { title = "Hi", inner = inner })
+			inner.size = 2 -- the caller's table inside is not the store's
+			expect(state:get("ui.panel.inner.size")).to.equal(1)
+			expect(state:get("ui.panel.title")).to.equal("Hi")
+			expect(type(read)).to.equal("table")
+			expect(table.concat(seen, ",")).to.equal("Hi")
+			-- Over an existing table it is a normal write: changed keys, and only those.
+			state:_place(segments, { title = "Hi", inner = { size = 3 } })
+			expect(state:get("ui.panel.inner.size")).to.equal(3)
+			expect(table.concat(seen, ",")).to.equal("Hi")
+			scope:stop()
+		end)
+
+		it("builds no tables, even on a key's first write", function()
+			local keys = table.create(1000)
+			local fields = {}
+			for i = 1, 1000 do
+				keys[i] = `k{i}`
+				fields[keys[i]] = 0
+			end
+			local least = math.huge
+			for _ = 1, 5 do
+				local state = AppState.new({ ui = { play = fields } })
+				local segments = state:_segments("ui.play")
+				local before = gcinfo()
+				for i = 1, 1000 do
+					state:_writeKey(segments, keys[i], 1)
+				end
+				least = math.min(least, gcinfo() - before)
+				expect(state:get("ui.play.k1000")).to.equal(1)
+			end
+			expect(least < 2).to.equal(true) -- KB over 1,000 first writes
+		end)
+	end)
 end

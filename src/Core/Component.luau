@@ -233,12 +233,17 @@ local function pickState(defaults: { [string]: any }, props: { [string]: any }):
 	return state
 end
 
--- State keys whose prop is a ref, computed or getter: key -> source.
-local function pickSources(defaults: { [string]: any }, props: { [string]: any }): { [string]: any }
-	local sources = {}
+-- State keys whose prop is a ref, computed or getter: key -> source. Nil if none.
+local function pickSources(defaults: { [string]: any }, props: { [string]: any }): { [string]: any }?
+	local sources: { [string]: any }? = nil
 	for key in defaults do
-		if type(props[key]) == "function" then
-			sources[key] = props[key]
+		local value = props[key]
+		if type(value) == "function" then
+			if sources then
+				sources[key] = value
+			else
+				sources = { [key] = value }
+			end
 		end
 	end
 	return sources
@@ -254,8 +259,7 @@ type HandleFields = {
 	id: string,
 	path: string,
 	segments: { any }, -- `path`, split once
-	keyPaths: { [string]: { any } }, -- `path`.<key>, split on first use
-	refs: { [string]: any }, -- h:ref(key), one per key
+	refs: { [string]: any } | false, -- h:ref(key), one per key; made on the first
 	props: { [string]: any },
 	maid: Maid.Maid,
 	destroyed: boolean,
@@ -273,46 +277,42 @@ function Handle.get(self: Handle, key: string?): any
 	return self.app.state:_readKey(self.segments, key)
 end
 
--- The pre-split path of one state key, built once per handle and key.
-local function keyPath(self: Handle, key: string): { any }
-	local path = self.keyPaths[key]
-	if not path then
-		local segments = table.clone(self.segments)
-		table.insert(segments, key)
-		path = table.freeze(segments)
-		self.keyPaths[key] = path
-	end
-	return path :: { any }
-end
-
 --[[
 	h:ref(key): a writable ref onto one of the component's state keys. Reading it
 	tracks that key's own source (no node of its own); writing it writes the store,
 	so bound refs and store subscribers see the write. One per key.
 ]]
 function Handle.ref(self: Handle, key: string): Reactive.Ref<any>
-	local existing = self.refs[key]
-	if existing then
-		return existing
+	local current: { [string]: any }? = self.refs or nil
+	local refs: { [string]: any }
+	if current then
+		local existing = current[key]
+		if existing then
+			return existing
+		end
+		refs = current
+	else
+		refs = {}
+		self.refs = refs
 	end
 	local state = self.app.state
 	local segments = self.segments
-	-- One closure per ref; the key's write path is built on the first write.
+	-- One closure per ref, and writes build nothing.
 	local ref = Reactive._markAccessor(function(...: any): any
 		if select("#", ...) == 0 then
 			return (state:_trackedKey(segments, key))
 		end
-		state:_write(keyPath(self, key), (...), false)
+		state:_writeKey(segments, key, (...))
 		return nil
 	end)
-	self.refs[key] = ref
+	refs[key] = ref
 	return ref
 end
 
 -- set(key, value) writes one key (allocates nothing); set(patch) merges a table.
 function Handle.set(self: Handle, patch: { [string]: any } | string, value: any?)
 	if type(patch) == "string" then
-		self.app.state:_write(keyPath(self, patch), value, false)
+		self.app.state:_writeKey(self.segments, patch, value)
 	else
 		self.app.state:_write(self.segments, patch, true)
 	end
@@ -324,6 +324,10 @@ function Handle.destroy(self: Handle)
 	end
 	self.destroyed = true
 	self.app:unregisterHandle(self)
+	local scope = self.scope
+	if scope then
+		scope:stop() -- first: render's bindings and watchers end before anything else
+	end
 	self.maid:clean()
 	if self.Instance then
 		self.Instance:Destroy()
@@ -365,8 +369,7 @@ function Component.mount(spec: Spec): Handle
 		id = id,
 		path = path,
 		segments = app.state:_segments(path),
-		keyPaths = {},
-		refs = {},
+		refs = false,
 		props = props,
 		maid = Maid.new(),
 		destroyed = false,
@@ -386,18 +389,21 @@ function Component.mount(spec: Spec): Handle
 			initial[key] = value
 		end
 	end
-	for key, source in sources do
-		initial[key] = Reactive.peek(source)
+	if sources then
+		for key, source in sources do
+			initial[key] = Reactive.peek(source)
+		end
 	end
-	app.state:set(handle.path, initial)
+	app.state:_place(handle.segments, initial) -- the store keeps `initial` itself
 
 	-- Writable sources are bound to their key (ADR 0017): a write to the key writes
 	-- the source within the same store write. Unbound on destroy; the source lives on.
 	local segments = handle.segments
-	for key, source in sources do
-		keyPath(handle, key) -- built now, so the first write from the source is free
-		if Reactive.isWritable(source) then
-			handle.maid:give(app.state:_alias(segments, key, source))
+	if sources then
+		for key, source in sources do
+			if Reactive.isWritable(source) then
+				handle.maid:give(app.state:_alias(segments, key, source))
+			end
 		end
 	end
 
@@ -425,13 +431,10 @@ function Component.mount(spec: Spec): Handle
 	scope:onCleanup(function()
 		handle:destroy()
 	end)
-	handle.maid:give(function()
-		scope:stop()
-	end)
 
 	-- Each source drives its key; for a bound source this is the only copy, and the
 	-- store skips equal values, so nothing ping-pongs.
-	if next(sources) ~= nil then
+	if sources then
 		scope:run(function()
 			for key, source in sources do
 				Reactive._effect(function()

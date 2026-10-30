@@ -79,8 +79,10 @@ local function report(err: any)
 	task.spawn(error, err, 0)
 end
 
--- Nodes carry only the tables their kind uses: refs and keys are observed,
--- computeds observe and are observed, scopes do neither. Each literal names every
+-- Nodes carry only the tables their kind uses: refs are observed, computeds
+-- observe and are observed, scopes do neither. A key of a reactive or store table
+-- is a source with nothing but readers, so its node is the set of readers itself
+-- (see keyNode): one table per key. Each literal names every
 -- field the kind usually holds (false for "not yet"), so the table is sized once
 -- and never grows. Fields are reset to false, never nil, for the same reason.
 -- Effects are built in `newEffect` and are the only nodes without a `kind`.
@@ -126,11 +128,12 @@ local function adopt(node: any)
 end
 
 -- `execute` unlinks a node before running it, so `observers[t]` doubles as the
--- seen-this-run check and tracking allocates nothing.
+-- seen-this-run check and tracking allocates nothing. A key node is its own set
+-- of observers; its only keys are nodes, so `.observers` reads nil on it.
 local function track(source: any)
 	local t = tracking
 	if t ~= nil and t.state ~= DISPOSED then
-		local observers = source.observers
+		local observers = source.observers or source
 		if not observers[t] then
 			observers[t] = true
 			table.insert(t.sources, source)
@@ -144,7 +147,7 @@ local function unlink(node: any)
 		return
 	end
 	for _, source in sources do
-		source.observers[node] = nil
+		(source.observers or source)[node] = nil
 	end
 	table.clear(sources)
 end
@@ -606,6 +609,15 @@ end
 
 local scopeMethods = {}
 
+-- Hands pcall's results straight through, so running a function packs no table.
+local function endRun(previousOwner: any, ok: boolean, ...: any): ...any
+	owner = previousOwner
+	if not ok then
+		error((...), 0)
+	end
+	return ...
+end
+
 function scopeMethods.run(scope: any, fn: (...any) -> ...any, ...): ...any
 	local node = scope._node
 	if node.state == DISPOSED then
@@ -613,12 +625,7 @@ function scopeMethods.run(scope: any, fn: (...any) -> ...any, ...): ...any
 	end
 	local previousOwner = owner
 	owner = node
-	local results = table.pack(pcall(fn, ...))
-	owner = previousOwner
-	if not results[1] then
-		error(results[2], 0)
-	end
-	return table.unpack(results, 2, results.n)
+	return endRun(previousOwner, pcall(fn, ...))
 end
 
 function scopeMethods.stop(scope: any)
@@ -669,10 +676,7 @@ local function runEndHooks()
 	runningHooks = false
 end
 
-function Reactive.batch<R...>(fn: (...any) -> R..., ...): R...
-	batchDepth += 1
-	userBatch += 1
-	local results = table.pack(pcall(fn, ...))
+local function endBatch(ok: boolean, ...: any): ...any
 	userBatch -= 1
 	batchDepth -= 1
 	if batchDepth == 0 then
@@ -681,21 +685,30 @@ function Reactive.batch<R...>(fn: (...any) -> R..., ...): R...
 	if userBatch == 0 and endHookCount > 0 then
 		runEndHooks()
 	end
-	if not results[1] then
-		error(results[2], 0)
+	if not ok then
+		error((...), 0)
 	end
-	return (table.unpack :: any)(results, 2, results.n)
+	return ...
+end
+
+function Reactive.batch<R...>(fn: (...any) -> R..., ...): R...
+	batchDepth += 1
+	userBatch += 1
+	return endBatch(pcall(fn, ...))
+end
+
+local function endUntrack(previous: any, ok: boolean, ...: any): ...any
+	tracking = previous
+	if not ok then
+		error((...), 0)
+	end
+	return ...
 end
 
 function Reactive.untrack<R...>(fn: (...any) -> R..., ...): R...
 	local previous = tracking
 	tracking = nil
-	local results = table.pack(pcall(fn, ...))
-	tracking = previous
-	if not results[1] then
-		error(results[2], 0)
-	end
-	return (table.unpack :: any)(results, 2, results.n)
+	return endUntrack(previous, pcall(fn, ...))
 end
 
 -- A value, ref, computed or getter, read as a plain value (tracked).
@@ -738,7 +751,7 @@ local function keyNode(raw: any, key: any): any
 	end
 	local node = map[key]
 	if not node then
-		node = newNode("key")
+		node = {} -- the key's readers: observer -> true
 		map[key] = node
 	end
 	return node
@@ -765,18 +778,18 @@ local function changed(raw: any, key: any, structural: boolean, from: number?)
 	if from then
 		for k, node in map do
 			if type(k) == "number" and k >= from then
-				for observer in node.observers do
+				for observer in node do
 					mark(observer, DIRTY)
 				end
 			end
 		end
 	elseif map[key] then
-		for observer in map[key].observers do
+		for observer in map[key] do
 			mark(observer, DIRTY)
 		end
 	end
 	if structural and map[ITERATE] then
-		for observer in map[ITERATE].observers do
+		for observer in map[ITERATE] do
 			mark(observer, DIRTY)
 		end
 	end
@@ -917,7 +930,7 @@ function Reactive._changedAll(raw: any)
 	end
 	batchDepth += 1
 	for _, node in map do
-		for observer in node.observers do
+		for observer in node do
 			mark(observer, DIRTY)
 		end
 	end
