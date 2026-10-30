@@ -22,7 +22,9 @@
 
 	Gamepad selection moves through the children and the engine scrolls to it;
 	focus moved with Tab or the arrow keys is scrolled into view by the
-	InputManager (Core/Scroll).
+	InputManager (Core/Scroll). When it scrolls and holds nothing selectable
+	(rules text, say), the area itself can be selected, so a gamepad can still
+	scroll it.
 
 	Scrollbar visibility, per the axis that scrolls:
 		auto     while the content overflows
@@ -185,6 +187,33 @@ local spec: Component.Spec = {
 		Component.adopt(content, p.children)
 		h.content = content
 
+		-- Whether anything inside can take gamepad selection; followed as children
+		-- come and go (looked at once things settle, as removals fire before).
+		local hasSelectable = Reactive.ref(false)
+		local function recount()
+			for _, descendant in content:GetDescendants() do
+				if descendant:IsA("GuiObject") and descendant.Selectable then
+					hasSelectable(true)
+					return
+				end
+			end
+			hasSelectable(false)
+		end
+		recount()
+		local function later()
+			task.defer(function()
+				if not h.destroyed then
+					recount()
+				end
+			end)
+		end
+		local added = content.DescendantAdded:Connect(later)
+		local removing = content.DescendantRemoving:Connect(later)
+		Reactive.onCleanup(function()
+			added:Disconnect()
+			removing:Disconnect()
+		end)
+
 		local given: UDim2? = p.size
 		local size: any = given or UDim2.fromScale(1, 1)
 		if measured then
@@ -205,7 +234,9 @@ local spec: Component.Spec = {
 			ScrollingDirection = axis.scrolling,
 			VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
 			HorizontalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
-			Selectable = false,
+			Selectable = function(): boolean
+				return not hasSelectable() and overflows()
+			end,
 			Visible = h:ref("visible"),
 			Tags = { "ui-scroll-area" :: any, ["ui-scroll-bar-visible"] = barVisible },
 			[OUT_CANVAS] = canvas :: any,

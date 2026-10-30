@@ -65,12 +65,13 @@ moves when it shows.
 
 ## Gamepad and keyboard
 
-The area itself is never selected. Gamepad selection moves through the
-buttons and other controls inside it, and the area scrolls to show each one.
-Tab and the arrow keys do the same.
+Gamepad selection moves through the buttons and other controls inside the
+area, and the area scrolls to show each one. Tab and the arrow keys do the
+same.
 
-Content with nothing to select, such as a long block of text, cannot be
-scrolled with a gamepad. Give the player a control inside it, or keep it short.
+When the area holds nothing to select, such as a long block of rules text, and
+the content does not fit, the area itself can be selected instead, so the
+player can still scroll it with a gamepad.
 
 ## Examples
 

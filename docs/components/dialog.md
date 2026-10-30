@@ -37,12 +37,17 @@ quit:open()
 | `modal` | boolean | `true` | | `false` lets clicks reach what is behind it and lets focus move out of it |
 | `scrim` | boolean | `true` | | `false` drops the dimmed backdrop |
 | `showClose` | boolean | `true` | | Shows the close button in the corner |
-| `maxWidth` | number | `448` | | The widest it gets, in pixels |
+| `size` | string | `"md"` | | How wide it gets: `sm` (384), `md` (448), `lg` (512), `xl` (640) or `full` |
+| `maxWidth` | number | | | The widest it gets in pixels, instead of `size` |
+| `maxHeight` | number, ref or getter | | | The tallest it gets in pixels. The body scrolls past it |
 | `onOpenChange` | function | | | Called with `(open, handle)` when it opens or closes |
 
 It also takes the [props every component takes](index.md#using-a-component).
 Without a `Parent`, it goes into the app's modal layer, above every scene. A
 dialog opened later shows above one opened earlier.
+
+When the content is taller than `maxHeight`, or than the screen, the body
+scrolls and the title and actions stay where they are.
 
 While a modal dialog is open, keyboard and gamepad focus stay inside it. When
 it closes, focus goes back to whatever had it before. A dialog with
@@ -64,6 +69,7 @@ An action closes the dialog after its `onClick` runs, unless `onClick` returns
 | `dialog:close()` | Closes it |
 | `dialog:toggle()` | Opens it if closed, closes it if open |
 | `dialog.body` | The frame that holds `children` (hidden when there are none) |
+| `dialog.scroll` | The [ScrollArea](scroll-area.md) around the body |
 
 ## Alert dialogs
 

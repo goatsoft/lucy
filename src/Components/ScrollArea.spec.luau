@@ -125,9 +125,50 @@ return function()
 		expect(math.abs(frame.AbsoluteSize.Y - 100 * Scroll.scaleOf(frame)) < 1).to.equal(true)
 	end)
 
-	it("lets gamepad selection pass to its children", function()
-		local area = ScrollArea.new({ app = app, Parent = gui })
-		expect(area.Instance.Selectable).to.equal(false)
+	describe("gamepad", function()
+		local function text(height: number): TextLabel
+			local label = Instance.new("TextLabel")
+			label.Size = UDim2.new(1, 0, 0, height)
+			return label
+		end
+		local function make(children)
+			local area = ScrollArea.new({
+				app = app,
+				Parent = gui,
+				size = UDim2.fromOffset(200, 100),
+				children = children,
+			})
+			task.wait(0.1)
+			return area
+		end
+
+		it("lets selection pass to the controls inside it", function()
+			local button = Instance.new("TextButton")
+			button.Size = UDim2.new(1, 0, 0, 400)
+			local area = make({ button })
+			expect(area.Instance.Selectable).to.equal(false)
+		end)
+
+		it("can be selected itself when it scrolls and holds nothing selectable", function()
+			local area = make({ text(400) })
+			expect(area.Instance.Selectable).to.equal(true)
+		end)
+
+		it("is not selectable with nothing to scroll", function()
+			local area = make({ text(40) })
+			expect(area.Instance.Selectable).to.equal(false)
+		end)
+
+		it("follows controls added and removed later", function()
+			local area = make({ text(400) })
+			local button = Instance.new("TextButton")
+			button.Parent = area.content
+			task.wait(0.1)
+			expect(area.Instance.Selectable).to.equal(false)
+			button:Destroy()
+			task.wait(0.1)
+			expect(area.Instance.Selectable).to.equal(true)
+		end)
 	end)
 	describe("scrollbar", function()
 		-- A 200 x 100 area; `height` of content inside it.

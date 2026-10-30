@@ -185,6 +185,75 @@ return function()
 		expect(gapTop >= 0 and gapTop <= 12).to.equal(true)
 	end)
 
+	describe("sizing", function()
+		local Scroll = require(script.Parent.Parent.Core.Scroll)
+		local function rows(count: number): { Frame }
+			local out = {}
+			for i = 1, count do
+				local row = Instance.new("Frame")
+				row.Name = "Row" .. i
+				row.Size = UDim2.new(1, 0, 0, 40)
+				row.LayoutOrder = i
+				table.insert(out, row)
+			end
+			return out
+		end
+		local function widthCap(dialog): number
+			return dialog.content:FindFirstChildOfClass("UISizeConstraint").MaxSize.X
+		end
+
+		it("takes a size for its width, md by default", function()
+			expect(widthCap(Dialog.new({ app = app }))).to.equal(Dialog.sizes.md)
+			expect(widthCap(Dialog.new({ app = app, size = "sm" }))).to.equal(Dialog.sizes.sm)
+			expect(widthCap(Dialog.new({ app = app, size = "xl" }))).to.equal(Dialog.sizes.xl)
+			expect(widthCap(Dialog.new({ app = app, size = "full" }))).to.equal(math.huge)
+			expect(widthCap(Dialog.new({ app = app, size = "lg", maxWidth = 500 }))).to.equal(500)
+			expect(function()
+				Dialog.new({ app = app, size = "huge" })
+			end).to.throw()
+		end)
+
+		it("keeps children in dialog.body", function()
+			local dialog = Dialog.new({ app = app, children = rows(2) })
+			expect(dialog.body:FindFirstChild("Row1")).to.be.ok()
+			expect(dialog.scroll.Instance:IsA("ScrollingFrame")).to.equal(true)
+		end)
+
+		it("stops at maxHeight and scrolls the body", function()
+			local dialog = Dialog.new({
+				app = app,
+				open = true,
+				title = "Rules",
+				maxHeight = 300,
+				children = rows(30),
+				actions = { { text = "OK" } },
+			})
+			task.wait(0.3)
+			local height = dialog.content.AbsoluteSize.Y / Scroll.scaleOf(dialog.content)
+			expect(height <= 301).to.equal(true)
+			expect(height > 200).to.equal(true)
+			local scroll = dialog.scroll.Instance
+			expect(scroll.AbsoluteCanvasSize.Y > scroll.AbsoluteSize.Y).to.equal(true)
+			expect(dialog.footer.AbsoluteSize.Y > 0).to.equal(true)
+		end)
+
+		it("fits the screen with a long body even without maxHeight", function()
+			local dialog = Dialog.new({ app = app, open = true, title = "Rules", children = rows(60) })
+			task.wait(0.3)
+			local view = dialog.Instance.AbsoluteSize.Y
+			expect(dialog.content.AbsoluteSize.Y <= view).to.equal(true)
+			local scroll = dialog.scroll.Instance
+			expect(scroll.AbsoluteCanvasSize.Y > scroll.AbsoluteSize.Y).to.equal(true)
+		end)
+
+		it("fits short content with no scrolling", function()
+			local dialog = Dialog.new({ app = app, open = true, maxHeight = 600, children = rows(2) })
+			task.wait(0.3)
+			local scroll = dialog.scroll.Instance
+			expect(scroll.AbsoluteCanvasSize.Y <= scroll.AbsoluteSize.Y + 1).to.equal(true)
+		end)
+	end)
+
 	it("dims the screen with the overlay token", function()
 		local dialog = Dialog.new({ app = app, open = true })
 		Harness.flush()

@@ -16,7 +16,9 @@
 			modal = true,             -- false: no focus trap, presses reach what is behind
 			scrim = true,             -- false: no dimmed backdrop
 			showClose = true,
-			maxWidth = 448,
+			size = "md",              -- sm | md | lg | xl | full: how wide it gets
+			maxWidth = nil,           -- pixels, instead of size
+			maxHeight = nil,          -- pixels (a number, ref or getter); the body scrolls past it
 			onOpenChange = function(open, dialog) end,
 		})
 		dialog:open()  dialog:close()  dialog:toggle()
@@ -25,6 +27,8 @@
 		Dialog.alert({ title, description, confirmText, cancelText, destructive, onConfirm, onCancel })
 
 	An action closes the dialog after its onClick unless onClick returns false.
+	The body (dialog.body holds the children) scrolls when the dialog would be
+	taller than maxHeight or the screen; the header and actions stay put.
 	Dialogs mount into the app's "modal" portal (above every scene) unless Parent is given,
 	and stack with sheets and popups by the order they open (Core/Overlay).
 
@@ -41,8 +45,15 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Overlay = require(script.Parent.Parent.Core.Overlay)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
+local Scroll = require(script.Parent.Parent.Core.Scroll)
+local ScrollArea = require(script.Parent.ScrollArea)
 
 local Dialog = {}
+
+-- How wide each size gets, in pixels.
+Dialog.sizes = { sm = 384, md = 448, lg = 512, xl = 640, full = math.huge }
+
+local OUT_SIZE = Element.out("AbsoluteSize")
 
 local rules: { Component.Rule } = {
 	{
@@ -123,6 +134,11 @@ function Dialog.new(props: { [string]: any }?)
 		and (if modal then p.closeOnOverlay ~= false else p.closeOnOverlay == true)
 	local showClose = dismissible and p.showClose ~= false
 	local actionHandles = {}
+	local sizeName = p.size or "md"
+	local width = p.maxWidth or Dialog.sizes[sizeName]
+	if width == nil then
+		error(`[Lucy] unknown Dialog size "{tostring(sizeName)}" (sm, md, lg, xl or full)`, 2)
+	end
 
 	local handle
 	handle = Component.mount({
@@ -141,7 +157,7 @@ function Dialog.new(props: { [string]: any }?)
 			})
 			Component.create(
 				"UISizeConstraint",
-				{ MaxSize = Vector2.new(p.maxWidth or 448, math.huge), Parent = content }
+				{ MaxSize = Vector2.new(width, math.huge), Parent = content }
 			)
 			-- Padding and layout live on an inner frame, so the close button can sit in
 			-- the content's own corner.
@@ -152,9 +168,21 @@ function Dialog.new(props: { [string]: any }?)
 				Tags = { "ui-dialog-inner" },
 				Parent = content,
 			})
-			Component.list({ Padding = Component.space(h.app, "Space4", 16), Parent = inner })
+			local gap = Component.space(h.app, "Space4", 16)
+			Component.list({ Padding = gap, Parent = inner })
 
-			local header = Component.box({ Name = "Header", LayoutOrder = 1, Parent = inner })
+			-- Measured, so the body knows how much height is left for it.
+			local headerSize = Reactive.ref(Vector2.zero)
+			local footerSize = Reactive.ref(Vector2.zero)
+			local header = Element.new("Frame", {
+				Name = "Header",
+				BackgroundTransparency = 1,
+				Size = UDim2.fromScale(1, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				LayoutOrder = 1,
+				[OUT_SIZE] = headerSize :: any,
+			})
+			header.Parent = inner
 			local text = Component.box({
 				Name = "Text",
 				Size = UDim2.new(1, if showClose then -44 else 0, 0, 0),
@@ -182,12 +210,51 @@ function Dialog.new(props: { [string]: any }?)
 				h.maid:give(h.closeButton)
 			end
 
-			local body = Component.box({ Name = "Body", LayoutOrder = 2, Parent = inner })
-			Component.list({ Padding = Component.space(h.app, "Space4", 16), Parent = body })
-			Component.adopt(body, p.children)
-			body.Visible = p.children ~= nil
+			-- The body scrolls in what is left of the overlay's height (and maxHeight)
+			-- after the padding, header, footer and gaps.
+			local overlayRef: Reactive.Ref<Overlay.Overlay?> = Reactive.ref(nil :: Overlay.Overlay?)
+			local pad = Component.space(h.app, "Space6", 24).Offset
+			local function bodyCap(): number
+				local overlay = overlayRef()
+				if not overlay then
+					return math.huge
+				end
+				local cap = overlay.maxHeight()
+				if p.maxHeight ~= nil then
+					cap = math.min(cap, Reactive.toValue(p.maxHeight))
+				end
+				local scale = Scroll.scaleOf(content)
+				if scale <= 0 then
+					scale = 1
+				end
+				local used = pad * 2 + headerSize().Y / scale + gap.Offset
+				if #actionHandles > 0 then
+					used += footerSize().Y / scale + gap.Offset
+				end
+				return math.max(0, math.floor(cap - used))
+			end
+			local scroll = ScrollArea.new({
+				app = h.app,
+				name = "Body",
+				layoutOrder = 2,
+				maxHeight = bodyCap,
+				visible = p.children ~= nil,
+				children = p.children,
+			})
+			scroll.Instance.Parent = inner
+			local body = scroll.content
+			Component.list({ Padding = gap, Parent = body })
+			h.scroll = scroll
 
-			local footer = Component.box({ Name = "Footer", LayoutOrder = 3, Parent = inner })
+			local footer = Element.new("Frame", {
+				Name = "Footer",
+				BackgroundTransparency = 1,
+				Size = UDim2.fromScale(1, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				LayoutOrder = 3,
+				[OUT_SIZE] = footerSize :: any,
+			})
+			footer.Parent = inner
 			Component.list({
 				FillDirection = Enum.FillDirection.Horizontal,
 				HorizontalAlignment = Enum.HorizontalAlignment.Right,
@@ -233,6 +300,7 @@ function Dialog.new(props: { [string]: any }?)
 				end,
 			})
 			local root = overlay.root
+			overlayRef(overlay)
 			h.overlay, h.content, h.body, h.footer, h.actions =
 				overlay.scrim, content, body, footer, actionHandles
 			Component.claimSelection(h.app, root)
