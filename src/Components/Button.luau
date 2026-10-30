@@ -171,6 +171,23 @@ local function check(list: { string }, value: string, what: string)
 	end
 end
 
+-- One tag list per variant and size pair, built on first use and shared by every
+-- Button, so changing a variant or size builds nothing.
+local tagLists: { [string]: { [string]: { string } } } = {}
+local function variantTags(variant: string, size: string): { string }
+	local bySize = tagLists[variant]
+	if not bySize then
+		bySize = {}
+		tagLists[variant] = bySize
+	end
+	local list = bySize[size]
+	if not list then
+		list = { "ui-button-variant-" .. variant, "ui-button-size-" .. size }
+		bySize[size] = list
+	end
+	return list
+end
+
 function Button.new(props: { [string]: any }?)
 	local p: Component.Props = props or {}
 	local activated = Signal.new()
@@ -204,7 +221,7 @@ function Button.new(props: { [string]: any }?)
 						local v, s = variant(), size()
 						check(Button.variants, v, "variant")
 						check(Button.sizes, s, "size")
-						return { "ui-button-variant-" .. v, "ui-button-size-" .. s }
+						return variantTags(v, s)
 					end,
 					["ui-disabled"] = disabled,
 				},

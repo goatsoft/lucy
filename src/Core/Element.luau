@@ -123,18 +123,32 @@ end
 
 local function bindTags(instance: Instance, tags: any)
 	if type(tags) == "function" then
-		local applied: { [string]: boolean } = {}
+		-- Two sets that swap each run and are cleared, never rebuilt, so a change builds
+		-- no tables. The second one is made on the first change, not at mount.
+		local applied: { [string]: boolean }? = nil
+		local spare: { [string]: boolean }? = nil
 		Reactive.watchEffect(function()
-			local want = {}
+			local want: { [string]: boolean } = spare or {}
+			table.clear(want)
 			collectTags(tags(), want)
-			for tag in applied do
-				if not want[tag] then
-					instance:RemoveTag(tag)
+			local had = applied
+			if had then
+				for tag in had do
+					if not want[tag] then
+						instance:RemoveTag(tag)
+					end
+				end
+				for tag in want do
+					if not had[tag] then
+						instance:AddTag(tag)
+					end
+				end
+			else
+				for tag in want do
+					instance:AddTag(tag)
 				end
 			end
-			for tag in want do
-				instance:AddTag(tag)
-			end
+			spare = had
 			applied = want
 		end)
 		return

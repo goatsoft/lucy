@@ -110,6 +110,9 @@ local function mountButtons(ctx: Context, n: number): State
 			-- steady-state writes, as in a live app.
 			button:set("text", "Buy")
 			button:set("disabled", false)
+			-- The first tag change makes the second tag set; flip once so runs don't pay it.
+			button:set("variant", "secondary")
+			button:set("variant", "default")
 			buttons[i] = button
 		end
 	end)
@@ -440,6 +443,23 @@ local suites: { Suite } = {
 			state.flip = not state.flip
 			for _, button in state.buttons do
 				button:set("disabled", state.flip)
+			end
+		end,
+		teardown = stop,
+	},
+	{
+		name = "Set Button variant",
+		group = "Components",
+		size = 100,
+		description = "One variant write to each mounted Button (tags).",
+		setup = function(ctx, n)
+			return mountButtons(ctx, n)
+		end,
+		run = function(state)
+			state.flip = not state.flip
+			local variant = if state.flip then "secondary" else "default"
+			for _, button in state.buttons do
+				button:set("variant", variant)
 			end
 		end,
 		teardown = stop,

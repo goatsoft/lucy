@@ -134,6 +134,53 @@ return function()
 			frame:Destroy()
 		end)
 
+		it("accepts a getter that switches between a string and a list", function()
+			local tags = ref("a" :: any)
+			local frame = new("Frame")({
+				Tags = function()
+					return tags()
+				end,
+			})
+			expect(frame:HasTag("a")).to.equal(true)
+			tags("b")
+			expect(frame:HasTag("a")).to.equal(false)
+			expect(frame:HasTag("b")).to.equal(true)
+			tags({ "b", "c" })
+			expect(frame:HasTag("b")).to.equal(true)
+			expect(frame:HasTag("c")).to.equal(true)
+			tags({ "c", "d" })
+			expect(frame:HasTag("b")).to.equal(false)
+			expect(frame:HasTag("c")).to.equal(true)
+			expect(frame:HasTag("d")).to.equal(true)
+			tags("a")
+			expect(#frame:GetTags()).to.equal(1)
+			expect(frame:HasTag("a")).to.equal(true)
+			frame:Destroy()
+		end)
+
+		it("changes a tag set without building tables", function()
+			local pairsOf = { { "btn", "btn-a" }, { "btn", "btn-b" } }
+			local which = ref(1)
+			local frame = new("Frame")({
+				Tags = function()
+					return pairsOf[which()]
+				end,
+			})
+			which(2)
+			which(1) -- warm up
+			local least = math.huge
+			for _ = 1, 3 do
+				local before = gcinfo()
+				for i = 1, 1000 do
+					which(if i % 2 == 0 then 1 else 2)
+				end
+				least = math.min(least, gcinfo() - before)
+			end
+			expect(least < 8).to.equal(true)
+			expect(frame:HasTag("btn-a")).to.equal(true)
+			frame:Destroy()
+		end)
+
 		it("binds attributes", function()
 			local hp = ref(10)
 			local frame = new("Frame")({ Attributes = { Health = hp, Kind = "boss" } })

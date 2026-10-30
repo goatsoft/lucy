@@ -31,6 +31,7 @@ operation 100 times per run.
 | Toggle Switches | Components | 100 | 0.96 | 1.22 | 0 |
 | Set Button text | Components | 100 | 0.46 | 0.61 | 0 |
 | Set Button disabled | Components | 100 | 0.95 | 1.13 | 0 |
+| Set Button variant | Components | 100 | 0.84 | 0.99 | 0 |
 | Write one component, 10 mounted | Store | 10 | 0.09 | 0.09 | 0 |
 | Write one component, 1,000 mounted | Store | 1,000 | 0.09 | 0.10 | 0 |
 | Subscribe 1,000 paths, write one | Store | 1,000 | 0.12 | 0.13 | 0 |
