@@ -18,6 +18,8 @@ sourcemap.json
 # Site workspace (pnpm). JS packages live in libs/, not packages/: on macOS that
 # would be the same folder as Wally's Packages/.
 node_modules/
+# Copied from the root LICENSE when a package is packed (scripts/prepack.ts).
+libs/*/LICENSE
 dist/
 dist-server/
 *.tsbuildinfo

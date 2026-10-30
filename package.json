@@ -12,9 +12,12 @@
     "site:preview": "pnpm --filter lucy-site preview",
     "site:typecheck": "pnpm --filter lucy-site typecheck",
     "icons:typecheck": "pnpm --filter @goatsoft/lucy-icons typecheck",
-    "icons:test": "pnpm --filter @goatsoft/lucy-icons test"
+    "icons:test": "pnpm --filter @goatsoft/lucy-icons test",
+    "changeset": "changeset",
+    "release": "pnpm -r --filter \"@goatsoft/lucy-icons\" build && node scripts/publish.ts"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "@types/node": "^24.19.2",
     "@vitejs/plugin-vue": "^6.0.10",
     "typescript": "~5.9.3",
