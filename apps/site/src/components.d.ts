@@ -16,6 +16,7 @@ declare module 'vue' {
     CopyButton: typeof import('./components/doc/CopyButton.vue')['default']
     DocPage: typeof import('./components/doc/DocPage.vue')['default']
     DocToc: typeof import('./components/doc/DocToc.vue')['default']
+    GoatsoftLogo: typeof import('./components/GoatsoftLogo.vue')['default']
     IHgArrowDown01: typeof import('~icons/hugeicons/arrow-down01')['default']
     IHgArrowLeft01: typeof import('~icons/hugeicons/arrow-left01')['default']
     IHgArrowRight01: typeof import('~icons/hugeicons/arrow-right01')['default']

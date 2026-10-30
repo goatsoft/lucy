@@ -69,7 +69,7 @@ const columns = [
         </ul>
       </div>
     </div>
-    <div class="mx-auto flex max-w-6xl flex-col gap-2 border-t border-border px-6 py-6 text-xs text-muted-foreground sm:flex-row sm:justify-between">
+    <div class="mx-auto flex max-w-6xl flex-col gap-3 border-t border-border px-6 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
       <p>
         MIT ·
         <a
@@ -79,7 +79,16 @@ const columns = [
           class="underline decoration-border underline-offset-4 hover:text-foreground"
         >Licence</a>
       </p>
-      <p>Made by GOATsoft</p>
+      <a
+        :href="SITE.goatsoft"
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
+        aria-label="Made by GOATsoft"
+      >
+        <span>Made by</span>
+        <GoatsoftLogo :height="16" />
+      </a>
     </div>
   </footer>
 </template>
