@@ -1,45 +1,42 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/dist/logo-lockup.png">
-    <img src="assets/brand/dist/logo-lockup-ink.png" alt="Lucy" height="128">
-  </picture>
+  <a href="https://lucy.goatsoft.io">
+    <img src="https://raw.githubusercontent.com/goatsoft/lucy/main/assets/brand/readme/lucy-head.webp" alt="Lucy" height="200">
+  </a>
 </p>
 
-# Lucy
+<h1 align="center">Lucy</h1>
 
-A UI kit and app framework for Roblox, built on
-[Universal Styling](https://create.roblox.com/docs/ui/styling).
+<p align="center">
+  <a href="https://lucy.goatsoft.io/docs/">Getting started</a> ·
+  <a href="https://lucy.goatsoft.io/docs/components/">Components</a> ·
+  <a href="https://lucy.goatsoft.io/docs/reactivity/">Reactivity</a> ·
+  <a href="https://lucy.goatsoft.io/docs/architecture/">Architecture</a> ·
+  <a href="https://lucy.goatsoft.io/docs/benchmarks/">Benchmarks</a>
+</p>
 
-- **Only what changed updates**: change a value and only the properties that read it are set again. Nothing is rebuilt and nothing is diffed, so long lists and busy HUDs stay cheap ([benchmarks](docs/benchmarks.md)).
-- **State in plain Luau**: a ref is a function you call (`count()`, `count(5)`), `computed` caches a derived value, `reactive` tables let you write fields, and `watch` runs code when something changes. You never list dependencies.
-- **Cleanup is automatic**: effects, bindings and instances belong to whatever created them and are removed with it.
-- **UI in code or in Studio**: describe UI with `Lucy.new`, `show` and `each`, or `hydrate` a ScreenGui built in Studio and add the behaviour.
-- **Animation is state**: springs and tweens bind like any other value. Colours blend through Oklab, and nothing runs once every animation has stopped.
-- **Components you own**: buttons, dialogs, toasts, inputs, panels and more. Copy them into your game with one command, or install the Wally package.
-- **Styling runs in the engine**: themes are Universal Styling sheets, light and dark for each base colour, with an optional primary colour, switchable at runtime. Hover and theme changes run no Luau. Colours are defined in OKLCH.
-- **Every input, every screen**: mouse, keyboard, gamepad and touch on desktop, console, tablet and phone, with densities, scaling and responsive props built in.
-- **A focus ring you can see**: Lucy hides the Roblox selection ring and default borders and draws a themed ring, shown only while navigating with keys or a gamepad.
-- **Preview in Studio**: write a story for any component or scene and see it in edit mode without pressing Play. Story controls are refs, so they bind to components both ways, and every story also runs as a test.
-- **One app, separate scenes**: one store drives every component, scene and toast. The title screen, game, menus and modals each get their own layer and never take each other's input.
-- **Small and tested**: one package with no runtime dependencies, strict types throughout, and hundreds of specs run in Studio.
+<p align="center">A UI kit and app framework for Roblox, built on Universal Styling.</p>
 
-## Install
+<p align="center">
+  <a href="https://github.com/goatsoft/lucy/actions/workflows/ci.yml"><img src="https://github.com/goatsoft/lucy/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://lucy.goatsoft.io"><img src="https://img.shields.io/badge/docs-lucy.goatsoft.io-8757e2" alt="Docs"></a>
+  <a href="https://wally.run/package/goatsoft/lucy"><img src="https://img.shields.io/badge/wally-goatsoft%2Flucy-c050ea" alt="Wally"></a>
+  <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-5bd0f8" alt="MIT License"></a>
+</p>
 
-### Copy in (recommended)
+## Overview
 
-Components are copied into your project as source you own. You need
-[Lune](https://lune-org.github.io/docs) and a checkout of Lucy.
+Lucy gives a Roblox game a set of components, one place to keep its UI state,
+and a way to write UI in code that stays in step with that state.
 
-```sh
-git clone https://github.com/goatsoft/lucy ~/Projects/Lucy
-cd your-game
-lune run ~/Projects/Lucy/scripts/add -- button dialog --from ~/Projects/Lucy --out src/shared/Lucy
-```
+The components (buttons, dialogs, toasts, inputs, switches, panels and more)
+come with light and dark themes and work with mouse, keyboard, gamepad and
+touch on desktop, console, tablet and phone. Their looks are Universal Styling
+rules, so hovering and switching themes run no Luau.
 
-- Core is always copied; dependencies come along (Dialog brings Button).
-- Files you have edited are kept unless you pass `--overwrite`.
-- `--list` shows every component, `--all` installs them all, `--specs` copies the tests too.
-- Set `LUCY_HOME=~/Projects/Lucy` to skip `--from`.
+When a value changes, only the properties that read it are set again. Nothing is
+rebuilt and nothing is diffed, so long lists and busy HUDs stay cheap.
+
+## Installation
 
 ### Wally
 
@@ -48,14 +45,28 @@ lune run ~/Projects/Lucy/scripts/add -- button dialog --from ~/Projects/Lucy --o
 Lucy = "goatsoft/lucy@0.1.0"
 ```
 
+### Copy the source
+
+If you would rather own and edit the components, copy them into your project
+with [Lune](https://lune-org.github.io/docs) and a checkout of Lucy:
+
+```sh
+git clone https://github.com/goatsoft/lucy ~/Projects/Lucy
+cd your-game
+lune run ~/Projects/Lucy/scripts/add -- button dialog --from ~/Projects/Lucy --out src/shared/Lucy
+```
+
+The core comes along, and so do dependencies (Dialog brings Button). Files you
+have changed are kept unless you pass `--overwrite`. Use `--list` to see every
+component and `--all` to copy them all.
+
 ## Usage
 
 Create one App on the client, then build scenes from components.
 
 ```lua
--- StarterPlayerScripts/UI.client.luau
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Lucy = require(ReplicatedStorage.Shared.Lucy) -- or ReplicatedStorage.Packages.Lucy
+local Lucy = require(ReplicatedStorage.Packages.Lucy)
 
 local app = Lucy.App.new({ theme = "dark", baseColor = "zinc", primary = "violet" })
 
@@ -76,17 +87,11 @@ app.scenes:register("Title", {
 	end,
 })
 
-app.scenes:register("Game", {
-	build = function(scene) --[[ HUD ]] end,
-	onBack = function()
-		app.scenes:goTo("Title") -- Escape or ButtonB
-	end,
-})
-
 app.scenes:goTo("Title")
 ```
 
-### Reactive UI
+Any property can follow a value. Here the label follows the player's coins and
+the button slides on a spring:
 
 ```lua
 local coins = app.state:ref("player.coins")
@@ -97,101 +102,66 @@ Lucy.new "TextButton" {
 	Text = function() return `Coins: {coins()}` end,
 	Position = function() return UDim2.fromOffset(x(), 16) end,
 	[Lucy.on "Activated"] = function() open(not open()) end,
-	Parent = scene.gui,
+	Parent = gui,
 }
 ```
 
-Only the properties that read a changed ref update. See
-[docs/reactivity.md](docs/reactivity.md).
-
-### Drive anything from app state
+Every component keeps its state in the app's store, so game code can change any
+of it by id:
 
 ```lua
-app.state:set("ui.play.disabled", true)       -- any component, by id
-app.state:set("theme", "light")               -- switch theme
-app.state:set("scenes.current", "Game")       -- navigate
-app.state:subscribe("input.device", print)    -- "desktop" | "console" | "tablet" | "mobile"
-```
-
-### Dialogs and toasts
-
-```lua
-local quit = Lucy.Dialog.new({
-	id = "quit",
-	title = "Leave match?",
-	description = "You will drop your cash.",
-	actions = {
-		{ text = "Stay", variant = "outline" },
-		{ text = "Leave", variant = "destructive", onClick = leaveMatch },
-	},
-})
-quit:open() -- or app.state:set("ui.quit.open", true)
+app.state:set("ui.play.disabled", true)     -- disable the Play button
+app.state:set("theme", "light")             -- switch theme
+app.state:set("scenes.current", "Game")     -- change screen
 
 app.toast.success("Round won", { description = "+$250" })
-app.toast("Invite from JB", { action = { label = "Join", onClick = join } })
 ```
 
-### Layout that adapts
+## Features
 
-```lua
-Lucy.Panel.new({
-	title = "Loadout",
-	maxWidth = 480,
-	Parent = scene.gui,
-	children = {
-		Lucy.Stack.new({
-			direction = { mobile = "vertical", default = "horizontal" },
-			gap = { console = "Space6", default = "Space2" },
-			children = {
-				Lucy.Button.new({ text = "Pistol", variant = "outline" }),
-				Lucy.Button.new({ text = "Rifle", variant = "outline" }),
-			},
-		}),
-	},
-})
+- Button, Badge, Text, Panel, Dialog, Toaster, Input, Checkbox, Switch,
+  Progress, Skeleton, Separator and Stack.
+- Light and dark themes for each base colour, with an optional primary colour,
+  switchable while the game runs.
+- Controls that grow for touch and console, and layout props that change with
+  the device.
+- A themed focus ring in place of the Roblox selection ring, shown only while
+  navigating with keys or a gamepad.
+- Scenes on separate layers, so menus and modals never take input from the
+  screen below.
+- Refs, computed values, springs and tweens that bind to any property.
+- `Lucy.hydrate` to add behaviour to UI built in Studio.
+- Stories that preview any component or scene in Studio without pressing Play.
+- Strict types, no runtime dependencies, and over 350 specs.
+
+## Architecture
+
+```
+App                one per client
+├─ AppState        every piece of UI state, in one tree of tables
+├─ Theme           Universal Styling sheets and the rules for every component
+├─ InputManager    input mode, device, focus and the back button
+├─ SceneManager    one ScreenGui per scene, on layers
+└─ toast           the toast API
 ```
 
-Every component has a story in [examples/stories](examples/stories), and
-[examples/Showcase.client.luau](examples/Showcase.client.luau) is a story browser built with Lucy.
-Preview one from the command bar with `Lucy.Preview.show("Button")`.
+Components keep their state in AppState at `ui.<id>`. Each one builds its
+instances once and binds their properties to that state, so a write to one key
+updates only the properties that read it. Code sets behaviour and layout; looks
+come from style rules matched by tags.
 
-## Components
+The [architecture guide](https://lucy.goatsoft.io/docs/architecture/) covers
+the rest.
 
-Button, Badge, Text, Panel, Dialog (and alert dialog), Toaster, Input, Checkbox,
-Switch, Progress, Skeleton, Separator, Stack. Props and state keys are in
-[docs/components.md](docs/components.md).
+---
 
-## Documentation
-
-The docs are published at [lucy.goatsoft.io](https://lucy.goatsoft.io) and live in this repo:
-
-| Doc | What it covers |
-|---|---|
-| [docs/reactivity.md](docs/reactivity.md) | ref, computed, reactive, watch, `Lucy.new`, springs and tweens |
-| [docs/architecture.md](docs/architecture.md) | How App, AppState, Theme, scenes and input fit together |
-| [docs/components.md](docs/components.md) | Every component's props, state keys and responsive values |
-| [docs/stories.md](docs/stories.md) | Stories, controls and previewing UI in Studio |
-| [docs/benchmarks.md](docs/benchmarks.md) | Mount, update and teardown costs, and how to run the benchmarks |
-| [docs/development.md](docs/development.md) | Toolchain, the TDD loop, writing a component, releasing |
-| [docs/adr/](docs/adr) | Architecture decisions and why they were made |
-
-The website itself is in `apps/site`; it is never part of the package.
-
-## Contributing
-
-```sh
-rokit install && wally install
-rojo serve test.project.json   # port 38574; connect the Rojo plugin in Studio
-```
-
-Then run the tests from the Studio command bar:
-
-```lua
-require(game.ReplicatedStorage.LucyTests.Runner).run()
-```
-
-See [docs/development.md](docs/development.md) before adding a component.
-
-## License
-
-MIT · by GOATsoft
+<p align="center">
+  <a href="https://goatsoft.io">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/goatsoft/lucy/main/assets/brand/goatsoft/GOATsoft-masthead-light.png">
+      <img src="https://raw.githubusercontent.com/goatsoft/lucy/main/assets/brand/goatsoft/GOATsoft-masthead.png" alt="GOATsoft" height="48">
+    </picture>
+  </a>
+  <br>
+  Made by <a href="https://goatsoft.io">GOATsoft</a> · <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE">MIT License</a>
+</p>
