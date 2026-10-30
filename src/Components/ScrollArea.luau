@@ -7,6 +7,8 @@
 			size = UDim2,             -- fills the parent when left out
 			maxHeight = 300,          -- optional: fit the content up to this height, then scroll
 			padding = "Space4",       -- optional: a spacing token, pixels or a UDim
+			scrollbar = "hover",      -- hover | auto | always | scroll | glimpse
+			hideDelay = 0.6,          -- seconds the bar stays after scrolling (scroll, hover, glimpse)
 			children = { ... },       -- instances, handles or functions
 			visible = true,
 			Parent = frame,
@@ -22,6 +24,16 @@
 	focus moved with Tab or the arrow keys is scrolled into view by the
 	InputManager (Core/Scroll).
 
+	Scrollbar visibility, per the axis that scrolls:
+		auto     while the content overflows
+		always   always, overflowing or not
+		scroll   while the player scrolls (wheel, drag, touch, right stick)
+		hover    while scrolling, or while the mouse is over it (like scroll on
+		         touch and gamepad, which have no hover)
+		glimpse  briefly when the mouse enters, and while scrolling
+	The bar is hidden by fading it (tag ui-scroll-bar-visible), so the space it
+	takes stays put and the content does not move when it shows.
+
 	State keys: visible.
 ]]
 
@@ -33,6 +45,13 @@ local Scroll = require(script.Parent.Parent.Core.Scroll)
 local ScrollArea = {}
 
 local OUT_SIZE = Element.out("AbsoluteSize")
+local OUT_CANVAS = Element.out("AbsoluteCanvasSize")
+local OUT_WINDOW = Element.out("AbsoluteWindowSize")
+local ON_SCROLL = Element.changed("CanvasPosition")
+local ON_ENTER = Element.on("MouseEnter")
+local ON_LEAVE = Element.on("MouseLeave")
+
+ScrollArea.scrollbars = { "hover", "auto", "always", "scroll", "glimpse" }
 
 type Axis = {
 	scrolling: Enum.ScrollingDirection,
@@ -62,7 +81,12 @@ ScrollArea.rules = {
 	{
 		selector = ".ui-scroll-area",
 		priority = 0,
-		properties = { BackgroundTransparency = 1, BorderSizePixel = 0 },
+		properties = { BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarImageTransparency = 1 },
+	},
+	{
+		selector = ".ui-scroll-area.ui-scroll-bar-visible",
+		priority = 1,
+		properties = { ScrollBarImageTransparency = 0 },
 	},
 	{
 		selector = ".ui-scroll-area-content",
@@ -82,6 +106,58 @@ local spec: Component.Spec = {
 		local axis = DIRECTIONS[key]
 		if not axis then
 			error(`ScrollArea: unknown direction "{key}" (vertical, horizontal or both)`, 0)
+		end
+
+		local mode: string = p.scrollbar or "hover"
+		if not table.find(ScrollArea.scrollbars, mode) then
+			error(`ScrollArea: unknown scrollbar "{mode}" (hover, auto, always, scroll or glimpse)`, 0)
+		end
+		h.scrollbar = mode
+
+		-- What the bar's visibility depends on: overflow, the pointer, and recent scrolling.
+		local canvas = Reactive.ref(Vector2.zero)
+		local window = Reactive.ref(Vector2.zero)
+		local pointer = Reactive.ref(false)
+		local recent = Reactive.ref(false)
+		local inputMode = h.app.state:ref("input.mode")
+		local hideDelay: number = p.hideDelay or 0.6
+		local pulses = 0
+		local function pulse()
+			pulses += 1
+			local mine = pulses
+			recent(true)
+			task.delay(hideDelay, function()
+				if pulses == mine then
+					recent(false)
+				end
+			end)
+		end
+		local function overflows(): boolean
+			local c, w = canvas(), window()
+			local x, y = c.X > w.X + 1, c.Y > w.Y + 1
+			return if key == "vertical" then y elseif key == "horizontal" then x else x or y
+		end
+		local function barVisible(): boolean
+			if mode == "always" then
+				return true
+			end
+			if not overflows() then
+				return false
+			end
+			if mode == "auto" then
+				return true
+			elseif mode == "hover" then
+				local input = inputMode()
+				return recent() or (pointer() and input ~= "touch" and input ~= "gamepad")
+			end
+			return recent() -- scroll, glimpse
+		end
+		-- The mouse entering or leaving (also how specs simulate it).
+		h._pointer = function(on: boolean)
+			pointer(on)
+			if on and mode == "glimpse" then
+				pulse()
+			end
 		end
 
 		local paddingChild: UIPadding? = nil
@@ -131,7 +207,20 @@ local spec: Component.Spec = {
 			HorizontalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
 			Selectable = false,
 			Visible = h:ref("visible"),
-			Tags = { "ui-scroll-area" },
+			Tags = { "ui-scroll-area" :: any, ["ui-scroll-bar-visible"] = barVisible },
+			[OUT_CANVAS] = canvas :: any,
+			[OUT_WINDOW] = window :: any,
+			[ON_SCROLL] = function()
+				if mode ~= "auto" and mode ~= "always" then
+					pulse()
+				end
+			end,
+			[ON_ENTER] = function()
+				h._pointer(true)
+			end,
+			[ON_LEAVE] = function()
+				h._pointer(false)
+			end,
 			content,
 		})
 	end,

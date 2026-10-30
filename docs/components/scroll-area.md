@@ -28,6 +28,8 @@ Lucy.ScrollArea.new({
 | `size` | UDim2 | fills the parent | | The area's size |
 | `maxHeight` | number, ref or getter | none | | Fits the content up to this height, then scrolls |
 | `padding` | spacing | none | | Space around the inside edge of the content |
+| `scrollbar` | string | `"hover"` | | When the scroll bar shows, see [Scroll bar](#scroll-bar) |
+| `hideDelay` | number | `0.6` | | Seconds the bar stays after scrolling stops |
 | `children` | table | | | Instances, handles or functions to put in it |
 | `visible` | boolean | `true` | yes | Shows or hides the area |
 
@@ -43,6 +45,23 @@ it that holds the children. The area lays out nothing itself: put a
 With `maxHeight`, the area takes its width from `size` (or fills the parent) and
 its height from the content, up to `maxHeight` pixels. Short content fits with
 no scroll bar; long content stops at the cap and scrolls.
+
+## Scroll bar
+
+`scrollbar` decides when the bar shows, for the direction the area scrolls in:
+
+| Value | The bar shows |
+|---|---|
+| `hover` | While the player scrolls, or while the mouse is over the area |
+| `auto` | Whenever the content does not fit |
+| `always` | All the time, even when the content fits |
+| `scroll` | While the player scrolls: wheel, drag, touch or right stick |
+| `glimpse` | For a moment when the mouse comes over the area, and while scrolling |
+
+Touch and gamepad have no hover, so on those `hover` acts like `scroll`. Apart
+from `always`, the bar only shows when there is something to scroll to. It
+fades in and out without changing the space it takes, so the content never
+moves when it shows.
 
 ## Gamepad and keyboard
 

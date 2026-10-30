@@ -129,4 +129,88 @@ return function()
 		local area = ScrollArea.new({ app = app, Parent = gui })
 		expect(area.Instance.Selectable).to.equal(false)
 	end)
+	describe("scrollbar", function()
+		-- A 200 x 100 area; `height` of content inside it.
+		local function area(height: number, props: { [string]: any }?)
+			local p = table.clone(props or {})
+			p.app = app
+			p.Parent = gui
+			p.size = UDim2.fromOffset(200, 100)
+			p.children = { block(height) }
+			local handle = ScrollArea.new(p)
+			task.wait(0.1)
+			return handle
+		end
+		local function shown(handle): boolean
+			return handle.Instance:HasTag("ui-scroll-bar-visible")
+		end
+
+		it("rejects an unknown mode", function()
+			expect(function()
+				ScrollArea.new({ app = app, scrollbar = "sometimes" })
+			end).to.throw()
+		end)
+
+		it("auto shows only while content overflows, not when it fits exactly", function()
+			expect(shown(area(400, { scrollbar = "auto" }))).to.equal(true)
+			expect(shown(area(100, { scrollbar = "auto" }))).to.equal(false)
+			expect(shown(area(40, { scrollbar = "auto" }))).to.equal(false)
+		end)
+
+		it("always shows", function()
+			expect(shown(area(40, { scrollbar = "always" }))).to.equal(true)
+		end)
+
+		it("scroll shows while scrolling, then hides after the delay", function()
+			local handle = area(400, { scrollbar = "scroll", hideDelay = 0.2 })
+			expect(shown(handle)).to.equal(false)
+			handle.Instance.CanvasPosition = Vector2.new(0, 50)
+			task.wait(0.05)
+			expect(shown(handle)).to.equal(true)
+			task.wait(0.3)
+			expect(shown(handle)).to.equal(false)
+		end)
+
+		it("scroll stays hidden when nothing overflows", function()
+			local handle = area(40, { scrollbar = "scroll" })
+			handle.Instance.CanvasPosition = Vector2.new(0, 10)
+			task.wait(0.05)
+			expect(shown(handle)).to.equal(false)
+		end)
+
+		it("hover is the default and shows while the mouse is over it", function()
+			local handle = area(400)
+			expect(handle.scrollbar).to.equal("hover")
+			expect(shown(handle)).to.equal(false)
+			handle._pointer(true)
+			expect(shown(handle)).to.equal(true)
+			handle._pointer(false)
+			expect(shown(handle)).to.equal(false)
+		end)
+
+		it("hover acts like scroll on touch", function()
+			local handle = area(400)
+			app.input:setMode("touch")
+			handle._pointer(true)
+			expect(shown(handle)).to.equal(false)
+		end)
+
+		it("glimpse shows briefly when the mouse enters", function()
+			local handle = area(400, { scrollbar = "glimpse", hideDelay = 0.2 })
+			expect(shown(handle)).to.equal(false)
+			handle._pointer(true)
+			expect(shown(handle)).to.equal(true)
+			task.wait(0.3)
+			expect(shown(handle)).to.equal(false)
+		end)
+
+		it("styles the bar from the tag", function()
+			local handle = area(400, { scrollbar = "auto" })
+			Harness.flush()
+			expect(Harness.styled(handle.Instance, "ScrollBarImageTransparency")).to.equal(0)
+			local hidden = area(400, { scrollbar = "scroll" })
+			Harness.flush()
+			expect(Harness.styled(hidden.Instance, "ScrollBarImageTransparency")).to.equal(1)
+		end)
+	end)
 end
