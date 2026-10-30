@@ -125,10 +125,11 @@ tests/Stories.spec     mounts every story in each theme and device
 examples/stories/      a story per component, plus reactivity and scene stories
 examples/Showcase      the story browser (Play)
 scripts/               add.luau (copy-in CLI), gen-palette.luau, run-tests.server.luau
-registry.json          what the CLI can install and the dependencies
+registry.json          a description of each component for the copy-in CLI
 docs/                  the pages this site renders
 apps/site/             the website (Vue, prerendered), deployed by .github/workflows/pages.yml
 libs/gruff/            the docs engine the site uses (to become its own package)
+libs/icons/            lucy-icons, the icon build (published to npm)
 ```
 
 Only the Luau package ships: the Wally package is checked in CI to contain

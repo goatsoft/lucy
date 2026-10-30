@@ -33,6 +33,8 @@ jobs:
         run: stylua --check src tests scripts examples
       - name: Lint
         run: selene src tests examples
+      - name: Copy-in installer
+        run: lune run scripts/add -- --check
       - name: Types
         run: |
           rojo sourcemap test.project.json -o sourcemap.json

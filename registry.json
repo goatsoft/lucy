@@ -1,115 +1,33 @@
 {
-  "$schema": "./docs/registry.md",
+  "$comment": "Descriptions for scripts/add --list. Files and dependencies come from src/ itself; scripts/add --check fails when a component has no description here.",
   "name": "lucy",
-  "core": {
-    "description": "App, AppState, reactivity (ref, computed, reactive, watch), Lucy.new, springs and tweens, Theme, Tokens, Oklab, Palette, SceneManager, InputManager, Adaptive, Responsive, Preview (stories) and helpers. Always installed.",
-    "files": [
-      "Core/Adaptive.luau",
-      "Core/Animate.luau",
-      "Core/App.luau",
-      "Core/AppState.luau",
-      "Core/Component.luau",
-      "Core/Context.luau",
-      "Core/Element.luau",
-      "Core/InputManager.luau",
-      "Core/Maid.luau",
-      "Core/Oklab.luau",
-      "Core/Palette.luau",
-      "Core/Preview.luau",
-      "Core/Reactive.luau",
-      "Core/Responsive.luau",
-      "Core/SceneManager.luau",
-      "Core/Signal.luau",
-      "Core/Theme.luau",
-      "Core/Tokens.luau",
-      "Testing/Harness.luau"
-    ],
-    "specs": [
-      "Core/Adaptive.spec.luau",
-      "Core/Animate.spec.luau",
-      "Core/App.spec.luau",
-      "Core/AppState.spec.luau",
-      "Core/Component.spec.luau",
-      "Core/Element.spec.luau",
-      "Core/InputManager.spec.luau",
-      "Core/Oklab.spec.luau",
-      "Core/Preview.spec.luau",
-      "Core/Reactive.spec.luau",
-      "Core/Responsive.spec.luau",
-      "Core/SceneManager.spec.luau",
-      "Core/Theme.spec.luau",
-      "Core/Tokens.spec.luau"
-    ]
-  },
   "components": {
-    "badge": {
-      "module": "Badge",
-      "description": "Small status label",
-      "dependencies": []
-    },
-    "button": {
-      "module": "Button",
-      "description": "Button with variants and sizes",
-      "dependencies": []
-    },
-    "checkbox": {
-      "module": "Checkbox",
-      "description": "Checkbox with optional label",
-      "dependencies": []
-    },
-    "dialog": {
-      "module": "Dialog",
-      "description": "Modal dialog and alert dialog",
-      "dependencies": [
-        "button"
-      ]
-    },
-    "input": {
-      "module": "Input",
-      "description": "Single-line text field",
-      "dependencies": []
-    },
-    "panel": {
-      "module": "Panel",
-      "description": "Card with header, content and footer",
-      "dependencies": []
-    },
-    "progress": {
-      "module": "Progress",
-      "description": "Progress bar",
-      "dependencies": []
-    },
-    "separator": {
-      "module": "Separator",
-      "description": "Horizontal or vertical rule",
-      "dependencies": []
-    },
-    "skeleton": {
-      "module": "Skeleton",
-      "description": "Pulsing loading placeholder",
-      "dependencies": []
-    },
-    "stack": {
-      "module": "Stack",
-      "description": "Responsive flex row or column",
-      "dependencies": []
-    },
-    "switch": {
-      "module": "Switch",
-      "description": "Toggle switch with optional label",
-      "dependencies": []
-    },
-    "text": {
-      "module": "Text",
-      "description": "Typography: headings, body, muted, label",
-      "dependencies": []
-    },
-    "toaster": {
-      "module": "Toaster",
-      "description": "Toast notifications (app.toast)",
-      "dependencies": [
-        "button"
-      ]
-    }
+    "alert": "A box that calls attention to a message",
+    "avatar": "A player's headshot, or a monogram for a bot",
+    "badge": "Small status label",
+    "button": "Button with variants, sizes and an optional key hint",
+    "checkbox": "Checkbox with optional label",
+    "dialog": "Modal dialog and alert dialog",
+    "grid": "Rows of equal cells",
+    "icon": "Small picture in the theme's colours, by name or asset id",
+    "image": "Picture from an asset id or a thumbnail",
+    "input": "Text field on one line",
+    "item": "List row with media, title, description and actions",
+    "kbd": "The key to press for the player's keyboard or controller",
+    "panel": "Card with header, content and footer",
+    "pressable": "Clickable surface that holds anything",
+    "progress": "Bar that fills from 0 to a maximum",
+    "radio-group": "Options where the player picks exactly one",
+    "scroll-area": "Region that scrolls when its content does not fit",
+    "separator": "Thin line between items",
+    "skeleton": "Pulsing placeholder while content loads",
+    "spinner": "Turning ring while something loads",
+    "stack": "Row or column that lays out its children",
+    "switch": "On and off switch with optional label",
+    "tabs": "Tab bar with one panel per tab",
+    "text": "Headings, body copy and labels",
+    "toaster": "Toast notifications through app.toast",
+    "toggle": "Button that stays pressed until clicked again",
+    "toggle-group": "Toggles where the player picks one or several"
   }
 }

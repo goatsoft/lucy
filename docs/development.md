@@ -115,8 +115,10 @@ Gotchas:
 6. Add a story, `examples/stories/Thing.story.luau`, with controls for its state
    keys ([stories](stories.md)). `tests/Stories.spec.luau` mounts every story in
    each theme and device.
-7. Add it to `src/init.luau` and `registry.json` (with dependencies), give it a
-   page in `docs/components/` and add it to the list in `docs/components/index.md`.
+7. Add it to `src/init.luau` and give it a one line description in
+   `registry.json` (the copy-in installer works out its files and dependencies
+   from `src` itself), give it a page in `docs/components/` and add it to the
+   list in `docs/components/index.md`.
 8. Grep for the em dash character before committing: `grep -rn $'\xe2\x80\x94' .`
    must return nothing.
 
@@ -128,7 +130,12 @@ luau-lsp analyze --sourcemap=sourcemap.json --definitions=@roblox=globalTypes.d.
   --definitions=@testez=testez.d.luau src tests
 selene src tests examples
 stylua --check src tests scripts examples
+lune run scripts/add -- --check
 ```
+
+The last one installs every component with the copy-in installer into a
+temporary folder and checks that every `require` finds its module, and that
+every component has a description in `registry.json`.
 
 Every source file starts with `--!strict` and `luau-lsp analyze` must report
 nothing. Specs stay in the default nonstrict mode (`.luaurc`) since TestEZ's
