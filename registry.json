@@ -2,7 +2,7 @@
   "$schema": "./docs/registry.md",
   "name": "lucy",
   "core": {
-    "description": "App, AppState, reactivity (ref, computed, reactive, watch), Lucy.new, springs and tweens, Theme, Tokens, Oklab, Palette, SceneManager, InputManager, Adaptive, Responsive and helpers. Always installed.",
+    "description": "App, AppState, reactivity (ref, computed, reactive, watch), Lucy.new, springs and tweens, Theme, Tokens, Oklab, Palette, SceneManager, InputManager, Adaptive, Responsive, Preview (stories) and helpers. Always installed.",
     "files": [
       "Core/Adaptive.luau",
       "Core/Animate.luau",
@@ -15,6 +15,7 @@
       "Core/Maid.luau",
       "Core/Oklab.luau",
       "Core/Palette.luau",
+      "Core/Preview.luau",
       "Core/Reactive.luau",
       "Core/Responsive.luau",
       "Core/SceneManager.luau",
@@ -32,6 +33,7 @@
       "Core/Element.spec.luau",
       "Core/InputManager.spec.luau",
       "Core/Oklab.spec.luau",
+      "Core/Preview.spec.luau",
       "Core/Reactive.spec.luau",
       "Core/Responsive.spec.luau",
       "Core/SceneManager.spec.luau",

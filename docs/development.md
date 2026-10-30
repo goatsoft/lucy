@@ -34,6 +34,12 @@ for TestEZ (into `DevPackages/`, gitignored).
    require(game.ReplicatedStorage.LucyTests.Runner).run({ pattern = "Button" })
    ```
    `run` returns `{ passed, failed, skipped, errors, ok }`.
+4. Look at a component without pressing Play:
+   ```lua
+   require(game.ReplicatedStorage.Lucy).Preview.show("Button", { root = game.ReplicatedStorage.LucyExamples })
+   ```
+   Press Play for the story browser (`examples/Showcase.client.luau`, mapped into
+   StarterPlayerScripts), where every control is clickable.
 
 Keep build output and scratch files outside the repo (for example `~/tmp`).
 
@@ -92,9 +98,12 @@ Gotchas:
 5. Anything interactive: `Interactable`/`Selectable` follow `disabled`, a
    keyboard path exists (`handle:click()` or `handle:toggle()`), and it works
    inside focus scopes.
-6. Add it to `src/init.luau`, `registry.json` (with dependencies) and
+6. Add a story, `examples/stories/Thing.story.luau`, with controls for its state
+   keys ([stories](stories.md)). `tests/Stories.spec.luau` mounts every story in
+   each theme and device.
+7. Add it to `src/init.luau`, `registry.json` (with dependencies) and
    `docs/components.md`.
-7. Grep for the em-dash character before committing: `grep -rn $'\xe2\x80\x94' .`
+8. Grep for the em-dash character before committing: `grep -rn $'\xe2\x80\x94' .`
    must return nothing.
 
 ## Static checks

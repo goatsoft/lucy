@@ -9,7 +9,7 @@ export interface NavGroup {
 /** The docs sidebar: groups by route, each sorted by frontmatter `order`, then title. */
 const GROUPS: { title: string, match: (route: string) => boolean }[] = [
   { title: 'Get started', match: (r) => r === '/docs' || r.startsWith('/docs/guide/') },
-  { title: 'Reference', match: (r) => r === '/docs/reactivity' || r === '/docs/components' || r === '/docs/architecture' || r.startsWith('/docs/reference/') },
+  { title: 'Reference', match: (r) => r === '/docs/reactivity' || r === '/docs/components' || r === '/docs/architecture' || r === '/docs/stories' || r.startsWith('/docs/reference/') },
   { title: 'Contributing', match: (r) => r === '/docs/development' },
 ]
 

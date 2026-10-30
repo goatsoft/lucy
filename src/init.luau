@@ -19,6 +19,10 @@
 		app.scenes:goTo("Title")
 		app.toast.success("Welcome back")
 
+	Preview a story in Studio (edit mode, from the command bar):
+
+		Lucy.Preview.show("Button")
+
 	See README.md and docs/ for the full guide.
 ]]
 
@@ -33,6 +37,7 @@ local AppState = require(Core.AppState)
 local Component = require(Core.Component)
 local SceneManager = require(Core.SceneManager)
 local Theme = require(Core.Theme)
+local Preview = require(Core.Preview)
 
 export type Ref<T> = Reactive.Ref<T>
 export type Computed<T> = Reactive.Computed<T>
@@ -45,6 +50,7 @@ export type Scene = SceneManager.Scene
 export type Handle = Component.Handle
 export type Props = Component.Props
 export type Rule = Component.Rule
+export type Story = Preview.Story
 
 return {
 	-- Reactivity (Core/Reactive)
@@ -99,6 +105,7 @@ return {
 	Animate = Animate,
 	Signal = require(Core.Signal),
 	Maid = require(Core.Maid),
+	Preview = Preview,
 
 	-- Components
 	Badge = require(Components.Badge),

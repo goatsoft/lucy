@@ -80,6 +80,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/stories': RouteRecordInfo<
+      '/docs/stories',
+      '/docs/stories',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
   }
 
   /**
@@ -144,6 +151,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reactivity.md': {
       routes:
         | '/docs/reactivity'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/stories.md': {
+      routes:
+        | '/docs/stories'
       views:
         | never
       pathParamNames:

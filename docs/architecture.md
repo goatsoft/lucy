@@ -24,6 +24,7 @@ App ─────────────── one per client, owns everythin
 ```
 
 Components (`src/Components`) are built on `Core/Component` (ADR 0002).
+`Core/Preview` mounts stories into their own App for previewing (ADR 0016).
 
 ## Data flow
 
@@ -89,6 +90,9 @@ src/
   Components/          one file per component + its spec
   Testing/Harness.luau shared test helpers
 tests/Runner.luau      runs every spec, returns a summary
+tests/Stories.spec     mounts every story in each theme and device
+examples/stories/      a story per component, plus reactivity and scene stories
+examples/Showcase      the story browser (Play)
 scripts/               add.luau (copy-in CLI), gen-palette.luau, run-tests.server.luau
 registry.json          what the CLI can install and the dependencies
 docs/                  this, development guide, components, ADRs (the site renders all but the ADRs)

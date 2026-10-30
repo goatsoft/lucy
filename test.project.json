@@ -17,6 +17,13 @@
         "$path": "examples"
       }
     },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "LucyShowcase": {
+          "$path": "examples/Showcase.client.luau"
+        }
+      }
+    },
     "ServerScriptService": {
       "RunTests": {
         "$path": "scripts/run-tests.server.luau"

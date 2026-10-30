@@ -195,6 +195,7 @@ local core = {
 	"Animate",
 	"Signal",
 	"Maid",
+	"Preview",
 }
 -- The top-level API (Lucy.ref, Lucy.new, ...), kept in step with src/init.luau.
 local api = {
@@ -234,9 +235,11 @@ local types = {
 	{ "Handle", "Component.Handle" },
 	{ "Props", "Component.Props" },
 	{ "Rule", "Component.Rule" },
+	{ "Story", "Preview.Story" },
 }
 -- Core modules required up front (for the API above or for their types).
-local locals = { "Reactive", "Element", "Animate", "App", "AppState", "Component", "SceneManager", "Theme" }
+local locals =
+	{ "Reactive", "Element", "Animate", "App", "AppState", "Component", "SceneManager", "Theme", "Preview" }
 
 local lines = {
 	"--!strict",
