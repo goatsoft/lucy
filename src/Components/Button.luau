@@ -27,6 +27,7 @@
 
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
+local Icon = require(script.Parent.Icon)
 local Kbd = require(script.Parent.Kbd)
 
 local Button = {}
@@ -156,9 +157,6 @@ local rules: { Component.Rule } = {
 		priority = VARIANT,
 		properties = { PaddingLeft = "$Space0", PaddingRight = "$Space0" },
 	},
-
-	-- The close button of dialogs and sheets: an icon button with a glyph big enough to hit.
-	{ selector = ".ui-button-close", priority = VARIANT + 1, properties = { TextSize = "$Text4xl" } },
 
 	-- Disabled (the component also sets Interactable = false)
 	{ selector = ".ui-button.ui-disabled", priority = DISABLED, properties = { TextTransparency = 0.5 } },
@@ -316,18 +314,33 @@ function Button.new(props: { [string]: any }?)
 	return handle
 end
 
+-- The close icon's size in pixels (before the TV scale Icon applies).
+Button.closeIconSize = 28
+
 --[[
 	The close button dialogs and sheets put in their top right corner: a ghost
-	icon button with a large "×". Takes the same props as Button.new.
+	icon button drawing the lucy:close icon (change it with Lucy.Icon.register).
+	Takes the same props as Button.new; handle.icon is the Icon.
 ]]
 function Button.close(props: { [string]: any }?)
 	local p: { [string]: any } = table.clone(props or {})
-	p.text = p.text or "×"
+	p.text = ""
 	p.variant = p.variant or "ghost"
 	p.size = p.size or "icon"
 	p.name = p.name or "Close"
 	local handle = Button.new(p)
 	handle.Instance:AddTag("ui-button-close")
+	local icon = Icon.new({
+		app = handle.app,
+		icon = "lucy:close",
+		size = Button.closeIconSize,
+		name = "CloseIcon",
+	})
+	icon.Instance.AnchorPoint = Vector2.new(0.5, 0.5)
+	icon.Instance.Position = UDim2.fromScale(0.5, 0.5)
+	icon.Instance.Parent = handle.Instance
+	handle.icon = icon
+	handle.maid:give(icon)
 	return handle
 end
 

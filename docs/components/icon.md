@@ -14,8 +14,9 @@ Lucy.Icon.new({ icon = "lucide:heart", variant = "destructive", Parent = row })
 
 ## Registering icons
 
-Lucy ships no icons. Your game registers a map of names to images once, before
-it builds any UI:
+Apart from the few [icons Lucy draws](../guide/icons.md#icons-lucy-draws) in its
+own components, icons come from your game. It registers a map of names to
+images once, before it builds any UI:
 
 ```lua
 Lucy.Icon.register({

@@ -10,11 +10,16 @@
 			Parent = button,
 		})
 
-	Lucy ships no icons. A game registers its own: a map of name to
+	A game registers its own icons: a map of name to
 		{ image = 123 | "rbxassetid://...", rect = { x, y, width, height }?, tint = false? }
 	`rect` picks a cell of a sprite sheet; `tint = false` keeps an icon's own
 	colours (logos, emoji). Icon.register returns a function that removes those
 	names again. An unknown name fails the mount.
+
+	Lucy's own components draw a few slots, which Lucy fills from its own sheet
+	(Core/IconSheet): lucy:close, lucy:check and lucy:chevron-down / up / left /
+	right. Register a slot's name to change it everywhere; unregistering puts
+	Lucy's back.
 
 	State keys: icon, size, variant, visible.
 ]]
@@ -22,6 +27,7 @@
 local Component = require(script.Parent.Parent.Core.Component)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
+local IconSheet = require(script.Parent.Parent.Core.IconSheet)
 local Image = require(script.Parent.Image)
 
 local Icon = {}
@@ -77,6 +83,24 @@ local function resolveEntry(name: string, entry: Entry): Resolved
 	}
 end
 
+-- Lucy's slots and the sheet icon that fills each by default.
+local slots: { [string]: string } = {
+	["lucy:close"] = "lucide:x",
+	["lucy:check"] = "lucide:check",
+	["lucy:chevron-down"] = "lucide:chevron-down",
+	["lucy:chevron-up"] = "lucide:chevron-up",
+	["lucy:chevron-left"] = "lucide:chevron-left",
+	["lucy:chevron-right"] = "lucide:chevron-right",
+}
+
+Icon.slots = slots
+
+-- What a slot shows when no game has registered its name.
+local defaults: { [string]: Resolved } = {}
+for slot, source in slots do
+	defaults[slot] = resolveEntry(slot, (IconSheet :: any)[source])
+end
+
 -- Adds named icons. Returns a function that removes exactly these (if not replaced since).
 function Icon.register(map: { [string]: Entry }): () -> ()
 	local added: { [string]: Resolved } = {}
@@ -96,13 +120,13 @@ function Icon.register(map: { [string]: Entry }): () -> ()
 end
 
 function Icon.has(name: string): boolean
-	return registry[name] ~= nil
+	return registry[name] ~= nil or defaults[name] ~= nil
 end
 
 -- A registered name, an asset id or a url, as what to draw. Nil for an unknown name.
 function Icon.resolve(value: any): Resolved?
 	if type(value) == "string" then
-		local entry = registry[value]
+		local entry = registry[value] or defaults[value]
 		if entry then
 			return entry
 		end

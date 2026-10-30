@@ -24,3 +24,6 @@ dist/
 dist-server/
 *.tsbuildinfo
 .env*
+
+# lucy-icons downloads and unuploaded sheets
+.lucy-icons/

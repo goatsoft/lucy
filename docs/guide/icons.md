@@ -7,7 +7,9 @@ order: 5
 # Add icons
 
 [Icon](../components/icon.md) draws small pictures that take the theme's
-colours. Lucy ships no icons, so they come from your game, in one of two ways:
+colours. Lucy draws a few icons of its own in its components (see
+[Icons Lucy draws](#icons-lucy-draws)). Every other icon comes from your game,
+in one of two ways:
 
 - **Your own images.** Upload them yourself and register them by name, or pass
   an asset id straight to `icon`. Nothing else to install.
@@ -19,6 +21,29 @@ colours. Lucy ships no icons, so they come from your game, in one of two ways:
 Both end the same way: a map from names to images, passed to
 `Lucy.Icon.register` once, before you build any UI. You can use both in one
 game.
+
+## Icons Lucy draws
+
+Lucy's components draw these names, and Lucy fills them with its own icons, so
+they work with nothing set up:
+
+| Name | Where |
+|---|---|
+| `lucy:close` | The close button of dialogs and sheets |
+| `lucy:chevron-down` | The arrow on a select |
+| `lucy:check` | The chosen option in a select's list |
+| `lucy:chevron-up`, `lucy:chevron-left`, `lucy:chevron-right` | Kept for components to come |
+
+To use your own, register the name, and every component that draws it changes:
+
+```lua
+Lucy.Icon.register({
+    ["lucy:close"] = { image = 1234567 },
+})
+```
+
+Removing your registration brings Lucy's icon back. Lucy's icons are from the
+Lucide set (ISC licence), on one image owned by GOATsoft.
 
 ## Your own images
 

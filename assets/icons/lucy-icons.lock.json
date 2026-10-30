@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "size": 64,
+  "sheet": 512,
+  "padding": 4,
+  "order": [
+    "lucide:check",
+    "lucide:chevron-down",
+    "lucide:chevron-left",
+    "lucide:chevron-right",
+    "lucide:chevron-up",
+    "lucide:x"
+  ],
+  "sheets": {
+    "d455e229db48ac17df90a8fd5f261084": "126543493650331"
+  }
+}

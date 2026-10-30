@@ -11,7 +11,7 @@ return function()
 		cleanup()
 	end)
 
-	it("makes a close button with a large glyph", function()
+	it("makes a close button that draws the lucy:close icon", function()
 		local clicked = 0
 		local close = Button.close({
 			app = app,
@@ -24,8 +24,9 @@ return function()
 		expect(close.Instance:HasTag("ui-button-close")).to.equal(true)
 		close:click()
 		expect(clicked).to.equal(1)
-		Harness.flush()
-		expect(Harness.styled(close.Instance, "TextSize")).to.equal(app.theme:resolve("Text4xl"))
+		expect(close.Instance.Text).to.equal("")
+		local slot: any = require(script.Parent.Icon).resolve("lucy:close")
+		expect(close.icon.Instance.Image).to.equal(slot.image)
 	end)
 
 	it("follows reactive text and disabled", function()

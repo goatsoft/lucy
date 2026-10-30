@@ -1,0 +1,18 @@
+{
+  "src": [],
+  "include": [
+    "lucide:x",
+    "lucide:check",
+    "lucide:chevron-down",
+    "lucide:chevron-up",
+    "lucide:chevron-left",
+    "lucide:chevron-right"
+  ],
+  "output": "../../src/Core/IconSheet.luau",
+  "lock": "lucy-icons.lock.json",
+  "cache": ".lucy-icons",
+  "sheet": 512,
+  "creator": {
+    "groupId": "811663185"
+  }
+}

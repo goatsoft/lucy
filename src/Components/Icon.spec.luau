@@ -34,6 +34,35 @@ return function()
 		expect(Icon.has("test:nope")).to.equal(false)
 	end)
 
+	it("has Lucy's slots without registering anything", function()
+		for _, slot in
+			{
+				"lucy:close",
+				"lucy:check",
+				"lucy:chevron-down",
+				"lucy:chevron-up",
+				"lucy:chevron-left",
+				"lucy:chevron-right",
+			}
+		do
+			expect(Icon.has(slot)).to.equal(true)
+			local resolved: any = Icon.resolve(slot)
+			expect(string.sub(resolved.image, 1, 13)).to.equal("rbxassetid://")
+			expect(resolved.size).to.equal(Vector2.new(64, 64))
+		end
+	end)
+
+	it("lets a game replace a slot, and puts Lucy's back when it unregisters", function()
+		local default = Icon.resolve("lucy:close")
+		local undo = Icon.register({ ["lucy:close"] = { image = 333 } })
+		local replaced: any = Icon.resolve("lucy:close")
+		expect(replaced.image).to.equal("rbxassetid://333")
+		local icon = Icon.new({ app = app, icon = "lucy:close", Parent = gui })
+		expect(icon.Instance.Image).to.equal("rbxassetid://333")
+		undo()
+		expect(Icon.resolve("lucy:close")).to.equal(default)
+	end)
+
 	it("forgets names when unregistered", function()
 		local remove = Icon.register({ ["test:temp"] = { image = 5 } })
 		expect(Icon.has("test:temp")).to.equal(true)
