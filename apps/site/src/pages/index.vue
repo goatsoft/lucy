@@ -3,10 +3,9 @@ import { ref } from 'vue'
 import { AuroraScene } from '@goatsoft/aurora-vue'
 import { RouterLink } from 'vue-router'
 import heroDark from '@/backgrounds/hero-dark.aurora'
-import screenComponents from '@/backgrounds/screen-components.aurora'
-import screenInput from '@/backgrounds/screen-input.aurora'
-import screenState from '@/backgrounds/screen-state.aurora'
-import screenThemes from '@/backgrounds/screen-themes.aurora'
+import cardRadar from '@/backgrounds/card-radar.aurora'
+import sectionRadarDark from '@/backgrounds/section-radar-dark.aurora'
+import sectionRadarLight from '@/backgrounds/section-radar-light.aurora'
 import heroLight from '@/backgrounds/hero-light.aurora'
 import terminalDark from '@/backgrounds/terminal-dark.aurora'
 import terminalLight from '@/backgrounds/terminal-light.aurora'
@@ -31,16 +30,13 @@ useHead({ description: SITE.description })
 
 // The hero's background follows the pointer over the whole section.
 const hero = ref<HTMLElement>()
-// The four cards are screens in one scene: rings start from the pointer anywhere over the
-// row and spread through every card, each over its own texture.
-const cards = ref<HTMLElement>()
 
 // The four that matter most, as cards.
 const features = [
-  { icon: Boxes, screen: screenComponents, title: '35 components', text: 'Buttons, dialogs, selects, tables, sliders, tabs and more, ready for menus, HUDs and shops.' },
-  { icon: Atom, screen: screenState, title: 'One source of truth', text: 'All UI and app state in one store. Change a value and only the properties that read it are set again.' },
-  { icon: Gamepad, screen: screenInput, title: 'Every input, every device', text: 'Mouse, keyboard, gamepad and touch, on desktop, console, tablet and phone. Controls grow for touch and TV.' },
-  { icon: SwatchBook, screen: screenThemes, title: 'Themes', text: 'Light and dark themes for every base colour, switched while the game runs. Hover and theme changes run no Luau.' },
+  { icon: Boxes, title: '35 components', text: 'Buttons, dialogs, selects, tables, sliders, tabs and more, ready for menus, HUDs and shops.' },
+  { icon: Atom, title: 'One source of truth', text: 'All UI and app state in one store. Change a value and only the properties that read it are set again.' },
+  { icon: Gamepad, title: 'Every input, every device', text: 'Mouse, keyboard, gamepad and touch, on desktop, console, tablet and phone. Controls grow for touch and TV.' },
+  { icon: SwatchBook, title: 'Themes', text: 'Light and dark themes for every base colour, switched while the game runs. Hover and theme changes run no Luau.' },
 ] as const
 
 // Everything else, as a short list under the cards.
@@ -112,32 +108,36 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
       </p>
     </section>
 
-    <section
-      id="features"
-      class="mx-auto max-w-6xl scroll-mt-24 px-6 py-20"
-    >
-      <p class="eyebrow text-center">
-        Features
-      </p>
-      <h2 class="mx-auto mt-4 max-w-2xl text-center font-display text-heading font-semibold tracking-tight text-balance">
-        What Lucy does
-      </h2>
-      <!-- One scene across the four cards: each shows its part of one picture, lined up. -->
-      <AuroraScene name="features">
+    <!-- One scene: a faint radar behind the section, seen brighter through each card. The
+         sweep crosses the section and lights each card in turn, all on one clock. -->
+    <AuroraScene name="features">
+      <section
+        id="features"
+        class="relative isolate mx-auto max-w-6xl scroll-mt-24 px-6 py-20"
+      >
         <div
-          ref="cards"
-          class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(closest-side,black_55%,transparent)]"
         >
+          <ThemedBackground
+            :dark="sectionRadarDark"
+            :light="sectionRadarLight"
+          />
+        </div>
+        <p class="eyebrow text-center">
+          Features
+        </p>
+        <h2 class="mx-auto mt-4 max-w-2xl text-center font-display text-heading font-semibold tracking-tight text-balance">
+          What Lucy does
+        </h2>
+        <div class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <article
             v-for="feature in features"
             :key="feature.title"
             class="group relative isolate flex min-h-64 flex-col justify-end overflow-hidden rounded-2xl border border-white/10 bg-[oklch(0.13_0.02_290)] p-5 shadow-[0_24px_60px_-30px_var(--primary)] transition duration-300 hover:border-primary/60 motion-safe:hover:-translate-y-0.5"
           >
             <!-- A screen in both themes: the same dark glass, light text. -->
-            <ThemedBackground
-              :dark="feature.screen"
-              :interaction-target="cards"
-            />
+            <ThemedBackground :dark="cardRadar" />
             <div
               aria-hidden="true"
               class="absolute inset-x-0 bottom-0 -z-10 h-2/3 bg-linear-to-t from-[oklch(0.13_0.02_290)] to-transparent"
@@ -158,29 +158,29 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
             </p>
           </article>
         </div>
-      </AuroraScene>
-      <ul class="mt-12 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
-        <li
-          v-for="item in more"
-          :key="item.title"
-          class="flex gap-3"
-        >
-          <component
-            :is="item.icon"
-            aria-hidden="true"
-            class="mt-0.5 size-5 shrink-0 text-primary"
-          />
-          <div>
-            <h3 class="font-display text-sm font-semibold text-foreground">
-              {{ item.title }}
-            </h3>
-            <p class="mt-1 text-sm leading-6 text-pretty text-muted-foreground">
-              {{ item.text }}
-            </p>
-          </div>
-        </li>
-      </ul>
-    </section>
+        <ul class="mt-12 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+          <li
+            v-for="item in more"
+            :key="item.title"
+            class="flex gap-3"
+          >
+            <component
+              :is="item.icon"
+              aria-hidden="true"
+              class="mt-0.5 size-5 shrink-0 text-primary"
+            />
+            <div>
+              <h3 class="font-display text-sm font-semibold text-foreground">
+                {{ item.title }}
+              </h3>
+              <p class="mt-1 text-sm leading-6 text-pretty text-muted-foreground">
+                {{ item.text }}
+              </p>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </AuroraScene>
 
     <section class="relative isolate overflow-hidden">
       <ThemedBackground
