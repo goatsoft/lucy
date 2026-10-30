@@ -1,8 +1,5 @@
 <script setup lang="ts">
 import type { TocEntry } from '@goatsoft/gruff'
-import docsDark from '@/backgrounds/docs-dark.aurora'
-import docsLight from '@/backgrounds/docs-light.aurora'
-import ThemedBackground from '@/components/ThemedBackground.vue'
 import { useHead } from '@/head'
 import { breadcrumbs, nav, sequence } from '@/lib/docs'
 
@@ -23,15 +20,7 @@ watch(here, () => (menu.value = false))
 <template>
   <!-- The grid runs to the footer (its top margin is cancelled here and given back as the main
        column's padding), so the sticky sidebar stays put until the footer actually arrives. -->
-  <div class="relative isolate mx-auto -mb-24 grid max-w-7xl gap-10 px-6 pt-28 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_13rem]">
-    <!-- A band of digital rain across the top of every page, the full width of the window,
-         fading out before the text starts. -->
-    <div class="pointer-events-none absolute top-0 left-1/2 -z-10 h-96 w-screen -translate-x-1/2 mask-b-from-10% mask-b-to-100%">
-      <ThemedBackground
-        :dark="docsDark"
-        :light="docsLight"
-      />
-    </div>
+  <div class="mx-auto -mb-24 grid max-w-7xl gap-10 px-6 pt-28 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_13rem]">
     <!-- Sticks below the nav and runs to the bottom of the window, scrolling on its own. -->
     <aside class="lg:sticky lg:top-28 lg:max-h-[calc(100dvh-7rem)] lg:self-start lg:overflow-y-auto lg:overscroll-contain lg:mask-b-from-[calc(100%-2.5rem)] lg:mask-b-to-100% lg:pb-10">
       <SearchDialog />

@@ -2,15 +2,15 @@
   "$schema": "https://aurora.goatsoft.io/schema/v1.json",
   "format": "aurora",
   "version": 1,
-  "name": "Lucy Card Scanlines",
+  "name": "Lucy Panel Light",
   "motion": {
     "speed": 1,
     "reduced": "still"
   },
   "palette": [
-    "oklch(0.13 0.02 290)",
-    "oklch(0.42 0.15 292.7)",
-    "oklch(0.606 0.25 292.7)"
+    "oklch(0.985 0.005 295)",
+    "oklch(0.93 0.025 293)",
+    "oklch(0.86 0.08 293)"
   ],
   "layers": [
     {
@@ -21,11 +21,11 @@
         2
       ],
       "params": {
-        "spacing": 4,
-        "softness": 0.5,
+        "spacing": 3,
+        "softness": 0.6,
         "strength": 0.45,
         "speed": 0.03,
-        "roll": 0.6,
+        "roll": 0.4,
         "phase": 0.2
       }
     }

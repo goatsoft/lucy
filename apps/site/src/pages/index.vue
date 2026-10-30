@@ -3,7 +3,8 @@ import { ref } from 'vue'
 import { AuroraScene } from '@goatsoft/aurora-vue'
 import { RouterLink } from 'vue-router'
 import heroDark from '@/backgrounds/hero-dark.aurora'
-import cardScanlines from '@/backgrounds/card-scanlines.aurora'
+import cardScanlinesDark from '@/backgrounds/card-scanlines-dark.aurora'
+import cardScanlinesLight from '@/backgrounds/card-scanlines-light.aurora'
 import heroLight from '@/backgrounds/hero-light.aurora'
 import terminalDark from '@/backgrounds/terminal-dark.aurora'
 import terminalLight from '@/backgrounds/terminal-light.aurora'
@@ -123,13 +124,16 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
           <article
             v-for="feature in features"
             :key="feature.title"
-            class="group relative isolate min-h-64 overflow-hidden rounded-2xl border border-white/10 bg-[oklch(0.13_0.02_290)] p-5 shadow-[0_24px_60px_-30px_var(--primary)] transition duration-300 hover:border-primary/60 motion-safe:hover:-translate-y-0.5"
+            class="group relative isolate overflow-hidden rounded-2xl border border-border bg-surface p-6 shadow-[inset_0_1px_0_0_color-mix(in_oklab,white_8%,transparent)] transition duration-300 hover:border-primary/50 motion-safe:hover:-translate-y-0.5"
           >
-            <!-- A screen in both themes: the same dark glass, light text. -->
-            <ThemedBackground :dark="cardScanlines" />
+            <ThemedBackground
+              :dark="cardScanlinesDark"
+              :light="cardScanlinesLight"
+            />
+            <!-- A violet glow from the corner on hover. -->
             <div
               aria-hidden="true"
-              class="absolute inset-x-0 top-0 -z-10 h-3/4 bg-linear-to-b from-[oklch(0.13_0.02_290)] to-transparent"
+              class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_0%_0%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_65%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
             />
             <div class="grid size-11 place-items-center rounded-xl bg-linear-to-br from-primary/25 to-primary/5 text-primary ring-1 ring-primary/25 ring-inset shadow-[0_8px_24px_-12px_var(--primary)] transition-transform duration-300 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6 [&_svg]:size-6">
               <component
@@ -137,10 +141,10 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
                 aria-hidden="true"
               />
             </div>
-            <h3 class="mt-4 font-display text-base leading-snug font-semibold text-balance text-white">
+            <h3 class="mt-5 font-display text-base leading-snug font-semibold text-balance text-foreground">
               {{ feature.title }}
             </h3>
-            <p class="mt-2 text-sm leading-6 text-pretty text-white/70">
+            <p class="mt-2 text-sm leading-6 text-pretty text-muted-foreground">
               {{ feature.text }}
             </p>
           </article>

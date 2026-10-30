@@ -1,0 +1,33 @@
+{
+  "$schema": "https://aurora.goatsoft.io/schema/v1.json",
+  "format": "aurora",
+  "version": 1,
+  "name": "Lucy Panel",
+  "motion": {
+    "speed": 1,
+    "reduced": "still"
+  },
+  "palette": [
+    "oklch(0.18 0.012 288)",
+    "oklch(0.27 0.05 292)",
+    "oklch(0.5 0.19 293)"
+  ],
+  "layers": [
+    {
+      "type": "scanlines",
+      "colors": [
+        0,
+        1,
+        2
+      ],
+      "params": {
+        "spacing": 3,
+        "softness": 0.6,
+        "strength": 0.35,
+        "speed": 0.03,
+        "roll": 0.45,
+        "phase": 0.2
+      }
+    }
+  ]
+}
