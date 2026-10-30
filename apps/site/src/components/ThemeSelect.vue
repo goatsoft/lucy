@@ -20,15 +20,15 @@ const { theme, setTheme } = useSitePreferences()
       <option value="light">Light</option>
       <option value="dark">Dark</option>
     </select>
-    <IHgComputer
+    <ILxMonitorDuotone
       v-if="theme === 'system'"
       aria-hidden="true"
     />
-    <IHgSun03
+    <ILxSunDuotone
       v-else-if="theme === 'light'"
       aria-hidden="true"
     />
-    <IHgMoon02
+    <ILxMoonDuotone
       v-else
       aria-hidden="true"
     />

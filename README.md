@@ -25,13 +25,13 @@
 
 ## Overview
 
-Lucy gives a Roblox game a set of components, one place to keep its UI state,
-and a way to write UI in code that stays in step with that state.
+All components have one place to keep their UI state. Change a value and the UI
+updates to match. Works with mouse, keyboard, gamepad and touch.
 
 The components (buttons, dialogs, toasts, inputs, switches, panels and more)
-come with light and dark themes and work with mouse, keyboard, gamepad and
-touch on desktop, console, tablet and phone. Their looks are Universal Styling
-rules, so hovering and switching themes run no Luau.
+come with light and dark themes and work on desktop, console, tablet and phone.
+Their looks are Universal Styling rules, so hovering and switching themes run
+no Luau.
 
 When a value changes, only the properties that read it are set again. Nothing is
 rebuilt and nothing is diffed, so long lists and busy HUDs stay cheap.
@@ -62,13 +62,21 @@ component and `--all` to copy them all.
 
 ## Usage
 
-Create one App on the client, then build scenes from components.
+Create one App on the client, then build scenes from components. This one has a
+title screen and a game screen whose label follows the player's coins.
 
 ```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lucy = require(ReplicatedStorage.Packages.Lucy)
 
-local app = Lucy.App.new({ theme = "dark", baseColor = "zinc", primary = "violet" })
+local app = Lucy.App.new({
+	theme = "dark",
+	baseColor = "zinc",
+	primary = "violet",
+	state = { player = { coins = 0 } },
+})
+
+local coins = app.state:ref("player.coins")
 
 app.scenes:register("Title", {
 	build = function(scene)
@@ -76,10 +84,20 @@ app.scenes:register("Title", {
 			id = "play",
 			text = "Play",
 			size = "lg",
-			Parent = scene.gui,
 			onClick = function()
 				app.scenes:goTo("Game")
 			end,
+		})
+		Lucy.Stack.new({
+			size = UDim2.fromScale(1, 1),
+			align = "center",
+			justify = "center",
+			gap = "Space6",
+			children = {
+				Lucy.Text.new({ text = "My Game", variant = "h1", align = "center" }),
+				scene.play,
+			},
+			Parent = scene.gui,
 		})
 	end,
 	defaultFocus = function(scene)
@@ -87,11 +105,37 @@ app.scenes:register("Title", {
 	end,
 })
 
+app.scenes:register("Game", {
+	build = function(scene)
+		Lucy.Stack.new({
+			padding = "Space6",
+			children = {
+				Lucy.Text.new({
+					text = function()
+						return `Coins: {coins()}`
+					end,
+					variant = "h3",
+				}),
+			},
+			Parent = scene.gui,
+		})
+	end,
+	enter = function()
+		app.toast.success("Round started", { description = "Collect coins to win" })
+	end,
+	onBack = function()
+		app.scenes:goTo("Title") -- Escape or ButtonB
+	end,
+})
+
 app.scenes:goTo("Title")
+
+-- Game code changes state and the label follows.
+coins(coins() + 10)
 ```
 
-Any property can follow a value. Here the label follows the player's coins and
-the button slides on a spring:
+Any property of any instance can follow a value. Here a button shows the coins
+and slides on a spring:
 
 ```lua
 local coins = app.state:ref("player.coins")

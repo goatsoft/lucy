@@ -2,25 +2,37 @@
 import { RouterLink } from 'vue-router'
 import Quickstart from '@/content/quickstart.md'
 import { SITE, useHead } from '@/head'
+import Atom from '~icons/lucide-extended/atom-duotone'
+import Blocks from '~icons/lucide-extended/blocks-duotone'
+import Boxes from '~icons/lucide-extended/boxes-duotone'
+import BrushCleaning from '~icons/lucide-extended/brush-cleaning-duotone'
+import Clapperboard from '~icons/lucide-extended/clapperboard-duotone'
+import Feather from '~icons/lucide-extended/feather-duotone'
+import Gamepad from '~icons/lucide-extended/gamepad-2-duotone'
+import MonitorSmartphone from '~icons/lucide-extended/monitor-smartphone-duotone'
+import Orbit from '~icons/lucide-extended/orbit-duotone'
+import ScanEye from '~icons/lucide-extended/scan-eye-duotone'
+import SquareCode from '~icons/lucide-extended/square-code-duotone'
+import SwatchBook from '~icons/lucide-extended/swatch-book-duotone'
 
 useHead({ description: SITE.description })
 
 const features = [
-  { icon: 'fast', title: 'Fine-grained by design', text: 'Change a value and only the properties that read it update. Nothing re-renders and nothing is diffed: editing one row of a 1,000-row list takes about 5 µs.' },
-  { icon: 'code', title: 'State that reads like Luau', text: 'Refs you call like functions, cached computed values, reactive tables you write as fields, and watchers. No dependency lists, no boilerplate.' },
-  { icon: 'clean', title: 'Cleans up after itself', text: 'Effects, bindings and instances belong to whatever created them and go away with it. No cleanup bookkeeping, no leaks.' },
-  { icon: 'declarative', title: 'Declarative, or built in Studio', text: 'Describe UI with Lucy.new, show and each, or hydrate a ScreenGui built in Studio and just add the behaviour.' },
-  { icon: 'motion', title: 'Motion is a value', text: 'Springs and tweens bind like any other state. Colours glide through Oklab, and nothing runs while everything is at rest.' },
-  { icon: 'components', title: 'Components you own', text: 'Buttons, dialogs, toasts, inputs, panels and more. Copy them into your game with one command, or install the Wally package.' },
-  { icon: 'themes', title: 'Styling runs in the engine', text: 'Themes are Universal Styling sheets: light and dark per base colour, switched at runtime, with hover and theme changes costing no Lua.' },
-  { icon: 'preview', title: 'See it in Studio', text: 'Write a story for a component or a whole screen, preview it in edit mode, or browse every story with live controls in Play.' },
-  { icon: 'input', title: 'Every input, focus included', text: 'Mouse, keyboard, gamepad and touch. Tab and arrows navigate, focus stays inside dialogs, and a themed ring shows only for keys or a gamepad.' },
-  { icon: 'devices', title: 'Every screen', text: 'Desktop, console, tablet and phone. Adaptive scaling, 44px touch targets, 10-foot sizes and responsive props.' },
-  { icon: 'scenes', title: 'One app, clean scenes', text: 'One store drives every component, scene and toast. Title screen, game, menus and modals each own a layer and never steal input.' },
-  { icon: 'light', title: 'Light and dependable', text: 'One package with no runtime dependencies, strict types throughout, and hundreds of specs run in Studio.' },
+  { icon: Boxes, title: '13 components', text: 'Button, Dialog, Toaster, Input, Checkbox, Switch, Panel, Progress and more.' },
+  { icon: Atom, title: 'Small updates', text: 'When a value changes, only the properties that read it are set again. Nothing is rebuilt.' },
+  { icon: SquareCode, title: 'State in plain Luau', text: 'Refs, computed values and reactive tables. Any property can follow any of them.' },
+  { icon: Blocks, title: 'Code or Studio', text: 'Write UI in code with Lucy.new, or add behaviour to UI you laid out in Studio.' },
+  { icon: SwatchBook, title: 'Light and dark themes', text: 'A theme for each base colour, switched while the game runs. Hover and theme changes run no Luau.' },
+  { icon: Gamepad, title: 'Every input', text: 'Mouse, keyboard, gamepad and touch. The focus ring shows only for keys and gamepads.' },
+  { icon: MonitorSmartphone, title: 'Every device', text: 'Desktop, console, tablet and phone. Controls grow for touch and for TV screens.' },
+  { icon: Clapperboard, title: 'Scenes', text: 'Each screen is a scene on its own layer, so menus never take input from the screen below.' },
+  { icon: Orbit, title: 'Springs and tweens', text: 'Animate any property by binding it to a spring or a tween.' },
+  { icon: ScanEye, title: 'Preview in Studio', text: 'Stories show any component or scene in Studio without pressing Play.' },
+  { icon: BrushCleaning, title: 'Cleans up', text: 'Bindings and instances are removed along with whatever created them.' },
+  { icon: Feather, title: 'Small and tested', text: 'Strict types, no runtime dependencies and over 350 specs.' },
 ] as const
 
-const install = 'lune run ~/Projects/Lucy/scripts/add -- button dialog --out src/shared/Lucy'
+const install = 'Lucy = "goatsoft/lucy@0.1.0"'
 </script>
 
 <template>
@@ -31,23 +43,22 @@ const install = 'lune run ~/Projects/Lucy/scripts/add -- button dialog --out src
     <section class="relative isolate overflow-hidden px-6 pt-40 pb-24 text-center">
       <div class="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,color-mix(in_oklab,var(--primary)_28%,transparent),transparent_60%)]" />
       <Mark
-        :size="72"
-        class="animate-mark-in mx-auto"
+        :size="256"
+        class="animate-mark-in mx-auto shadow-2xl"
       />
-      <h1 class="animate-rise mx-auto mt-8 max-w-3xl font-display text-display font-semibold tracking-tight text-balance">
-        A UI kit for <span class="text-spectrum">Roblox</span>
+      <h1 class="animate-rise mx-auto mt-8 max-w-3xl font-display text-display font-semibold tracking-loose text-balance">
+        A UI kit and app framework for Roblox
       </h1>
-      <p class="animate-rise mx-auto mt-6 max-w-2xl text-lead text-pretty text-muted-foreground [animation-delay:120ms]">
-        Fine-grained reactive state, declarative UI and themeable components, with first-class mouse,
-        keyboard, gamepad and touch on desktop, console, tablet and phone.
+      <p class="animate-rise mx-auto mt-6 max-w-2xl text-lead text-pretty tracking-tight leading-8 text-muted-foreground [animation-delay:120ms]">
+        {{ SITE.description }}
       </p>
       <div class="animate-rise mt-10 flex flex-col justify-center gap-3 sm:flex-row [animation-delay:200ms]">
         <Button
           size="lg"
           :as="RouterLink"
-          to="/docs"
+          to="/docs/"
         >
-          Get started <IHgArrowRight01 />
+          Get started <ILcChevronRight />
         </Button>
         <Button
           size="lg"
@@ -61,7 +72,7 @@ const install = 'lune run ~/Projects/Lucy/scripts/add -- button dialog --out src
         </Button>
       </div>
       <p class="mx-auto mt-8 max-w-full overflow-x-auto font-mono text-xs text-muted-foreground">
-        <span class="text-primary">$</span> {{ install }}
+        <span class="text-primary">wally.toml</span> {{ install }}
       </p>
     </section>
 
@@ -73,32 +84,30 @@ const install = 'lune run ~/Projects/Lucy/scripts/add -- button dialog --out src
         Features
       </p>
       <h2 class="mx-auto mt-4 max-w-2xl text-center font-display text-heading font-semibold tracking-tight text-balance">
-        Everything a game UI needs, out of the box
+        What Lucy does
       </h2>
-      <div class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <article
           v-for="feature in features"
           :key="feature.title"
-          class="rounded-2xl border border-border bg-surface/60 p-6"
+          class="group relative isolate overflow-hidden rounded-2xl border border-border bg-surface/60 p-5 transition duration-300 hover:border-primary/40 motion-safe:hover:-translate-y-0.5"
         >
-          <div class="grid size-10 place-items-center rounded-xl bg-primary/15 text-primary [&_svg]:size-5">
-            <IHgFlash v-if="feature.icon === 'fast'" />
-            <IHgCode v-else-if="feature.icon === 'code'" />
-            <IHgSparkles v-else-if="feature.icon === 'clean'" />
-            <IHgStructure03 v-else-if="feature.icon === 'declarative'" />
-            <IHgWave v-else-if="feature.icon === 'motion'" />
-            <IHgPackage v-else-if="feature.icon === 'components'" />
-            <IHgPaintBoard v-else-if="feature.icon === 'themes'" />
-            <IHgGameController03 v-else-if="feature.icon === 'input'" />
-            <IHgView v-else-if="feature.icon === 'preview'" />
-            <IHgComputerPhoneSync v-else-if="feature.icon === 'devices'" />
-            <IHgFeather v-else-if="feature.icon === 'light'" />
-            <IHgLayers01 v-else />
+          <div
+            aria-hidden="true"
+            class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_0%_0%,color-mix(in_oklab,var(--primary)_16%,transparent),transparent_65%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          />
+          <div class="flex items-center gap-3">
+            <div class="grid size-11 shrink-0 place-items-center rounded-xl bg-linear-to-br from-primary/25 to-primary/5 text-primary ring-1 ring-primary/25 ring-inset shadow-[0_8px_24px_-12px_var(--primary)] transition-transform duration-300 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6 [&_svg]:size-6">
+              <component
+                :is="feature.icon"
+                aria-hidden="true"
+              />
+            </div>
+            <h3 class="font-display text-base leading-snug font-semibold text-balance text-foreground">
+              {{ feature.title }}
+            </h3>
           </div>
-          <h3 class="mt-5 font-display text-lg font-semibold text-foreground">
-            {{ feature.title }}
-          </h3>
-          <p class="mt-2 text-sm leading-6 text-muted-foreground">
+          <p class="mt-3 text-sm leading-6 text-pretty text-muted-foreground">
             {{ feature.text }}
           </p>
         </article>
@@ -110,7 +119,7 @@ const install = 'lune run ~/Projects/Lucy/scripts/add -- button dialog --out src
         Quick start
       </p>
       <h2 class="mx-auto mt-4 max-w-2xl text-center font-display text-heading font-semibold tracking-tight text-balance">
-        A title screen in a dozen lines
+        A title screen and a game screen
       </h2>
       <div class="prose mt-10">
         <Quickstart />
@@ -119,9 +128,32 @@ const install = 'lune run ~/Projects/Lucy/scripts/add -- button dialog --out src
         <Button
           variant="glass"
           :as="RouterLink"
-          to="/docs"
+          to="/docs/"
         >
-          <IHgBook02 /> Read the docs
+          <ILxBookOpenDuotone /> Read the docs
+        </Button>
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-3xl px-6 py-20 text-center">
+      <p class="eyebrow">
+        Architecture
+      </p>
+      <h2 class="mx-auto mt-4 max-w-2xl font-display text-heading font-semibold tracking-tight text-balance">
+        How it is built
+      </h2>
+      <p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-pretty text-muted-foreground">
+        Each client has one App. It holds the UI state in a single tree, the theme, input and focus, the scenes and the toasts.
+        Every component keeps its state in that tree, builds its instances once and binds their properties to the state.
+        Looks come from Universal Styling rules matched by tags.
+      </p>
+      <div class="mt-8 flex justify-center">
+        <Button
+          variant="glass"
+          :as="RouterLink"
+          to="/docs/architecture"
+        >
+          Architecture guide <ILcChevronRight />
         </Button>
       </div>
     </section>

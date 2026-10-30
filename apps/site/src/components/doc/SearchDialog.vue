@@ -47,7 +47,7 @@ function keys(event: KeyboardEvent) {
 <template>
   <DialogRoot v-model:open="open">
     <DialogTrigger class="flex w-full items-center gap-2 rounded-lg border border-border bg-surface/50 px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
-      <IHgSearch01 class="size-4" /> Search docs
+      <ILxSearchDuotone class="size-4" /> Search docs
       <kbd class="ml-auto rounded-sm border border-border px-1.5 font-mono text-[11px]">{{ isMac ? '⌘' : 'Ctrl ' }}K</kbd>
     </DialogTrigger>
     <DialogPortal>
@@ -60,7 +60,7 @@ function keys(event: KeyboardEvent) {
           Search the docs
         </DialogTitle>
         <div class="flex items-center gap-3 border-b border-border px-4">
-          <IHgSearch01 class="size-5 text-muted-foreground" />
+          <ILxSearchDuotone class="size-5 text-muted-foreground" />
           <input
             v-model="query"
             placeholder="Search the docs"

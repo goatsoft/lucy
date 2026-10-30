@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { TocEntry } from '@goatsoft/gruff'
 import { useHead } from '@/head'
-import { nav, sequence } from '@/lib/docs'
+import { breadcrumbs, nav, sequence } from '@/lib/docs'
 
 /** The docs layout gruff wraps every page in: sidebar, the page, and "On this page". */
 const props = defineProps<{ frontmatter: { title?: string, description?: string, toc?: TocEntry[] } }>()
@@ -12,6 +12,7 @@ const here = computed(() => route.path.replace(/\/$/, '') || '/')
 const index = computed(() => sequence.findIndex((p) => p.route === here.value))
 const prev = computed(() => sequence[index.value - 1])
 const next = computed(() => (index.value >= 0 ? sequence[index.value + 1] : undefined))
+const trail = computed(() => breadcrumbs(here.value))
 const menu = ref(false)
 watch(here, () => (menu.value = false))
 </script>
@@ -28,7 +29,7 @@ watch(here, () => (menu.value = false))
         :aria-expanded="menu"
         @click="menu = !menu"
       >
-        Menu <IHgArrowDown01
+        Menu <ILcChevronDown
           class="size-4 transition-transform"
           :class="menu && 'rotate-180'"
         />
@@ -59,7 +60,7 @@ watch(here, () => (menu.value = false))
                   v-if="page.route === here"
                   class="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-linear-to-b from-spectrum-1 to-spectrum-2"
                 />
-                {{ page.title }}
+                {{ page.sidebarTitle ?? page.title }}
               </RouterLink>
             </li>
           </ul>
@@ -73,6 +74,36 @@ watch(here, () => (menu.value = false))
       tabindex="-1"
       class="min-w-0 pb-48 lg:min-h-[calc(100dvh-7rem)]"
     >
+      <nav
+        v-if="trail.length"
+        aria-label="Breadcrumb"
+        class="mb-6 text-sm"
+      >
+        <ol class="flex flex-wrap items-center gap-1.5 text-muted-foreground">
+          <li
+            v-for="crumb in trail"
+            :key="crumb.route"
+            class="flex items-center gap-1.5"
+          >
+            <RouterLink
+              :to="`${crumb.route}/`"
+              class="transition-colors hover:text-foreground"
+            >
+              {{ crumb.title }}
+            </RouterLink>
+            <ILcChevronRight
+              aria-hidden="true"
+              class="size-3.5 text-muted-foreground/60"
+            />
+          </li>
+          <li
+            aria-current="page"
+            class="text-foreground"
+          >
+            {{ props.frontmatter.title }}
+          </li>
+        </ol>
+      </nav>
       <article><slot /></article>
       <nav
         v-if="prev || next"
@@ -85,7 +116,7 @@ watch(here, () => (menu.value = false))
           class="group rounded-xl border border-border p-4 transition-colors hover:border-primary/40"
         >
           <span class="text-xs text-muted-foreground">Previous</span>
-          <span class="mt-1 flex items-center gap-1.5 font-medium"><IHgArrowLeft01 class="size-4 transition-transform group-hover:-translate-x-0.5" />{{ prev.title }}</span>
+          <span class="mt-1 flex items-center gap-1.5 font-medium"><ILcChevronLeft class="size-4 transition-transform group-hover:-translate-x-0.5" />{{ prev.title }}</span>
         </RouterLink>
         <RouterLink
           v-if="next"
@@ -93,7 +124,7 @@ watch(here, () => (menu.value = false))
           class="group rounded-xl border border-border p-4 text-right transition-colors hover:border-primary/40 sm:col-start-2"
         >
           <span class="text-xs text-muted-foreground">Next</span>
-          <span class="mt-1 flex items-center justify-end gap-1.5 font-medium">{{ next.title }}<IHgArrowRight01 class="size-4 transition-transform group-hover:translate-x-0.5" /></span>
+          <span class="mt-1 flex items-center justify-end gap-1.5 font-medium">{{ next.title }}<ILcChevronRight class="size-4 transition-transform group-hover:translate-x-0.5" /></span>
         </RouterLink>
       </nav>
     </main>

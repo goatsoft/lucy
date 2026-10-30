@@ -17,11 +17,11 @@ async function copy() {
     :aria-label="copied ? 'Copied' : 'Copy code'"
     @click="copy"
   >
-    <IHgTick02
+    <ILcCheck
       v-if="copied"
       class="size-4 text-primary"
     />
-    <IHgCopy01
+    <ILxCopyDuotone
       v-else
       class="size-4"
     />

@@ -7,7 +7,7 @@ export const SITE = {
   repo: 'https://github.com/goatsoft/lucy',
   wally: 'https://wally.run/package/goatsoft/lucy',
   goatsoft: 'https://goatsoft.io',
-  description: 'A UI kit and app framework for Roblox: fine-grained reactive state, declarative UI, themeable components and first-class mouse, keyboard, gamepad and touch.',
+  description: 'All components have one place to keep their UI state. Change a value and the UI updates to match. Works with mouse, keyboard, gamepad and touch.',
 }
 
 export interface Head {
@@ -30,7 +30,7 @@ export function useHead(meta: { title?: MaybeRefOrGetter<string | undefined>, de
   if (!head) return
   watchEffect(() => {
     const title = toValue(meta.title)
-    head.title = title ? `${title} · ${SITE.name}` : `${SITE.name}: a UI kit for Roblox`
+    head.title = title ? `${title} · ${SITE.name}` : `${SITE.name}: a UI kit and app framework for Roblox`
     head.description = toValue(meta.description) ?? SITE.description
     if (typeof document !== 'undefined') {
       document.title = head.title

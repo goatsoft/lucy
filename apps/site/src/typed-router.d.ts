@@ -38,11 +38,11 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
-    '/404': RouteRecordInfo<
-      '/404',
-      '/404',
-      Record<never, never>,
-      Record<never, never>,
+    '/[...path]': RouteRecordInfo<
+      '/[...path]',
+      '/:path(.*)',
+      { path: ParamValue<true> },
+      { path: ParamValue<false> },
       | never
     >,
     '/docs/': RouteRecordInfo<
@@ -66,9 +66,100 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
-    '/docs/components': RouteRecordInfo<
+    '/docs/components/': RouteRecordInfo<
+      '/docs/components/',
       '/docs/components',
-      '/docs/components',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/badge': RouteRecordInfo<
+      '/docs/components/badge',
+      '/docs/components/badge',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/button': RouteRecordInfo<
+      '/docs/components/button',
+      '/docs/components/button',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/checkbox': RouteRecordInfo<
+      '/docs/components/checkbox',
+      '/docs/components/checkbox',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/dialog': RouteRecordInfo<
+      '/docs/components/dialog',
+      '/docs/components/dialog',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/input': RouteRecordInfo<
+      '/docs/components/input',
+      '/docs/components/input',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/panel': RouteRecordInfo<
+      '/docs/components/panel',
+      '/docs/components/panel',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/progress': RouteRecordInfo<
+      '/docs/components/progress',
+      '/docs/components/progress',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/separator': RouteRecordInfo<
+      '/docs/components/separator',
+      '/docs/components/separator',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/skeleton': RouteRecordInfo<
+      '/docs/components/skeleton',
+      '/docs/components/skeleton',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/stack': RouteRecordInfo<
+      '/docs/components/stack',
+      '/docs/components/stack',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/switch': RouteRecordInfo<
+      '/docs/components/switch',
+      '/docs/components/switch',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/text': RouteRecordInfo<
+      '/docs/components/text',
+      '/docs/components/text',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/toaster': RouteRecordInfo<
+      '/docs/components/toaster',
+      '/docs/components/toaster',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -80,9 +171,37 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/guide/app-state': RouteRecordInfo<
+      '/docs/guide/app-state',
+      '/docs/guide/app-state',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/guide/components': RouteRecordInfo<
+      '/docs/guide/components',
+      '/docs/guide/components',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/guide/composables': RouteRecordInfo<
+      '/docs/guide/composables',
+      '/docs/guide/composables',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reactivity': RouteRecordInfo<
       '/docs/reactivity',
       '/docs/reactivity',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/store': RouteRecordInfo<
+      '/docs/reference/store',
+      '/docs/reference/store',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -115,13 +234,13 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
-    'src/pages/404.vue': {
+    'src/pages/[...path].vue': {
       routes:
-        | '/404'
+        | '/[...path]'
       views:
         | never
       pathParamNames:
-        | never
+        | 'path'
     }
     '../../docs/index.md': {
       routes:
@@ -147,9 +266,113 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
-    '../../docs/components.md': {
+    '../../docs/components/index.md': {
       routes:
-        | '/docs/components'
+        | '/docs/components/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/badge.md': {
+      routes:
+        | '/docs/components/badge'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/button.md': {
+      routes:
+        | '/docs/components/button'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/checkbox.md': {
+      routes:
+        | '/docs/components/checkbox'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/dialog.md': {
+      routes:
+        | '/docs/components/dialog'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/input.md': {
+      routes:
+        | '/docs/components/input'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/panel.md': {
+      routes:
+        | '/docs/components/panel'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/progress.md': {
+      routes:
+        | '/docs/components/progress'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/separator.md': {
+      routes:
+        | '/docs/components/separator'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/skeleton.md': {
+      routes:
+        | '/docs/components/skeleton'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/stack.md': {
+      routes:
+        | '/docs/components/stack'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/switch.md': {
+      routes:
+        | '/docs/components/switch'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/text.md': {
+      routes:
+        | '/docs/components/text'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/toaster.md': {
+      routes:
+        | '/docs/components/toaster'
       views:
         | never
       pathParamNames:
@@ -163,9 +386,41 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/guide/app-state.md': {
+      routes:
+        | '/docs/guide/app-state'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/guide/components.md': {
+      routes:
+        | '/docs/guide/components'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/guide/composables.md': {
+      routes:
+        | '/docs/guide/composables'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/reactivity.md': {
       routes:
         | '/docs/reactivity'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/store.md': {
+      routes:
+        | '/docs/reference/store'
       views:
         | never
       pathParamNames:

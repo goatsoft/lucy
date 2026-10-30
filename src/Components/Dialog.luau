@@ -6,7 +6,7 @@
 			id = "quit",
 			title = "Leave match?",
 			description = "You will drop your cash.",
-			children = { ... },                     -- into dialog.content
+			children = { ... },                     -- into dialog.body
 			actions = {
 				{ text = "Stay", variant = "outline" },
 				{ text = "Leave", variant = "destructive", onClick = function(dialog) leave() end },

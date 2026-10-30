@@ -18,10 +18,11 @@ Rules:
   focus scopes, back handlers, sounds), never to set a property, tag or attribute a
   binding could own. Review enforces this.
 - Code and docs do not name third-party design systems or CSS frameworks; ADRs may.
+- ADRs are repo only: never mention or link them in `docs/` pages, the README or the website.
 - Scratch files go outside the repo (e.g. `/tmp`).
 - Only the Luau package ships. The website (`apps/site`, `libs/`) is never part of it;
   a new top-level path must be added to `wally.toml`'s `exclude` (CI checks).
-- `libs/gruff` is a temporary copy of Aurora's gruff (ADR 0012); fix bugs in both or not at all.
+- `libs/gruff` is the docs engine the site uses, and this copy is the source. It will move out into its own package, `@goatsoft/gruff`, which Aurora will then use; until then, change it here only and never edit Aurora's older copy.
 - Tests run in the Lucy dev place Studio window only, never a game's:
   `require(game.ReplicatedStorage.LucyTests.Runner).run()`. JB serves Rojo himself (port 38574).
 - Shell commands on JB's Mac run through zsh: `zsh -lc "cd ~/Projects/Lucy && ..."`.

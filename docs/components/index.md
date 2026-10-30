@@ -1,25 +1,55 @@
 ---
 title: Components
-description: Props, state keys and responsive values for every Lucy component.
-order: 1
+sidebarTitle: Overview
+description: Every Lucy component, how to use one and how to write your own.
+order: 0
 ---
 
 # Components
+
+Each component has its own page with its props, usage and examples:
+
+| Component | What it is |
+|---|---|
+| [Badge](badge.md) | A small label for a status or count |
+| [Button](button.md) | A button, in six variants and four sizes |
+| [Checkbox](checkbox.md) | A box that can be checked, with an optional label |
+| [Dialog](dialog.md) | A modal window, and alert dialogs that ask for a yes or no |
+| [Input](input.md) | A text field on one line |
+| [Panel](panel.md) | A card with a header, content and footer |
+| [Progress](progress.md) | A bar that fills from 0 to a maximum |
+| [Separator](separator.md) | A thin line between items |
+| [Skeleton](skeleton.md) | A pulsing placeholder while content loads |
+| [Stack](stack.md) | A row or column that lays out its children |
+| [Switch](switch.md) | An on and off switch, with an optional label |
+| [Text](text.md) | Headings, body copy and labels |
+| [Toaster](toaster.md) | Toast notifications through `app.toast` |
+
+## Using a component
 
 Every component is `X.new(props)` and returns a handle:
 
 - `handle.Instance`: the root Instance
 - `handle:get(key?)`, `handle:set(patch)`: read and write its state at `ui.<id>`
 - `handle:destroy()`
-- common props: `app`, `id`, `Parent`, `name`, `layoutOrder`, `persist`
-  (keep state after destroy)
 
-Any state key can be driven from the app: `app.state:set("ui.<id>.<key>", value)`.
+Every component also takes these props:
+
+| Prop | What it does |
+|---|---|
+| `id` | Where its state lives: `ui.<id>`. Made up for you if left out |
+| `Parent` | The Instance to put it in |
+| `app` | The App it belongs to. Defaults to the current App |
+| `name` | The root Instance's Name |
+| `layoutOrder` | The root Instance's LayoutOrder |
+| `persist` | Keep its state in the app after it is destroyed |
+
+Any state key can be changed from the app: `app.state:set("ui.<id>.<key>", value)`.
 
 ## Reactive props
 
-Every state key in the table below also accepts a ref, a computed or a getter
-function. The component follows it and nothing else runs again.
+Every state key listed on a component's page also accepts a ref, a computed or a
+getter function. The component follows it and nothing else runs again.
 
 ```lua
 local coins = Lucy.ref(0)
@@ -45,22 +75,6 @@ Lucy.Switch.new({ label = "Music", checked = music })
   item or a scope is destroyed when that owner stops. Destroying it stops its
   bindings.
 - Callback and layout props (`onClick`, `children`, `gap`, ...) stay plain.
-
-| Component | State keys | Notes |
-|---|---|---|
-| Button | text, variant, size, disabled, visible | variants: default, destructive, outline, secondary, ghost, link. sizes: sm, md, lg, icon. `onClick`, `Activated`, `:click()` |
-| Badge | text, variant, visible | default, secondary, destructive, outline |
-| Text | text, variant, align, visible | h1 to h4, p, lead, large, small, muted, label. `autoWidth`, `richText` |
-| Panel | title, description, visible | `children`, `footer`, `size`, `maxWidth`, `aspectRatio`; `.header .content .footer` |
-| Dialog | open, title, description | `actions`, `dismissible`, `closeOnOverlay`, `showClose`, `onOpenChange`, `:open() :close() :toggle()`, `Dialog.alert{}` |
-| Toaster | (list in `toasts`) | `app.toast(msg, opts)`, `.success .error .warning .info`, `.dismiss(id?)`, update by `id`, `action` |
-| Input | value, placeholder, disabled, visible | `onChange`, `onSubmit`, `width`, `:focus()` |
-| Checkbox | checked, label, disabled, visible | `onCheckedChange`, `:toggle()`, row is the hit area |
-| Switch | checked, label, disabled, visible | `onCheckedChange`, `:toggle()` |
-| Progress | value, max, visible | clamped |
-| Skeleton | visible | `size`, `circle`; pulses while visible |
-| Separator | orientation, visible | horizontal, vertical |
-| Stack | visible | `direction`, `gap`, `align`, `justify`, `padding`, `wrap`, `size`, `children`; all layout props accept responsive values |
 
 ## Responsive values
 
@@ -181,7 +195,7 @@ Each bound key costs a little at mount: it gets a binding, and the store sets
 up tracking for it the first time it is read. That is paid once. After that, a
 write runs only the bindings that read the key and creates no garbage: changing
 a Button's text sets its `Text` again and nothing else. See
-[Benchmarks](./benchmarks.md).
+[Benchmarks](../benchmarks.md).
 
 ## Roadmap (next components)
 

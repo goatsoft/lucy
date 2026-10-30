@@ -6,8 +6,8 @@ const scrolled = computed(() => y.value > 24)
 const open = ref(false)
 const links = [
   { label: 'Features', to: '/#features' },
-  { label: 'Components', to: '/docs/components' },
-  { label: 'Docs', to: '/docs' },
+  { label: 'Components', to: '/docs/components/' },
+  { label: 'Docs', to: '/docs/' },
 ]
 </script>
 
@@ -31,7 +31,7 @@ const links = [
           aria-label="Lucy home"
         >
           <Mark :size="32" />
-          <span class="font-display text-xl font-semibold tracking-tight text-foreground">Lucy</span>
+          <span class="font-display text-2xl font-semibold tracking-tight">Lucy</span>
         </RouterLink>
         <div
           class="hidden items-center gap-7 text-sm md:flex"
@@ -63,10 +63,10 @@ const links = [
           <Button
             size="sm"
             :as="'a'"
-            href="/docs"
+            href="/docs/"
             class="hidden sm:inline-flex"
           >
-            <IHgBook02 /> Get started
+            <ILxBookOpenDuotone /> Get started
           </Button>
           <button
             type="button"
@@ -76,7 +76,7 @@ const links = [
             aria-controls="mobile-navigation"
             @click="open = !open"
           >
-            <IHgMenu01 v-if="!open" /><IHgCancel01 v-else />
+            <ILcMenu v-if="!open" /><ILcX v-else />
           </button>
         </div>
       </nav>

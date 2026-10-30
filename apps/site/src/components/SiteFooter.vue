@@ -5,8 +5,8 @@ const columns = [
   {
     title: 'Docs',
     links: [
-      { label: 'Get started', to: '/docs' },
-      { label: 'Components', to: '/docs/components' },
+      { label: 'Get started', to: '/docs/' },
+      { label: 'Components', to: '/docs/components/' },
       { label: 'Architecture', to: '/docs/architecture' },
       { label: 'Contributing', to: '/docs/development' },
     ],
@@ -16,8 +16,6 @@ const columns = [
     links: [
       { label: 'GitHub', href: SITE.repo },
       { label: 'Wally package', href: SITE.wally },
-      { label: 'Issues', href: `${SITE.repo}/issues` },
-      { label: 'Decisions (ADRs)', href: `${SITE.repo}/tree/main/docs/adr` },
     ],
   },
 ]
@@ -71,13 +69,12 @@ const columns = [
     </div>
     <div class="mx-auto flex max-w-6xl flex-col gap-3 border-t border-border px-6 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
       <p>
-        MIT ·
         <a
           :href="`${SITE.repo}/blob/main/LICENSE`"
           target="_blank"
           rel="noopener"
           class="underline decoration-border underline-offset-4 hover:text-foreground"
-        >Licence</a>
+        >MIT licence</a>
       </p>
       <a
         :href="SITE.goatsoft"

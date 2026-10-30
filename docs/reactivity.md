@@ -83,26 +83,12 @@ again when that key changes, and nothing else does.
 ```lua
 local coins = app.state:ref("player.coins")
 coins(coins() + 10)                  -- same as app.state:set("player.coins", ...)
-
 app.state.root.player.coins += 10    -- the store as plain tables
-for id, item in app.state.root.inventory do end
-
-app.state:get("player")              -- a frozen copy: it never changes under you
-app.state:subscribe("player.coins", function(new, old) end)
 ```
 
-- `state:ref(path)` is a ref onto one path. It sees writes made from anywhere.
-- `state.root` is the store as tables you can index, loop over and assign to.
-  Reading a key subscribes to that key only. Assigning goes through `set`, so
-  subscribers and bindings see it.
-- `get` returns a frozen copy. Lucy builds it when you ask and reuses it until
-  something inside changes. Changing the copy throws an error.
-- `set` stores a copy of your value and compares it key by key with what is
-  there, so writing an equal value notifies nobody. A path part made only of
-  digits is an array index (`"toasts.1.title"`).
-- `app.state:batch(fn)` is `Lucy.batch(fn)`: effects and subscribers run once,
-  after the outermost batch.
-- Effects and bindings run before store subscribers.
+`Lucy.batch` and `app.state:batch` are the same batch. See
+[The store](./reference/store.md) for how it works and every method, and
+[Work with app state](./guide/app-state.md) for a walkthrough.
 
 ## Effects
 
@@ -253,8 +239,8 @@ destroyed.
 
 Lucy's components take refs, computeds and getters for any state key, and bind
 writable ones both ways: `Lucy.Switch.new({ checked = music })`. See
-[Components](./components.md#reactive-props), and
-[Writing a component](./components.md#writing-a-component) for building your own.
+[Components](./components/index.md#reactive-props), and
+[Writing a component](./components/index.md#writing-a-component) for building your own.
 
 ## Animation
 

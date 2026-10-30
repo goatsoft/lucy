@@ -194,6 +194,8 @@ A subscriber whose value ends where it started is not called at all.
 
 ## Next
 
+- [The store](../reference/store.md): how the store works, every method and
+  the rules.
 - [Share logic with composables](./composables.md)
 - [Reactivity](../reactivity.md): refs, computeds, effects and the rest of the
   reference.

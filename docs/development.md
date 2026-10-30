@@ -104,7 +104,7 @@ Gotchas:
    Annotate the rules list as `{ Component.Rule }` so rules with different
    properties pass the type checker together. Render is declarative: bind properties,
    derive with `computed`, and keep watchers for side effects (see
-   [Writing a component](components.md#writing-a-component) and ADR 0018).
+   [Writing a component](components/index.md#writing-a-component)).
 3. Visual properties go in `rules` with `$Token` values; layout and behaviour in code.
 4. Sizes that should grow on touch or console come from density tokens:
    `Lucy.useMetric(app, "ControlMd")` or `Lucy.useDensity(app)` in `render`.
@@ -114,8 +114,8 @@ Gotchas:
 6. Add a story, `examples/stories/Thing.story.luau`, with controls for its state
    keys ([stories](stories.md)). `tests/Stories.spec.luau` mounts every story in
    each theme and device.
-7. Add it to `src/init.luau`, `registry.json` (with dependencies) and
-   `docs/components.md`.
+7. Add it to `src/init.luau` and `registry.json` (with dependencies), give it a
+   page in `docs/components/` and add it to the list in `docs/components/index.md`.
 8. Grep for the em dash character before committing: `grep -rn $'\xe2\x80\x94' .`
    must return nothing.
 
@@ -138,12 +138,12 @@ write methods as `function AppState.get(self: AppState, ...)`.
 ## Regenerating the palette
 
 ```
-lune run scripts/gen-palette <path-or-url>   # source URL is in docs/adr/0010
+lune run scripts/gen-palette <path-or-url>
 ```
 
 ## The website
 
-The site in `apps/site` renders this `docs/` folder (everything except `adr/`)
+The site in `apps/site` renders this `docs/` folder
 at `/docs/...`, plus a landing page. It needs Node 24 and pnpm.
 
 ```sh
@@ -154,10 +154,10 @@ pnpm site:typecheck
 ```
 
 - A Markdown file added under `docs/` becomes a page. Frontmatter `title`,
-  `description` and `order` set its sidebar entry; the sidebar groups are in
-  `apps/site/src/lib/docs.ts`.
-- Links between docs files work on GitHub and on the site; links to ADRs go to
-  GitHub.
+  `description` and `order` set its sidebar entry, and `sidebarTitle` gives the
+  sidebar a shorter label when the page title is too long or repeats its group.
+  The sidebar groups are in `apps/site/src/lib/docs.ts`.
+- Links between docs files work on GitHub and on the site.
 - Pushes to `main` that touch the site or docs deploy it via
   `.github/workflows/pages.yml`. Deploying never publishes the package.
 - If a build logs a hydration mismatch, `LUCY_DEBUG_HYDRATION=1 pnpm site:build`

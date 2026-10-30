@@ -20,21 +20,21 @@ useHead({ title: 'Not found', description: 'There is nothing at this address.' }
         Page not found
       </h1>
       <p class="mx-auto mt-4 max-w-md text-lg text-pretty text-muted-foreground">
-        Nothing lives at this address. Try the home page or the docs.
+        There is no page at this address.
       </p>
       <div class="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
         <Button
           :as="RouterLink"
           to="/"
         >
-          <IHgHome01 /> Home
+          <ILxHouseDuotone /> Home
         </Button>
         <Button
           variant="glass"
           :as="RouterLink"
-          to="/docs"
+          to="/docs/"
         >
-          <IHgBook02 /> Documentation
+          <ILxBookOpenDuotone /> Docs
         </Button>
       </div>
     </div>

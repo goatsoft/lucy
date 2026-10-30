@@ -6,27 +6,27 @@ order: 2
 
 # Lucy architecture
 
-Lucy is a UI kit and small application framework for Roblox. This page is the
-map; the ADRs in `docs/adr/` hold the reasoning.
+Lucy is a UI kit and app framework for Roblox. This page shows how its parts
+fit together.
 
 ## The pieces
 
 ```
 App ─────────────── one per client, owns everything below
-├─ AppState         one tree of tables: ui.<id>, scenes, toasts, input, theme   (ADR 0004, 0017)
-├─ Theme            Universal Styling sheet graph + all StyleRules                 (ADR 0003)
-│   └─ Tokens       OKLCH palette (via Oklab), light/dark themes, densities        (ADR 0010)
-├─ InputManager     mode, device, focus ring, focus scopes, Tab nav, back          (ADR 0007)
-├─ SceneManager     one ScreenGui per scene, layers, stack, overlays               (ADR 0005)
-├─ Adaptive         UIScale per gui with device profiles, constraints, StyleQuery  (ADR 0006)
+├─ AppState         one tree of tables: ui.<id>, scenes, toasts, input, theme
+├─ Theme            Universal Styling sheet graph + all StyleRules
+│   └─ Tokens       OKLCH palette (via Oklab), light/dark themes, densities
+├─ InputManager     mode, device, focus ring, focus scopes, Tab nav, back
+├─ SceneManager     one ScreenGui per scene, layers, stack, overlays
+├─ Adaptive         UIScale per gui with device profiles, constraints, StyleQuery
 ├─ portals          shared ScreenGuis: "modal" (900), "toast" (1000)
 └─ toast            toast API, installed when Components/Toaster exists
 ```
 
-Components (`src/Components`) are built on `Core/Component` (ADR 0002) and render
-with `Core/Element` (ADR 0014, 0018). Shared component behaviour lives in
+Components (`src/Components`) are built on `Core/Component` and render with
+`Core/Element`. Shared component behaviour lives in
 `src/Composables` (`Lucy.use*`). `Core/Preview` mounts stories into their own App
-for previewing (ADR 0016).
+for previewing.
 
 ## Data flow
 
@@ -45,7 +45,7 @@ for previewing (ADR 0016).
 
 ## Components
 
-A component is a table passed to `Component.mount` (ADR 0018):
+A component is a table passed to `Component.mount`:
 
 - **State** lives at `ui.<id>`, starting from `defaults` and the props.
 - **`render(h)` runs once**, inside the component's scope. It builds the
@@ -60,7 +60,7 @@ A component is a table passed to `Component.mount` (ADR 0018):
 
 Most of the cost is at mount, where each bound key gets a binding. After that, a
 write runs only the bindings that read it and creates no garbage. See
-[Components](./components.md#writing-a-component).
+[Components](./components/index.md#writing-a-component).
 
 ## Styling
 
@@ -119,11 +119,11 @@ examples/stories/      a story per component, plus reactivity and scene stories
 examples/Showcase      the story browser (Play)
 scripts/               add.luau (copy-in CLI), gen-palette.luau, run-tests.server.luau
 registry.json          what the CLI can install and the dependencies
-docs/                  this, development guide, components, ADRs (the site renders all but the ADRs)
+docs/                  the pages this site renders
 apps/site/             the website (Vue, prerendered), deployed by .github/workflows/pages.yml
-libs/gruff/            the docs engine the site uses (temporary copy, see ADR 0012)
+libs/gruff/            the docs engine the site uses (to become its own package)
 ```
 
 Only the Luau package ships: the Wally package is checked in CI to contain
 nothing but `src/` (without specs and test helpers), `default.project.json`,
-`wally.toml`, `README.md` and `LICENSE` (ADR 0012).
+`wally.toml`, `README.md` and `LICENSE`.

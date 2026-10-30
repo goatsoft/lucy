@@ -1,5 +1,5 @@
-import { readdirSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { extname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { gruff } from '@goatsoft/gruff'
 import tailwindcss from '@tailwindcss/vite'
@@ -8,6 +8,7 @@ import AutoImport from 'unplugin-auto-import/vite'
 import IconsResolver from 'unplugin-icons/resolver'
 import Icons from 'unplugin-icons/vite'
 import Components from 'unplugin-vue-components/vite'
+import type { Plugin } from 'vite'
 import { defineConfig, searchForWorkspaceRoot } from 'vite'
 import { VueRouterAutoImports } from 'vue-router/unplugin'
 import VueRouter from 'vue-router/vite'
@@ -34,6 +35,34 @@ function pages(dir = docs): { file: string, route: string }[] {
     const path = route(file)
     return path ? [{ file, route: path }] : []
   })
+}
+
+/**
+ * Makes `vite preview` answer like GitHub Pages: a page path without its trailing slash
+ * redirects to the folder, and an unknown path gets 404.html. Without this, preview
+ * serves the home page for those paths and the page hydrates with mismatches.
+ */
+function pagesPreview(): Plugin {
+  return {
+    name: 'lucy:pages-preview',
+    configurePreviewServer(server) {
+      const dist = resolve(server.config.root, server.config.build.outDir)
+      server.middlewares.use((req, res, next) => {
+        const [path = '/', query] = (req.url ?? '/').split('?')
+        if (extname(path)) return next()
+        if (existsSync(join(dist, path, 'index.html'))) {
+          if (path.endsWith('/')) return next()
+          res.statusCode = 301
+          res.setHeader('Location', `${path}/${query ? `?${query}` : ''}`)
+          res.end()
+          return
+        }
+        res.statusCode = 404
+        res.setHeader('Content-Type', 'text/html')
+        res.end(readFileSync(join(dist, '404.html')))
+      })
+    },
+  }
 }
 
 export default defineConfig({
@@ -69,9 +98,10 @@ export default defineConfig({
       extensions: ['vue', 'md'],
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
       dts: process.env['VITEST'] ? false : `${here}src/components.d.ts`,
-      resolvers: [IconsResolver({ prefix: 'i', alias: { hg: 'hugeicons', si: 'simple-icons' } })],
+      resolvers: [IconsResolver({ prefix: 'i', enabledCollections: ['lucide-extended', 'lucide', 'simple-icons'], alias: { lx: 'lucide-extended', lc: 'lucide', si: 'simple-icons' } })],
     }),
     Icons({ compiler: 'vue3', scale: 1 }),
+    pagesPreview(),
   ],
   resolve: {
     conditions: ['@goatsoft/source'],

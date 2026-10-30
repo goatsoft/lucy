@@ -268,7 +268,7 @@ its value whenever it changes.
 
 The Stepper sets `BackgroundTransparency` directly because a transparent frame
 is not a look. For colours, fonts and sizes, add tags and rules so themes and
-density apply. See [Writing a component](../components.md#writing-a-component)
+density apply. See [Writing a component](../components/index.md#writing-a-component)
 for rules, variants as tags, and why watchers are kept for side effects only.
 
 ## Next

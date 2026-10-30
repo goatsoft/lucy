@@ -43,25 +43,43 @@ Create one App on the client. It owns the state, theme, input, scenes and toasts
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lucy = require(ReplicatedStorage.Shared.Lucy) -- or ReplicatedStorage.Packages.Lucy
 
-local app = Lucy.App.new({ theme = "dark", baseColor = "zinc", primary = "violet" })
+local app = Lucy.App.new({
+	theme = "dark",
+	baseColor = "zinc",
+	primary = "violet",
+	state = { player = { coins = 0 } },
+})
 ```
 
 ## Build a scene
 
 Each scene owns one ScreenGui. Only one screen shows at a time; modals and
-overlays sit above it.
+overlays sit above it. This builds a title screen and a game screen whose label
+follows the player's coins.
 
 ```luau
+local coins = app.state:ref("player.coins")
+
 app.scenes:register("Title", {
 	build = function(scene)
 		scene.play = Lucy.Button.new({
 			id = "play",
 			text = "Play",
 			size = "lg",
-			Parent = scene.gui,
 			onClick = function()
 				app.scenes:goTo("Game")
 			end,
+		})
+		Lucy.Stack.new({
+			size = UDim2.fromScale(1, 1),
+			align = "center",
+			justify = "center",
+			gap = "Space6",
+			children = {
+				Lucy.Text.new({ text = "My Game", variant = "h1", align = "center" }),
+				scene.play,
+			},
+			Parent = scene.gui,
 		})
 	end,
 	defaultFocus = function(scene)
@@ -69,7 +87,33 @@ app.scenes:register("Title", {
 	end,
 })
 
+app.scenes:register("Game", {
+	build = function(scene)
+		Lucy.Stack.new({
+			padding = "Space6",
+			children = {
+				Lucy.Text.new({
+					text = function()
+						return `Coins: {coins()}`
+					end,
+					variant = "h3",
+				}),
+			},
+			Parent = scene.gui,
+		})
+	end,
+	enter = function()
+		app.toast.success("Round started", { description = "Collect coins to win" })
+	end,
+	onBack = function()
+		app.scenes:goTo("Title") -- Escape or ButtonB
+	end,
+})
+
 app.scenes:goTo("Title")
+
+-- Game code changes state and the label follows.
+coins(coins() + 10)
 ```
 
 ## Drive anything from app state
@@ -100,7 +144,7 @@ app.toast.success("Round won", { description = "+$250" })
 
 ## Next
 
-- [Components](components.md): every component's props and state keys
+- [Components](components/index.md): a page for each component with its props and examples
 - [Stories and preview](stories.md): see your UI in Studio without pressing Play
 - [Architecture](architecture.md): how the pieces fit together
 - [Benchmarks](benchmarks.md): what mounting and updating UI costs

@@ -24,8 +24,9 @@ function paths(list: typeof entry.routes, base = ''): string[] {
   })
 }
 
-// The 404 page is written once, as 404.html, which GitHub Pages serves for unknown paths.
-const routes = [...new Set(paths(entry.routes))].filter((path) => path !== '/404')
+// The 404 page is the catch-all route ([...path].vue), so it has no path of its own here.
+// It is written once, as 404.html, which GitHub Pages serves for unknown paths.
+const routes = [...new Set(paths(entry.routes))]
 // The CSS is small (about 10 kB gzip), so it rides in the HTML instead of blocking first paint.
 // The pages read fine before Vue starts, so the JavaScript waits until after first paint, and
 // Inter is cut down to the characters and weights (400 to 700) the site uses.
