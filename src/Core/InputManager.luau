@@ -264,6 +264,7 @@ local function isShown(object: GuiObject): boolean
 end
 
 -- Selectable, visible, interactable GuiObjects under `root`, in reading order.
+-- selene: allow(unused_variable)
 function InputManager.selectables(self: InputManager, root: Instance): { GuiObject }
 	local out = {}
 	for _, descendant in root:GetDescendants() do

@@ -217,7 +217,7 @@ end
 local function buildToast(h, toast)
 	local frame = Component.create("Frame", {
 		Name = toast.id,
-		Size = UDim2.new(1, 0, 0, 0),
+		Size = UDim2.fromScale(1, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		Tags = { "ui-toast" },
 	})
@@ -231,7 +231,7 @@ local function buildToast(h, toast)
 
 	local accent = Component.create("Frame", {
 		Name = "Accent",
-		Size = UDim2.new(0, 4, 0, 32),
+		Size = UDim2.fromOffset(4, 32),
 		LayoutOrder = 1,
 		Tags = { "ui-toast-accent" },
 		Parent = row,

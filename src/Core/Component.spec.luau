@@ -58,7 +58,7 @@ return function()
 				props = props,
 				defaults = { text = "", visible = true },
 				rules = { { selector = ".ui-thing", properties = { BackgroundTransparency = 1 } } },
-				render = function(h)
+				render = function()
 					return Component.create("TextLabel", { Tags = { "ui-thing" } })
 				end,
 				update = function(h, state)
