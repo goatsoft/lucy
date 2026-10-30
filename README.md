@@ -10,7 +10,7 @@
 A UI kit and app framework for Roblox, built on
 [Universal Styling](https://create.roblox.com/docs/ui/styling).
 
-- **Fine-grained by design**: change a value and only the properties that read it update. Nothing re-renders and nothing is diffed, so long lists and busy HUDs stay cheap.
+- **Fine-grained by design**: change a value and only the properties that read it update. Nothing re-renders and nothing is diffed, so long lists and busy HUDs stay cheap ([benchmarks](docs/benchmarks.md)).
 - **State that reads like Luau**: refs you call like functions (`count()`, `count(5)`), cached `computed` values, `reactive` tables you write as fields, and `watch`. No dependency lists, no boilerplate.
 - **Cleans up after itself**: effects, bindings and instances belong to whatever created them and go away with it. No cleanup bookkeeping, no leaks.
 - **Declarative, or built in Studio**: describe UI with `Lucy.new`, `show` and `each`, or `hydrate` a ScreenGui built in Studio and just add the behaviour.

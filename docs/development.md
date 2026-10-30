@@ -117,8 +117,8 @@ Gotchas:
 rojo sourcemap test.project.json -o sourcemap.json
 luau-lsp analyze --sourcemap=sourcemap.json --definitions=@roblox=globalTypes.d.luau \
   --definitions=@testez=testez.d.luau src tests
-selene src tests
-stylua --check src tests scripts
+selene src tests examples
+stylua --check src tests scripts examples
 ```
 
 Every source file starts with `--!strict` and `luau-lsp analyze` must report
