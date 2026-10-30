@@ -1,0 +1,59 @@
+<!-- Made by scripts/skills.ts from docs/components/spinner.md. Edit the doc, not this file. -->
+# Spinner
+
+A small ring that turns while something loads: finding a server, saving, or
+waiting on a purchase.
+
+```lua
+Lucy.Spinner.new({ size = "sm", Parent = row })
+```
+
+It only turns while it is visible, so a hidden spinner costs nothing.
+
+## Props
+
+| Prop | Type | Default | State key | What it does |
+|---|---|---|---|---|
+| `size` | string | `"md"` | yes | `sm` (16 pixels), `md` (24) or `lg` (32) |
+| `variant` | string | `"default"` | yes | The ring's colour: `default` (the text colour), `muted` or `primary` |
+| `visible` | boolean | `true` | yes | Shows or hides it, and starts or stops the turning |
+
+It also takes the [props every component takes](index.md#using-a-component).
+
+`handle.stroke` is the ring, if you want to change its colour from your own
+rules.
+
+## Examples
+
+A spinner beside a line of text:
+
+```lua
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space2",
+    align = "center",
+    children = {
+        Lucy.Spinner.new({ size = "sm", variant = "muted" }),
+        Lucy.Text.new({ text = "Finding a server", variant = "muted", autoWidth = true }),
+    },
+    Parent = footer,
+})
+```
+
+Shown only while a request is out:
+
+```lua
+local saving = Lucy.ref(false)
+
+Lucy.Spinner.new({ visible = saving, Parent = header })
+
+task.spawn(function()
+    saving(true)
+    save() -- yields until the server answers
+    saving(false)
+end)
+```
+
+## Preview
+
+In Studio, from the command bar: `Lucy.Preview.show("Spinner")`.

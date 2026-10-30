@@ -1,6 +1,6 @@
 # 0027: Agent skills, a debugging module and an MCP server
 
-- Status: proposed (JB accepted the shape 2026-10-31; names and layout below await his read)
+- Status: accepted (JB, 2026-10-31)
 - Date: 2026-10-31
 
 ## Context

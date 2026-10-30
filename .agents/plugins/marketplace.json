@@ -1,0 +1,20 @@
+{
+  "name": "goatsoft",
+  "interface": {
+    "displayName": "GOATsoft"
+  },
+  "plugins": [
+    {
+      "name": "lucy",
+      "source": {
+        "source": "local",
+        "path": "./plugins/lucy"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

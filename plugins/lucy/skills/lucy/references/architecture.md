@@ -1,0 +1,147 @@
+<!-- Made by scripts/skills.ts from docs/architecture.md. Edit the doc, not this file. -->
+# Lucy architecture
+
+Lucy is a UI kit and app framework for Roblox. This page shows how its parts
+fit together.
+
+## The pieces
+
+```
+App ─────────────── one per client, owns everything below
+├─ AppState         one tree of tables: ui.<id>, scenes, toasts, input, theme
+├─ Theme            Universal Styling sheet graph + all StyleRules
+│   └─ Tokens       OKLCH palette (via Oklab), light/dark themes, densities
+├─ InputManager     mode, device, focus ring, focus scopes, Tab nav, back
+├─ SceneManager     one ScreenGui per scene, layers, stack, overlays
+├─ Adaptive         UIScale per gui with device profiles, constraints, StyleQuery
+├─ portals          shared ScreenGuis: "modal" (900), "toast" (1000)
+└─ toast            toast API, installed when Components/Toaster exists
+```
+
+Components (`src/Components`) are built on `Core/Component` and render with
+`Core/Element`. Shared component behaviour lives in
+`src/Composables` (`Lucy.use*`). `Core/Preview` mounts stories into their own App
+for previewing.
+
+## Data flow
+
+```
+ game code ──write──▶ AppState key ──changed──▶ the bindings that read it ──▶ Instance props + tags
+     ▲                (ui.<id>.<key>)                                                  │
+     │                                                                                 ▼
+     └──read── handle:get(), app.state:ref()            Theme rules match tags ──▶ rendered style
+```
+
+- Components never hold UI truth locally; `ui.<id>` in AppState is the truth.
+- A write to a key runs only the bindings that read that key: one property on
+  one instance, not the whole component.
+- Code changes **behaviour and layout** (Text, Visible, Size, Interactable, tags).
+- Rules change **looks** (colours, fonts, radius, stroke, padding, heights).
+
+## Components
+
+A component is a spec, a table built once per kind, passed to `Component.mount`
+with each mount's props:
+
+- **State** lives at `ui.<id>`, starting from `defaults` and the props.
+- **`render(h)` runs once**, inside the component's scope. It builds the
+  instances with `Lucy.new` and binds them to `h:ref(key)`, other refs and
+  getters. Everything it creates belongs to the component and is removed with it.
+- **Derived values** are `computed`s, or plain functions when the work is trivial.
+- **Shared behaviour** comes from composables: `useDensity`, `useMetric`,
+  `useResponsive`, `useBackHandler`, `useFocusScope`, `useUiSound`.
+- **What the player did** (activate, toggle, open, close) is reported with
+  `h:emit`, so games can play their own sounds through `useUiSound`. Lucy plays
+  no audio.
+- **Watchers are for side effects only**: tweens, callbacks into game code, focus
+  scopes, sounds. A watcher never sets a property, tag or attribute that a
+  binding could own.
+
+Most of the cost is at mount, where each bound key gets a binding. After that, a
+write runs only the bindings that read it and creates no garbage. See
+[Components](./components/index.md#writing-a-component).
+
+## Styling
+
+```
+Folder Lucy_Styles (ReplicatedStorage)
+├─ Tokens            palette + radius, space, fonts, stroke
+├─ Theme_light/dark  semantic colours ($Primary, $Border ...), derives Tokens
+├─ Density_default/touch/tv  ControlSm/Md/Lg/Icon, TextXs..Text4xl
+└─ Design            derives ActiveTheme + ActiveDensity, holds every StyleRule
+```
+
+Every app ScreenGui has a `StyleLink` to `Design`. Rule priority bands:
+reset -100 · base 0 · variant/size 10 · state 20 · disabled 30 · focus ring 100.
+
+Tags are classes: `ui-<component>`, `ui-<component>-<key>-<value>` for variants,
+`ui-disabled`, `ui-checked`, `ui-focused`, `ui-focus-visible` for flags.
+
+Styled values are read with `instance:GetStyled(prop)`; plain reads return the
+unstyled value. Styles apply a few frames after a change.
+
+## Scenes and layers
+
+| Layer | DisplayOrder | Shown | Examples |
+|---|---|---|---|
+| screen | 10 | exactly one (`scenes.current`) | Title, Lobby, Game |
+| overlay | 100+ | any, independent (`scenes.visible`) | HUD, chat |
+| modal | 200+ | stacked (`scenes.stack`) | Pause, Settings |
+| portal: modal | 900 | dialogs and anything else floating, newest on top | Dialog, Dialog.alert |
+| portal: toast | 1000 | toasts | app.toast |
+
+## Input and focus
+
+`input.mode` follows the last input. `input.device` is derived from capabilities
+(`GuiService:IsTenFootInterface()` → console; touch only → mobile or tablet by short side;
+otherwise desktop) and drives density and the adaptive profile.
+
+Focus scopes stack: screens and modal scenes push one on enter, dialogs push one
+while open. Keyboard Tab/arrows, gamepad selection and `defaultFocus` all work
+inside the top scope. Escape / ButtonB call `app.input:back()`. LB / RB call
+`app.input:shoulder(-1 / 1)`: from the focused object up, the first component with
+a `shoulder(step)` method that returns true handles them, so only the tabs around
+the focus switch. Arrow keys, the D-pad and the left stick first call
+`app.input:nudge(dx, dy, count)` the same way: a component with a `nudge` method
+that returns true takes them (a Slider changes its value), repeating faster while
+held, and hears `release()` when let go. Otherwise arrows move focus. Focus that
+Lucy moves (Tab, arrows) scrolls into view.
+
+Enter calls `app.input:activate()`. A focused component with `click` or `toggle`
+gets that call. When the focused object is a part of a component instead (a
+Collapsible's header), the first component from it up with a `press(object)`
+method that returns true takes it.
+
+Roblox's own selection image is replaced with a blank frame; Lucy draws its own
+ring with the `ui-focus-visible` tag only while navigating with keys or a pad.
+
+Hotkeys go through `app.actions`: named actions in sets, built as Roblox
+InputContexts, that a game switches off together (the built in `movement` set
+stops the character). `app:modalOpen()` says whether a modal overlay is open; a
+game decides what to switch off while one is. See
+[Hotkeys and modal input](./guide/actions.md).
+
+## Folder layout
+
+```
+src/
+  init.luau            package entry (Wally)
+  Core/                framework; always installed
+  Composables/         Lucy.use*: behaviour shared between components
+  Components/          one file per component + its spec
+  Testing/Harness.luau shared test helpers
+tests/Runner.luau      runs every spec, returns a summary
+tests/Stories.spec     mounts every story in each theme and device
+examples/stories/      a story per component, plus reactivity and scene stories
+examples/Showcase      the story browser (Play)
+scripts/               add.luau (copy-in CLI), gen-palette.luau, run-tests.server.luau
+registry.json          a description of each component for the copy-in CLI
+docs/                  the pages this site renders
+apps/site/             the website (Vue, prerendered), deployed by .github/workflows/pages.yml
+libs/gruff/            the docs engine the site uses (to become its own package)
+libs/icons/            lucy-icons, the icon build (published to npm)
+```
+
+Only the Luau package ships: the Wally package is checked in CI to contain
+nothing but `src/` (without specs and test helpers), `default.project.json`,
+`wally.toml`, `README.md` and `LICENSE`.

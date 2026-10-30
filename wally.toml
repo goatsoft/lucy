@@ -37,6 +37,9 @@ exclude = [
 	"sourcemap.json",
 	"DevPackages",
 	"Packages",
+	"plugins",
+	".claude-plugin",
+	".agents",
 ]
 
 [dependencies]

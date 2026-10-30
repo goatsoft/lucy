@@ -62,6 +62,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Agent skills match the docs
+        run: pnpm skills:check
       - run: pnpm site:typecheck
       - run: pnpm site:build
 

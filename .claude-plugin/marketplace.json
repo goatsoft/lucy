@@ -1,0 +1,14 @@
+{
+  "name": "goatsoft",
+  "owner": {
+    "name": "GOATsoft",
+    "url": "https://goatsoft.io"
+  },
+  "plugins": [
+    {
+      "name": "lucy",
+      "source": "./plugins/lucy",
+      "description": "Build Roblox game UI with Lucy: components, app state, styling, input, hotkeys and icons."
+    }
+  ]
+}
