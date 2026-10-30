@@ -57,6 +57,12 @@ local queue: { any } = {}
 local spare: { any } = {}
 local queueSize = 0
 local flushing = false
+-- Lucy.batch depth (not the internal one), and callbacks to run when it ends.
+-- AppState uses this so its subscribers are batched by Lucy.batch too (ADR 0017).
+local userBatch = 0
+local endHooks: { () -> () } = {}
+local endHookCount = 0
+local runningHooks = false
 
 local nodeOf: { [any]: any } = setmetatable({}, { __mode = "k" }) :: any -- accessor -> node
 
@@ -542,12 +548,36 @@ end
 
 -- Reading helpers --------------------------------------------------------------------
 
+local function runEndHooks()
+	if runningHooks then
+		return -- the outer runner picks up hooks added meanwhile
+	end
+	runningHooks = true
+	local i = 1
+	while i <= endHookCount do
+		local hook = endHooks[i]
+		endHooks[i] = nil
+		i += 1
+		local ok: boolean, err: any = pcall(hook :: any)
+		if not ok then
+			report(err)
+		end
+	end
+	endHookCount = 0
+	runningHooks = false
+end
+
 function Reactive.batch<R...>(fn: (...any) -> R..., ...): R...
 	batchDepth += 1
+	userBatch += 1
 	local results = table.pack(pcall(fn, ...))
+	userBatch -= 1
 	batchDepth -= 1
 	if batchDepth == 0 then
 		flush()
+	end
+	if userBatch == 0 and endHookCount > 0 then
+		runEndHooks()
 	end
 	if not results[1] then
 		error(results[2], 0)
@@ -757,6 +787,47 @@ function Reactive.remove(list: { any }, pos: number?): any
 	local value = table.remove(raw, index)
 	changed(raw, nil, true, index)
 	return wrap(value)
+end
+
+-- Store integration (ADR 0017) -------------------------------------------------------
+-- Internal: AppState keeps a tree of plain tables and uses the same per-key sources
+-- as `reactive`, so the store and the reactive core are one change system.
+
+-- Tracks key `key` of the plain table `raw` in the running computed or effect.
+function Reactive._trackKey(raw: any, key: any)
+	if tracking then
+		track(keyNode(raw, key))
+	end
+end
+
+-- Notifies readers of `raw[key]`; `structural` when the key appeared or went away.
+function Reactive._changedKey(raw: any, key: any, structural: boolean)
+	if keyNodes[raw] then
+		changed(raw, key, structural, nil)
+	end
+end
+
+-- Brackets a multi-key mutation: effects run once, at the end.
+function Reactive._begin()
+	batchDepth += 1
+end
+
+function Reactive._finish()
+	batchDepth -= 1
+	if batchDepth == 0 then
+		flush()
+	end
+end
+
+-- True inside Lucy.batch.
+function Reactive._inBatch(): boolean
+	return userBatch > 0
+end
+
+-- Runs `hook` once, when the outermost Lucy.batch ends.
+function Reactive._afterBatch(hook: () -> ())
+	endHookCount += 1
+	endHooks[endHookCount] = hook
 end
 
 return Reactive

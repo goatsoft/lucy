@@ -1,6 +1,6 @@
 # 0017: A living state tree: app state and component state as one graph
 
-- Status: proposed
+- Status: accepted (phase 2 landed 2026-10-30)
 - Date: 2026-10-30
 - Amends: 0004 (keeps its API and guarantees, replaces its copy-on-write mechanism)
 
@@ -213,6 +213,25 @@ One component write: 5.5 µs and 1.2 KB with 10 mounted, 163 µs and 33 KB with
 - Ref to computed to effect and the list suites do not regress.
 - All existing specs pass; new specs cover reconcile, frozen snapshots, node
   subscriptions, aliasing, derived keys with override, and unmount.
+
+### Implementation notes
+
+- **Array indices in paths.** An all-digit segment is a number key, so
+  `"toasts.1.title"` addresses the first toast. Needed for "arrays reconcile by
+  index" to be observable per item.
+- **Values are copied in.** `set` never keeps the caller's table: plain tables and
+  snapshots are copied into fresh tree tables, so the "no shared sub-tables" rule
+  holds by construction and needs no dev-time check. Tables with a metatable
+  (handles, classes) are stored as opaque values; reactive tables are unwrapped.
+- **Incremental snapshots.** Each cached snapshot remembers up to 8 changed keys;
+  the next one is a native clone of the last plus those keys, so a one-key write
+  to a 1,000-key table costs a clone on the next read, not a Lua loop.
+- **Equality costs a comparison.** Setting a table compares it with the current
+  one by content (O(size), no allocation) before anything else; that is what
+  makes an equal table a no-op. Setting the store's own current snapshot back is
+  an identity check.
+- **Batching.** `state:batch` is `Lucy.batch`; store notifications queued inside
+  either run when the outermost batch ends, after effects.
 
 ## Alternatives considered
 
