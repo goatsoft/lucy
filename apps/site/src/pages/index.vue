@@ -3,8 +3,7 @@ import { ref } from 'vue'
 import { AuroraScene } from '@goatsoft/aurora-vue'
 import { RouterLink } from 'vue-router'
 import heroDark from '@/backgrounds/hero-dark.aurora'
-import cardRadar from '@/backgrounds/card-radar.aurora'
-import featuresScene from '@/backgrounds/features-scene.aurora'
+import cardScanlines from '@/backgrounds/card-scanlines.aurora'
 import heroLight from '@/backgrounds/hero-light.aurora'
 import terminalDark from '@/backgrounds/terminal-dark.aurora'
 import terminalLight from '@/backgrounds/terminal-light.aurora'
@@ -107,15 +106,13 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
       </p>
     </section>
 
-    <!-- One scene the size of the section: one radar, seen only through the cards. The
-         sweep crosses them in turn, all on one clock. -->
+    <!-- One scene across the cards: one raster, its exposure band rolling through every
+         card on one clock. -->
     <AuroraScene name="features">
       <section
         id="features"
         class="relative isolate mx-auto max-w-6xl scroll-mt-24 px-6 py-20"
       >
-        <!-- Draws nothing: it only gives the scene the section's size, so the radar is big. -->
-        <ThemedBackground :dark="featuresScene" />
         <p class="eyebrow text-center">
           Features
         </p>
@@ -129,7 +126,7 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
             class="group relative isolate min-h-64 overflow-hidden rounded-2xl border border-white/10 bg-[oklch(0.13_0.02_290)] p-5 shadow-[0_24px_60px_-30px_var(--primary)] transition duration-300 hover:border-primary/60 motion-safe:hover:-translate-y-0.5"
           >
             <!-- A screen in both themes: the same dark glass, light text. -->
-            <ThemedBackground :dark="cardRadar" />
+            <ThemedBackground :dark="cardScanlines" />
             <div
               aria-hidden="true"
               class="absolute inset-x-0 top-0 -z-10 h-3/4 bg-linear-to-b from-[oklch(0.13_0.02_290)] to-transparent"
