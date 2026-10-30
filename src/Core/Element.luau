@@ -99,7 +99,7 @@ end
 
 local function bindProperty(instance: Instance, property: string, value: any)
 	if type(value) == "function" and not CALLBACKS[property] then
-		Reactive.watchEffect(function()
+		Reactive._effect(function()
 			assign(instance, property, value())
 		end)
 	else
@@ -127,7 +127,7 @@ local function bindTags(instance: Instance, tags: any)
 		-- no tables. The second one is made on the first change, not at mount.
 		local applied: { [string]: boolean }? = nil
 		local spare: { [string]: boolean }? = nil
-		Reactive.watchEffect(function()
+		Reactive._effect(function()
 			local want: { [string]: boolean } = spare or {}
 			table.clear(want)
 			collectTags(tags(), want)
@@ -161,7 +161,7 @@ local function bindTags(instance: Instance, tags: any)
 				instance:AddTag(v)
 			end
 		elseif type(v) == "function" then
-			Reactive.watchEffect(function()
+			Reactive._effect(function()
 				if v() then
 					instance:AddTag(k)
 				else
@@ -177,7 +177,7 @@ end
 local function bindAttributes(instance: Instance, attributes: { [string]: any })
 	for name, value in attributes do
 		if type(value) == "function" then
-			Reactive.watchEffect(function()
+			Reactive._effect(function()
 				instance:SetAttribute(name, value())
 			end)
 		else
@@ -265,7 +265,7 @@ local function bindChild(instance: Instance, child: any, position: number, owned
 		Reactive.onCleanup(stopRows)
 	end
 	local current: { Instance } = {}
-	Reactive.watchEffect(function()
+	Reactive._effect(function()
 		local children = collect(child, {})
 		local keep = {}
 		for j, item in children do

@@ -232,6 +232,50 @@ return function()
 			expect(cleaned).to.equal(2)
 		end)
 
+		it("passes onCleanup to an effect that takes ...", function()
+			local count = ref(0)
+			local cleaned = 0
+			local stop = watchEffect(function(...)
+				count()
+				local onCleanup = ...
+				onCleanup(function()
+					cleaned += 1
+				end)
+			end)
+			count(1)
+			stop()
+			expect(cleaned).to.equal(2)
+		end)
+
+		it("has a binding form that returns nothing and stays small", function()
+			local source = ref(0)
+			local runs, returned = 0, 0
+			local function bind()
+				for _ = 1, 1000 do
+					if Reactive._effect(function()
+						source()
+						runs += 1
+					end) ~= nil then
+						returned += 1
+					end
+				end
+			end
+			local least = math.huge
+			for _ = 1, 5 do
+				local scope = Reactive.effectScope(true)
+				local before = gcinfo()
+				scope:run(bind)
+				least = math.min(least, gcinfo() - before)
+				runs = 0
+				source(source() + 1)
+				expect(runs).to.equal(1000)
+				scope:stop()
+			end
+			expect(returned).to.equal(0)
+			-- Under 400 bytes per effect, closure included (gcinfo is in KB, 1,000 effects).
+			expect(least < 400).to.equal(true)
+		end)
+
 		it("disposes effects created inside it when it re-runs", function()
 			local outer, inner = ref(0), ref(0)
 			local innerRuns = 0

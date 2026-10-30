@@ -42,7 +42,8 @@ export type Scope = {
 }
 export type WatchOptions = { immediate: boolean?, deep: boolean? }
 
-local CLEAN, CHECK, DIRTY = 0, 1, 2
+-- DISPOSED is higher than every other state, so `mark` never touches a stopped node.
+local CLEAN, CHECK, DIRTY, DISPOSED = 0, 1, 2, 3
 local MAX_ROUNDS = 100
 
 local Reactive = {}
@@ -79,15 +80,25 @@ local function report(err: any)
 end
 
 -- Nodes carry only the tables their kind uses: refs and keys are observed,
--- effects observe, computeds do both, scopes do neither.
--- (One literal per kind, so the table is sized once.)
+-- computeds observe and are observed, scopes do neither. Each literal names every
+-- field the kind usually holds (false for "not yet"), so the table is sized once
+-- and never grows. Fields are reset to false, never nil, for the same reason.
+-- Effects are built in `newEffect` and are the only nodes without a `kind`.
 local function newNode(kind: string): any
-	if kind == "effect" then
-		return { kind = kind, state = CLEAN, sources = {} }
-	elseif kind == "computed" then
-		return { kind = kind, state = CLEAN, sources = {}, observers = {} }
+	if kind == "computed" then
+		return {
+			kind = kind,
+			state = CLEAN,
+			sources = {},
+			observers = {},
+			fn = false,
+			equals = false,
+			writable = false,
+			initialized = false,
+			owner = false,
+		}
 	elseif kind == "scope" then
-		return { kind = kind, state = CLEAN }
+		return { kind = kind, state = CLEAN, owner = false }
 	end
 	return { kind = kind, state = CLEAN, observers = {} }
 end
@@ -118,7 +129,7 @@ end
 -- seen-this-run check and tracking allocates nothing.
 local function track(source: any)
 	local t = tracking
-	if t ~= nil and not t.disposed then
+	if t ~= nil and t.state ~= DISPOSED then
 		local observers = source.observers
 		if not observers[t] then
 			observers[t] = true
@@ -144,14 +155,14 @@ local dispose: (node: any) -> ()
 local function release(node: any)
 	local children = node.children
 	if children then
-		node.children = nil
+		node.children = false
 		for child in children do
 			dispose(child)
 		end
 	end
 	local cleanups = node.cleanups
 	if cleanups then
-		node.cleanups = nil
+		node.cleanups = false
 		for i = #cleanups, 1, -1 do
 			local ok, err = pcall(cleanups[i])
 			if not ok then
@@ -162,37 +173,34 @@ local function release(node: any)
 end
 
 dispose = function(node: any)
-	if node.disposed then
+	if node.state == DISPOSED then
 		return
 	end
-	node.disposed = true
+	node.state = DISPOSED
 	release(node)
 	unlink(node)
 	local o = node.owner
 	if o then
-		node.owner = nil
+		node.owner = false
 		if o.children then
 			o.children[node] = nil
 		end
 	end
 end
 
-local function schedule(effect: any)
-	if not effect.queued then
-		effect.queued = true
-		queueSize += 1
-		queue[queueSize] = effect
-	end
-end
-
+-- An effect is queued exactly when it leaves CLEAN, and goes back to CLEAN only
+-- when it runs (or the queue is dropped), so it is never queued twice.
 local function mark(node: any, state: number)
 	if node.state >= state then
 		return
 	end
 	local wasClean = node.state == CLEAN
 	node.state = state
-	if node.kind == "effect" then
-		schedule(node)
+	if node.kind == nil then -- an effect
+		if wasClean then
+			queueSize += 1
+			queue[queueSize] = node
+		end
 	elseif wasClean then
 		for observer in node.observers do
 			mark(observer, CHECK)
@@ -214,8 +222,9 @@ local function flush()
 			for i = 1, queueSize do
 				local effect = queue[i]
 				queue[i] = nil
-				effect.queued = false
-				effect.state = CLEAN
+				if effect.state ~= DISPOSED then
+					effect.state = CLEAN
+				end
 			end
 			queueSize = 0
 			report(
@@ -228,10 +237,9 @@ local function flush()
 		for i = 1, count do
 			local effect = current[i]
 			current[i] = nil
-			effect.queued = false -- false, not nil: keeps the key so the node never rehashes
-			if not effect.disposed then
+			if effect.state ~= DISPOSED then
 				local ok: boolean, err: any = pcall(refresh, effect)
-				if not ok then
+				if not ok and effect.state ~= DISPOSED then
 					effect.state = CLEAN
 					report(err)
 				end
@@ -266,7 +274,9 @@ end
 
 local function recompute(node: any)
 	local ok, result = execute(node, node.value)
-	node.state = CLEAN
+	if node.state ~= DISPOSED then
+		node.state = CLEAN
+	end
 	if not ok then
 		node.err = result
 		node.initialized = false
@@ -289,14 +299,16 @@ end
 
 local function runEffect(node: any)
 	local ok, err = execute(node, node.onCleanup)
-	node.state = CLEAN
+	if node.state ~= DISPOSED then
+		node.state = CLEAN
+	end
 	if not ok then
 		report(err)
 	end
 end
 
 refresh = function(node: any)
-	if node.disposed then
+	if node.state == DISPOSED then
 		return
 	end
 	if node.state == CHECK then
@@ -317,7 +329,7 @@ refresh = function(node: any)
 		else
 			runEffect(node)
 		end
-	else
+	elseif node.state ~= DISPOSED then
 		node.state = CLEAN
 	end
 end
@@ -390,7 +402,7 @@ function Reactive.computed<T>(
 			set((...))
 			return nil
 		end
-		if node.disposed then
+		if node.state == DISPOSED then
 			return Reactive.untrack(get, node.value)
 		end
 		pcall(refresh, node) -- a failing getter leaves node.err; track first so we hear the fix
@@ -406,14 +418,21 @@ end
 
 -- Effects ---------------------------------------------------------------------------
 
-function Reactive.watchEffect(fn: (onCleanup: OnCleanup) -> ()): StopHandle
-	local node = newNode("effect")
-	node.fn = fn
-	node.onCleanup = function(cleanup: () -> ())
-		addCleanup(node, cleanup)
+-- An effect node holds four fields (five with onCleanup), sized once. It starts
+-- DIRTY and runs now, so it is not queued.
+local function newEffect(fn: (onCleanup: OnCleanup) -> ()): any
+	local node: any
+	-- Only an effect that takes an argument can use onCleanup; most bindings don't.
+	local params, vararg = debug.info(fn, "a")
+	if params > 0 or vararg then
+		node = { state = DIRTY, sources = {}, fn = fn, owner = false, onCleanup = false }
+		node.onCleanup = function(cleanup: () -> ())
+			addCleanup(node, cleanup)
+		end
+	else
+		node = { state = DIRTY, sources = {}, fn = fn, owner = false }
 	end
 	adopt(node)
-	node.state = DIRTY
 	batchDepth += 1
 	local ok: boolean, err: any = pcall(refresh, node)
 	batchDepth -= 1
@@ -423,9 +442,20 @@ function Reactive.watchEffect(fn: (onCleanup: OnCleanup) -> ()): StopHandle
 	if batchDepth == 0 then
 		flush()
 	end
+	return node
+end
+
+function Reactive.watchEffect(fn: (onCleanup: OnCleanup) -> ()): StopHandle
+	local node = newEffect(fn)
 	return function()
 		dispose(node)
 	end
+end
+
+-- Internal: `watchEffect` for bindings that only stop with their owner. Makes no
+-- stop handle, so it costs one closure less.
+function Reactive._effect(fn: (onCleanup: OnCleanup) -> ())
+	newEffect(fn)
 end
 
 local function traverse(value: any, seen: { [any]: boolean })
@@ -578,7 +608,7 @@ local scopeMethods = {}
 
 function scopeMethods.run(scope: any, fn: (...any) -> ...any, ...): ...any
 	local node = scope._node
-	if node.disposed then
+	if node.state == DISPOSED then
 		error("[Lucy] this effect scope has been stopped", 2)
 	end
 	local previousOwner = owner
@@ -602,7 +632,7 @@ end
 local scopeMeta = {
 	__index = function(scope: any, key: any): any
 		if key == "active" then
-			return not scope._node.disposed
+			return scope._node.state ~= DISPOSED
 		end
 		return scopeMethods[key]
 	end,
@@ -876,6 +906,24 @@ end
 function Reactive._changedKey(raw: any, key: any, structural: boolean)
 	if keyNodes[raw] then
 		changed(raw, key, structural, nil)
+	end
+end
+
+-- Notifies readers of every key of `raw`: the table has left the store's tree.
+function Reactive._changedAll(raw: any)
+	local map = keyNodes[raw]
+	if not map then
+		return
+	end
+	batchDepth += 1
+	for _, node in map do
+		for observer in node.observers do
+			mark(observer, DIRTY)
+		end
+	end
+	batchDepth -= 1
+	if batchDepth == 0 then
+		flush()
 	end
 end
 

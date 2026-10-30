@@ -18,28 +18,28 @@ operation 100 times per run.
 
 | Benchmark | Group | Size | Median (ms) | p95 (ms) | Heap (KB) |
 |---|---|---:|---:|---:|---:|
-| Mount a keyed list | Lists | 1,000 | 18.83 | 21.93 | 2536 |
-| Edit 100 rows, one write each | Lists | 1,000 | 0.52 | 0.61 | 0 |
-| Reverse a keyed list | Lists | 1,000 | 7.53 | 9.19 | 158 |
-| Append 100 rows | Lists | 1,000 | 3.65 | 4.29 | 529 |
-| Clear a keyed list | Lists | 1,000 | 6.69 | 8.14 | 125 |
-| Destroy a mounted list | Lists | 1,000 | 7.01 | 8.69 | 125 |
-| HUD frame: 50 values, 200 labels | HUD | 200 | 0.43 | 0.58 | 0 |
-| One value, 1,000 readers | HUD | 1,000 | 2.45 | 2.79 | 0 |
-| Mount Buttons | Components | 100 | 6.46 | 7.37 | 1333 |
-| Mount Switches | Components | 100 | 15.10 | 17.44 | 2004 |
-| Toggle Switches | Components | 100 | 0.96 | 1.22 | 0 |
-| Set Button text | Components | 100 | 0.46 | 0.61 | 0 |
-| Set Button disabled | Components | 100 | 0.95 | 1.13 | 0 |
-| Set Button variant | Components | 100 | 0.84 | 0.99 | 0 |
-| Write one component, 10 mounted | Store | 10 | 0.09 | 0.09 | 0 |
-| Write one component, 1,000 mounted | Store | 1,000 | 0.09 | 0.10 | 0 |
+| Mount a keyed list | Lists | 1,000 | 18.76 | 20.76 | 2426 |
+| Edit 100 rows, one write each | Lists | 1,000 | 0.52 | 0.62 | 0 |
+| Reverse a keyed list | Lists | 1,000 | 6.85 | 8.10 | 158 |
+| Append 100 rows | Lists | 1,000 | 3.32 | 3.85 | 518 |
+| Clear a keyed list | Lists | 1,000 | 6.56 | 7.58 | 0 |
+| Destroy a mounted list | Lists | 1,000 | 6.19 | 7.55 | 0 |
+| HUD frame: 50 values, 200 labels | HUD | 200 | 0.41 | 0.57 | 0 |
+| One value, 1,000 readers | HUD | 1,000 | 2.32 | 2.74 | 0 |
+| Mount Buttons | Components | 100 | 5.46 | 7.03 | 1054 |
+| Mount Switches | Components | 100 | 13.63 | 15.10 | 1571 |
+| Toggle Switches | Components | 100 | 0.72 | 0.92 | 0 |
+| Set Button text | Components | 100 | 0.42 | 0.57 | 0 |
+| Set Button disabled | Components | 100 | 0.86 | 0.97 | 0 |
+| Set Button variant | Components | 100 | 0.71 | 0.90 | 0 |
+| Write one component, 10 mounted | Store | 10 | 0.08 | 0.08 | 0 |
+| Write one component, 1,000 mounted | Store | 1,000 | 0.08 | 0.10 | 0 |
 | Subscribe 1,000 paths, write one | Store | 1,000 | 0.12 | 0.13 | 0 |
-| Read a table of 1,000 keys after one write | Store | 1,000 | 2.29 | 3.69 | 3205 |
-| Set a table equal to the stored one | Store | 1,000 | 2.88 | 2.98 | 0 |
-| Ref to computed to effect | Reactive core | 10,000 | 10.51 | 10.76 | 0 |
-| 1 ref, 1,000 computeds, 1 effect | Reactive core | 1,000 | 0.57 | 0.63 | 0 |
-| Mount 1,000 bound effects | Reactive core | 1,000 | 0.86 | 1.29 | 580 |
+| Read a table of 1,000 keys after one write | Store | 1,000 | 2.19 | 4.75 | 3205 |
+| Set a table equal to the stored one | Store | 1,000 | 2.84 | 2.96 | 0 |
+| Ref to computed to effect | Reactive core | 10,000 | 10.10 | 10.36 | 0 |
+| 1 ref, 1,000 computeds, 1 effect | Reactive core | 1,000 | 0.54 | 0.61 | 0 |
+| Mount 1,000 bound effects | Reactive core | 1,000 | 0.75 | 0.86 | 408 |
 
 Medians move by up to about 15% between runs on the same machine; mount times,
 which create the most garbage, move the most.
@@ -55,10 +55,10 @@ which create the most garbage, move the most.
 - **Components update only what changed.** Setting a Button's text sets
   its `Text` again and nothing else: about 5 µs per Button, no garbage. Disabling one
   (a tag, `Interactable` and `Selectable`) takes about 10 µs. A Switch toggle,
-  thumb animation included, takes about 10 µs.
+  thumb animation included, takes about 7 µs.
 - **Mounting is where the cost is paid.** A keyed row (a TextLabel with a bound
-  text) takes about 19 µs and 2.5 KB to build. A Button takes about 65 µs and a
-  Switch about 150 µs, much of it creating and parenting instances. Each bound
+  text) takes about 19 µs and 2.4 KB to build. A Button takes about 55 µs and a
+  Switch about 135 µs, much of it creating and parenting instances. Each bound
   state key adds a binding, which is what lets later updates skip everything
   else. Build UI once and update it, rather than rebuilding it.
 - **Store writes cost the same however many components exist.** A write to one

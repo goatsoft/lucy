@@ -434,7 +434,7 @@ function Component.mount(spec: Spec): Handle
 	if next(sources) ~= nil then
 		scope:run(function()
 			for key, source in sources do
-				Reactive.watchEffect(function()
+				Reactive._effect(function()
 					local value = Reactive.toValue(source)
 					if not handle.destroyed and app.state:_readKey(segments, key) ~= value then
 						Reactive._untracked(handle.set, handle, key, value)

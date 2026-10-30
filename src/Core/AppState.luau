@@ -327,6 +327,18 @@ end
 
 local reconcile: (raw: { [any]: any }, incoming: { [any]: any }) -> boolean
 
+-- A table left the tree (removed, or replaced by a value): everyone reading a key
+-- inside it runs again. Readers track only the key they read, not the tables
+-- above it, so this is how they hear that the path is gone.
+local function detach(raw: { [any]: any })
+	Reactive._changedAll(raw)
+	for _, value in raw do
+		if isPlain(value) then
+			detach(value)
+		end
+	end
+end
+
 -- Writes `value` at raw[key], reconciling into an existing table. Returns true if
 -- anything changed. Notifies the key's readers; never copies an unchanged table.
 local function assign(raw: { [any]: any }, key: any, value: any): boolean
@@ -350,6 +362,9 @@ local function assign(raw: { [any]: any }, key: any, value: any): boolean
 	end
 	raw[key] = value
 	Reactive._changedKey(raw, key, (current == nil) ~= (value == nil))
+	if isPlain(current) then
+		detach(current)
+	end
 	queueAlias(raw, key)
 	return true
 end
@@ -365,10 +380,13 @@ reconcile = function(raw: { [any]: any }, incoming: { [any]: any }): boolean
 			changed = true
 		end
 	end
-	for key in raw do
+	for key, old in raw do
 		if incoming[key] == nil then
 			raw[key] = nil -- clearing a field during traversal is allowed
 			Reactive._changedKey(raw, key, true)
+			if isPlain(old) then
+				detach(old)
+			end
 			invalidate(raw, key)
 			queueAlias(raw, key)
 			changed = true
@@ -406,6 +424,24 @@ local function drainAliases()
 	end
 	aliasCount = 0
 	drainingAliases = false
+end
+
+-- The table at the first `count` segments, or nil. Tracks only the key where the
+-- path stops, so the reader runs again when the missing table appears. The tables
+-- on the way are not tracked: one that leaves the tree notifies its readers
+-- (`detach`), and one that is set again is updated in place.
+local function walk(root: any, segments: { any }, count: number): any
+	local node = root
+	for i = 1, count do
+		local key = segments[i]
+		local child = node[key]
+		if not isPlain(child) then
+			Reactive._trackKey(node, key)
+			return nil
+		end
+		node = child
+	end
+	return node
 end
 
 -- The raw value at `segments`, or nil if the path runs through a non-table.
@@ -450,17 +486,9 @@ local function childPath(data: ProxyData, key: any): { any }
 	return path :: { any }
 end
 
--- The tree table a view stands for, tracking every key on the way; nil if gone.
+-- The tree table a view stands for; nil if gone.
 local function viewNode(data: ProxyData): any
-	local node: any = data.store._root
-	for _, key in data.segments do
-		if not isPlain(node) then
-			return nil
-		end
-		Reactive._trackKey(node, key)
-		node = node[key]
-	end
-	return if isPlain(node) then node else nil
+	return walk(data.store._root, data.segments, #data.segments)
 end
 
 local function childView(data: ProxyData, key: any): any
@@ -776,15 +804,8 @@ end
 -- `_readKey`, tracked: re-runs the reader when that key or a table above it changes.
 -- The second result says whether the table at `segments` exists.
 function AppState._trackedKey(self: AppState, segments: { any }, key: any): (any, boolean)
-	local node: any = self._root
-	for _, segment in segments do
-		if not isPlain(node) then
-			return nil, false
-		end
-		Reactive._trackKey(node, segment)
-		node = node[segment]
-	end
-	if not isPlain(node) then
+	local node = walk(self._root, segments, #segments)
+	if node == nil then
 		return nil, false
 	end
 	Reactive._trackKey(node, key)
@@ -897,22 +918,25 @@ function AppState.subscribe(self: AppState, path: string?, fn: (new: any, old: a
 	end
 end
 
--- The value at `segments`, tracked: every key on the way (so replacing a parent
--- re-runs the reader), and the whole table when the path ends at one.
+-- The value at `segments`, tracked: the whole table when the path ends at one,
+-- else the last key.
 function AppState._tracked(self: AppState, segments: { any }): any
+	local depth = #segments
 	local node: any = self._root
-	for _, key in segments do
-		if not isPlain(node) then
+	if depth > 0 then
+		local parent = walk(node, segments, depth - 1)
+		if parent == nil then
 			return nil
 		end
-		Reactive._trackKey(node, key)
-		node = node[key]
+		local key = segments[depth]
+		node = parent[key]
+		if not isPlain(node) then
+			Reactive._trackKey(parent, key)
+			return node
+		end
 	end
-	if isPlain(node) then
-		Reactive._trackKey(node, VERSION)
-		return snapshot(node)
-	end
-	return node
+	Reactive._trackKey(node, VERSION)
+	return snapshot(node)
 end
 
 --[[

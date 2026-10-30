@@ -406,6 +406,93 @@ return function()
 			scope:stop()
 		end)
 
+		it("re-runs a deep reader when a table above it becomes a value and back", function()
+			local state = AppState.new({ a = { b = { c = 1 } } })
+			local scope = Reactive.effectScope(true)
+			local seen, keyed, viewed = nil, nil, nil
+			scope:run(function()
+				local c = state:ref("a.b.c")
+				local segments = state:_segments("a.b")
+				local root = state.root
+				Reactive.watchEffect(function()
+					seen = c()
+				end)
+				Reactive.watchEffect(function()
+					keyed = state:_trackedKey(segments, "c")
+				end)
+				Reactive.watchEffect(function()
+					local a = root.a
+					local b = if type(a) == "table" then a.b else nil
+					viewed = if type(b) == "table" then b.c else nil
+				end)
+			end)
+			state:set("a", 5)
+			expect(seen).to.equal(nil)
+			expect(keyed).to.equal(nil)
+			expect(viewed).to.equal(nil)
+			state:set("a", { b = { c = 2 } })
+			expect(seen).to.equal(2)
+			expect(keyed).to.equal(2)
+			expect(viewed).to.equal(2)
+			state:remove("a.b")
+			expect(seen).to.equal(nil)
+			expect(keyed).to.equal(nil)
+			expect(viewed).to.equal(nil)
+			state:set("a.b.c", 3)
+			expect(seen).to.equal(3)
+			expect(keyed).to.equal(3)
+			expect(viewed).to.equal(3)
+			state:set("a.b", { c = 4 }) -- same table, new value: only c changes
+			expect(seen).to.equal(4)
+			expect(keyed).to.equal(4)
+			scope:stop()
+		end)
+
+		it("re-runs a reader of a whole table when a table above it is removed", function()
+			local state = AppState.new({ a = { b = { c = 1 } } })
+			local scope = Reactive.effectScope(true)
+			local seen
+			scope:run(function()
+				local b = state:ref("a.b")
+				Reactive.watchEffect(function()
+					seen = b()
+				end)
+			end)
+			expect(seen.c).to.equal(1)
+			state:remove("a")
+			expect(seen).to.equal(nil)
+			state:set("a.b", { c = 2 })
+			expect(seen.c).to.equal(2)
+			scope:stop()
+		end)
+
+		it("links a reader to the key it reads, not to the tables above it", function()
+			local state = AppState.new({ shallow = 1, a = { b = { c = { d = 1 } } } })
+			local function cost(path: string?, key: string): number
+				local segments = state:_segments(path)
+				local function read()
+					state:_trackedKey(segments, key)
+				end
+				local function bind()
+					for _ = 1, 1000 do
+						Reactive.watchEffect(read)
+					end
+				end
+				local least = math.huge
+				for _ = 1, 5 do
+					local scope = Reactive.effectScope(true)
+					local before = gcinfo()
+					scope:run(bind)
+					least = math.min(least, gcinfo() - before)
+					scope:stop()
+				end
+				return least -- KB per 1,000 readers: bytes per reader
+			end
+			local shallow = cost(nil, "shallow")
+			local deep = cost("a.b.c", "d")
+			expect(deep - shallow < 24).to.equal(true)
+		end)
+
 		it("re-runs a ref onto a table when anything under it changes", function()
 			local state = AppState.new({ input = { device = "desktop", viewport = { x = 1 } } })
 			local scope = Reactive.effectScope(true)
