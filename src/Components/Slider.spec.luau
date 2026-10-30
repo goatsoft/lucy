@@ -241,22 +241,24 @@ return function()
 		expect(Harness.styled(slider.thumb, "BackgroundTransparency")).to.be.near(0, 0.001)
 	end)
 
-	it("rings the thumb, not the row, when focused with a pad or keys", function()
+	it("rings the thumb like every other control when focused with a pad or keys", function()
 		local slider = Slider.new({ app = app, Parent = gui, value = 40 })
-		local halo = slider.halo
+		local halo, ring = slider.halo, slider.ring
 		expect(halo.Position).to.equal(slider.thumb.Position)
 		expect(halo.Size.X.Offset > slider.thumb.Size.X.Offset).to.equal(true)
 		expect(halo.ZIndex < slider.thumb.ZIndex).to.equal(true)
+		expect(ring:IsA("UIStroke")).to.equal(true)
 		Harness.flush()
 		expect(Harness.styled(halo, "BackgroundTransparency")).to.be.near(1, 0.001)
+		expect(Harness.styled(ring, "Transparency")).to.be.near(1, 0.001)
 		app.input:setMode("gamepad")
 		app.input:focus(slider.Instance)
 		expect(slider.Instance:HasTag("ui-focus-visible")).to.equal(true)
 		Harness.flush()
-		expect(Harness.styled(halo, "BackgroundTransparency")).to.be.near(0.5, 0.001)
-		expect(Harness.colorEq(Harness.styled(halo, "BackgroundColor3"), app.theme:resolve("Ring"))).to.equal(
-			true
-		)
+		-- The same tokens as the base focus ring, so the theme changes both.
+		expect(Harness.styled(ring, "Transparency")).to.be.near(0, 0.001)
+		expect(Harness.colorEq(Harness.styled(ring, "Color"), app.theme:resolve("Ring"))).to.equal(true)
+		expect(Harness.styled(ring, "Thickness")).to.be.near(app.theme:resolve("FocusRing"), 0.001)
 		slider:setValue(70)
 		expect(halo.Position).to.equal(slider.thumb.Position)
 	end)

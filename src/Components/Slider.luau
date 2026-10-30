@@ -52,7 +52,6 @@ Slider.metrics = {
 }
 local DENSITY_SCALE: { [string]: number } = { default = 1, touch = 1.25, tv = 1.5 }
 
-Slider.ringWidth = 4 -- the focus ring around the thumb, in pixels
 Slider.defaultLength = 160 -- a vertical slider's height when `length` is left out
 Slider.valueWidth = 40
 Slider.valueHeight = 20 -- room for the value under a vertical slider
@@ -95,16 +94,28 @@ local rules: { Component.Rule } = {
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 		},
 	},
+	-- The thumb's focus ring: the base focus ring's tokens, on a stroke round the
+	-- thumb, shown while the slider has the focus ring.
 	{
 		selector = ".ui-slider-halo",
 		priority = 0,
-		properties = { BackgroundColor3 = "$Ring", BackgroundTransparency = 1, BorderSizePixel = 0 },
+		properties = { BackgroundTransparency = 1, BorderSizePixel = 0 },
 	},
 	{ selector = ".ui-slider-halo::UICorner", priority = 0, properties = { CornerRadius = "$RadiusFull" } },
 	{
-		selector = ".ui-slider.ui-focus-visible >> .ui-slider-halo",
+		selector = ".ui-slider-ring",
+		priority = 0,
+		properties = {
+			Color = "$Ring",
+			Thickness = "$FocusRing",
+			Transparency = 1,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		},
+	},
+	{
+		selector = ".ui-slider.ui-focus-visible >> .ui-slider-ring",
 		priority = 20,
-		properties = { BackgroundTransparency = 0.5 },
+		properties = { Transparency = 0 },
 	},
 	{
 		selector = ".ui-slider-value",
@@ -294,19 +305,21 @@ local spec: Component.Spec = {
 			end,
 			Tags = { "ui-slider-thumb" },
 		})
-		-- The focus ring: a soft disc in the ring colour under the thumb, a band of
-		-- Slider.ringWidth outside its edge. Shown by a rule while focused.
+		-- Holds the thumb's focus ring: a clear disc just round the thumb's border,
+		-- whose stroke is styled like the base focus ring.
 		local theme = h.app.theme
+		local ring = Element.new("UIStroke", { Tags = { "ui-slider-ring" } })
 		local halo = Element.new("Frame", {
 			Name = "Halo",
 			AnchorPoint = CENTRE,
 			ZIndex = 2,
 			Position = thumbPosition,
 			Size = function()
-				local k = thumbPx() + 2 * (theme:resolve("StrokeThin") + Slider.ringWidth)
+				local k = thumbPx() + 2 * theme:resolve("StrokeThin")
 				return UDim2.fromOffset(k, k)
 			end,
 			Tags = { "ui-slider-halo" },
+			ring,
 		})
 		-- The thumb's centre travels the whole track, so the rail is inset by half a
 		-- thumb along the axis to keep it inside the control.
@@ -362,7 +375,8 @@ local spec: Component.Spec = {
 			end,
 			Tags = { "ui-slider-value" },
 		})
-		h.track, h.fill, h.thumb, h.halo, h.rail, h.valueLabel = track, fill, thumb, halo, rail, valueLabel
+		h.track, h.fill, h.thumb, h.halo, h.ring = track, fill, thumb, halo, ring
+		h.rail, h.valueLabel = rail, valueLabel
 
 		-- Side effects: the player's callback, and the engine's drag listeners.
 		if p.onValueChange then
