@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import signalLost from '@/backgrounds/signal-lost.aurora'
+import ThemedBackground from '@/components/ThemedBackground.vue'
 import { useHead } from '@/head'
 
 useHead({ title: 'Not found', description: 'There is nothing at this address.' })
@@ -11,7 +13,7 @@ useHead({ title: 'Not found', description: 'There is nothing at this address.' }
     tabindex="-1"
     class="relative isolate grid min-h-dvh place-items-center overflow-hidden px-6 text-center"
   >
-    <div class="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_60%)]" />
+    <ThemedBackground :dark="signalLost" />
     <div class="rounded-3xl border border-border bg-background/95 p-8 sm:p-12">
       <p class="eyebrow">
         404

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://aurora.goatsoft.io/schema/v1.json",
+  "format": "aurora",
+  "version": 1,
+  "name": "Lucy Docs",
+  "canvas": {
+    "fade": "x"
+  },
+  "motion": {
+    "speed": 1,
+    "reduced": "still"
+  },
+  "palette": [
+    "oklch(0.141 0.005 285.8)",
+    "oklch(0.3 0.1 292)",
+    "oklch(0.606 0.25 292.7)",
+    "oklch(0.806 0.119 223.8)",
+    "oklch(0.683 0.265 332.6)"
+  ],
+  "layers": [
+    {
+      "type": "phosphor",
+      "colors": [
+        0,
+        1,
+        2
+      ],
+      "params": {
+        "spacing": 5,
+        "strength": 0.45,
+        "glow": 0.6,
+        "speed": 0.04
+      }
+    },
+    {
+      "type": "scanlines",
+      "blend": "screen",
+      "opacity": 0.5,
+      "colors": [
+        0,
+        1,
+        2
+      ],
+      "params": {
+        "spacing": 4,
+        "strength": 0.4,
+        "speed": 0.035,
+        "roll": 0.55
+      }
+    },
+    {
+      "type": "glitch",
+      "blend": "screen",
+      "opacity": 0.3,
+      "colors": [
+        0,
+        3,
+        4
+      ],
+      "params": {
+        "frequency": 0.12,
+        "strength": 0.5,
+        "bands": 36,
+        "density": 0.1,
+        "separation": 0.6,
+        "seed": 17
+      }
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { AuroraBadge } from '@goatsoft/aurora-vue/badge'
 import { SITE } from '@/head'
 
 const columns = [
@@ -76,16 +77,23 @@ const columns = [
           class="underline decoration-border underline-offset-4 hover:text-foreground"
         >MIT licence</a>
       </p>
-      <a
-        :href="SITE.goatsoft"
-        target="_blank"
-        rel="noopener"
-        class="inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
-        aria-label="Made by GOATsoft"
-      >
-        <span>Made by</span>
-        <GoatsoftLogo :height="16" />
-      </a>
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <!-- The backgrounds are Aurora, GOATsoft's too. -->
+        <AuroraBadge
+          label="powered-by"
+          animated
+        />
+        <a
+          :href="SITE.goatsoft"
+          target="_blank"
+          rel="noopener"
+          class="inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
+          aria-label="Made by GOATsoft"
+        >
+          <span>Made by</span>
+          <GoatsoftLogo :height="16" />
+        </a>
+      </div>
     </div>
   </footer>
 </template>

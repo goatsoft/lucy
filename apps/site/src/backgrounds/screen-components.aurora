@@ -1,0 +1,110 @@
+{
+  "$schema": "https://aurora.goatsoft.io/schema/v1.json",
+  "format": "aurora",
+  "version": 1,
+  "name": "Lucy Screen: Components",
+  "motion": {
+    "speed": 1,
+    "reduced": "still"
+  },
+  "modifiers": {
+    "vignette": {
+      "amount": 0.45,
+      "radius": 0.55,
+      "softness": 0.5
+    }
+  },
+  "interactions": [
+    {
+      "type": "follow",
+      "smoothing": 0.55,
+      "decay": 1.2,
+      "bindings": [
+        {
+          "layer": 1,
+          "parameter": "x",
+          "input": "x",
+          "amount": 1
+        },
+        {
+          "layer": 1,
+          "parameter": "y",
+          "input": "y",
+          "amount": 1
+        },
+        {
+          "layer": 1,
+          "parameter": "glow",
+          "input": "strength",
+          "amount": 0.3
+        },
+        {
+          "layer": 0,
+          "parameter": "opacity",
+          "input": "strength",
+          "amount": 0.3
+        }
+      ]
+    }
+  ],
+  "palette": [
+    "oklch(0.13 0.02 290)",
+    "oklch(0.606 0.25 292.7)",
+    "oklch(0.9 0.08 300)",
+    "oklch(0.806 0.119 223.8)",
+    "oklch(0.683 0.265 332.6)",
+    "oklch(0.3 0.1 292)"
+  ],
+  "layers": [
+    {
+      "type": "phosphor",
+      "opacity": 0.7,
+      "colors": [
+        0,
+        5,
+        1
+      ],
+      "params": {
+        "spacing": 7,
+        "strength": 0.55,
+        "glow": 0.55,
+        "speed": 0.06
+      }
+    },
+    {
+      "type": "ping",
+      "blend": "screen",
+      "colors": [
+        0,
+        1,
+        2
+      ],
+      "params": {
+        "background": 0,
+        "x": 0.5,
+        "y": 0.5,
+        "speed": 0.1,
+        "spacing": 0.16,
+        "width": 1.5,
+        "decay": 1.6,
+        "glow": 0.45
+      }
+    },
+    {
+      "type": "scanlines",
+      "blend": "screen",
+      "opacity": 0.35,
+      "colors": [
+        0,
+        5,
+        1
+      ],
+      "params": {
+        "spacing": 4,
+        "strength": 0.4,
+        "speed": 0.04,
+        "roll": 0.5
+      }
+    }
+  ]
+}

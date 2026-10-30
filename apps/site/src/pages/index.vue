@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { AuroraBackground } from '@goatsoft/aurora-vue'
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
+import { AuroraScene } from '@goatsoft/aurora-vue'
 import { RouterLink } from 'vue-router'
 import heroDark from '@/backgrounds/hero-dark.aurora'
+import screenComponents from '@/backgrounds/screen-components.aurora'
+import screenInput from '@/backgrounds/screen-input.aurora'
+import screenState from '@/backgrounds/screen-state.aurora'
+import screenThemes from '@/backgrounds/screen-themes.aurora'
 import heroLight from '@/backgrounds/hero-light.aurora'
 import terminalDark from '@/backgrounds/terminal-dark.aurora'
 import terminalLight from '@/backgrounds/terminal-light.aurora'
 import Quickstart from '@/content/quickstart.md'
 import { SITE, useHead } from '@/head'
-import { useSitePreferences } from '@/lib/preferences'
+import ThemedBackground from '@/components/ThemedBackground.vue'
 import Atom from '~icons/lucide-extended/atom-duotone'
 import Blocks from '~icons/lucide-extended/blocks-duotone'
 import Bot from '~icons/lucide-extended/bot-duotone'
@@ -25,21 +29,18 @@ import SwatchBook from '~icons/lucide-extended/swatch-book-duotone'
 
 useHead({ description: SITE.description })
 
-// Both backgrounds are in the server HTML, shown by CSS for the theme, so the first paint is
-// right. Once mounted, only the one for the current theme stays, so only one renders.
-const { light } = useSitePreferences()
-const mounted = ref(false)
-onMounted(() => {
-  mounted.value = true
-})
+// The hero's background follows the pointer over the whole section.
 const hero = ref<HTMLElement>()
+// The four cards are screens in one scene: rings start from the pointer anywhere over the
+// row and spread through every card, each over its own texture.
+const cards = ref<HTMLElement>()
 
 // The four that matter most, as cards.
 const features = [
-  { icon: Boxes, title: '35 components', text: 'Buttons, dialogs, selects, tables, sliders, tabs and more, ready for menus, HUDs and shops.' },
-  { icon: Atom, title: 'One source of truth', text: 'All UI and app state in one store. Change a value and only the properties that read it are set again.' },
-  { icon: Gamepad, title: 'Every input, every device', text: 'Mouse, keyboard, gamepad and touch, on desktop, console, tablet and phone. Controls grow for touch and TV.' },
-  { icon: SwatchBook, title: 'Themes', text: 'Light and dark themes for every base colour, switched while the game runs. Hover and theme changes run no Luau.' },
+  { icon: Boxes, screen: screenComponents, title: '35 components', text: 'Buttons, dialogs, selects, tables, sliders, tabs and more, ready for menus, HUDs and shops.' },
+  { icon: Atom, screen: screenState, title: 'One source of truth', text: 'All UI and app state in one store. Change a value and only the properties that read it are set again.' },
+  { icon: Gamepad, screen: screenInput, title: 'Every input, every device', text: 'Mouse, keyboard, gamepad and touch, on desktop, console, tablet and phone. Controls grow for touch and TV.' },
+  { icon: SwatchBook, screen: screenThemes, title: 'Themes', text: 'Light and dark themes for every base colour, switched while the game runs. Hover and theme changes run no Luau.' },
 ] as const
 
 // Everything else, as a short list under the cards.
@@ -67,24 +68,11 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
       ref="hero"
       class="relative isolate overflow-hidden px-6 pt-40 pb-24 text-center"
     >
-      <div
-        v-if="!mounted || !light"
-        class="absolute inset-0 -z-10 hidden dark:block"
-      >
-        <AuroraBackground
-          :src="heroDark"
-          :interaction-target="hero"
-        />
-      </div>
-      <div
-        v-if="!mounted || light"
-        class="absolute inset-0 -z-10 dark:hidden"
-      >
-        <AuroraBackground
-          :src="heroLight"
-          :interaction-target="hero"
-        />
-      </div>
+      <ThemedBackground
+        :dark="heroDark"
+        :light="heroLight"
+        :interaction-target="hero"
+      />
       <!-- A soft pool of the page colour behind the text, so the rain never runs through it. -->
       <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_48%_42%_at_50%_62%,var(--background)_35%,transparent_100%)] opacity-85" />
       <!-- The shadow follows her outline (a box shadow would draw the image's square). -->
@@ -134,32 +122,43 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
       <h2 class="mx-auto mt-4 max-w-2xl text-center font-display text-heading font-semibold tracking-tight text-balance">
         What Lucy does
       </h2>
-      <div class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <article
-          v-for="feature in features"
-          :key="feature.title"
-          class="group relative isolate overflow-hidden rounded-2xl border border-border bg-surface/60 p-5 transition duration-300 hover:border-primary/40 motion-safe:hover:-translate-y-0.5"
+      <!-- One scene across the four cards: each shows its part of one picture, lined up. -->
+      <AuroraScene name="features">
+        <div
+          ref="cards"
+          class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
         >
-          <div
-            aria-hidden="true"
-            class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_0%_0%,color-mix(in_oklab,var(--primary)_16%,transparent),transparent_65%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          />
-          <div class="flex items-center gap-3">
-            <div class="grid size-11 shrink-0 place-items-center rounded-xl bg-linear-to-br from-primary/25 to-primary/5 text-primary ring-1 ring-primary/25 ring-inset shadow-[0_8px_24px_-12px_var(--primary)] transition-transform duration-300 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6 [&_svg]:size-6">
-              <component
-                :is="feature.icon"
-                aria-hidden="true"
-              />
+          <article
+            v-for="feature in features"
+            :key="feature.title"
+            class="group relative isolate flex min-h-64 flex-col justify-end overflow-hidden rounded-2xl border border-white/10 bg-[oklch(0.13_0.02_290)] p-5 shadow-[0_24px_60px_-30px_var(--primary)] transition duration-300 hover:border-primary/60 motion-safe:hover:-translate-y-0.5"
+          >
+            <!-- A screen in both themes: the same dark glass, light text. -->
+            <ThemedBackground
+              :dark="feature.screen"
+              :interaction-target="cards"
+            />
+            <div
+              aria-hidden="true"
+              class="absolute inset-x-0 bottom-0 -z-10 h-2/3 bg-linear-to-t from-[oklch(0.13_0.02_290)] to-transparent"
+            />
+            <div class="flex items-center gap-3">
+              <div class="grid size-11 shrink-0 place-items-center rounded-xl bg-linear-to-br from-primary/25 to-primary/5 text-primary ring-1 ring-primary/25 ring-inset shadow-[0_8px_24px_-12px_var(--primary)] transition-transform duration-300 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6 [&_svg]:size-6">
+                <component
+                  :is="feature.icon"
+                  aria-hidden="true"
+                />
+              </div>
+              <h3 class="font-display text-base leading-snug font-semibold text-balance text-white">
+                {{ feature.title }}
+              </h3>
             </div>
-            <h3 class="font-display text-base leading-snug font-semibold text-balance text-foreground">
-              {{ feature.title }}
-            </h3>
-          </div>
-          <p class="mt-3 text-sm leading-6 text-pretty text-muted-foreground">
-            {{ feature.text }}
-          </p>
-        </article>
-      </div>
+            <p class="mt-3 text-sm leading-6 text-pretty text-white/70">
+              {{ feature.text }}
+            </p>
+          </article>
+        </div>
+      </AuroraScene>
       <ul class="mt-12 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
         <li
           v-for="item in more"
@@ -184,18 +183,10 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
     </section>
 
     <section class="relative isolate overflow-hidden">
-      <div
-        v-if="!mounted || !light"
-        class="absolute inset-0 -z-10 hidden dark:block"
-      >
-        <AuroraBackground :src="terminalDark" />
-      </div>
-      <div
-        v-if="!mounted || light"
-        class="absolute inset-0 -z-10 dark:hidden"
-      >
-        <AuroraBackground :src="terminalLight" />
-      </div>
+      <ThemedBackground
+        :dark="terminalDark"
+        :light="terminalLight"
+      />
       <div class="mx-auto max-w-4xl px-6 py-20">
         <p class="eyebrow text-center">
           Quick start

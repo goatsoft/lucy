@@ -38,6 +38,7 @@ declare module 'vue' {
     SiteFooter: typeof import('./components/SiteFooter.vue')['default']
     SiteNav: typeof import('./components/SiteNav.vue')['default']
     Term: typeof import('./components/doc/Term.vue')['default']
+    ThemedBackground: typeof import('./components/ThemedBackground.vue')['default']
     ThemeSelect: typeof import('./components/ThemeSelect.vue')['default']
   }
 }
