@@ -231,4 +231,33 @@ return function()
 		local hidden = Slider.new({ app = app, Parent = gui })
 		expect(hidden.valueLabel.Visible).to.equal(false)
 	end)
+
+	it("has a solid white thumb", function()
+		local slider = Slider.new({ app = app, Parent = gui, value = 40 })
+		Harness.flush()
+		expect(Harness.colorEq(Harness.styled(slider.thumb, "BackgroundColor3"), app.theme:resolve("White"))).to.equal(
+			true
+		)
+		expect(Harness.styled(slider.thumb, "BackgroundTransparency")).to.be.near(0, 0.001)
+	end)
+
+	it("rings the thumb, not the row, when focused with a pad or keys", function()
+		local slider = Slider.new({ app = app, Parent = gui, value = 40 })
+		local halo = slider.halo
+		expect(halo.Position).to.equal(slider.thumb.Position)
+		expect(halo.Size.X.Offset > slider.thumb.Size.X.Offset).to.equal(true)
+		expect(halo.ZIndex < slider.thumb.ZIndex).to.equal(true)
+		Harness.flush()
+		expect(Harness.styled(halo, "BackgroundTransparency")).to.be.near(1, 0.001)
+		app.input:setMode("gamepad")
+		app.input:focus(slider.Instance)
+		expect(slider.Instance:HasTag("ui-focus-visible")).to.equal(true)
+		Harness.flush()
+		expect(Harness.styled(halo, "BackgroundTransparency")).to.be.near(0.5, 0.001)
+		expect(Harness.colorEq(Harness.styled(halo, "BackgroundColor3"), app.theme:resolve("Ring"))).to.equal(
+			true
+		)
+		slider:setValue(70)
+		expect(halo.Position).to.equal(slider.thumb.Position)
+	end)
 end
