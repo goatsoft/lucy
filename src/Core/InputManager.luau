@@ -502,8 +502,21 @@ function InputManager.activate(self: InputManager)
 	local handle: any = id and self.app:handle(id)
 	if handle and handle.click then
 		handle:click()
+		return
 	elseif handle and handle.toggle then
 		handle:toggle()
+		return
+	end
+	-- A part of a component (a header, a row): from the focused object up, the
+	-- first component with a `press(object)` method that returns true takes it.
+	local node: Instance? = focused
+	while node do
+		local nodeId = node:GetAttribute("LucyId")
+		local owner: any = nodeId and self.app:handle(nodeId)
+		if owner and owner.press and owner:press(focused) then
+			return
+		end
+		node = node.Parent
 	end
 end
 

@@ -12,7 +12,8 @@
 	(how quick), damping 1 is critically damped, below 1 bounces. Both may be refs.
 	tween(source, info = TweenInfo.new(0.2)): eases from wherever it is to the new
 	target using info.Time, EasingStyle, EasingDirection and DelayTime (repeats and
-	reverses are ignored).
+	reverses are ignored). A TweenInfo that takes no time (Time and DelayTime 0)
+	jumps straight to the new value, so `info` may be a ref that says when to skip.
 
 	Animates number, Vector2, Vector3, UDim, UDim2 and Color3. Colours move through
 	Oklab, so a spring from red to blue passes through a clean purple, not mud. Any
@@ -219,6 +220,12 @@ function Animate.tween<T>(
 			return
 		end
 		local tweenInfo = (Reactive.peek(info) or TweenInfo.new(0.2)) :: TweenInfo
+		if tweenInfo.Time <= 0 and tweenInfo.DelayTime <= 0 then
+			current, from, to = packed, packed, packed
+			stop(animator)
+			output(target)
+			return
+		end
 		from, to = table.clone(current :: { number }), packed
 		elapsed, duration, delay = 0, tweenInfo.Time, tweenInfo.DelayTime
 		style, direction = tweenInfo.EasingStyle, tweenInfo.EasingDirection

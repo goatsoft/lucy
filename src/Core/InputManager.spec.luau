@@ -222,4 +222,38 @@ return function()
 			cleanup()
 		end)
 	end)
+
+	describe("activate", function()
+		local Stack = require(script.Parent.Parent.Components.Stack)
+
+		it("asks the components around the focus to press it, the innermost first", function()
+			local app, cleanup = Harness.app()
+			local gui = Harness.mount(app)
+			local seen = {}
+			local outer = Stack.new({ app = app, Parent = gui })
+			local inner = Stack.new({ app = app, Parent = outer.Instance })
+			local button = Instance.new("TextButton")
+			button.Parent = inner.Instance
+			outer.press = function(_, object)
+				table.insert(seen, "outer:" .. object.Name)
+				return true
+			end
+			inner.press = function(_, object)
+				table.insert(seen, "inner:" .. object.Name)
+				return object.Name == "Mine"
+			end
+			app.input:focus(button)
+			app.input:activate()
+			button.Name = "Mine"
+			app.input:activate()
+			expect(table.concat(seen, ",")).to.equal("inner:TextButton,outer:TextButton,inner:Mine")
+			cleanup()
+		end)
+
+		it("does nothing with nothing focused", function()
+			local app, cleanup = Harness.app()
+			app.input:activate()
+			cleanup()
+		end)
+	end)
 end
