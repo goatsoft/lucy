@@ -98,8 +98,10 @@ It never ships its own Studio plugin.
   (`.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`), the skills and
   a `.mcp.json` that runs `npx -y @goatsoft/lucy-mcp`.
 - **`npx @goatsoft/lucy-mcp setup`** does what Studio's quick connect does, for
-  a game's repo: copies the skills into `.agents/skills/` with `.claude/skills/`
-  links to them, and adds the server to `.mcp.json`, `.codex/config.toml` and
+  a game's repo: copies the skills into `.agents/skills/` and links each skill
+  folder from `.claude/skills/` (Claude Code reads `AGENTS.md` since 2.1.277
+  but still not `.agents/skills/`; linking the whole folder breaks, as Claude
+  Code writes its own files there), and adds the server to `.mcp.json`, `.codex/config.toml` and
   `.agents/mcp_config.json`, merging with what is there. Antigravity gets
   everything this way.
 - **A docs page, "Use Lucy with agents"** (`docs/guide/agents.md`): installing
