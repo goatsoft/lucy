@@ -30,7 +30,9 @@ local region = Lucy.Select.new({
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
 | `items` | table | | | The options, see [Items](#items) |
-| `value` | any | `false` | yes | The value picked, or `false` for none yet |
+| `value` | any | `false` | yes | The value picked, or `false` for none yet. With `multiple`, an array |
+| `type` | string | `"default"` | | `default` or `check`, see [Types](#types) |
+| `multiple` | boolean | `false` | | Lets the player pick several (a `check` select) |
 | `placeholder` | string | `"Select"` | yes | Shown until something is picked |
 | `open` | boolean | `false` | yes | Whether the list is open |
 | `disabled` | boolean | `false` | yes | Stops the player opening it, and closes it |
@@ -47,6 +49,27 @@ It also takes the [props every component takes](index.md#using-a-component).
 An item is a value, shown as its text, or a table with `value`, and optionally
 `label` and `disabled`. A disabled option shows faded and cannot be picked.
 
+## Types
+
+- **`default`:** the picked option is highlighted in the list.
+- **`check`:** a tick in front of the picked option.
+
+With `multiple = true` the select is a `check` select where the player can
+pick several. Each press ticks or unticks an option and the list stays open.
+The value is an array in the order of `items`, and the button shows the first
+label and how many more, such as "Pop +2".
+
+```lua
+Lucy.Select.new({
+    multiple = true,
+    placeholder = "Genres",
+    items = { "Pop", "Hip hop", "House", "Rock" },
+    onValueChange = function(genres)
+        setFilter(genres)
+    end,
+})
+```
+
 ## How it opens
 
 The list opens on the app's overlay layer, above everything opened before it:
@@ -60,14 +83,14 @@ The list opens on the app's overlay layer, above everything opened before it:
 A long list scrolls inside the space it has. Escape, ButtonB or a press outside
 closes it without changing anything.
 
-The button draws `lucy:chevron-down` and the picked option `lucy:check`. To use
-your own, see [Icons Lucy draws](../guide/icons.md#icons-lucy-draws).
+The button draws `lucy:chevron-down`, and a `check` select draws `lucy:check`.
+To use your own, see [Icons Lucy draws](../guide/icons.md#icons-lucy-draws).
 
 ## Methods and events
 
 | Name | What it does |
 |---|---|
-| `select:select(value)` | Picks `value` as if the player had, and closes the list |
+| `select:select(value)` | Picks `value` as if the player had, and closes the list. With `multiple`, ticks or unticks it |
 | `select:open()` | Opens the list |
 | `select:close()` | Closes the list |
 | `select:toggle()` | Opens it if closed, closes it if open |

@@ -54,6 +54,31 @@ return {
 						end,
 						layoutOrder = 2,
 					}),
+					Lucy.Select.new({
+						type = "check",
+						value = "medium",
+						disabled = ctx.controls.disabled,
+						items = {
+							{ value = "low", label = "Low quality" },
+							{ value = "medium", label = "Medium quality" },
+							{ value = "high", label = "High quality" },
+						},
+						layoutOrder = 3,
+					}),
+					Lucy.Select.new({
+						multiple = true,
+						value = { "pop", "house" },
+						placeholder = "Genres",
+						disabled = ctx.controls.disabled,
+						items = {
+							{ value = "pop", label = "Pop" },
+							{ value = "hiphop", label = "Hip hop" },
+							{ value = "house", label = "House" },
+							{ value = "kpop", label = "K-pop" },
+							{ value = "rock", label = "Rock" },
+						},
+						layoutOrder = 4,
+					}),
 				},
 			}),
 		}

@@ -5,7 +5,9 @@
 
 		Select.new({
 			items = { { value = "eu", label = "Europe" }, { value = "na", label = "North America" }, "Oceania" },
-			value = "eu",              -- false for nothing picked yet
+			value = "eu",              -- false for nothing picked yet; an array with multiple
+			type = "default",          -- default | check: ticks in front of the labels
+			multiple = false,          -- pick several (a check select)
 			placeholder = "Region",    -- shown until something is picked
 			disabled = false,
 			size = UDim2,              -- the trigger's size; full width, control height when left out
@@ -18,15 +20,20 @@
 
 	An item is a value (shown as its text) or { value, label?, disabled? }.
 
+	Types: "default" highlights the picked option; "check" draws lucy:check in
+	front of the picked one. With multiple = true (a check select) each press
+	ticks or unticks an option and the list stays open; the value is an array
+	in item order and the button shows the first label and how many more.
+
 	The list floats on the app's overlay layer: under the trigger on mouse,
 	keyboard and gamepad, and a drawer from the bottom on touch. On gamepad the
 	picked option is selected when it opens, and focus goes back to the trigger
-	when it closes. A long list scrolls. The trigger draws lucy:chevron-down and
-	the picked option lucy:check (see Icon to change them).
+	when it closes. A long list scrolls. The trigger draws lucy:chevron-down
+	(see Icon to change it).
 
 	State keys: value, open, placeholder, disabled, visible.
 	Events: "select" with the value picked, for Lucy.useUiSound.
-	select.items holds one { root, label, check } per option, in order.
+	select.items holds one { root, label, check? } per option, in order.
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
@@ -41,6 +48,11 @@ local ToggleGroup = require(script.Parent.ToggleGroup)
 local Select = {}
 
 local ACTIVATED = Element.on("Activated")
+
+Select.types = { "default", "check" }
+
+-- The width of the tick column in a check select.
+local TICK = 24
 
 Select.rules = {
 	{
@@ -130,6 +142,7 @@ Select.rules = {
 		properties = { PaddingLeft = "$Space2", PaddingRight = "$Space2" },
 	},
 	{ selector = ".ui-select-option:Hover", priority = 10, properties = { BackgroundTransparency = 0 } },
+	{ selector = ".ui-select-plain.ui-selected", priority = 10, properties = { BackgroundTransparency = 0 } },
 	{
 		selector = ".ui-select-option-label",
 		priority = 0,
@@ -154,23 +167,43 @@ local spec: Component.Spec = {
 	render = function(h)
 		local p: Component.Props = h.props
 		local app = h.app
-		local value, open, disabled = h:ref("value"), h:ref("open"), h:ref("disabled")
+		local open, disabled = h:ref("open"), h:ref("disabled")
+		local kind: string = p._selectKind or "default"
+		local multiple: boolean = p._selectMultiple == true
+		-- A list is changed in place, which its key alone does not report, so a
+		-- multiple select follows a snapshot of the whole list.
+		local value: () -> any = h:ref("value")
+		if multiple then
+			local state = app.state
+			local segments = state:_segments(h.path .. ".value")
+			value = Reactive.computed(function(): any
+				return state:_tracked(segments)
+			end)
+		end
 		local placeholder = h:ref("placeholder")
 		local height = Composables.useMetric(app, "ControlMd")
 		local entries = ToggleGroup.normalize(p.items, "Select")
 		h.entries = entries
 
-		local function picked(): any
+		local function has(current: any, itemValue: any): boolean
+			if multiple then
+				return type(current) == "table" and table.find(current, itemValue) ~= nil
+			end
+			return current == itemValue
+		end
+		-- The picked items, in item order.
+		local function picked(): { any }
 			local current = value()
+			local out = {}
 			for _, item in entries do
-				if item.value == current then
-					return item
+				if has(current, item.value) then
+					table.insert(out, item)
 				end
 			end
-			return nil
+			return out
 		end
 		local function empty(): boolean
-			return picked() == nil
+			return #picked() == 0
 		end
 		local function enabled(): boolean
 			return not disabled()
@@ -189,8 +222,11 @@ local spec: Component.Spec = {
 			TextXAlignment = Enum.TextXAlignment.Left,
 			TextTruncate = Enum.TextTruncate.AtEnd,
 			Text = function(): string
-				local item = picked()
-				return if item then item.text else placeholder()
+				local items = picked()
+				if #items == 0 then
+					return placeholder()
+				end
+				return if #items == 1 then items[1].text else `{items[1].text} +{#items - 1}`
 			end,
 			Tags = {
 				"ui-select-value" :: any,
@@ -250,7 +286,7 @@ local spec: Component.Spec = {
 		for index, item in entries do
 			local itemValue = item.value
 			local function isPicked(): boolean
-				return value() == itemValue
+				return has(value(), itemValue)
 			end
 			local function off(): boolean
 				return item.disabled == true
@@ -258,13 +294,23 @@ local spec: Component.Spec = {
 			local function on(): boolean
 				return not off()
 			end
-			local check =
-				Icon.new({ app = app, icon = "lucy:check", size = "sm", name = "Check", visible = isPicked })
-			check.Instance.AnchorPoint = Vector2.new(1, 0.5)
-			check.Instance.Position = UDim2.fromScale(1, 0.5)
+			local check = nil
+			if kind == "check" then
+				check = Icon.new({
+					app = app,
+					icon = "lucy:check",
+					size = "sm",
+					name = "Check",
+					visible = isPicked,
+				})
+				check.Instance.AnchorPoint = Vector2.new(0, 0.5)
+				check.Instance.Position = UDim2.fromScale(0, 0.5)
+			end
+			local indent = if check then TICK else 0
 			local label = Element.new("TextLabel", {
 				Name = "Label",
-				Size = UDim2.new(1, -24, 1, 0),
+				Position = UDim2.fromOffset(indent, 0),
+				Size = UDim2.new(1, -indent, 1, 0),
 				TextXAlignment = Enum.TextXAlignment.Left,
 				TextTruncate = Enum.TextTruncate.AtEnd,
 				Text = item.text,
@@ -280,13 +326,20 @@ local spec: Component.Spec = {
 				end,
 				Interactable = on,
 				Selectable = on,
-				Tags = { "ui-select-option" :: any, ["ui-selected"] = isPicked, ["ui-disabled"] = off },
+				Tags = {
+					"ui-select-option" :: any,
+					if check then "ui-select-checks" else "ui-select-plain",
+					["ui-selected"] = isPicked,
+					["ui-disabled"] = off,
+				},
 				[ACTIVATED] = function()
 					h:select(itemValue)
 				end,
 				label,
 			})
-			check.Instance.Parent = root
+			if check then
+				check.Instance.Parent = root
+			end
 			root.Parent = listFrame
 			rows[index] = { root = root, label = label, check = check }
 		end
@@ -334,7 +387,7 @@ local spec: Component.Spec = {
 				local first
 				for index, item in entries do
 					if not item.disabled then
-						if item.value == current then
+						if has(current, item.value) then
 							return rows[index].root
 						end
 						first = first or rows[index].root
@@ -359,7 +412,21 @@ local spec: Component.Spec = {
 }
 
 function Select.new(props: { [string]: any }?)
-	local handle = Component.mount(spec, props)
+	local given: { [string]: any } = table.clone(props or {})
+	local multiple = given.multiple == true
+	local kind = given.type or (if multiple then "check" else "default")
+	if not table.find(Select.types, kind) then
+		error(`[Lucy] unknown Select type "{tostring(kind)}" ({table.concat(Select.types, " or ")})`, 2)
+	end
+	if multiple and kind ~= "check" then
+		error(`[Lucy] a Select with multiple = true is a check select (type "check")`, 2)
+	end
+	if multiple and given.value == nil then
+		given.value = {}
+	end
+	-- Read by render (the spec is shared, so it goes through the props).
+	given._selectKind, given._selectMultiple = kind, multiple
+	local handle = Component.mount(spec, given)
 	Component.clickable(handle)
 	function handle.open(h)
 		if not h:get("disabled") then
@@ -377,7 +444,8 @@ function Select.new(props: { [string]: any }?)
 		end
 	end
 	-- The player picked `value`: set it, report it and close. Ignored for a
-	-- disabled option or select; picking the current value just closes.
+	-- disabled option or select; picking the current value just closes. With
+	-- multiple it ticks or unticks the option and the list stays open.
 	function handle.select(h, picked: any)
 		if h.destroyed or h:get("disabled") then
 			return
@@ -385,6 +453,22 @@ function Select.new(props: { [string]: any }?)
 		for _, item in h.entries do
 			if item.value == picked then
 				if item.disabled then
+					return
+				end
+				if multiple then
+					local current = h:get("value")
+					local list = {}
+					for _, entry in h.entries do
+						local on = type(current) == "table" and table.find(current, entry.value) ~= nil
+						if entry.value == picked then
+							on = not on
+						end
+						if on then
+							table.insert(list, entry.value)
+						end
+					end
+					h:set("value", list)
+					h:emit("select", picked)
 					return
 				end
 				if h:get("value") ~= picked then
