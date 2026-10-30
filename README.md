@@ -11,6 +11,7 @@
   <a href="https://lucy.goatsoft.io/docs/components/">Components</a> ·
   <a href="https://lucy.goatsoft.io/docs/reactivity/">Reactivity</a> ·
   <a href="https://lucy.goatsoft.io/docs/architecture/">Architecture</a> ·
+  <a href="https://lucy.goatsoft.io/docs/guide/agents/">Agents</a> ·
   <a href="https://lucy.goatsoft.io/docs/benchmarks/">Benchmarks</a>
 </p>
 
@@ -177,9 +178,15 @@ app.toast.success("Round won", { description = "+$250" })
 - Scenes on separate layers, so menus and modals never take input from the
   screen below.
 - Refs, computed values, springs and tweens that bind to any property.
+- Named hotkeys for keyboard and gamepad, switched off together while a menu is
+  open, and a way to stop the character moving under a dialog.
+- Any Iconify icon by name, packed into a few uploaded images by the
+  lucy-icons build.
 - `Lucy.hydrate` to add behaviour to UI built in Studio.
 - Stories that preview any component or scene in Studio without pressing Play.
-- Strict types, no runtime dependencies, and over 350 specs.
+- Skills for Claude Code, Codex and Antigravity, so coding agents build with
+  Lucy's components and rules.
+- Strict types, no runtime dependencies, and over 750 specs.
 
 ## Architecture
 

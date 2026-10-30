@@ -147,4 +147,5 @@ app.toast.success("Round won", { description = "+$250" })
 - [Components](components/index.md): a page for each component with its props and examples
 - [Stories and preview](stories.md): see your UI in Studio without pressing Play
 - [Architecture](architecture.md): how the pieces fit together
+- [Use Lucy with agents](guide/agents.md): give your coding agent Lucy's skills
 - [Benchmarks](benchmarks.md): what mounting and updating UI costs

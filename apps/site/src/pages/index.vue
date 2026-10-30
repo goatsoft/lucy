@@ -4,13 +4,17 @@ import Quickstart from '@/content/quickstart.md'
 import { SITE, useHead } from '@/head'
 import Atom from '~icons/lucide-extended/atom-duotone'
 import Blocks from '~icons/lucide-extended/blocks-duotone'
+import Bot from '~icons/lucide-extended/bot-duotone'
 import Boxes from '~icons/lucide-extended/boxes-duotone'
 import BrushCleaning from '~icons/lucide-extended/brush-cleaning-duotone'
 import Clapperboard from '~icons/lucide-extended/clapperboard-duotone'
 import Feather from '~icons/lucide-extended/feather-duotone'
 import Gamepad from '~icons/lucide-extended/gamepad-2-duotone'
+import Keyboard from '~icons/lucide-extended/keyboard-duotone'
+import Layers from '~icons/lucide-extended/layers-duotone'
 import MonitorSmartphone from '~icons/lucide-extended/monitor-smartphone-duotone'
 import Orbit from '~icons/lucide-extended/orbit-duotone'
+import Shapes from '~icons/lucide-extended/shapes-duotone'
 import ScanEye from '~icons/lucide-extended/scan-eye-duotone'
 import SquareCode from '~icons/lucide-extended/square-code-duotone'
 import SwatchBook from '~icons/lucide-extended/swatch-book-duotone'
@@ -26,10 +30,14 @@ const features = [
   { icon: Gamepad, title: 'Every input', text: 'Mouse, keyboard, gamepad and touch. The focus ring shows only for keys and gamepads.' },
   { icon: MonitorSmartphone, title: 'Every device', text: 'Desktop, console, tablet and phone. Controls grow for touch and for TV screens.' },
   { icon: Clapperboard, title: 'Scenes', text: 'Each screen is a scene on its own layer, so menus never take input from the screen below.' },
+  { icon: Layers, title: 'Dialogs and sheets', text: 'Dialogs, sheets, selects and toasts float above the game on one layer, newest on top.' },
+  { icon: Keyboard, title: 'Hotkeys', text: 'Name an action once for keyboard and gamepad. Switch hotkeys and movement off while a menu is open.' },
+  { icon: Shapes, title: 'Any icon', text: 'Use any Iconify icon by name. The lucy-icons build packs the ones you use into a few images.' },
   { icon: Orbit, title: 'Springs and tweens', text: 'Animate any property by binding it to a spring or a tween.' },
   { icon: ScanEye, title: 'Preview in Studio', text: 'Stories show any component or scene in Studio without pressing Play.' },
   { icon: BrushCleaning, title: 'Cleans up', text: 'Bindings and instances are removed along with whatever created them.' },
-  { icon: Feather, title: 'Small and tested', text: 'Strict types, no runtime dependencies and over 350 specs.' },
+  { icon: Feather, title: 'Small and tested', text: 'Strict types, no runtime dependencies and over 750 specs.' },
+  { icon: Bot, title: 'Ready for agents', text: 'Skills for Claude Code, Codex and Antigravity teach coding agents to build with Lucy.' },
 ] as const
 
 const install = 'Lucy = "goatsoft/lucy@0.1.0"'
