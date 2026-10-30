@@ -47,79 +47,63 @@ local app = Lucy.App.new({
 	theme = "dark",
 	baseColor = "zinc",
 	primary = "violet",
-	state = { player = { coins = 0 } },
+	state = { coins = 0 },
 })
 ```
 
 ## Build a scene
 
 Each scene owns one ScreenGui. Only one screen shows at a time; modals and
-overlays sit above it. This builds a title screen and a game screen whose label
-follows the player's coins.
+overlays sit above it. This one shows the player's coins and a button that adds
+to them.
 
 ```luau
-local coins = app.state:ref("player.coins")
+-- coins() reads the value, coins(10) writes it.
+local coins = app.state:ref("coins")
 
-app.scenes:register("Title", {
+app.scenes:register("Hud", {
 	build = function(scene)
-		scene.play = Lucy.Button.new({
-			id = "play",
-			text = "Play",
-			size = "lg",
-			onClick = function()
-				app.scenes:goTo("Game")
-			end,
-		})
 		Lucy.Stack.new({
-			size = UDim2.fromScale(1, 1),
+			direction = "horizontal",
 			align = "center",
-			justify = "center",
-			gap = "Space6",
-			children = {
-				Lucy.Text.new({ text = "My Game", variant = "h1", align = "center" }),
-				scene.play,
-			},
-			Parent = scene.gui,
-		})
-	end,
-	defaultFocus = function(scene)
-		return scene.play -- selected first on keyboard or gamepad
-	end,
-})
-
-app.scenes:register("Game", {
-	build = function(scene)
-		Lucy.Stack.new({
+			gap = "Space4",
 			padding = "Space6",
 			children = {
 				Lucy.Text.new({
+					-- A function is followed: the label updates when coins changes.
 					text = function()
 						return `Coins: {coins()}`
 					end,
 					variant = "h3",
+					autoWidth = true,
+				}),
+				Lucy.Button.new({
+					id = "collect", -- its state lives at ui.collect
+					text = "Collect 10",
+					onClick = function()
+						coins(coins() + 10)
+					end,
 				}),
 			},
 			Parent = scene.gui,
 		})
 	end,
-	enter = function()
-		app.toast.success("Round started", { description = "Collect coins to win" })
-	end,
-	onBack = function()
-		app.scenes:goTo("Title") -- Escape or ButtonB
-	end,
 })
 
-app.scenes:goTo("Title")
+app.scenes:goTo("Hud")
 
--- Game code changes state and the label follows.
-coins(coins() + 10)
+-- Change state from anywhere in your game and the UI follows.
+app.state:set("coins", 100)
 ```
+
+On a screen the player moves around with keys or a gamepad, give the scene a
+`defaultFocus` that returns what to select first. See
+[Architecture](architecture.md#input-and-focus).
 
 ## Drive anything from app state
 
 ```luau
-app.state:set("ui.play.disabled", true)       -- any component, by id
+app.state:set("ui.collect.disabled", true)    -- any component, by id
 app.state:set("theme", "light")               -- switch theme
 app.state:set("scenes.current", "Game")       -- navigate
 app.state:subscribe("input.device", print)    -- "desktop" | "console" | "tablet" | "mobile"

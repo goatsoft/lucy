@@ -64,83 +64,62 @@ component and `--all` to copy them all.
 
 ## Usage
 
-Create one App on the client, then build scenes from components. This one has a
-title screen and a game screen whose label follows the player's coins.
+Create one App on the client, then build scenes from components. This one shows
+the player's coins and a button that adds to them.
 
 ```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lucy = require(ReplicatedStorage.Packages.Lucy)
 
+-- One app per player. Its state holds your game's data.
 local app = Lucy.App.new({
 	theme = "dark",
-	baseColor = "zinc",
-	primary = "violet",
-	state = { player = { coins = 0 } },
+	state = { coins = 0 },
 })
 
-local coins = app.state:ref("player.coins")
+-- coins() reads the value, coins(10) writes it.
+local coins = app.state:ref("coins")
 
-app.scenes:register("Title", {
+app.scenes:register("Hud", {
 	build = function(scene)
-		scene.play = Lucy.Button.new({
-			id = "play",
-			text = "Play",
-			size = "lg",
-			onClick = function()
-				app.scenes:goTo("Game")
-			end,
-		})
 		Lucy.Stack.new({
-			size = UDim2.fromScale(1, 1),
+			direction = "horizontal",
 			align = "center",
-			justify = "center",
-			gap = "Space6",
-			children = {
-				Lucy.Text.new({ text = "My Game", variant = "h1", align = "center" }),
-				scene.play,
-			},
-			Parent = scene.gui,
-		})
-	end,
-	defaultFocus = function(scene)
-		return scene.play -- selected first on keyboard or gamepad
-	end,
-})
-
-app.scenes:register("Game", {
-	build = function(scene)
-		Lucy.Stack.new({
+			gap = "Space4",
 			padding = "Space6",
 			children = {
 				Lucy.Text.new({
+					-- A function is followed: the label updates when coins changes.
 					text = function()
 						return `Coins: {coins()}`
 					end,
 					variant = "h3",
+					autoWidth = true,
+				}),
+				Lucy.Button.new({
+					id = "collect", -- its state lives at ui.collect
+					text = "Collect 10",
+					onClick = function()
+						coins(coins() + 10)
+					end,
 				}),
 			},
 			Parent = scene.gui,
 		})
 	end,
-	enter = function()
-		app.toast.success("Round started", { description = "Collect coins to win" })
-	end,
-	onBack = function()
-		app.scenes:goTo("Title") -- Escape or ButtonB
-	end,
 })
 
-app.scenes:goTo("Title")
+app.scenes:goTo("Hud")
 
--- Game code changes state and the label follows.
-coins(coins() + 10)
+-- Change state from anywhere in your game and the UI follows.
+app.state:set("coins", 100)
 ```
 
 Any property of any instance can follow a value. Here a button shows the coins
 and slides on a spring:
 
 ```lua
-local coins = app.state:ref("player.coins")
+local coins = app.state:ref("coins")
 local open = Lucy.ref(false)
 local x = Lucy.spring(function() return if open() then 0 else -320 end)
 
@@ -156,7 +135,7 @@ Every component keeps its state in the app's store, so game code can change any
 of it by id:
 
 ```lua
-app.state:set("ui.play.disabled", true)     -- disable the Play button
+app.state:set("ui.collect.disabled", true)  -- disable the Collect button
 app.state:set("theme", "light")             -- switch theme
 app.state:set("scenes.current", "Game")     -- change screen
 

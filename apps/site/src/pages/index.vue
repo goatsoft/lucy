@@ -147,7 +147,7 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
         Quick start
       </p>
       <h2 class="mx-auto mt-4 max-w-2xl text-center font-display text-heading font-semibold tracking-tight text-balance">
-        A title screen and a game screen
+        A coin counter in one screen
       </h2>
       <div class="prose mt-10">
         <Quickstart />
