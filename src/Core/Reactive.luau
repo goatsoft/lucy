@@ -896,6 +896,11 @@ function Reactive._hasOwner(): boolean
 	return owner ~= nil
 end
 
+-- The node (effect or scope) that owns what is created now, or nil.
+function Reactive._owner(): any
+	return owner
+end
+
 -- True inside Lucy.batch.
 function Reactive._inBatch(): boolean
 	return userBatch > 0

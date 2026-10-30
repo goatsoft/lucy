@@ -162,6 +162,33 @@ updates stay allocation-free); or make child elements of an owned element share
 their parent's scope, which would cut most of the per-instance cost for every
 component and list row.
 
+**Decided (JB, 2026-10-30): elements share their owner's scope.** An element
+created while an owner runs (a component's render, a show branch, an each row,
+an effect scope) binds straight into that owner: no scope, `Destroying` hook or
+cleanup of its own. The owner keeps one list of the elements it created per
+run, registered before their bindings, so when it stops the bindings and slot
+rows stop first and then those instances are destroyed. Elements made with no
+owner, and hydrated ones, keep their own scope and still stop when destroyed
+from outside. The one behaviour given up: destroying an owned element by hand
+no longer stops its bindings early; they stop with the owner (show and each do
+this for you). An element made in one owner and adopted by a parent in another
+lives as long as the owner that made it.
+
+| Suite | Own scope per element | Shared owner scope |
+|---|---:|---:|
+| Mount 100 Switches | 14.9 ms, 2,605 KB | 15.4 ms (14.2 to 17.4), 2,142 KB |
+| Toggle 100 Switches | 0.9 ms, 0 KB | 0.94 ms, 0 KB |
+| Mount 1,000 keyed rows | 22.9 ms (19.3 to 23.9), 3,467 KB | 19.6 ms (17.9 to 20.6), 2,536 KB |
+| Clear 1,000 rows | 7.9 ms, 47 KB | 7.5 ms, 125 KB |
+| Destroy 1,000 rows | 8.9 ms, 47 KB | 7.1 ms, 125 KB |
+
+Heap falls by about a quarter wherever elements are mounted. Mount time for
+Switches does not move: profiling puts about 5.6 ms of the 15 in parenting into
+a styled GUI (engine work, unchanged since before this ADR) and most of the rest
+in one effect per bound property (about 0.5 KB each). Scopes were not the time.
+Teardown heap rose by about 80 bytes per row while getting faster; it is a
+`gcinfo` delta and moves with GC timing, so it is noted, not chased.
+
 ## Alternatives considered
 
 - **Keep `spec.watch` and document restraint.** The shape of the API decides

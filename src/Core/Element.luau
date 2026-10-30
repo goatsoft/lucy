@@ -23,10 +23,14 @@
 
 		Lucy.hydrate(existingGui.Title) { Text = title }   -- bring Studio-built UI to life
 
-	Lifetime: an element's bindings live in a scope owned by whatever created it (an
-	effect, a show branch, an each item, an effectScope). When that owner stops, the
-	element is destroyed. When the instance is destroyed by anyone, its bindings stop.
-	Hydrated instances are never destroyed by Lucy, only unbound.
+	Lifetime: an element created inside an owner (a component's render, an effect, a
+	show branch, an each item, an effectScope) shares that owner's scope: its
+	bindings are the owner's, and when the owner stops, the bindings stop first and
+	then the element is destroyed. Destroying such an element yourself does not stop
+	its bindings; stop the owner instead (a show or each slot does that for you).
+	An element created with no owner gets a scope of its own, stopped when the
+	instance is destroyed by anyone. Hydrated instances are never destroyed by Lucy,
+	only unbound, and always get their own scope.
 ]]
 
 local Reactive = require(script.Parent.Reactive)
@@ -45,6 +49,10 @@ local slotCleanups: { [any]: () -> () } = setmetatable({}, { __mode = "k" }) :: 
 -- Strong on purpose (the scope reaches the instance through its bindings, so weak keys
 -- would never clear); each entry is removed when its scope stops.
 local scopes: { [Instance]: any } = {}
+-- owner -> the elements created in it this run (ADR 0018). One list and one cleanup
+-- per owner run instead of a scope and a Destroying hook per element. Strong; each
+-- entry is removed by the owner's cleanup.
+local groups: { [any]: { Instance } } = {}
 
 local function key(kind: string, name: string?): any
 	return table.freeze({ [KEY] = kind, name = name })
@@ -262,7 +270,77 @@ local function bindChild(instance: Instance, child: any, position: number, owned
 	end)
 end
 
+local function bind(instance: Instance, props: { [any]: any }, owned: boolean)
+	local parent = nil
+	for k, value in props do
+		if type(k) == "string" then
+			if k == "Parent" then
+				parent = value
+			elseif k == "Tags" then
+				bindTags(instance, value)
+			elseif k == "Attributes" then
+				bindAttributes(instance, value)
+			elseif k == "Children" then
+				for name, child in value do
+					if type(name) == "string" and typeof(child) == "Instance" then
+						child.Name = name
+					end
+				end
+			else
+				bindProperty(instance, k, value)
+			end
+		elseif type(k) == "table" and k[KEY] then
+			bindSpecial(instance, k, value)
+		end
+	end
+
+	local position = 0
+	local children = props.Children
+	if children then
+		for _, child in children do
+			position += 1
+			bindChild(instance, child, position, owned)
+		end
+	end
+	for i = 1, #props do
+		position += 1
+		bindChild(instance, props[i], position, owned)
+	end
+
+	if parent ~= nil then
+		bindProperty(instance, "Parent", parent)
+	end
+end
+
+-- An element in an owner: its bindings are the owner's. The owner's first element
+-- registers one cleanup, before any binding so it runs after them all (cleanups run
+-- in reverse): bindings and slot rows stop, then every element of that run is
+-- destroyed (children made before their parent go first; that is harmless).
+local function grouped(owner: any, instance: Instance, props: { [any]: any }): Instance
+	local items = groups[owner]
+	if items == nil then
+		local list: { Instance } = {}
+		items = list
+		groups[owner] = list
+		Reactive.onCleanup(function()
+			groups[owner] = nil
+			for i = #list, 1, -1 do
+				list[i]:Destroy()
+			end
+		end)
+	end
+	table.insert(items :: { Instance }, instance)
+	bind(instance, props, true)
+	return instance
+end
+
 local function apply(instance: Instance, props: { [any]: any }, owned: boolean): Instance
+	if owned then
+		local owner = Reactive._owner()
+		if owner ~= nil then
+			return grouped(owner, instance, props)
+		end
+	end
 	local scope = Reactive.effectScope()
 	scopes[instance] = scope
 	-- Destroying from outside stops the scope. One cleanup, registered before any
@@ -283,47 +361,7 @@ local function apply(instance: Instance, props: { [any]: any }, owned: boolean):
 			instance:Destroy()
 		end
 	end)
-	scope:run(function()
-		local parent = nil
-		for k, value in props do
-			if type(k) == "string" then
-				if k == "Parent" then
-					parent = value
-				elseif k == "Tags" then
-					bindTags(instance, value)
-				elseif k == "Attributes" then
-					bindAttributes(instance, value)
-				elseif k == "Children" then
-					for name, child in value do
-						if type(name) == "string" and typeof(child) == "Instance" then
-							child.Name = name
-						end
-					end
-				else
-					bindProperty(instance, k, value)
-				end
-			elseif type(k) == "table" and k[KEY] then
-				bindSpecial(instance, k, value)
-			end
-		end
-
-		local position = 0
-		local children = props.Children
-		if children then
-			for _, child in children do
-				position += 1
-				bindChild(instance, child, position, owned)
-			end
-		end
-		for i = 1, #props do
-			position += 1
-			bindChild(instance, props[i], position, owned)
-		end
-
-		if parent ~= nil then
-			bindProperty(instance, "Parent", parent)
-		end
-	end)
+	scope:run(bind, instance, props, owned)
 	return instance
 end
 
