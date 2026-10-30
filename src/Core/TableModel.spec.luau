@@ -25,9 +25,9 @@ return function()
 	end)
 
 	describe("useTable", function()
-		local app, cleanup
+		local cleanup
 		beforeEach(function()
-			app, cleanup = Harness.app()
+			_, cleanup = Harness.app()
 		end)
 		afterEach(function()
 			cleanup()

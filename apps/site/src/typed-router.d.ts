@@ -241,6 +241,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/table': RouteRecordInfo<
+      '/docs/components/table',
+      '/docs/components/table',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/tabs': RouteRecordInfo<
       '/docs/components/tabs',
       '/docs/components/tabs',
@@ -587,6 +594,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/switch.md': {
       routes:
         | '/docs/components/switch'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/table.md': {
+      routes:
+        | '/docs/components/table'
       views:
         | never
       pathParamNames:

@@ -139,6 +139,7 @@ local spec: Component.Spec = {
 			local x, y = c.X > w.X + 1, c.Y > w.Y + 1
 			return if key == "vertical" then y elseif key == "horizontal" then x else x or y
 		end
+		h.overflows = overflows -- for parts outside the area that line up with it (a table header)
 		local function barVisible(): boolean
 			if mode == "always" then
 				return true

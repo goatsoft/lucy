@@ -144,6 +144,7 @@ return {
 	Spinner = require(Components.Spinner),
 	Stack = require(Components.Stack),
 	Switch = require(Components.Switch),
+	Table = require(Components.Table),
 	Tabs = require(Components.Tabs),
 	Text = require(Components.Text),
 	Toaster = require(Components.Toaster),

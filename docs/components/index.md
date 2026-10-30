@@ -35,6 +35,7 @@ Each component has its own page with its props, usage and examples:
 | [Spinner](spinner.md) | A turning ring while something loads |
 | [Stack](stack.md) | A row or column that lays out its children |
 | [Switch](switch.md) | An on and off switch, with an optional label |
+| [Table](table.md) | Rows and columns for leaderboards, friends lists and inventories |
 | [Tabs](tabs.md) | A tab bar with one panel per tab |
 | [Text](text.md) | Headings, body copy and labels |
 | [Toaster](toaster.md) | Toast notifications through `app.toast` |
@@ -228,7 +229,6 @@ a Button's text sets its `Text` again and nothing else. See
 
 Coming in 0.1.0, each working with mouse, touch, gamepad and TV:
 
-- **Layout and display:** Table
 - **Controls:** Slider, Number Field, Accordion, and Input options for several
   lines, numbers only and a maximum length
 

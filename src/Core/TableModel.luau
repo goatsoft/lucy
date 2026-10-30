@@ -240,15 +240,12 @@ function TableModel.new(options: { [string]: any })
 		end
 		local first = column.descFirst
 		local current = Reactive.peek(sorting)
-		local nextSort: Sorting
-		if not current or current.id ~= columnId then
-			nextSort = { id = columnId, desc = first }
-		elseif current.desc == first then
+		local onThis = current and current.id == columnId
+		local nextSort: Sorting = { id = columnId, desc = first }
+		if onThis and current.desc == first then
 			nextSort = { id = columnId, desc = not first }
-		elseif removable then
+		elseif onThis and removable then
 			nextSort = false
-		else
-			nextSort = { id = columnId, desc = first }
 		end
 		sorting(nextSort)
 	end

@@ -26,6 +26,7 @@
     "spinner": "Turning ring while something loads",
     "stack": "Row or column that lays out its children",
     "switch": "On and off switch with optional label",
+    "table": "Rows and columns for leaderboards, friends lists and inventories",
     "tabs": "Tab bar with one panel per tab",
     "text": "Headings, body copy and labels",
     "toaster": "Toast notifications through app.toast",

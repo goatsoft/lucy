@@ -88,8 +88,8 @@ Lucy.Table.new({
   handle or a string; `ctx` has `row`, `value`, `column`.
 - Rows are keyed by `rowId`, so a score update changes one cell, not the list.
 - **Virtual rows:** with `virtual` and a fixed `rowHeight`, the canvas is
-  sized for every row and only the rows on screen plus a margin are built;
-  rows leaving the screen are reused for the ones coming in. On gamepad,
+  sized for every row and only the rows on screen plus a margin exist; they
+  are built as they come near the view and removed as they leave. On gamepad,
   moving selection to the edge of the built rows scrolls the next ones in.
 - `onEndReached` fires once when the player scrolls within a few rows of the
   end, and again only after the row count grows.
