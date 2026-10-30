@@ -11,6 +11,41 @@ return function()
 		cleanup()
 	end)
 
+	it("keeps checked in step with a ref, both ways", function()
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+		local muted = Reactive.ref(false)
+		local seen = {}
+		local checkbox = Checkbox.new({
+			app = app,
+			Parent = gui,
+			checked = muted,
+			label = function()
+				return if muted() then "Muted" else "Mute"
+			end,
+			onCheckedChange = function(checked)
+				table.insert(seen, checked)
+			end,
+		})
+		checkbox:toggle()
+		expect(muted()).to.equal(true)
+		expect(checkbox.label.Text).to.equal("Muted")
+		muted(false)
+		expect(checkbox.check.Visible).to.equal(false)
+		expect(#seen).to.equal(2)
+		expect(seen[2]).to.equal(false)
+	end)
+
+	it("follows a reactive disabled", function()
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+		local locked = Reactive.ref(true)
+		local checkbox = Checkbox.new({ app = app, Parent = gui, disabled = locked })
+		checkbox:toggle()
+		expect(checkbox:get("checked")).to.equal(false)
+		locked(false)
+		checkbox:toggle()
+		expect(checkbox:get("checked")).to.equal(true)
+	end)
+
 	it("toggles and reports changes", function()
 		local seen = {}
 		local checkbox = Checkbox.new({
@@ -55,6 +90,8 @@ return function()
 	it("fills with primary when checked", function()
 		local checkbox = Checkbox.new({ app = app, Parent = gui, checked = true })
 		Harness.flush()
-		expect(Harness.colorEq(Harness.styled(checkbox.box, "BackgroundColor3"), app.theme:resolve("Primary"))).to.equal(true)
+		expect(
+			Harness.colorEq(Harness.styled(checkbox.box, "BackgroundColor3"), app.theme:resolve("Primary"))
+		).to.equal(true)
 	end)
 end

@@ -345,6 +345,7 @@ function Reactive.computed<T>(
 	end
 	local node = newNode("computed")
 	node.fn = get
+	node.writable = set ~= nil
 	node.state = DIRTY
 	node.equals = (options and options.equals) or defaultEquals
 	adopt(node)
@@ -570,6 +571,15 @@ end
 
 function Reactive.isRef(value: any): boolean
 	return type(value) == "function" and nodeOf[value] ~= nil
+end
+
+-- True for a ref or a computed made with { get, set }: calling it with a value writes.
+function Reactive.isWritable(value: any): boolean
+	if type(value) ~= "function" then
+		return false
+	end
+	local node = nodeOf[value]
+	return node ~= nil and (node.kind == "ref" or node.writable == true)
 end
 
 -- Reactive tables ----------------------------------------------------------------------

@@ -11,6 +11,29 @@ return function()
 		cleanup()
 	end)
 
+	it("follows reactive text, variant and align", function()
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+		local name = Reactive.ref("JB")
+		local heading = Reactive.ref(false)
+		local text = Text.new({
+			app = app,
+			Parent = gui,
+			text = function()
+				return `Hi {name()}`
+			end,
+			variant = function()
+				return if heading() then "h1" else "p"
+			end,
+			align = Reactive.ref("right"),
+		})
+		expect(text.Instance.Text).to.equal("Hi JB")
+		expect(text.Instance.TextXAlignment).to.equal(Enum.TextXAlignment.Right)
+		name("Lucy")
+		heading(true)
+		expect(text.Instance.Text).to.equal("Hi Lucy")
+		expect(text.Instance:HasTag("ui-text-variant-h1")).to.equal(true)
+	end)
+
 	it("fills width and wraps by default", function()
 		local text = Text.new({ app = app, Parent = gui, text = "Hello" })
 		expect(text.Instance.Size).to.equal(UDim2.fromScale(1, 0))
@@ -40,6 +63,8 @@ return function()
 	it("uses the muted colour for muted text", function()
 		local text = Text.new({ app = app, Parent = gui, variant = "muted" })
 		Harness.flush()
-		expect(Harness.colorEq(Harness.styled(text.Instance, "TextColor3"), app.theme:resolve("MutedForeground"))).to.equal(true)
+		expect(
+			Harness.colorEq(Harness.styled(text.Instance, "TextColor3"), app.theme:resolve("MutedForeground"))
+		).to.equal(true)
 	end)
 end

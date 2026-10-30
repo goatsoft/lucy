@@ -11,6 +11,15 @@ return function()
 		cleanup()
 	end)
 
+	it("follows a reactive visible", function()
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+		local shown = Reactive.ref(true)
+		local stack = Stack.new({ app = app, Parent = gui, visible = shown })
+		expect(stack.Instance.Visible).to.equal(true)
+		shown(false)
+		expect(stack.Instance.Visible).to.equal(false)
+	end)
+
 	it("lays children out vertically by default, in order", function()
 		local a, b = Instance.new("Frame"), Instance.new("Frame")
 		local stack = Stack.new({ app = app, Parent = gui, children = { a, b } })
@@ -27,7 +36,13 @@ return function()
 	end)
 
 	it("maps align and justify for rows", function()
-		local stack = Stack.new({ app = app, Parent = gui, direction = "horizontal", align = "center", justify = "end" })
+		local stack = Stack.new({
+			app = app,
+			Parent = gui,
+			direction = "horizontal",
+			align = "center",
+			justify = "end",
+		})
 		expect(stack.layout.FillDirection).to.equal(Enum.FillDirection.Horizontal)
 		expect(stack.layout.VerticalAlignment).to.equal(Enum.VerticalAlignment.Center)
 		expect(stack.layout.HorizontalAlignment).to.equal(Enum.HorizontalAlignment.Right)

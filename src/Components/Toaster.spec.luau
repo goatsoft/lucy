@@ -44,6 +44,25 @@ return function()
 			cleanup()
 		end)
 
+		it("follows a reactive visible", function()
+			local Reactive = require(script.Parent.Parent.Core.Reactive)
+			local inMenu = Reactive.ref(false)
+			local toaster = Toaster.new({
+				app = app,
+				Parent = app:portal("toast"),
+				visible = function()
+					return not inMenu()
+				end,
+			})
+			expect(toaster.Instance.Visible).to.equal(true)
+			inMenu(true)
+			expect(toaster.Instance.Visible).to.equal(false)
+			expect(toaster:get("visible")).to.equal(false)
+			inMenu(false)
+			expect(toaster.Instance.Visible).to.equal(true)
+			toaster:destroy()
+		end)
+
 		it("is installed on every app", function()
 			expect(app.toast).to.be.ok()
 			expect(app.state:get("toasts")).to.be.ok()
@@ -131,7 +150,9 @@ return function()
 			local id = app.toast.error("Nope")
 			Harness.flush()
 			local accent = app:portal("toast"):FindFirstChild(id, true).Row.Accent
-			expect(Harness.colorEq(Harness.styled(accent, "BackgroundColor3"), app.theme:resolve("Destructive"))).to.equal(true)
+			expect(
+				Harness.colorEq(Harness.styled(accent, "BackgroundColor3"), app.theme:resolve("Destructive"))
+			).to.equal(true)
 		end)
 	end)
 end

@@ -212,6 +212,7 @@ local api = {
 		"toValue",
 		"toRaw",
 		"isRef",
+		"isWritable",
 		"isReactive",
 		"trigger",
 		"insert",

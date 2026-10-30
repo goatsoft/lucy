@@ -11,6 +11,43 @@ return function()
 		cleanup()
 	end)
 
+	it("follows reactive text and disabled", function()
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+		local count = Reactive.ref(0)
+		local busy = Reactive.ref(false)
+		local button = Button.new({
+			app = app,
+			Parent = gui,
+			text = function()
+				return `Buy ({count()})`
+			end,
+			disabled = busy,
+		})
+		expect(button.Instance.Text).to.equal("Buy (0)")
+		count(3)
+		busy(true)
+		expect(button.Instance.Text).to.equal("Buy (3)")
+		expect(button.Instance.Interactable).to.equal(false)
+		expect(button.Instance:HasTag("ui-disabled")).to.equal(true)
+		busy(false)
+		expect(button.Instance:HasTag("ui-disabled")).to.equal(false)
+	end)
+
+	it("follows a reactive variant", function()
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+		local danger = Reactive.ref(false)
+		local button = Button.new({
+			app = app,
+			Parent = gui,
+			variant = function()
+				return if danger() then "destructive" else "default"
+			end,
+		})
+		danger(true)
+		expect(button.Instance:HasTag("ui-button-variant-destructive")).to.equal(true)
+		expect(button.Instance:HasTag("ui-button-variant-default")).to.equal(false)
+	end)
+
 	it("renders a TextButton with base and variant tags", function()
 		local button = Button.new({ app = app, Parent = gui, text = "Play" })
 		local instance = button.Instance
@@ -23,7 +60,8 @@ return function()
 	end)
 
 	it("keeps its props in app state", function()
-		local button = Button.new({ app = app, id = "play", Parent = gui, text = "Play", variant = "secondary" })
+		local button =
+			Button.new({ app = app, id = "play", Parent = gui, text = "Play", variant = "secondary" })
 		expect(app.state:get("ui.play.variant")).to.equal("secondary")
 		app.state:set("ui.play.text", "Resume")
 		expect(button.Instance.Text).to.equal("Resume")
@@ -96,16 +134,36 @@ return function()
 			local primary = Button.new({ app = app, Parent = gui })
 			local secondary = Button.new({ app = app, Parent = gui, variant = "secondary" })
 			Harness.flush()
-			expect(Harness.colorEq(Harness.styled(primary.Instance, "BackgroundColor3"), app.theme:resolve("Primary"))).to.equal(true)
-			expect(Harness.colorEq(Harness.styled(secondary.Instance, "BackgroundColor3"), app.theme:resolve("Secondary"))).to.equal(true)
-			expect(Harness.colorEq(Harness.styled(secondary.Instance, "TextColor3"), app.theme:resolve("SecondaryForeground"))).to.equal(true)
+			expect(
+				Harness.colorEq(
+					Harness.styled(primary.Instance, "BackgroundColor3"),
+					app.theme:resolve("Primary")
+				)
+			).to.equal(true)
+			expect(
+				Harness.colorEq(
+					Harness.styled(secondary.Instance, "BackgroundColor3"),
+					app.theme:resolve("Secondary")
+				)
+			).to.equal(true)
+			expect(
+				Harness.colorEq(
+					Harness.styled(secondary.Instance, "TextColor3"),
+					app.theme:resolve("SecondaryForeground")
+				)
+			).to.equal(true)
 		end)
 
 		it("restyles when the theme switches", function()
 			local button = Button.new({ app = app, Parent = gui })
 			app:setTheme("dark")
 			Harness.flush()
-			expect(Harness.colorEq(Harness.styled(button.Instance, "BackgroundColor3"), app.theme:resolve("Primary"))).to.equal(true)
+			expect(
+				Harness.colorEq(
+					Harness.styled(button.Instance, "BackgroundColor3"),
+					app.theme:resolve("Primary")
+				)
+			).to.equal(true)
 		end)
 
 		it("takes its height from the size token", function()

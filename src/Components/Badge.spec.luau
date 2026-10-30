@@ -11,6 +11,25 @@ return function()
 		cleanup()
 	end)
 
+	it("follows reactive text and variant", function()
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+		local kills = Reactive.ref(0)
+		local badge = Badge.new({
+			app = app,
+			Parent = gui,
+			text = Reactive.computed(function()
+				return tostring(kills())
+			end),
+			variant = function()
+				return if kills() >= 10 then "destructive" else "default"
+			end,
+		})
+		expect(badge.Instance.Text).to.equal("0")
+		kills(12)
+		expect(badge.Instance.Text).to.equal("12")
+		expect(badge.Instance:HasTag("ui-badge-variant-destructive")).to.equal(true)
+	end)
+
 	it("renders an auto-sized, tagged label", function()
 		local badge = Badge.new({ app = app, Parent = gui, text = "New" })
 		expect(badge.Instance:IsA("TextLabel")).to.equal(true)
@@ -29,7 +48,12 @@ return function()
 	it("styles the destructive variant", function()
 		local badge = Badge.new({ app = app, Parent = gui, variant = "destructive" })
 		Harness.flush()
-		expect(Harness.colorEq(Harness.styled(badge.Instance, "BackgroundColor3"), app.theme:resolve("Destructive"))).to.equal(true)
+		expect(
+			Harness.colorEq(
+				Harness.styled(badge.Instance, "BackgroundColor3"),
+				app.theme:resolve("Destructive")
+			)
+		).to.equal(true)
 	end)
 
 	it("rejects unknown variants", function()

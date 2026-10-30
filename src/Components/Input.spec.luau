@@ -11,6 +11,27 @@ return function()
 		cleanup()
 	end)
 
+	it("keeps value in step with a ref, both ways", function()
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+		local name = Reactive.ref("JB")
+		local field = Input.new({
+			app = app,
+			Parent = gui,
+			value = name,
+			placeholder = function()
+				return if name() == "" then "Your name" else ""
+			end,
+		})
+		expect(field.Instance.Text).to.equal("JB")
+		field.Instance.Text = "Lucy"
+		task.wait()
+		expect(name()).to.equal("Lucy")
+		name("")
+		task.wait()
+		expect(field.Instance.Text).to.equal("")
+		expect(field.Instance.PlaceholderText).to.equal("Your name")
+	end)
+
 	it("renders a TextBox that keeps text on focus", function()
 		local field = Input.new({ app = app, Parent = gui, placeholder = "Name" })
 		expect(field.Instance:IsA("TextBox")).to.equal(true)

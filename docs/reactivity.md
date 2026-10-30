@@ -101,6 +101,8 @@ Lucy.watch(player, callback)                                         -- deep, an
 
 - `Lucy.batch(fn)` groups writes; dependents run once, afterwards.
 - `Lucy.untrack(fn)` and `Lucy.peek(source)` read without subscribing.
+- `Lucy.isRef(x)` is true for refs and computeds; `Lucy.isWritable(x)` is true
+  for refs and computeds made with `{ get, set }`.
 - `Lucy.toValue(x)` reads a ref, computed or getter, and passes plain values through.
 
 An effect never re-triggers itself by writing a ref it reads. Effects that keep
@@ -198,6 +200,12 @@ Hydrated instances are unbound when their owner stops, never destroyed.
 An element created inside an effect, a `show` branch, an `each` item or a scope is
 destroyed when that owner goes away. If something else destroys the instance, its
 bindings stop. You do not need to clean up by hand.
+
+### Components
+
+Lucy's components take refs, computeds and getters for any state key, and bind
+writable ones both ways: `Lucy.Switch.new({ checked = music })`. See
+[Components](./components.md#reactive-props).
 
 ## Animation
 

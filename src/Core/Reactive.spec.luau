@@ -26,6 +26,24 @@ return function()
 			expect(Reactive.isRef(1)).to.equal(false)
 		end)
 
+		it("tells writable sources apart with isWritable", function()
+			local source = ref(1)
+			expect(Reactive.isWritable(source)).to.equal(true)
+			expect(Reactive.isWritable(computed(function()
+				return source()
+			end))).to.equal(false)
+			expect(Reactive.isWritable(computed({
+				get = function()
+					return source()
+				end,
+				set = function(value)
+					source(value)
+				end,
+			}))).to.equal(true)
+			expect(Reactive.isWritable(function() end)).to.equal(false)
+			expect(Reactive.isWritable(nil)).to.equal(false)
+		end)
+
 		it("does not notify when the value is unchanged", function()
 			local count = ref(1)
 			local runs = 0

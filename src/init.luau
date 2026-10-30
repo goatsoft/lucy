@@ -48,6 +48,7 @@ return {
 	toValue = Reactive.toValue,
 	toRaw = Reactive.toRaw,
 	isRef = Reactive.isRef,
+	isWritable = Reactive.isWritable,
 	isReactive = Reactive.isReactive,
 	trigger = Reactive.trigger,
 	insert = Reactive.insert,

@@ -16,6 +16,35 @@ Every component is `X.new(props)` and returns a handle:
 
 Any state key can be driven from the app: `app.state:set("ui.<id>.<key>", value)`.
 
+## Reactive props
+
+Every state key in the table below also accepts a ref, a computed or a getter
+function. The component follows it and nothing else re-renders.
+
+```lua
+local coins = Lucy.ref(0)
+local isBusy = Lucy.ref(false)
+local music = Lucy.ref(true)
+
+Lucy.Button.new({
+    text = function() return `Buy ({coins()})` end,
+    disabled = isBusy,
+})
+Lucy.Switch.new({ label = "Music", checked = music })
+```
+
+- **Two-way for writable sources.** A ref, or a computed made with `{ get, set }`,
+  is written back when the key changes: the player flips the Switch and `music`
+  becomes `false`. `checked`, `value` and `open` are the usual ones to bind this way.
+- **One-way for getters.** A plain getter or read-only computed only flows in. If
+  the app or the player changes that key, the next change of the source wins.
+- **App state still works.** Bound values land in `ui.<id>` like any other, so
+  `app.state` subscribers and `handle:get` see them.
+- **Lifetime.** A component created inside an effect, a `show` branch, an `each`
+  item or a scope is destroyed when that owner stops. Destroying it stops its
+  bindings.
+- Callback and layout props (`onClick`, `children`, `gap`, ...) stay plain.
+
 | Component | State keys | Notes |
 |---|---|---|
 | Button | text, variant, size, disabled, visible | variants: default, destructive, outline, secondary, ghost, link. sizes: sm, md, lg, icon. `onClick`, `Activated`, `:click()` |

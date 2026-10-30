@@ -10,6 +10,27 @@ return function()
 		cleanup()
 	end)
 
+	it("keeps open in step with a ref, both ways", function()
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+		local open = Reactive.ref(false)
+		local round = Reactive.ref(1)
+		local dialog = Dialog.new({
+			app = app,
+			open = open,
+			title = function()
+				return `Round {round()}`
+			end,
+		})
+		expect(dialog.Instance.Visible).to.equal(false)
+		open(true)
+		expect(dialog.Instance.Visible).to.equal(true)
+		round(2)
+		expect(dialog.titleLabel.Text).to.equal("Round 2")
+		dialog:close()
+		expect(open()).to.equal(false)
+		expect(dialog.Instance.Visible).to.equal(false)
+	end)
+
 	it("mounts closed into the modal portal", function()
 		local dialog = Dialog.new({ app = app, title = "Hi" })
 		expect(dialog.Instance.Parent).to.equal(app:portal("modal"))
@@ -119,6 +140,8 @@ return function()
 	it("dims the screen with the overlay token", function()
 		local dialog = Dialog.new({ app = app, open = true })
 		Harness.flush()
-		expect(Harness.styled(dialog.overlay, "BackgroundTransparency")).to.equal(app.theme:resolve("OverlayTransparency"))
+		expect(Harness.styled(dialog.overlay, "BackgroundTransparency")).to.equal(
+			app.theme:resolve("OverlayTransparency")
+		)
 	end)
 end

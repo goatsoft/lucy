@@ -11,6 +11,29 @@ return function()
 		cleanup()
 	end)
 
+	it("follows reactive title and description", function()
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+		local coins = Reactive.ref(0)
+		local showTitle = Reactive.ref(false)
+		local panel = Panel.new({
+			app = app,
+			Parent = gui,
+			title = function()
+				return if showTitle() then "Shop" else ""
+			end,
+			description = function()
+				return if coins() > 0 then `{coins()} coins` else ""
+			end,
+		})
+		expect(panel.header.Visible).to.equal(false)
+		coins(5)
+		expect(panel.header.Visible).to.equal(true)
+		expect(panel.title.Visible).to.equal(false)
+		showTitle(true)
+		expect(panel.title.Text).to.equal("Shop")
+		expect(panel.title.Visible).to.equal(true)
+	end)
+
 	it("renders header, content and footer regions", function()
 		local child = Instance.new("Frame")
 		local panel = Panel.new({ app = app, Parent = gui, title = "Loadout", children = { child } })
@@ -41,6 +64,8 @@ return function()
 	it("uses the card colour", function()
 		local panel = Panel.new({ app = app, Parent = gui })
 		Harness.flush()
-		expect(Harness.colorEq(Harness.styled(panel.Instance, "BackgroundColor3"), app.theme:resolve("Card"))).to.equal(true)
+		expect(Harness.colorEq(Harness.styled(panel.Instance, "BackgroundColor3"), app.theme:resolve("Card"))).to.equal(
+			true
+		)
 	end)
 end

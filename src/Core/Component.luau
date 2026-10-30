@@ -18,12 +18,21 @@
 			update = function(handle, state, previous) ... end,
 		})
 		handle:set({ text = "Go" }) ; handle:get("text") ; handle:destroy()
+
+	Reactive props: any state key may be given a ref, a computed or a getter
+	function instead of a plain value. The component follows it, writing each new
+	value to "ui.<id>" as usual. Writable sources (a ref, or a computed with
+	{ get, set }) are two-way: when the component or the app changes that key, the
+	source is written too, so `checked = isOn` keeps a Switch and a ref in step.
+	A read-only source wins on its next change. A component created inside an
+	effect, a scope or an `each` item is destroyed when that owner stops.
 ]]
 
 local CollectionService = game:GetService("CollectionService")
 
 local Context = require(script.Parent.Context)
 local Maid = require(script.Parent.Maid)
+local Reactive = require(script.Parent.Reactive)
 
 local Component = {}
 
@@ -207,11 +216,23 @@ end
 local function pickState(defaults: { [string]: any }, props: { [string]: any }): { [string]: any }
 	local state = table.clone(defaults)
 	for key in defaults do
-		if props[key] ~= nil then
-			state[key] = props[key]
+		local value = props[key]
+		if value ~= nil and type(value) ~= "function" then
+			state[key] = value
 		end
 	end
 	return state
+end
+
+-- State keys whose prop is a ref, computed or getter: key -> source.
+local function pickSources(defaults: { [string]: any }, props: { [string]: any }): { [string]: any }
+	local sources = {}
+	for key in defaults do
+		if type(props[key]) == "function" then
+			sources[key] = props[key]
+		end
+	end
+	return sources
 end
 
 local Handle = {}
@@ -269,13 +290,19 @@ function Component.mount(spec: { [string]: any })
 		destroyed = false,
 	}, Handle)
 
-	-- Seed state: defaults <- props, then anything the app already set wins.
-	local initial = pickState(spec.defaults or {}, props)
+	-- Seed state: defaults <- props, then anything the app already set wins,
+	-- except keys bound to a reactive source, which always start from the source.
+	local defaults = spec.defaults or {}
+	local sources = pickSources(defaults, props)
+	local initial = pickState(defaults, props)
 	local existing = app.state:get(handle.path)
 	if type(existing) == "table" then
 		for key, value in existing do
 			initial[key] = value
 		end
+	end
+	for key, source in sources do
+		initial[key] = Reactive.peek(source)
 	end
 	app.state:set(handle.path, initial)
 
@@ -297,10 +324,46 @@ function Component.mount(spec: { [string]: any })
 		if spec.update then
 			spec.update(handle, state, previous)
 		end
+		local before = previous
 		previous = state
+		-- Two-way: a state change on a key bound to a writable source writes it back.
+		if before then
+			for key, source in sources do
+				local value = state[key]
+				if value ~= nil and value ~= before[key] and Reactive.isWritable(source) then
+					if Reactive.peek(source) ~= value then
+						source(value)
+					end
+				end
+			end
+		end
 	end
 	apply(app.state:get(handle.path))
 	handle.maid:give(app.state:subscribe(handle.path, apply))
+
+	-- Ownership and reactive props. The scope belongs to whatever effect, scope or
+	-- `each` item is running now; stopping it destroys the component, and
+	-- destroying the component stops the scope.
+	local scope = Reactive.effectScope()
+	handle.scope = scope
+	scope:onCleanup(function()
+		handle:destroy()
+	end)
+	handle.maid:give(function()
+		scope:stop()
+	end)
+	scope:run(function()
+		for key, source in sources do
+			Reactive.watchEffect(function()
+				local value = Reactive.toValue(source)
+				Reactive.untrack(function()
+					if not handle.destroyed and handle:get(key) ~= value then
+						handle:set({ [key] = value })
+					end
+				end)
+			end)
+		end
+	end)
 
 	local parent = props.Parent or props.parent
 	if parent then

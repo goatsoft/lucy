@@ -141,4 +141,166 @@ return function()
 			end).to.throw()
 		end)
 	end)
+
+	describe("reactive props", function()
+		local Reactive = require(script.Parent.Reactive)
+		local app, cleanup
+		beforeEach(function()
+			app, cleanup = Harness.app()
+		end)
+		afterEach(function()
+			cleanup()
+		end)
+
+		local function mountThing(props)
+			local renders = 0
+			local handle = Component.mount({
+				kind = "thing",
+				props = props,
+				defaults = { text = "", visible = true },
+				render = function()
+					return Component.create("TextLabel", {})
+				end,
+				update = function(h, state)
+					renders += 1
+					h.Instance.Text = state.text
+					h.Instance.Visible = state.visible
+				end,
+			})
+			return handle, function()
+				return renders
+			end
+		end
+
+		it("follows a ref", function()
+			local text = Reactive.ref("a")
+			local handle = mountThing({ app = app, id = "r", text = text })
+			expect(handle.Instance.Text).to.equal("a")
+			text("b")
+			expect(handle.Instance.Text).to.equal("b")
+			expect(app.state:get("ui.r.text")).to.equal("b")
+			handle:destroy()
+		end)
+
+		it("follows a computed and a plain getter", function()
+			local count = Reactive.ref(1)
+			local label = Reactive.computed(function()
+				return `x{count()}`
+			end)
+			local hidden = Reactive.ref(false)
+			local handle = mountThing({
+				app = app,
+				text = label,
+				visible = function()
+					return not hidden()
+				end,
+			})
+			expect(handle.Instance.Text).to.equal("x1")
+			count(2)
+			hidden(true)
+			expect(handle.Instance.Text).to.equal("x2")
+			expect(handle.Instance.Visible).to.equal(false)
+			handle:destroy()
+		end)
+
+		it("renders once on mount, then once per change", function()
+			local text = Reactive.ref("a")
+			local _, renders = mountThing({ app = app, text = text })
+			expect(renders()).to.equal(1)
+			text("b")
+			expect(renders()).to.equal(2)
+			text("b")
+			expect(renders()).to.equal(2)
+		end)
+
+		it("lets the source win over pre-seeded state", function()
+			app.state:set("ui.seed", { text = "from app" })
+			local handle = mountThing({ app = app, id = "seed", text = Reactive.ref("from ref") })
+			expect(handle.Instance.Text).to.equal("from ref")
+			handle:destroy()
+		end)
+
+		it("writes state changes back to a ref", function()
+			local text = Reactive.ref("a")
+			local handle = mountThing({ app = app, id = "two", text = text })
+			handle:set({ text = "from component" })
+			expect(text()).to.equal("from component")
+			app.state:set("ui.two.text", "from app")
+			expect(text()).to.equal("from app")
+			handle:destroy()
+		end)
+
+		it("writes back through a writable computed", function()
+			local raw = Reactive.ref("a")
+			local upper = Reactive.computed({
+				get = function()
+					return string.upper(raw())
+				end,
+				set = function(value)
+					raw(string.lower(value))
+				end,
+			})
+			local handle = mountThing({ app = app, text = upper })
+			expect(handle.Instance.Text).to.equal("A")
+			handle:set({ text = "Hi" })
+			expect(raw()).to.equal("hi")
+			expect(handle.Instance.Text).to.equal("HI")
+			handle:destroy()
+		end)
+
+		it("keeps a read-only source one-way; its next change wins", function()
+			local count = Reactive.ref(1)
+			local handle = mountThing({
+				app = app,
+				text = function()
+					return tostring(count())
+				end,
+			})
+			handle:set({ text = "manual" })
+			expect(handle.Instance.Text).to.equal("manual")
+			count(2)
+			expect(handle.Instance.Text).to.equal("2")
+			handle:destroy()
+		end)
+
+		it("stops following after destroy", function()
+			local text = Reactive.ref("a")
+			local handle = mountThing({ app = app, id = "bye", text = text })
+			local instance = handle.Instance
+			handle:destroy()
+			text("b")
+			expect(instance.Text).to.equal("a")
+			expect(app.state:get("ui.bye")).to.equal(nil)
+		end)
+
+		it("is destroyed when its owning scope stops", function()
+			local scope = Reactive.effectScope()
+			local handle = scope:run(function()
+				return mountThing({ app = app })
+			end)
+			expect(handle.destroyed).to.equal(false)
+			scope:stop()
+			expect(handle.destroyed).to.equal(true)
+		end)
+
+		it("leaves callback props alone", function()
+			local called = false
+			local handle = Component.mount({
+				kind = "thing",
+				props = {
+					app = app,
+					onClick = function()
+						called = true
+					end,
+				},
+				defaults = { text = "" },
+				render = function()
+					return Component.create("TextLabel", {})
+				end,
+			})
+			expect(handle:get("onClick")).to.equal(nil)
+			expect(called).to.equal(false)
+			handle:destroy()
+		end)
+	end)
 end
