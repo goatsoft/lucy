@@ -18,3 +18,7 @@ Rules:
 - `libs/gruff` is a temporary copy of Aurora's gruff (ADR 0012); fix bugs in both or not at all.
 - Tests run in the Lucy dev place Studio window only, never a game's:
   `require(game.ReplicatedStorage.LucyTests.Runner).run()`. JB serves Rojo himself (port 38574).
+- Shell commands on JB's Mac run through zsh: `zsh -lc "cd ~/Projects/Lucy && ..."`.
+- Format before committing: `stylua src tests scripts` (CI runs `stylua --check`).
+- Commits carry no attribution trailers (no `Co-Authored-By`, no session links);
+  attribution is handled at the project level.
