@@ -6,38 +6,37 @@ import Atom from '~icons/lucide-extended/atom-duotone'
 import Blocks from '~icons/lucide-extended/blocks-duotone'
 import Bot from '~icons/lucide-extended/bot-duotone'
 import Boxes from '~icons/lucide-extended/boxes-duotone'
-import BrushCleaning from '~icons/lucide-extended/brush-cleaning-duotone'
 import Clapperboard from '~icons/lucide-extended/clapperboard-duotone'
 import Feather from '~icons/lucide-extended/feather-duotone'
 import Gamepad from '~icons/lucide-extended/gamepad-2-duotone'
 import Keyboard from '~icons/lucide-extended/keyboard-duotone'
 import Layers from '~icons/lucide-extended/layers-duotone'
-import MonitorSmartphone from '~icons/lucide-extended/monitor-smartphone-duotone'
 import Orbit from '~icons/lucide-extended/orbit-duotone'
-import Shapes from '~icons/lucide-extended/shapes-duotone'
 import ScanEye from '~icons/lucide-extended/scan-eye-duotone'
-import SquareCode from '~icons/lucide-extended/square-code-duotone'
+import Shapes from '~icons/lucide-extended/shapes-duotone'
 import SwatchBook from '~icons/lucide-extended/swatch-book-duotone'
 
 useHead({ description: SITE.description })
 
+// The four that matter most, as cards.
 const features = [
-  { icon: Boxes, title: '35 components', text: 'Button, Dialog, Toaster, Input, Checkbox, Switch, Panel, Progress and more.' },
-  { icon: Atom, title: 'Small updates', text: 'When a value changes, only the properties that read it are set again. Nothing is rebuilt.' },
-  { icon: SquareCode, title: 'State in plain Luau', text: 'Refs, computed values and reactive tables. Any property can follow any of them.' },
-  { icon: Blocks, title: 'Code or Studio', text: 'Write UI in code with Lucy.new, or add behaviour to UI you laid out in Studio.' },
-  { icon: SwatchBook, title: 'Light and dark themes', text: 'A theme for each base colour, switched while the game runs. Hover and theme changes run no Luau.' },
-  { icon: Gamepad, title: 'Every input', text: 'Mouse, keyboard, gamepad and touch. The focus ring shows only for keys and gamepads.' },
-  { icon: MonitorSmartphone, title: 'Every device', text: 'Desktop, console, tablet and phone. Controls grow for touch and for TV screens.' },
-  { icon: Clapperboard, title: 'Scenes', text: 'Each screen is a scene on its own layer, so menus never take input from the screen below.' },
-  { icon: Layers, title: 'Dialogs and sheets', text: 'Dialogs, sheets, selects and toasts float above the game on one layer, newest on top.' },
-  { icon: Keyboard, title: 'Hotkeys', text: 'Name an action once for keyboard and gamepad. Switch hotkeys and movement off while a menu is open.' },
-  { icon: Shapes, title: 'Any icon', text: 'Use any Iconify icon by name. The lucy-icons build packs the ones you use into a few images.' },
+  { icon: Boxes, title: '35 components', text: 'Buttons, dialogs, selects, tables, sliders, tabs and more, ready for menus, HUDs and shops.' },
+  { icon: Atom, title: 'One source of truth', text: 'All UI and app state in one store. Change a value and only the properties that read it are set again.' },
+  { icon: Gamepad, title: 'Every input, every device', text: 'Mouse, keyboard, gamepad and touch, on desktop, console, tablet and phone. Controls grow for touch and TV.' },
+  { icon: SwatchBook, title: 'Themes', text: 'Light and dark themes for every base colour, switched while the game runs. Hover and theme changes run no Luau.' },
+] as const
+
+// Everything else, as a short list under the cards.
+const more = [
+  { icon: Clapperboard, title: 'Scenes', text: 'Each screen on its own layer, so menus never take input from the screen below.' },
+  { icon: Layers, title: 'Dialogs and sheets', text: 'Dialogs, sheets, selects and toasts float above the game, newest on top.' },
+  { icon: Keyboard, title: 'Hotkeys', text: 'Name an action once for keyboard and gamepad, and switch it off while a menu is open.' },
+  { icon: Shapes, title: 'Any icon', text: 'Any Iconify icon by name, packed into a few images by the lucy-icons build.' },
   { icon: Orbit, title: 'Springs and tweens', text: 'Animate any property by binding it to a spring or a tween.' },
-  { icon: ScanEye, title: 'Preview in Studio', text: 'Stories show any component or scene in Studio without pressing Play.' },
-  { icon: BrushCleaning, title: 'Cleans up', text: 'Bindings and instances are removed along with whatever created them.' },
+  { icon: Blocks, title: 'Code or Studio', text: 'Write UI in code, or add behaviour to UI you laid out in Studio.' },
+  { icon: ScanEye, title: 'Preview in Studio', text: 'See any component or scene in Studio without pressing Play.' },
+  { icon: Bot, title: 'Ready for agents', text: 'Skills that teach Claude Code, Codex and Antigravity to build with Lucy.' },
   { icon: Feather, title: 'Small and tested', text: 'Strict types, no runtime dependencies and over 750 specs.' },
-  { icon: Bot, title: 'Ready for agents', text: 'Skills for Claude Code, Codex and Antigravity teach coding agents to build with Lucy.' },
 ] as const
 
 const install = 'Lucy = "goatsoft/lucy@0.1.0"'
@@ -120,6 +119,27 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
           </p>
         </article>
       </div>
+      <ul class="mt-12 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+        <li
+          v-for="item in more"
+          :key="item.title"
+          class="flex gap-3"
+        >
+          <component
+            :is="item.icon"
+            aria-hidden="true"
+            class="mt-0.5 size-5 shrink-0 text-primary"
+          />
+          <div>
+            <h3 class="font-display text-sm font-semibold text-foreground">
+              {{ item.title }}
+            </h3>
+            <p class="mt-1 text-sm leading-6 text-pretty text-muted-foreground">
+              {{ item.text }}
+            </p>
+          </div>
+        </li>
+      </ul>
     </section>
 
     <section class="mx-auto max-w-4xl px-6 py-20">
