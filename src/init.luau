@@ -120,11 +120,13 @@ return {
 	Preview = Preview,
 
 	-- Components
+	Accordion = require(Components.Accordion),
 	Alert = require(Components.Alert),
 	Avatar = require(Components.Avatar),
 	Badge = require(Components.Badge),
 	Button = require(Components.Button),
 	Checkbox = require(Components.Checkbox),
+	Collapsible = require(Components.Collapsible),
 	DataGrid = require(Components.DataGrid),
 	Dialog = require(Components.Dialog),
 	Grid = require(Components.Grid),

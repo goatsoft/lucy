@@ -11,11 +11,13 @@ Each component has its own page with its props, usage and examples:
 
 | Component | What it is |
 |---|---|
+| [Accordion](accordion.md) | Sections the player opens and closes, one or several at a time |
 | [Alert](alert.md) | A box that calls attention to a message |
 | [Avatar](avatar.md) | A player's headshot, or a monogram for a bot |
 | [Badge](badge.md) | A small label for a status or count |
 | [Button](button.md) | A button, in six variants and four sizes |
 | [Checkbox](checkbox.md) | A box that can be checked, with an optional label |
+| [Collapsible](collapsible.md) | A header that shows or hides what is under it |
 | [DataGrid](data-grid.md) | A table the player can sort by pressing its headers |
 | [Dialog](dialog.md) | A modal window, and alert dialogs that ask for a yes or no |
 | [Grid](grid.md) | Rows of equal cells, such as shop items or emotes |
@@ -230,9 +232,5 @@ a Button's text sets its `Text` again and nothing else. See
 
 ## Roadmap
 
-Coming in 0.1.0, each working with mouse, touch, gamepad and TV:
-
-- **Controls:** Accordion
-
-Later: Tooltip, Carousel, Field, Empty, Dropdown Menu, `toast.promise`, pausing
+After 0.1.0: Tooltip, Carousel, Field, Empty, Dropdown Menu, `toast.promise`, pausing
 toasts on hover.

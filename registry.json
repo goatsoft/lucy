@@ -2,11 +2,13 @@
   "$comment": "Descriptions for scripts/add --list. Files and dependencies come from src/ itself; scripts/add --check fails when a component has no description here.",
   "name": "lucy",
   "components": {
+    "accordion": "Sections the player opens and closes, one or several at a time",
     "alert": "A box that calls attention to a message",
     "avatar": "A player's headshot, or a monogram for a bot",
     "badge": "Small status label",
     "button": "Button with variants, sizes and an optional key hint",
     "checkbox": "Checkbox with optional label",
+    "collapsible": "A header that shows or hides what is under it",
     "data-grid": "A table the player can sort by pressing its headers",
     "dialog": "Modal dialog and alert dialog",
     "grid": "Rows of equal cells",

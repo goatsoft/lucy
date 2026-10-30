@@ -73,6 +73,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/accordion': RouteRecordInfo<
+      '/docs/components/accordion',
+      '/docs/components/accordion',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/alert': RouteRecordInfo<
       '/docs/components/alert',
       '/docs/components/alert',
@@ -104,6 +111,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/components/checkbox': RouteRecordInfo<
       '/docs/components/checkbox',
       '/docs/components/checkbox',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/collapsible': RouteRecordInfo<
+      '/docs/components/collapsible',
+      '/docs/components/collapsible',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -428,6 +442,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/accordion.md': {
+      routes:
+        | '/docs/components/accordion'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/alert.md': {
       routes:
         | '/docs/components/alert'
@@ -463,6 +485,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/checkbox.md': {
       routes:
         | '/docs/components/checkbox'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/collapsible.md': {
+      routes:
+        | '/docs/components/collapsible'
       views:
         | never
       pathParamNames:
