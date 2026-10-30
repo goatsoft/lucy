@@ -16,6 +16,9 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Composables = require(script.Parent.Parent.Composables)
+local Element = require(script.Parent.Parent.Core.Element)
+local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Checkbox = {}
 
@@ -68,72 +71,76 @@ function Checkbox.new(props: { [string]: any }?)
 		defaults = { checked = false, label = "", disabled = false, visible = true },
 		rules = Checkbox.rules,
 		render = function(h)
-			local root = Component.create("TextButton", {
-				Text = "",
-				AutoButtonColor = false,
-				BackgroundTransparency = 1,
-				AutomaticSize = Enum.AutomaticSize.X,
-				Tags = { "ui-checkbox-root" },
-			})
-			Component.list({
-				FillDirection = Enum.FillDirection.Horizontal,
-				VerticalAlignment = Enum.VerticalAlignment.Center,
-				Padding = UDim.new(0, 8),
-				Parent = root,
-			})
-			local box = Component.create(
-				"Frame",
-				{ Name = "Box", LayoutOrder = 1, Tags = { "ui-checkbox" }, Parent = root }
-			)
-			local check = Component.create("TextLabel", {
+			local checked, disabled = h:ref("checked"), h:ref("disabled")
+			local label, visible = h:ref("label"), h:ref("visible")
+			local density = Composables.useDensity(h.app)
+			local function side(): number
+				return BOX[density()] or BOX.default
+			end
+			local function enabled(): boolean
+				return not disabled()
+			end
+
+			local check = Element.new("TextLabel", {
 				Name = "Check",
 				Text = "✓",
 				Size = UDim2.fromScale(1, 1),
+				Visible = checked,
 				Tags = { "ui-checkbox-check" },
-				Parent = box,
 			})
-			local label = Component.create("TextLabel", {
+			local box = Element.new("Frame", {
+				Name = "Box",
+				LayoutOrder = 1,
+				Size = function()
+					return UDim2.fromOffset(side(), side())
+				end,
+				Tags = { "ui-checkbox", ["ui-checked"] = checked, ["ui-disabled"] = disabled },
+				check,
+			})
+			local text = Element.new("TextLabel", {
 				Name = "Label",
 				AutomaticSize = Enum.AutomaticSize.X,
 				Size = UDim2.fromScale(0, 1),
 				LayoutOrder = 2,
-				Tags = { "ui-checkbox-label" },
-				Parent = root,
+				Text = label,
+				Visible = function()
+					return label() ~= ""
+				end,
+				Tags = { "ui-checkbox-label", ["ui-disabled"] = disabled },
 			})
-			h.box, h.check, h.label = box, check, label
-			h.maid:give(root.Activated:Connect(function()
-				h:toggle()
-			end))
-			Component.onDensity(h, function()
-				local density = h.app.theme:getDensity()
-				local size = BOX[density] or BOX.default
-				box.Size = UDim2.fromOffset(size, size)
-				root.Size = UDim2.fromOffset(0, math.max(Component.metric(h.app, "ControlSm"), size))
-			end)
-			return root
+			h.box, h.check, h.label = box, check, text
+
+			-- The one side effect: telling the owner.
+			if p.onCheckedChange then
+				Reactive.watch(checked, function(value)
+					p.onCheckedChange(value, h)
+				end)
+			end
+
+			return Element.new("TextButton", {
+				Text = "",
+				AutoButtonColor = false,
+				BackgroundTransparency = 1,
+				AutomaticSize = Enum.AutomaticSize.X,
+				Size = function()
+					return UDim2.fromOffset(0, math.max(Component.metric(h.app, "ControlSm"), side()))
+				end,
+				Visible = visible,
+				Interactable = enabled,
+				Selectable = enabled,
+				Tags = { "ui-checkbox-root" },
+				[Element.on("Activated")] = function()
+					h:toggle()
+				end,
+				Component.list({ -- static: no bindings, so a plain instance
+					FillDirection = Enum.FillDirection.Horizontal,
+					VerticalAlignment = Enum.VerticalAlignment.Center,
+					Padding = UDim.new(0, 8),
+				}) :: any,
+				box,
+				text,
+			})
 		end,
-		watch = {
-			visible = function(h, visible)
-				h.Instance.Visible = visible
-			end,
-			disabled = function(h, disabled)
-				h.Instance.Interactable = not disabled
-				h.Instance.Selectable = not disabled
-				Component.setFlag(h.box, "ui-disabled", disabled)
-				Component.setFlag(h.label, "ui-disabled", disabled)
-			end,
-			label = function(h, label)
-				h.label.Text = label
-				h.label.Visible = label ~= ""
-			end,
-			checked = function(h, checked, _, initial)
-				h.check.Visible = checked
-				Component.setFlag(h.box, "ui-checked", checked)
-				if not initial and p.onCheckedChange then
-					p.onCheckedChange(checked, h)
-				end
-			end,
-		},
 	})
 
 	function handle.toggle(h)

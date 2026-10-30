@@ -19,6 +19,9 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Composables = require(script.Parent.Parent.Composables)
+local Element = require(script.Parent.Parent.Core.Element)
+local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Input = {}
 
@@ -72,55 +75,49 @@ function Input.new(props: { [string]: any }?)
 		defaults = { value = "", placeholder = "", disabled = false, visible = true },
 		rules = Input.rules,
 		render = function(h)
-			local box = Component.create("TextBox", {
+			local value, disabled = h:ref("value"), h:ref("disabled")
+			local height = Composables.useMetric(h.app, "ControlMd")
+			local focused = Reactive.ref(false)
+			local width: UDim = p.width or UDim.new(1, 0)
+			local function enabled(): boolean
+				return not disabled()
+			end
+
+			return Element.new("TextBox", {
 				ClearTextOnFocus = false,
 				TextXAlignment = Enum.TextXAlignment.Left,
 				TextTruncate = Enum.TextTruncate.AtEnd,
-				Tags = { "ui-input" },
+				Size = function()
+					return UDim2.new(width.Scale, width.Offset, 0, height())
+				end,
+				Text = value,
+				PlaceholderText = h:ref("placeholder"),
+				TextEditable = enabled,
+				Interactable = enabled,
+				Visible = h:ref("visible"),
+				Tags = { "ui-input", ["ui-disabled"] = disabled, ["ui-focused"] = focused },
+				-- Typing writes state. Signals may be deferred, so compare with state
+				-- rather than flag our own writes: text that state already holds is ours.
+				[Element.changed("Text")] = function(text: string)
+					if text == value() then
+						return
+					end
+					value(text)
+					if p.onChange then
+						p.onChange(text, h)
+					end
+				end,
+				[Element.on("Focused")] = function()
+					focused(true)
+				end,
+				[Element.on("FocusLost")] = (function(enterPressed: boolean)
+					focused(false)
+					if enterPressed and p.onSubmit then
+						p.onSubmit(h.Instance.Text, h)
+					end
+				end) :: any, -- handlers differ in shape; Element takes any
 			})
-			h.maid:give(box:GetPropertyChangedSignal("Text"):Connect(function()
-				-- Signals may be deferred, so compare with state rather than flag our own writes.
-				if box.Text == h:get("value") then
-					return
-				end
-				h:set("value", box.Text)
-				if p.onChange then
-					p.onChange(box.Text, h)
-				end
-			end))
-			h.maid:give(box.Focused:Connect(function()
-				Component.setFlag(box, "ui-focused", true)
-			end))
-			h.maid:give(box.FocusLost:Connect(function(enterPressed)
-				Component.setFlag(box, "ui-focused", false)
-				if enterPressed and p.onSubmit then
-					p.onSubmit(box.Text, h)
-				end
-			end))
-			Component.onDensity(h, function()
-				local width = p.width or UDim.new(1, 0)
-				box.Size = UDim2.new(width.Scale, width.Offset, 0, Component.metric(h.app, "ControlMd"))
-			end)
-			return box
 		end,
-		watch = {
-			value = function(h, value)
-				if h.Instance.Text ~= value then
-					h.Instance.Text = value
-				end
-			end,
-			placeholder = function(h, placeholder)
-				h.Instance.PlaceholderText = placeholder
-			end,
-			disabled = function(h, disabled)
-				h.Instance.TextEditable = not disabled
-				h.Instance.Interactable = not disabled
-				Component.setFlag(h.Instance, "ui-disabled", disabled)
-			end,
-			visible = function(h, visible)
-				h.Instance.Visible = visible
-			end,
-		},
 	})
 
 	-- Focus the field from code (opens the keyboard on touch).

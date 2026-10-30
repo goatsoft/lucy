@@ -78,8 +78,18 @@ local function report(err: any)
 	task.spawn(error, err, 0)
 end
 
+-- Nodes carry only the tables their kind uses: refs and keys are observed,
+-- effects observe, computeds do both, scopes do neither.
+-- (One literal per kind, so the table is sized once.)
 local function newNode(kind: string): any
-	return { kind = kind, state = CLEAN, sources = {}, observers = {} }
+	if kind == "effect" then
+		return { kind = kind, state = CLEAN, sources = {} }
+	elseif kind == "computed" then
+		return { kind = kind, state = CLEAN, sources = {}, observers = {} }
+	elseif kind == "scope" then
+		return { kind = kind, state = CLEAN }
+	end
+	return { kind = kind, state = CLEAN, observers = {} }
 end
 
 local function addCleanup(node: any, cleanup: () -> ())
@@ -118,10 +128,14 @@ local function track(source: any)
 end
 
 local function unlink(node: any)
-	for _, source in node.sources do
+	local sources = node.sources
+	if sources == nil then
+		return
+	end
+	for _, source in sources do
 		source.observers[node] = nil
 	end
-	table.clear(node.sources)
+	table.clear(sources)
 end
 
 local dispose: (node: any) -> ()
@@ -447,6 +461,56 @@ function Reactive.watch(
 	local getter: () -> any
 	local equals: (any, any) -> boolean = defaultEquals
 	local deep = opts.deep == true
+	if type(source) == "function" and not deep then
+		-- The common case, one effect and no hidden computed: it may re-run with an
+		-- equal value (a getter whose inputs changed), which is skipped here, so the
+		-- callback's cleanups are kept apart from the effect's own.
+		local immediate = opts.immediate == true
+		local initialized, old = false, nil
+		local cleanups: { () -> () }? = nil
+		local function onCleanup(cleanup: () -> ())
+			if cleanups then
+				table.insert(cleanups, cleanup)
+			else
+				cleanups = { cleanup }
+			end
+		end
+		local function runCleanups()
+			local list = cleanups
+			cleanups = nil
+			if list then
+				for i = #list, 1, -1 do
+					local ok: boolean, err: any = pcall(list[i] :: any)
+					if not ok then
+						report(err)
+					end
+				end
+			end
+		end
+		local stopEffect = Reactive.watchEffect(function()
+			local new = source()
+			if not initialized then
+				initialized = true
+				old = new
+				if immediate then
+					Reactive._untracked(callback, new, nil, onCleanup)
+				end
+				return
+			end
+			if defaultEquals(new, old) then
+				return
+			end
+			local previous = old
+			old = new
+			runCleanups()
+			Reactive._untracked(callback, new, previous, onCleanup) -- no allocation per change
+		end)
+		Reactive.onCleanup(runCleanups) -- the owner stopping ends the watch too
+		return function()
+			stopEffect()
+			runCleanups()
+		end
+	end
 	if type(source) == "function" then
 		getter = function()
 			return source()
@@ -491,7 +555,7 @@ function Reactive.watch(
 		end
 		local previous = old
 		old = new
-		Reactive.untrack(callback, new, previous, onCleanup)
+		Reactive._untracked(callback, new, previous, onCleanup) -- no allocation per change
 	end)
 	return function()
 		stop()
@@ -510,40 +574,48 @@ function Reactive.onCleanup(cleanup: () -> ()): boolean
 	return false
 end
 
+local scopeMethods = {}
+
+function scopeMethods.run(scope: any, fn: (...any) -> ...any, ...): ...any
+	local node = scope._node
+	if node.disposed then
+		error("[Lucy] this effect scope has been stopped", 2)
+	end
+	local previousOwner = owner
+	owner = node
+	local results = table.pack(pcall(fn, ...))
+	owner = previousOwner
+	if not results[1] then
+		error(results[2], 0)
+	end
+	return table.unpack(results, 2, results.n)
+end
+
+function scopeMethods.stop(scope: any)
+	dispose(scope._node)
+end
+
+function scopeMethods.onCleanup(scope: any, cleanup: () -> ())
+	addCleanup(scope._node, cleanup)
+end
+
+local scopeMeta = {
+	__index = function(scope: any, key: any): any
+		if key == "active" then
+			return not scope._node.disposed
+		end
+		return scopeMethods[key]
+	end,
+}
+
 -- A group of effects stopped together. Child of the current scope unless `detached`.
 function Reactive.effectScope(detached: boolean?): Scope
 	local node = newNode("scope")
 	if not detached then
 		adopt(node)
 	end
-	local scope = {}
-	function scope.run(_, fn: (...any) -> ...any, ...): ...any
-		if node.disposed then
-			error("[Lucy] this effect scope has been stopped", 2)
-		end
-		local previousOwner = owner
-		owner = node
-		local results = table.pack(pcall(fn, ...))
-		owner = previousOwner
-		if not results[1] then
-			error(results[2], 0)
-		end
-		return table.unpack(results, 2, results.n)
-	end
-	function scope.stop(_)
-		dispose(node)
-	end
-	function scope.onCleanup(_, cleanup: () -> ())
-		addCleanup(node, cleanup)
-	end
-	return setmetatable(scope, {
-		__index = function(_, key): any
-			if key == "active" then
-				return not node.disposed
-			end
-			return nil
-		end,
-	}) :: any
+	-- One small table per scope; the methods are shared (every element has a scope).
+	return setmetatable({ _node = node }, scopeMeta) :: any
 end
 
 -- Reading helpers --------------------------------------------------------------------
@@ -819,9 +891,32 @@ function Reactive._finish()
 	end
 end
 
+-- True when something (an effect, a scope) would own effects created now.
+function Reactive._hasOwner(): boolean
+	return owner ~= nil
+end
+
 -- True inside Lucy.batch.
 function Reactive._inBatch(): boolean
 	return userBatch > 0
+end
+
+--[[
+	A ref-like accessor over other sources: calling it reads `get` (tracking what
+	get reads), calling it with a value calls `set`. Counts as a writable ref
+	(isRef, isWritable) but adds no node of its own to the graph: cheaper than a
+	writable computed when get is already a cheap read of tracked sources.
+]]
+function Reactive._accessor<T>(get: () -> T, set: (value: T) -> ()): Ref<T>
+	local function accessor(...: any): any
+		if select("#", ...) == 0 then
+			return get()
+		end
+		set((...))
+		return nil
+	end
+	nodeOf[accessor] = { kind = "accessor", writable = true }
+	return accessor :: any
 end
 
 -- `untrack` for hot paths: one result, no allocation.

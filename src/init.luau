@@ -38,6 +38,7 @@ local Component = require(Core.Component)
 local SceneManager = require(Core.SceneManager)
 local Theme = require(Core.Theme)
 local Preview = require(Core.Preview)
+local Composables = require(script.Composables)
 
 export type Ref<T> = Reactive.Ref<T>
 export type Computed<T> = Reactive.Computed<T>
@@ -83,6 +84,12 @@ return {
 	instance = Element.instance,
 	show = Element.show,
 	each = Element.each,
+
+	-- Composables (ADR 0018)
+	useDensity = Composables.useDensity,
+	useMetric = Composables.useMetric,
+	useBackHandler = Composables.useBackHandler,
+	useFocusScope = Composables.useFocusScope,
 
 	-- Animation (Core/Animate)
 	spring = Animate.spring,

@@ -241,10 +241,11 @@ One component write: 5.5 µs and 1.2 KB with 10 mounted, 163 µs and 33 KB with
   store-to-ref subscription is gone. Sharing the ref's source object with the
   key outright would still need that effect, to keep snapshots and store
   subscribers current when the ref changes, so it would not save anything.
-- **Watchers.** `spec.watch = { key = fn(handle, value, previous, initial) }`:
-  one effect per key, reading only that key's source. `handle:set(key, value)`
-  writes one key through a path split once per handle, allocating nothing.
-  Errors in the first `update` or watcher run surface from `mount`, as before.
+- **Watchers.** Phase 3 added `spec.watch = { key = fn }`, one effect per key.
+  ADR 0018 removed it: components bind instead, and side effects use
+  `Lucy.watch(h:ref(key), fn)`. `handle:set(key, value)` writes one key through a
+  path split once per handle, allocating nothing. Errors in the first `update`
+  run surface from `mount`, as before.
 
 ## Alternatives considered
 

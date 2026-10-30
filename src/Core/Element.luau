@@ -77,10 +77,13 @@ local function describe(instance: Instance, property: string): string
 	return `{instance.ClassName}.{property}`
 end
 
+local function setProperty(instance: any, property: string, value: any)
+	instance[property] = value
+end
+
+-- No closure per write: bindings call this on every change.
 local function assign(instance: Instance, property: string, value: any)
-	local ok, err = pcall(function()
-		(instance :: any)[property] = value
-	end)
+	local ok: boolean, err: any = pcall(setProperty :: any, instance, property, value)
 	if not ok then
 		error(`[Lucy] {describe(instance, property)}: {err}`, 0)
 	end
@@ -262,29 +265,25 @@ end
 local function apply(instance: Instance, props: { [any]: any }, owned: boolean): Instance
 	local scope = Reactive.effectScope()
 	scopes[instance] = scope
-	scope:run(function()
-		Reactive.onCleanup(function()
-			scopes[instance] = nil
-		end)
-		-- Registered early so it runs late: bindings and slot rows stop before the
-		-- instance is destroyed. Destroying from outside stops the scope instead.
-		local destroying = false
-		local onDestroying = connect(instance.Destroying, function()
+	-- Destroying from outside stops the scope. One cleanup, registered before any
+	-- binding so it runs last (cleanups run in reverse): bindings and slot rows stop
+	-- before the instance is destroyed.
+	local destroying = false
+	local onDestroying = instance.Destroying:Connect(function()
+		destroying = true
+		scope:stop()
+	end)
+	scope:onCleanup(function()
+		scopes[instance] = nil
+		-- Disconnect first: a live Destroying handler costs a resumed thread (about
+		-- 1.2 KB) per instance, only to stop a scope already stopping.
+		onDestroying:Disconnect()
+		if owned and not destroying then
 			destroying = true
-			scope:stop()
-		end)
-		if owned then
-			Reactive.onCleanup(function()
-				if not destroying then
-					destroying = true
-					-- Disconnect first: a live Destroying handler costs a resumed thread
-					-- (about 1.2 KB) per instance, only to stop a scope already stopping.
-					onDestroying:Disconnect()
-					instance:Destroy()
-				end
-			end)
+			instance:Destroy()
 		end
-
+	end)
+	scope:run(function()
 		local parent = nil
 		for k, value in props do
 			if type(k) == "string" then

@@ -34,6 +34,9 @@
 
 local Button = require(script.Parent.Button)
 local Component = require(script.Parent.Parent.Core.Component)
+local Composables = require(script.Parent.Parent.Composables)
+local Element = require(script.Parent.Parent.Core.Element)
+local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Dialog = {}
 
@@ -97,13 +100,18 @@ Dialog.rules = rules
 
 local layer = 0
 
-local function label(tag: string, order: number)
-	return Component.create("TextLabel", {
+-- A wrapped label bound to a text key; hidden while empty.
+local function label(tag: string, order: number, text: () -> string)
+	return Element.new("TextLabel", {
 		Size = UDim2.fromScale(1, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		LayoutOrder = order,
+		Text = text,
+		Visible = function()
+			return text() ~= ""
+		end,
 		Tags = { tag },
 	})
 end
@@ -114,7 +122,6 @@ function Dialog.new(props: { [string]: any }?)
 	local closeOnOverlay = dismissible and p.closeOnOverlay ~= false
 	local showClose = dismissible and p.showClose ~= false
 	local actionHandles = {}
-	local popScope, popBack = nil, nil
 
 	local handle
 	handle = Component.mount({
@@ -123,11 +130,13 @@ function Dialog.new(props: { [string]: any }?)
 		defaults = { open = false, title = "", description = "" },
 		rules = Dialog.rules,
 		render = function(h)
-			local root = Component.box({
+			local open = h:ref("open")
+			local root = Element.new("Frame", {
 				Name = "Dialog",
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
 				Size = UDim2.fromScale(1, 1),
-				AutomaticSize = Enum.AutomaticSize.None,
-				Visible = false,
+				Visible = open,
 				Tags = { "ui-dialog" },
 			})
 
@@ -177,9 +186,9 @@ function Dialog.new(props: { [string]: any }?)
 				Parent = header,
 			})
 			Component.list({ Padding = UDim.new(0, 6), Parent = text })
-			h.titleLabel = label("ui-dialog-title", 1)
+			h.titleLabel = label("ui-dialog-title", 1, h:ref("title"))
 			h.titleLabel.Parent = text
-			h.descriptionLabel = label("ui-dialog-description", 2)
+			h.descriptionLabel = label("ui-dialog-description", 2, h:ref("description"))
 			h.descriptionLabel.Parent = text
 
 			if showClose then
@@ -233,51 +242,35 @@ function Dialog.new(props: { [string]: any }?)
 
 			h.overlay, h.content, h.body, h.footer, h.actions = overlay, content, body, footer, actionHandles
 			Component.claimSelection(h.app, root)
+
+			-- While open: a back handler and a focus scope (owned, so destroy pops them).
+			Composables.useBackHandler(h.app, open, function()
+				if dismissible then
+					h:close()
+				end
+				return true
+			end)
+			Composables.useFocusScope(h.app, open, {
+				root = content,
+				defaultFocus = function()
+					local last = actionHandles[#actionHandles]
+					return if last then last.Instance else (h.closeButton and h.closeButton.Instance)
+				end,
+			})
+
+			-- Side effects of opening: the newest dialog goes on top, and the owner hears.
+			Reactive.watch(open, function(isOpen, previous)
+				local wasOpen = previous == true
+				if isOpen and not wasOpen then
+					layer += 1
+					root.ZIndex = 10 + layer
+				end
+				if (isOpen == true) ~= wasOpen and p.onOpenChange then
+					p.onOpenChange(isOpen, h)
+				end
+			end, { immediate = true })
 			return root
 		end,
-		watch = {
-			title = function(h, title)
-				h.titleLabel.Text = title
-				h.titleLabel.Visible = title ~= ""
-			end,
-			description = function(h, description)
-				h.descriptionLabel.Text = description
-				h.descriptionLabel.Visible = description ~= ""
-			end,
-			open = function(h, open, previous, initial)
-				local wasOpen = not initial and previous == true
-				h.Instance.Visible = open
-				if open and not wasOpen then
-					layer += 1
-					h.Instance.ZIndex = 10 + layer
-					popBack = h.app.input:pushBack(function()
-						if dismissible then
-							h:close()
-						end
-						return true
-					end)
-					popScope = h.app.input:pushScope({
-						root = h.content,
-						defaultFocus = function()
-							local last = actionHandles[#actionHandles]
-							return if last then last.Instance else (h.closeButton and h.closeButton.Instance)
-						end,
-					})
-				elseif not open and wasOpen then
-					if popBack then
-						popBack()
-						popBack = nil
-					end
-					if popScope then
-						popScope()
-						popScope = nil
-					end
-				end
-				if open ~= wasOpen and p.onOpenChange then
-					p.onOpenChange(open, h)
-				end
-			end,
-		},
 	})
 
 	function handle.open(h)
@@ -289,14 +282,6 @@ function Dialog.new(props: { [string]: any }?)
 	function handle.toggle(h)
 		h:set("open", not h:get("open"))
 	end
-	handle.maid:give(function()
-		if popBack then
-			popBack()
-		end
-		if popScope then
-			popScope()
-		end
-	end)
 
 	if not (p.Parent or p.parent) then
 		handle.Instance.Parent = handle.app:portal("modal")

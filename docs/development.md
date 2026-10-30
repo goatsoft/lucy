@@ -98,8 +98,8 @@ Gotchas:
    Annotate the rules list as `{ Component.Rule }` so rules with different
    properties type-check together.
 3. Visual properties go in `rules` with `$Token` values; layout and behaviour in code.
-4. Sizes that should grow on touch or console come from density tokens
-   (`Component.metric(app, "ControlMd")` with `Component.onDensity`).
+4. Sizes that should grow on touch or console come from density tokens:
+   `Lucy.useMetric(app, "ControlMd")` or `Lucy.useDensity(app)` in `render`.
 5. Anything interactive: `Interactable`/`Selectable` follow `disabled`, a
    keyboard path exists (`handle:click()` or `handle:toggle()`), and it works
    inside focus scopes.

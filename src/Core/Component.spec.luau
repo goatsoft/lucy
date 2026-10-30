@@ -347,8 +347,9 @@ return function()
 		end)
 	end)
 
-	describe("watch", function()
+	describe("declarative render", function()
 		local Reactive = require(script.Parent.Reactive)
+		local Element = require(script.Parent.Element)
 		local app, cleanup
 		beforeEach(function()
 			app, cleanup = Harness.app()
@@ -357,62 +358,81 @@ return function()
 			cleanup()
 		end)
 
-		local function mountWatched(props, log)
+		local function mountBound(props, log)
 			return Component.mount({
-				kind = "watched",
+				kind = "bound",
 				props = props,
 				defaults = { text = "", count = 0 },
-				render = function()
-					return Component.create("TextLabel", {})
+				render = function(h)
+					local count = h:ref("count")
+					Reactive.watch(count, function(new, old)
+						table.insert(log, `{old}>{new}`)
+					end)
+					return Element.new("TextLabel", {
+						Text = h:ref("text"),
+						Tags = {
+							["ui-many"] = function()
+								return count() > 1
+							end,
+						},
+					})
 				end,
-				watch = {
-					text = function(h, value, previous, initial)
-						h.Instance.Text = value
-						table.insert(log, `text:{previous}>{value}{if initial then "!" else ""}`)
-					end,
-					count = function(_, value, previous)
-						table.insert(log, `count:{previous}>{value}`)
-					end,
-				},
 			})
 		end
 
-		it("runs each key once on mount, then only for the key that changed", function()
+		it("binds the instance to state keys through h:ref", function()
 			local log = {}
-			local handle = mountWatched({ app = app, id = "w", text = "a" }, log)
-			table.sort(log)
-			expect(table.concat(log, ",")).to.equal("count:nil>0,text:nil>a!")
-			table.clear(log)
-			handle:set("text", "b")
-			app.state:set("ui.w.text", "c")
-			handle:set({ text = "c" })
-			expect(table.concat(log, ",")).to.equal("text:a>b,text:b>c")
-			expect(handle.Instance.Text).to.equal("c")
+			local handle = mountBound({ app = app, id = "b", text = "a" }, log)
+			expect(handle.Instance.Text).to.equal("a")
+			app.state:set("ui.b.text", "b")
+			expect(handle.Instance.Text).to.equal("b")
+			handle:set("count", 2)
+			expect(handle.Instance:HasTag("ui-many")).to.equal(true)
+			expect(table.concat(log, ",")).to.equal("0>2")
 			handle:destroy()
 		end)
 
-		it("follows a ref and stops after destroy", function()
+		it("writes the store through h:ref, reaching bound refs", function()
+			local text = Reactive.ref("a")
+			local handle = mountBound({ app = app, text = text }, {})
+			handle:ref("text")("from ref write")
+			expect(text()).to.equal("from ref write")
+			expect(handle:get("text")).to.equal("from ref write")
+			expect(handle:ref("text")).to.equal(handle:ref("text"))
+			handle:destroy()
+		end)
+
+		it("owns everything render creates", function()
 			local log = {}
 			local count = Reactive.ref(1)
-			local handle = mountWatched({ app = app, count = count }, log)
-			table.clear(log)
-			count(2)
-			expect(table.concat(log, ",")).to.equal("count:1>2")
-			handle:destroy()
+			local handle = mountBound({ app = app, count = count }, log)
+			local instance = handle.Instance
 			count(3)
+			expect(table.concat(log, ",")).to.equal("1>3")
+			handle:destroy()
+			count(4)
 			expect(#log).to.equal(1)
+			expect(instance.Parent).to.equal(nil)
 		end)
 
-		it("batches: one run per key per Lucy.batch", function()
-			local log = {}
-			local handle = mountWatched({ app = app }, log)
-			table.clear(log)
-			Reactive.batch(function()
-				handle:set("count", 1)
-				handle:set("count", 2)
-			end)
-			expect(table.concat(log, ",")).to.equal("count:0>2")
-			handle:destroy()
+		it("cleans up when render errors", function()
+			local effectRuns = 0
+			local source = Reactive.ref(0)
+			expect(function()
+				Component.mount({
+					kind = "broken",
+					props = { app = app },
+					render = function()
+						Reactive.watchEffect(function()
+							source()
+							effectRuns += 1
+						end)
+						error("nope")
+					end,
+				})
+			end).to.throw()
+			source(1)
+			expect(effectRuns).to.equal(1)
 		end)
 	end)
 end

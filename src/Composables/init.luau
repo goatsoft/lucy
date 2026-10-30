@@ -1,0 +1,86 @@
+--!strict
+--[[
+	Composables (ADR 0018): plain functions that create reactive state inside the
+	current owner (a component's render, an effect, an effectScope) and return it.
+	Everything they create stops with that owner. Called with no owner they error,
+	since nothing would ever stop them.
+
+		render = function(h)
+			local density = Lucy.useDensity(h.app)               -- "default" | "touch" | "tv"
+			local height = Lucy.useMetric(h.app, "ControlMd")     -- pixels, follows density
+			Lucy.useBackHandler(h.app, open, function() h:close() return true end)
+			Lucy.useFocusScope(h.app, open, { root = content })
+			...
+		end
+
+	Write your own the same way: take refs or getters, return refs or computeds,
+	and register any cleanup with Lucy.onCleanup.
+]]
+
+local Component = require(script.Parent.Core.Component)
+local Reactive = require(script.Parent.Core.Reactive)
+
+local Composables = {}
+
+local function requireOwner(name: string)
+	if not Reactive._hasOwner() then
+		error(`[Lucy] {name} needs an owner: call it in a component's render, an effect or an effectScope`, 3)
+	end
+end
+
+--[[
+	The theme's density as a read-only ref. Follows the theme itself (not the
+	store key), so anything read alongside it, such as tokens, is already updated.
+	One per app, shared by every caller and stopped with the app: a component
+	asking for it costs nothing.
+]]
+function Composables.useDensity(app: any): Reactive.Computed<string>
+	requireOwner("useDensity")
+	local shared = app._lucyDensity
+	if shared then
+		return shared
+	end
+	local density = Reactive.ref(app.theme:getDensity())
+	app.maid:give(app.theme.DensityChanged:Connect(function(name: string)
+		density(name)
+	end))
+	local function read(): string
+		return density()
+	end
+	app._lucyDensity = read
+	return read
+end
+
+-- A control size token (ControlSm, ControlMd, ControlLg, ControlIcon) in pixels.
+function Composables.useMetric(app: any, token: string): Reactive.Computed<number>
+	requireOwner("useMetric")
+	local density = Composables.useDensity(app)
+	return Reactive.computed(function()
+		density()
+		return Component.metric(app, token)
+	end)
+end
+
+-- Puts `handler` on the back stack (Escape / ButtonB) while `active` is true.
+-- The handler returns true when it consumed the back press.
+function Composables.useBackHandler(app: any, active: Reactive.MaybeRef<boolean>, handler: () -> boolean?)
+	requireOwner("useBackHandler")
+	Reactive.watchEffect(function(onCleanup)
+		if Reactive.toValue(active) then
+			onCleanup(Reactive._untracked(app.input.pushBack, app.input, handler))
+		end
+	end)
+end
+
+-- Keeps keyboard and gamepad focus inside `options.root` while `active` is true
+-- (an InputManager focus scope: { root, defaultFocus }).
+function Composables.useFocusScope(app: any, active: Reactive.MaybeRef<boolean>, options: { [string]: any })
+	requireOwner("useFocusScope")
+	Reactive.watchEffect(function(onCleanup)
+		if Reactive.toValue(active) then
+			onCleanup(Reactive._untracked(app.input.pushScope, app.input, options))
+		end
+	end)
+end
+
+return Composables

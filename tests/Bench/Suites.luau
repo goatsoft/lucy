@@ -341,6 +341,37 @@ local suites: { Suite } = {
 		teardown = stop,
 	},
 	{
+		name = "Mount Switches",
+		group = "Components",
+		size = 100,
+		description = "Lucy.Switch.new bound to one ref, in a holder.",
+		setup = function(ctx, n)
+			local Lucy = ctx.Lucy
+			return {
+				Lucy = Lucy,
+				app = ctx.app,
+				n = n,
+				on = Lucy.ref(false),
+				scope = Lucy.effectScope(true),
+				root = holder(ctx),
+			}
+		end,
+		run = function(state)
+			local Lucy = state.Lucy
+			state.scope:run(function()
+				for i = 1, state.n do
+					Lucy.Switch.new({
+						app = state.app,
+						Parent = state.root,
+						label = `Option {i}`,
+						checked = state.on,
+					})
+				end
+			end)
+		end,
+		teardown = stop,
+	},
+	{
 		name = "Toggle Switches",
 		group = "Components",
 		size = 100,

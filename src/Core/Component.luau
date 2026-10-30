@@ -8,25 +8,28 @@
 	mount(spec)                         state-bound handle, see below
 
 	A mounted component keeps its stateful props in AppState at "ui.<id>" (ADR 0004,
-	0017). The app controls it by writing there; the component reacts per key.
+	0017). The app controls it by writing there; the component's render binds to
+	those keys, so only what changed is touched (ADR 0018).
 
 		local handle = Component.mount({
 			kind = "switch",
 			props = props,                 -- may include app, id, Parent, persist
 			defaults = { checked = false, ... }, -- the keys that live in state
 			rules = Switch.rules,          -- registered on the theme once per kind
-			render = function(handle) return rootInstance end,
-			watch = {                      -- one function per key: runs on mount, then on change
-				checked = function(handle, checked, previous, initial) ... end,
-			},
-			update = function(handle, state, previous) ... end, -- or: whole state, any change
+			render = function(h)           -- runs once, inside the component's scope
+				local checked = h:ref("checked")
+				Lucy.watch(checked, function(on) ... end) -- side effects only
+				return Lucy.new "Frame" { Tags = { "ui-switch", ["ui-checked"] = checked } }
+			end,
 		})
 		handle:set("checked", true) ; handle:set({ label = "Go" }) ; handle:get("checked")
 		handle:destroy()
 
-	`watch` is incremental by construction and allocates nothing per change; prefer
-	it. `update` gets frozen snapshots of the whole state (`previous` is nil on the
-	first run), which costs a small table per change.
+	The rule: derive with computed, bind with refs and getters, share logic with
+	composables (Lucy.useDensity ...), and keep Lucy.watch for side effects such as
+	tweens and callbacks. Everything render creates is owned by the component.
+	`update(handle, state, previous)` still works for components not yet
+	declarative; it is deprecated (ADR 0018).
 
 	Reactive props: any state key may be given a ref, a computed or a getter
 	function instead of a plain value. A writable source (a ref, a computed with
@@ -195,14 +198,6 @@ function Component.metric(app: any, token: string): number
 	return if type(value) == "number" then value else 0
 end
 
--- Runs fn now and whenever the density (default / touch / tv) changes.
-function Component.onDensity(handle: any, fn: () -> ())
-	fn()
-	handle.maid:give(handle.app.state:subscribe("density", function()
-		fn()
-	end))
-end
-
 --[[
 	Takes over gamepad/keyboard selection visuals for `object` and its selectable
 	descendants: the engine's white ring is replaced by the app's blank image and
@@ -261,6 +256,7 @@ type HandleFields = {
 	path: string,
 	segments: { any }, -- `path`, split once
 	keyPaths: { [string]: { any } }, -- `path`.<key>, split on first use
+	refs: { [string]: any }, -- h:ref(key), one per key
 	props: { [string]: any },
 	maid: Maid.Maid,
 	destroyed: boolean,
@@ -288,6 +284,28 @@ local function keyPath(self: Handle, key: string): { any }
 		self.keyPaths[key] = path
 	end
 	return path :: { any }
+end
+
+--[[
+	h:ref(key): a writable ref onto one of the component's state keys. Reading it
+	tracks that key's own source (no node of its own); writing it writes the store,
+	so bound refs and store subscribers see the write. One per key.
+]]
+function Handle.ref(self: Handle, key: string): Reactive.Ref<any>
+	local existing = self.refs[key]
+	if existing then
+		return existing
+	end
+	local state = self.app.state
+	local segments = self.segments
+	local path = keyPath(self, key)
+	local ref = Reactive._accessor(function(): any
+		return (state:_trackedKey(segments, key))
+	end, function(value: any)
+		state:_write(path, value, false)
+	end)
+	self.refs[key] = ref
+	return ref
 end
 
 -- set(key, value) writes one key (allocates nothing); set(patch) merges a table.
@@ -322,9 +340,7 @@ export type Spec = {
 	rules: { Rule }?,
 	ruleKey: string?,
 	render: (handle: Handle) -> any,
-	update: ((handle: Handle, state: State, previous: State?) -> ())?,
-	-- key -> fn(handle, value, previous, initial); watchers may take fewer arguments
-	watch: { [string]: (...any) -> () }?,
+	update: ((handle: Handle, state: State, previous: State?) -> ())?, -- deprecated (ADR 0018)
 	mounted: ((handle: Handle) -> ())?,
 }
 
@@ -350,6 +366,7 @@ function Component.mount(spec: Spec): Handle
 		path = path,
 		segments = app.state:_segments(path),
 		keyPaths = {},
+		refs = {},
 		props = props,
 		maid = Maid.new(),
 		destroyed = false,
@@ -374,16 +391,6 @@ function Component.mount(spec: Spec): Handle
 	end
 	app.state:set(handle.path, initial)
 
-	local root = spec.render(handle)
-	handle.Instance = root
-	root.Name = props.name or root.Name ~= root.ClassName and root.Name or kind
-	if props.layoutOrder then
-		root.LayoutOrder = props.layoutOrder
-	end
-	root:SetAttribute("LucyId", id)
-	Component.claimSelection(app, root)
-	app:registerHandle(handle)
-
 	-- Writable sources are bound to their key (ADR 0017): a write to the key writes
 	-- the source within the same store write. Unbound on destroy; the source lives on.
 	local segments = handle.segments
@@ -394,19 +401,36 @@ function Component.mount(spec: Spec): Handle
 		end
 	end
 
-	-- Ownership and reactivity. The scope belongs to whatever effect, scope or
-	-- `each` item is running now; stopping it destroys the component, and
-	-- destroying the component stops the scope.
+	-- Ownership. The scope belongs to whatever effect, scope or `each` item is
+	-- running now; stopping it destroys the component, and destroying the component
+	-- stops the scope. Render runs inside it, so everything render creates
+	-- (bindings, computeds, watchers, composables) is the component's.
 	local scope = Reactive.effectScope()
 	handle.scope = scope
+	local okRender, rendered = pcall(scope.run, scope, spec.render, handle)
+	if not okRender then
+		scope:stop()
+		handle.maid:clean()
+		error(rendered, 0)
+	end
+	local root = rendered
+	handle.Instance = root
+	root.Name = props.name or root.Name ~= root.ClassName and root.Name or kind
+	if props.layoutOrder then
+		root.LayoutOrder = props.layoutOrder
+	end
+	root:SetAttribute("LucyId", id)
+	Component.claimSelection(app, root)
+	app:registerHandle(handle)
 	scope:onCleanup(function()
 		handle:destroy()
 	end)
 	handle.maid:give(function()
 		scope:stop()
 	end)
-	-- The first run of update / watch happens inside mount: its error (say, an
-	-- unknown variant) is mount's error. Later runs report like any effect.
+
+	-- The first run of `update` happens inside mount: its error (say, an unknown
+	-- variant) is mount's error. Later runs report like any effect.
 	local mountError: any = nil
 	local function firstRun(fn: (...any) -> (), ...: any)
 		local ok, err = pcall(Reactive._untracked, fn, ...)
@@ -445,27 +469,6 @@ function Component.mount(spec: Spec): Handle
 					Reactive._untracked(update, handle, state, before)
 				end
 			end)
-		end
-
-		-- `watch`: one effect per key, re-run only when that key changes.
-		if spec.watch then
-			for key, fn in spec.watch do
-				local previous: any = nil
-				local initial = true
-				Reactive.watchEffect(function()
-					local value, present = app.state:_trackedKey(segments, key)
-					if not present or handle.destroyed then
-						return -- the app removed ui.<id>; wait for it to come back
-					end
-					local before, first = previous, initial
-					previous, initial = value, false
-					if first then
-						firstRun(fn, handle, value, before, first)
-					else
-						Reactive._untracked(fn, handle, value, before, first)
-					end
-				end)
-			end
 		end
 	end)
 	if mountError ~= nil then

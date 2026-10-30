@@ -11,6 +11,12 @@ Rules:
 - TDD: write the `*.spec.luau` first, see it fail, then implement.
 - Looks belong in style rules with `$Token` values; code sets behaviour and layout only.
 - Components keep state in AppState at `ui.<id>` and work with mouse, keyboard, gamepad and touch.
+- Components are declarative (ADR 0018): `render` binds instances to `h:ref(key)`, refs and
+  getters. Derive with `computed` (writable when two-way), or a plain function when the
+  work is trivial; share logic with composables (`Lucy.use*`, `src/Composables`).
+  `Lucy.watch` / `watchEffect` are for side effects only (tweens, callbacks into user code,
+  focus scopes, back handlers, sounds), never to set a property, tag or attribute a
+  binding could own. Review enforces this.
 - Code and docs do not name third-party design systems or CSS frameworks; ADRs may.
 - Scratch files go outside the repo (e.g. `/tmp`).
 - Only the Luau package ships. The website (`apps/site`, `libs/`) is never part of it;
