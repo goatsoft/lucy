@@ -1,0 +1,16 @@
+# Wally
+/Packages
+/DevPackages
+/ServerPackages
+wally.lock
+
+# Rojo build output
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+sourcemap.json
+
+# Editors and OS
+.vscode/*.log
+.DS_Store

@@ -1,0 +1,26 @@
+{
+  "name": "LucyTests",
+  "servePort": 38574,
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Lucy": {
+        "$path": "src"
+      },
+      "DevPackages": {
+        "$path": "DevPackages"
+      },
+      "LucyTests": {
+        "$path": "tests"
+      },
+      "LucyExamples": {
+        "$path": "examples"
+      }
+    },
+    "ServerScriptService": {
+      "RunTests": {
+        "$path": "scripts/run-tests.server.luau"
+      }
+    }
+  }
+}

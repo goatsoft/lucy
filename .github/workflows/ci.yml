@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: CompeyDev/setup-rokit@v0.1.2
+      - name: Install packages
+        run: wally install
+      - name: No em-dashes
+        run: |
+          if grep -rn $'\xe2\x80\x94' --exclude-dir=.git --exclude-dir=DevPackages .; then
+            echo "Em-dash found (see AGENTS.md rule 1)"; exit 1
+          fi
+      - name: Format
+        run: stylua --check src tests scripts
+      - name: Lint
+        run: selene src tests
+      - name: Types
+        run: |
+          rojo sourcemap test.project.json -o sourcemap.json
+          curl -sSL -o globalTypes.d.luau https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.d.luau
+          curl -sSL -o lsp.zip https://github.com/JohnnyMorganz/luau-lsp/releases/latest/download/luau-lsp-linux-x86_64.zip
+          unzip -oq lsp.zip
+          printf '%s\n' \
+            'declare function describe(name: string, fn: () -> ()): ()' \
+            'declare function it(name: string, fn: () -> ()): ()' \
+            'declare function beforeEach(fn: () -> ()): ()' \
+            'declare function afterEach(fn: () -> ()): ()' \
+            'declare function beforeAll(fn: () -> ()): ()' \
+            'declare function afterAll(fn: () -> ()): ()' \
+            'declare function expect(value: any): any' > testez.d.luau
+          ./luau-lsp analyze --sourcemap=sourcemap.json \
+            --definitions=@roblox=globalTypes.d.luau --definitions=@testez=testez.d.luau src tests
+
+  # Engine tests need Roblox Studio installed and signed in on the runner.
+  # Enable once a self-hosted runner with Studio is available.
+  tests:
+    if: false
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: CompeyDev/setup-rokit@v0.1.2
+      - run: wally install
+      - run: rojo build test.project.json -o LucyTests.rbxl
+      - run: run-in-roblox --place LucyTests.rbxl --script scripts/run-tests.server.luau
