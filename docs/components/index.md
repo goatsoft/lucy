@@ -209,7 +209,17 @@ write runs only the bindings that read the key and creates no garbage: changing
 a Button's text sets its `Text` again and nothing else. See
 [Benchmarks](../benchmarks.md).
 
-## Roadmap (next components)
+## Roadmap
 
-Tabs, Select, Slider, Tooltip, Dropdown Menu, Scroll Area, Avatar, Alert,
-Toggle Group, Sheet (drawer), `toast.promise`, pausing toasts on hover.
+Coming in 0.1.0, each working with mouse, touch, gamepad and TV:
+
+- **Layout and display:** Scroll Area, Grid, Item, Image and Icon, Avatar, Kbd
+  and key hints, Alert, Spinner, Table
+- **Selection:** Toggle, Toggle Group, Tabs, Radio Group, Select
+- **Overlays:** Sheet (a bottom drawer on touch), and Dialog with a size and a
+  scrolling body
+- **Controls:** Slider, Number Field, Accordion, and Input options for several
+  lines, numbers only and a maximum length
+
+Later: Tooltip, Carousel, Field, Empty, Dropdown Menu, `toast.promise`, pausing
+toasts on hover.
