@@ -89,6 +89,51 @@ local function stop(state: State)
 	if state.root then
 		state.root:Destroy()
 	end
+	if state.store then
+		state.store:destroy()
+	end
+end
+
+-- Store suites repeat their operation this many times per run, so it rises above clock noise.
+local STORE_OPS = 100
+
+-- A table of n numeric keys, "k1" .. "kn".
+local function keyed(n: number): { [string]: number }
+	local t = {}
+	for i = 1, n do
+		t[`k{i}`] = i
+	end
+	return t
+end
+
+-- Setup for the component-write suites: n minimal components (one state key, an
+-- unparented Frame, no update), so the number is the store's cost and nothing else.
+local function mountedProbes(ctx: Context, n: number): State
+	local Lucy = ctx.Lucy
+	local scope = Lucy.effectScope(true)
+	local handles = table.create(n)
+	scope:run(function()
+		for i = 1, n do
+			handles[i] = Lucy.Component.mount({
+				kind = "benchprobe",
+				props = { app = ctx.app },
+				defaults = { value = 0 },
+				render = function()
+					return Instance.new("Frame")
+				end,
+			})
+		end
+	end)
+	return { scope = scope, target = handles[(n + 1) // 2], tick = 0 }
+end
+
+local function writeProbe(state: State)
+	state.tick += 1
+	local base = state.tick * STORE_OPS
+	local target = state.target
+	for i = 1, STORE_OPS do
+		target:set({ value = base + i })
+	end
 end
 
 local suites: { Suite } = {
@@ -314,6 +359,94 @@ local suites: { Suite } = {
 		end,
 		run = function(state)
 			state.on(not state.on())
+		end,
+		teardown = stop,
+	},
+	{
+		name = "Write one component, 10 mounted",
+		group = "Store",
+		size = 10,
+		description = "100 writes to one component's state key; compare with 1,000 mounted.",
+		setup = mountedProbes,
+		run = writeProbe,
+		teardown = stop,
+	},
+	{
+		name = "Write one component, 1,000 mounted",
+		group = "Store",
+		size = 1000,
+		description = "100 writes to one component's state key with n components mounted.",
+		setup = mountedProbes,
+		run = writeProbe,
+		teardown = stop,
+	},
+	{
+		name = "Subscribe 1,000 paths, write one",
+		group = "Store",
+		size = 1000,
+		description = "n subscribers on n sibling paths; 100 writes to one of them.",
+		setup = function(ctx, n)
+			local store = ctx.Lucy.AppState.new({ items = keyed(n) })
+			local sink = { calls = 0 }
+			for i = 1, n do
+				store:subscribe(`items.k{i}`, function()
+					sink.calls += 1
+				end)
+			end
+			return { store = store, sink = sink, tick = 0 }
+		end,
+		run = function(state)
+			state.tick += 1
+			local base = state.tick * STORE_OPS
+			local store = state.store
+			for i = 1, STORE_OPS do
+				store:set("items.k1", base + i)
+			end
+		end,
+		teardown = stop,
+	},
+	{
+		name = "Snapshot a 1,000-key table after one write",
+		group = "Store",
+		size = 1000,
+		description = "100 times: write one key of an n-key table, then get the whole table.",
+		setup = function(ctx, n)
+			return { store = ctx.Lucy.AppState.new({ big = keyed(n) }), tick = 0, last = nil }
+		end,
+		run = function(state)
+			state.tick += 1
+			local base = state.tick * STORE_OPS
+			local store = state.store
+			local last
+			for i = 1, STORE_OPS do
+				store:set("big.k1", base + i)
+				last = store:get("big")
+			end
+			state.last = last
+		end,
+		teardown = stop,
+	},
+	{
+		name = "Reconcile an equal table",
+		group = "Store",
+		size = 1000,
+		description = "100 sets of an n-key table equal to the current one, watched at the table and a leaf.",
+		setup = function(ctx, n)
+			local store = ctx.Lucy.AppState.new({ big = keyed(n) })
+			local sink = { calls = 0 }
+			local function count()
+				sink.calls += 1
+			end
+			store:subscribe("big", count)
+			store:subscribe("big.k1", count)
+			return { store = store, sink = sink, copies = { keyed(n), keyed(n) } }
+		end,
+		run = function(state)
+			local store = state.store
+			local copies = state.copies
+			for i = 1, STORE_OPS do
+				store:set("big", copies[i % 2 + 1])
+			end
 		end,
 		teardown = stop,
 	},

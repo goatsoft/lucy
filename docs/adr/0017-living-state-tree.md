@@ -185,6 +185,24 @@ them fixes:
 4. **`state.root` and docs.** Reactive proxy over the tree, docs/architecture.md
    and docs/reactivity.md updated, 0004 marked "amended by 0017".
 
+### Baseline
+
+Recorded before any change (phase 1), M1 Max, Studio edit mode, 15 to 30
+iterations. The store suites repeat their operation 100 times per run.
+
+| Suite | Median | Heap |
+|---|---:|---:|
+| Write one component, 10 mounted (100 writes) | 0.55 ms | 116 KB |
+| Write one component, 1,000 mounted (100 writes) | 16.3 ms | 3,266 KB |
+| Subscribe 1,000 paths, write one (100 writes) | 14.8 ms | 3,220 KB |
+| Snapshot a 1,000-key table after one write (100 times) | 0.23 ms | 3,227 KB |
+| Reconcile an equal table (100 sets) | 0.07 ms | 14 KB |
+| Toggle 100 Switches | 3.2 ms | 519 KB |
+
+One component write: 5.5 µs and 1.2 KB with 10 mounted, 163 µs and 33 KB with
+1,000. Mounting 1,000 components is itself quadratic today (each mount clones
+`ui` and its subscription joins the global scan): one setup takes about 200 ms.
+
 ### Acceptance
 
 - Toggle 100 Switches: at most 60 KB of heap and 1.5 ms (today 519 KB, 2.9 ms).
