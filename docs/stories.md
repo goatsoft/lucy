@@ -53,7 +53,7 @@ return {
 | `controls` | Values to vary, see below |
 | `render(ctx)` | Builds the UI and returns what to show |
 
-`ctx` holds `Lucy` (the package, so stories never hard-code a require path),
+`ctx` holds `Lucy` (the package, so stories never hardcode a require path),
 `app` (the story's own App), `target` (the frame to fill) and `controls`.
 Return an instance, a component handle or a list of them; anything returned
 without a parent goes into `target`.

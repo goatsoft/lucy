@@ -68,8 +68,8 @@ Spec helpers (`src/Testing/Harness.luau`):
 Gotchas:
 
 - Never assert styled values with plain property reads; they return the
-  unstyled value by design.
-- Property-changed signals are deferred; `task.wait()` before asserting on a
+  unstyled value.
+- `GetPropertyChangedSignal` events are deferred; `task.wait()` before asserting on a
   value set through a signal (see Input.spec).
 - Do not set styled properties from component code; it overrides the theme.
 
@@ -80,6 +80,7 @@ Gotchas:
    ```lua
    --!strict
    local Component = require(script.Parent.Parent.Core.Component)
+   local Element = require(script.Parent.Parent.Core.Element)
    local Thing = {}
    local rules: { Component.Rule } = {
        { selector = ".ui-thing", priority = 0, properties = { BackgroundColor3 = "$Card" } },
@@ -89,14 +90,21 @@ Gotchas:
        return Component.mount({
            kind = "thing", props = props, rules = Thing.rules,
            defaults = { text = "", visible = true },  -- the keys that live in state
-           render = function(h) return Component.create("TextLabel", { Tags = { "ui-thing" } }) end,
-           update = function(h, state) h.Instance.Text = state.text; h.Instance.Visible = state.visible end,
+           render = function(h)
+               return Element.new("TextLabel", {
+                   Text = h:ref("text"),
+                   Visible = h:ref("visible"),
+                   Tags = { "ui-thing" },
+               })
+           end,
        })
    end
    return Thing
    ```
    Annotate the rules list as `{ Component.Rule }` so rules with different
-   properties type-check together.
+   properties pass the type checker together. Render is declarative: bind properties,
+   derive with `computed`, and keep watchers for side effects (see
+   [Writing a component](components.md#writing-a-component) and ADR 0018).
 3. Visual properties go in `rules` with `$Token` values; layout and behaviour in code.
 4. Sizes that should grow on touch or console come from density tokens:
    `Lucy.useMetric(app, "ControlMd")` or `Lucy.useDensity(app)` in `render`.
@@ -108,7 +116,7 @@ Gotchas:
    each theme and device.
 7. Add it to `src/init.luau`, `registry.json` (with dependencies) and
    `docs/components.md`.
-8. Grep for the em-dash character before committing: `grep -rn $'\xe2\x80\x94' .`
+8. Grep for the em dash character before committing: `grep -rn $'\xe2\x80\x94' .`
    must return nothing.
 
 ## Static checks

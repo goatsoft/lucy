@@ -13,7 +13,7 @@ map; the ADRs in `docs/adr/` hold the reasoning.
 
 ```
 App ─────────────── one per client, owns everything below
-├─ AppState         single store: ui.<id>, scenes, toasts, input, theme, density   (ADR 0004)
+├─ AppState         one tree of tables: ui.<id>, scenes, toasts, input, theme   (ADR 0004, 0017)
 ├─ Theme            Universal Styling sheet graph + all StyleRules                 (ADR 0003)
 │   └─ Tokens       OKLCH palette (via Oklab), light/dark themes, densities        (ADR 0010)
 ├─ InputManager     mode, device, focus ring, focus scopes, Tab nav, back          (ADR 0007)
@@ -23,21 +23,44 @@ App ─────────────── one per client, owns everythin
 └─ toast            toast API, installed when Components/Toaster exists
 ```
 
-Components (`src/Components`) are built on `Core/Component` (ADR 0002).
-`Core/Preview` mounts stories into their own App for previewing (ADR 0016).
+Components (`src/Components`) are built on `Core/Component` (ADR 0002) and render
+with `Core/Element` (ADR 0014, 0018). Shared component behaviour lives in
+`src/Composables` (`Lucy.use*`). `Core/Preview` mounts stories into their own App
+for previewing (ADR 0016).
 
 ## Data flow
 
 ```
- game code ──write──▶ AppState ──notify──▶ component update() ──▶ Instance props + tags
-     ▲                   ▲                                              │
-     │                   │                                              ▼
-     └──read──── handle:get()          Theme rules match tags ──▶ rendered style
+ game code ──write──▶ AppState key ──changed──▶ the bindings that read it ──▶ Instance props + tags
+     ▲                (ui.<id>.<key>)                                                  │
+     │                                                                                 ▼
+     └──read── handle:get(), app.state:ref()            Theme rules match tags ──▶ rendered style
 ```
 
 - Components never hold UI truth locally; `ui.<id>` in AppState is the truth.
+- A write to a key runs only the bindings that read that key: one property on
+  one instance, not the whole component.
 - Code changes **behaviour and layout** (Text, Visible, Size, Interactable, tags).
 - Rules change **looks** (colours, fonts, radius, stroke, padding, heights).
+
+## Components
+
+A component is a table passed to `Component.mount` (ADR 0018):
+
+- **State** lives at `ui.<id>`, starting from `defaults` and the props.
+- **`render(h)` runs once**, inside the component's scope. It builds the
+  instances with `Lucy.new` and binds them to `h:ref(key)`, other refs and
+  getters. Everything it creates belongs to the component and is removed with it.
+- **Derived values** are `computed`s, or plain functions when the work is trivial.
+- **Shared behaviour** comes from composables: `useDensity`, `useMetric`,
+  `useResponsive`, `useBackHandler`, `useFocusScope`.
+- **Watchers are for side effects only**: tweens, callbacks into game code, focus
+  scopes, sounds. A watcher never sets a property, tag or attribute that a
+  binding could own.
+
+Most of the cost is at mount, where each bound key gets a binding. After that, a
+write runs only the bindings that read it and creates no garbage. See
+[Components](./components.md#writing-a-component).
 
 ## Styling
 
@@ -71,7 +94,7 @@ unstyled value. Styles apply a few frames after a change.
 ## Input and focus
 
 `input.mode` follows the last input. `input.device` is derived from capabilities
-(10-foot interface → console; touch only → mobile or tablet by short side;
+(`GuiService:IsTenFootInterface()` → console; touch only → mobile or tablet by short side;
 otherwise desktop) and drives density and the adaptive profile.
 
 Focus scopes stack: screens and modal scenes push one on enter, dialogs push one
@@ -87,6 +110,7 @@ ring with the `ui-focus-visible` tag only while navigating with keys or a pad.
 src/
   init.luau            package entry (Wally)
   Core/                framework; always installed
+  Composables/         Lucy.use*: behaviour shared between components
   Components/          one file per component + its spec
   Testing/Harness.luau shared test helpers
 tests/Runner.luau      runs every spec, returns a summary

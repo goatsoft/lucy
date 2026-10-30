@@ -393,7 +393,7 @@ local suites: { Suite } = {
 		name = "Toggle Switches",
 		group = "Components",
 		size = 100,
-		description = "Switches bound two-way to one ref; flip it.",
+		description = "Switches bound both ways to one ref; flip it.",
 		setup = function(ctx, n)
 			local Lucy = ctx.Lucy
 			local on = Lucy.ref(false)
@@ -488,10 +488,10 @@ local suites: { Suite } = {
 		teardown = stop,
 	},
 	{
-		name = "Snapshot a 1,000-key table after one write",
+		name = "Read a table of 1,000 keys after one write",
 		group = "Store",
 		size = 1000,
-		description = "100 times: write one key of an n-key table, then get the whole table.",
+		description = "100 times: write one key of a table of n keys, then get the whole table.",
 		setup = function(ctx, n)
 			return { store = ctx.Lucy.AppState.new({ big = keyed(n) }), tick = 0, last = nil }
 		end,
@@ -509,10 +509,10 @@ local suites: { Suite } = {
 		teardown = stop,
 	},
 	{
-		name = "Reconcile an equal table",
+		name = "Set a table equal to the stored one",
 		group = "Store",
 		size = 1000,
-		description = "100 sets of an n-key table equal to the current one, watched at the table and a leaf.",
+		description = "100 sets of a table of n keys equal to the stored one, watched at the table and one key.",
 		setup = function(ctx, n)
 			local store = ctx.Lucy.AppState.new({ big = keyed(n) })
 			local sink = { calls = 0 }
@@ -561,7 +561,7 @@ local suites: { Suite } = {
 		teardown = stop,
 	},
 	{
-		name = "Diamond: 1 ref, 1,000 computeds",
+		name = "1 ref, 1,000 computeds, 1 effect",
 		group = "Reactive core",
 		size = 1000,
 		description = "One effect sums n computeds that all read one ref; write it once.",

@@ -16,8 +16,8 @@ count()        -- 0
 count(5)       -- write: everything that read count updates
 ```
 
-Updates are fine-grained. When `count` changes, only the exact properties and
-effects that read it run again. Nothing re-renders, and nothing is diffed.
+When `count` changes, only the properties and effects that read it run again.
+Nothing is rebuilt and nothing is diffed.
 
 ## State
 
@@ -75,16 +75,40 @@ The `table` library works on raw tables, so `table.insert(player.bag, x)` would
 bypass tracking. Use `Lucy.insert` and `Lucy.remove`, or assign `bag[#bag + 1] = x`.
 `Lucy.toRaw(proxy)` returns the plain table. Frozen tables are left as they are.
 
-### App state as a ref
+### App state
+
+Every key in the app's store works like a ref: anything that reads a key runs
+again when that key changes, and nothing else does.
 
 ```lua
 local coins = app.state:ref("player.coins")
-coins(coins() + 10)    -- writes through app.state:set
+coins(coins() + 10)                  -- same as app.state:set("player.coins", ...)
+
+app.state.root.player.coins += 10    -- the store as plain tables
+for id, item in app.state.root.inventory do end
+
+app.state:get("player")              -- a frozen copy: it never changes under you
+app.state:subscribe("player.coins", function(new, old) end)
 ```
 
-It follows writes from anywhere, so the store and your bindings stay in step.
+- `state:ref(path)` is a ref onto one path. It sees writes made from anywhere.
+- `state.root` is the store as tables you can index, loop over and assign to.
+  Reading a key subscribes to that key only. Assigning goes through `set`, so
+  subscribers and bindings see it.
+- `get` returns a frozen copy. Lucy builds it when you ask and reuses it until
+  something inside changes. Changing the copy throws an error.
+- `set` stores a copy of your value and compares it key by key with what is
+  there, so writing an equal value notifies nobody. A path part made only of
+  digits is an array index (`"toasts.1.title"`).
+- `app.state:batch(fn)` is `Lucy.batch(fn)`: effects and subscribers run once,
+  after the outermost batch.
+- Effects and bindings run before store subscribers.
 
 ## Effects
+
+Reach for bindings and computeds first. Effects are for side effects: playing a
+tween, calling game code, pushing a focus scope, playing a sound. If an effect
+would only set a property, bind the property instead.
 
 ```lua
 local stop = Lucy.watchEffect(function(onCleanup)
@@ -105,14 +129,14 @@ Lucy.watch(player, callback)                                         -- deep, an
   for refs and computeds made with `{ get, set }`.
 - `Lucy.toValue(x)` reads a ref, computed or getter, and passes plain values through.
 
-An effect never re-triggers itself by writing a ref it reads. Effects that keep
+An effect never triggers itself again by writing a ref it reads. Effects that keep
 triggering each other are stopped after 100 rounds with an error, instead of
 freezing the game.
 
 ## Lifetime
 
 Everything created inside an effect, an element or a scope belongs to it, and is
-cleaned up when its owner re-runs or stops. You rarely need to think about it.
+cleaned up when its owner runs again or stops. You rarely need to think about it.
 
 ```lua
 local scope = Lucy.effectScope()
@@ -122,6 +146,23 @@ scope:run(function()
 end)
 scope:stop()   -- stops all of it
 ```
+
+## Composables
+
+A composable is a plain function, named `useX`, that creates refs, computeds and
+effects and returns them. Call it inside a component's render, an effect or a
+scope: what it creates stops with that owner. Called anywhere else, it errors.
+
+```lua
+local density = Lucy.useDensity(app)                     -- "default" | "touch" | "tv"
+local height = Lucy.useMetric(app, "ControlMd")          -- pixels, follows density
+local gap = Lucy.useResponsive(app, { touch = 16, default = 8 })
+Lucy.useBackHandler(app, isOpen, function() close() return true end)
+Lucy.useFocusScope(app, isOpen, { root = panel })
+```
+
+Write your own the same way: take refs or getters, return refs or computeds, and
+register cleanup with `Lucy.onCleanup`.
 
 ## Declarative UI
 
@@ -149,7 +190,7 @@ Lucy.new "TextButton" {
 | `Attributes = { Name = value }` | attributes, bound the same way |
 | `[Lucy.on "Event"] = fn` | connects an event |
 | `[Lucy.changed "Prop"] = fn` | calls `fn(newValue)` when a property changes |
-| `[Lucy.model "Text"] = ref` | two-way binding |
+| `[Lucy.model "Text"] = ref` | binds both ways |
 | `[Lucy.out "AbsoluteSize"] = ref` | the ref follows the property |
 | `[Lucy.instance] = ref` | the instance, for later |
 | array items | children: instances, component handles, arrays, `show` and `each` |
@@ -182,7 +223,7 @@ Lucy.new "Frame" {
   are rendered and removed ones destroyed. Items are matched by `key`, or by the
   item itself.
 
-### Studio-built UI
+### UI built in Studio
 
 `Lucy.hydrate` binds an existing instance, so designers can build in Studio and
 you only add behaviour:
@@ -197,15 +238,23 @@ Hydrated instances are unbound when their owner stops, never destroyed.
 
 ### Lifetime of instances
 
-An element created inside an effect, a `show` branch, an `each` item or a scope is
-destroyed when that owner goes away. If something else destroys the instance, its
-bindings stop. You do not need to clean up by hand.
+An element created inside a component's render, an effect, a `show` branch, an
+`each` item or a scope belongs to it. When that owner stops, the element's
+bindings stop and then the element is destroyed, so you never clean up by hand.
+
+To remove an element early, stop its owner, which is what `show` and `each` do
+for you. If you destroy an owned element yourself, its bindings keep running
+until the owner stops.
+
+An element created outside any owner stops its bindings when the instance is
+destroyed.
 
 ### Components
 
 Lucy's components take refs, computeds and getters for any state key, and bind
 writable ones both ways: `Lucy.Switch.new({ checked = music })`. See
-[Components](./components.md#reactive-props).
+[Components](./components.md#reactive-props), and
+[Writing a component](./components.md#writing-a-component) for building your own.
 
 ## Animation
 

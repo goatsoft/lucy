@@ -11,51 +11,71 @@ The suites live in `tests/Bench` and anyone can run them.
 
 ## Results
 
-Lucy 0.1.0 in Roblox Studio 0.745 (edit mode), on an Apple M1 Max, 30 timed
-iterations after 5 warmups. Times are per run of the benchmark, not per item.
+Lucy main (unreleased, October 2026) in Roblox Studio 0.745 (edit mode), on an
+Apple M1 Max: 30 timed iterations after 5 warmups, the median of five such runs.
+Times are per run of the benchmark, not per item. Store suites repeat their
+operation 100 times per run.
 
 | Benchmark | Group | Size | Median (ms) | p95 (ms) | Heap (KB) |
 |---|---|---:|---:|---:|---:|
-| Mount a keyed list | Lists | 1,000 | 20.30 | 34.37 | 5282 |
-| Edit 100 rows, one write each | Lists | 1,000 | 0.53 | 0.64 | 8 |
-| Reverse a keyed list | Lists | 1,000 | 7.84 | 9.05 | 237 |
-| Append 100 rows | Lists | 1,000 | 4.15 | 5.08 | 787 |
-| Clear a keyed list | Lists | 1,000 | 8.21 | 10.62 | 94 |
-| Destroy a mounted list | Lists | 1,000 | 9.25 | 11.85 | 94 |
-| HUD frame: 50 values, 200 labels | HUD | 200 | 0.44 | 0.59 | 16 |
-| One value, 1,000 readers | HUD | 1,000 | 2.96 | 3.45 | 78 |
-| Mount Buttons | Components | 100 | 7.18 | 13.20 | 1031 |
-| Toggle Switches | Components | 100 | 2.93 | 3.28 | 519 |
-| Ref to computed to effect | Reactive core | 10,000 | 10.34 | 10.60 | 0 |
-| Diamond: 1 ref, 1,000 computeds | Reactive core | 1,000 | 0.56 | 0.59 | 0 |
-| Mount 1,000 bound effects | Reactive core | 1,000 | 0.93 | 1.41 | 627 |
+| Mount a keyed list | Lists | 1,000 | 18.83 | 21.93 | 2536 |
+| Edit 100 rows, one write each | Lists | 1,000 | 0.52 | 0.61 | 0 |
+| Reverse a keyed list | Lists | 1,000 | 7.53 | 9.19 | 158 |
+| Append 100 rows | Lists | 1,000 | 3.65 | 4.29 | 529 |
+| Clear a keyed list | Lists | 1,000 | 6.69 | 8.14 | 125 |
+| Destroy a mounted list | Lists | 1,000 | 7.01 | 8.69 | 125 |
+| HUD frame: 50 values, 200 labels | HUD | 200 | 0.43 | 0.58 | 0 |
+| One value, 1,000 readers | HUD | 1,000 | 2.45 | 2.79 | 0 |
+| Mount Buttons | Components | 100 | 6.46 | 7.37 | 1333 |
+| Mount Switches | Components | 100 | 15.10 | 17.44 | 2004 |
+| Toggle Switches | Components | 100 | 0.96 | 1.22 | 0 |
+| Set Button text | Components | 100 | 0.46 | 0.61 | 0 |
+| Set Button disabled | Components | 100 | 0.95 | 1.13 | 0 |
+| Write one component, 10 mounted | Store | 10 | 0.09 | 0.09 | 0 |
+| Write one component, 1,000 mounted | Store | 1,000 | 0.09 | 0.10 | 0 |
+| Subscribe 1,000 paths, write one | Store | 1,000 | 0.12 | 0.13 | 0 |
+| Read a table of 1,000 keys after one write | Store | 1,000 | 2.29 | 3.69 | 3205 |
+| Set a table equal to the stored one | Store | 1,000 | 2.88 | 2.98 | 0 |
+| Ref to computed to effect | Reactive core | 10,000 | 10.51 | 10.76 | 0 |
+| 1 ref, 1,000 computeds, 1 effect | Reactive core | 1,000 | 0.57 | 0.63 | 0 |
+| Mount 1,000 bound effects | Reactive core | 1,000 | 0.86 | 1.29 | 580 |
 
 Medians move by up to about 15% between runs on the same machine; mount times,
 which create the most garbage, move the most.
 
 ## What the numbers mean
 
-- **Updates are fine-grained.** Editing one row of a 1,000-row list costs about
-  5 µs, and only that row's label runs again. A busy HUD frame, 50 values
-  feeding 200 labels in one batch, takes 0.5 ms: about 3% of a 60 FPS frame.
-- **A bound label costs about 3 µs to update.** One value read by 1,000 labels
-  updates all of them in 3 ms.
-- **The reactive core is cheap and allocation-free.** A write that flows through
-  a computed into an effect takes about 1 µs and allocates nothing. A computed in
-  a 1,000-node diamond costs under 1 µs, and the effect at the bottom runs once.
-- **Mounting is where the time goes.** A keyed row (a TextLabel with a bound
-  text) takes about 20 µs and about 5 KB of Luau heap to build. Most of that is
-  creating and parenting the instance. Build long lists once and update them,
-  rather than rebuilding them.
-- **Teardown is cheap.** Clearing or destroying a 1,000-row list unbinds each row
-  before its instance goes, so it costs under 100 KB of heap in total.
-- **Keyed lists keep their rows.** Reversing 1,000 rows moves every instance
-  instead of rebuilding it, in well under half the time it takes to mount them.
-- **Components do more than bare instances.** A Button mounts in about 50 to
-  70 µs. A Switch toggle takes about 30 µs, including its thumb animation.
-  Component state is copy-on-write, so each write copies the table that holds
-  every mounted component's state: that copy is most of a toggle's heap, and it
-  grows with the number of components on screen.
+- **Lists and HUDs update only what changed.** Editing one row in a list of
+  1,000 costs about 5 µs, and only that row's label runs again. A busy HUD
+  frame, 50 values feeding 200 labels in one batch, takes 0.4 ms: under 3% of a
+  60 FPS frame. Neither creates garbage.
+- **A bound label costs about 2.5 µs to update.** One value read by 1,000
+  labels updates all of them in 2.5 ms.
+- **Components update only what changed.** Setting a Button's text sets
+  its `Text` again and nothing else: about 5 µs per Button, no garbage. Disabling one
+  (a tag, `Interactable` and `Selectable`) takes about 10 µs. A Switch toggle,
+  thumb animation included, takes about 10 µs.
+- **Mounting is where the cost is paid.** A keyed row (a TextLabel with a bound
+  text) takes about 19 µs and 2.5 KB to build. A Button takes about 65 µs and a
+  Switch about 150 µs, much of it creating and parenting instances. Each bound
+  state key adds a binding, which is what lets later updates skip everything
+  else. Build UI once and update it, rather than rebuilding it.
+- **Store writes cost the same however many components exist.** A write to one
+  component costs the same with 10 or 1,000 mounted, and it notifies only the
+  subscribers on its path.
+- **Reading a whole table copies it.** `app.state:get` on a table that just
+  changed builds a new frozen copy (about 30 KB for 1,000 keys), and reuses it
+  until something inside changes. For values you read often, use
+  `app.state:ref`, `app.state.root` or a binding: they read single keys and copy
+  nothing. Setting a table equal to what is there compares the contents and
+  notifies nobody.
+- **Refs, computeds and effects are cheap.** A write that flows through a
+  computed into an effect takes about 1 µs and creates no garbage. With 1,000
+  computeds reading one ref and one effect reading all of them, each computed
+  costs under 1 µs and the effect runs once.
+- **Teardown is cheap, and keyed lists keep their rows.** Clearing or destroying
+  a list of 1,000 rows unbinds each row before its instance goes. Reversing 1,000
+  rows moves every instance instead of rebuilding it.
 
 ## Method
 

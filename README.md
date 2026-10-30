@@ -10,18 +10,18 @@
 A UI kit and app framework for Roblox, built on
 [Universal Styling](https://create.roblox.com/docs/ui/styling).
 
-- **Fine-grained by design**: change a value and only the properties that read it update. Nothing re-renders and nothing is diffed, so long lists and busy HUDs stay cheap ([benchmarks](docs/benchmarks.md)).
-- **State that reads like Luau**: refs you call like functions (`count()`, `count(5)`), cached `computed` values, `reactive` tables you write as fields, and `watch`. No dependency lists, no boilerplate.
-- **Cleans up after itself**: effects, bindings and instances belong to whatever created them and go away with it. No cleanup bookkeeping, no leaks.
-- **Declarative, or built in Studio**: describe UI with `Lucy.new`, `show` and `each`, or `hydrate` a ScreenGui built in Studio and just add the behaviour.
-- **Motion is a value**: springs and tweens bind like any other state. Colours glide through Oklab, and nothing runs while everything is at rest.
+- **Only what changed updates**: change a value and only the properties that read it are set again. Nothing is rebuilt and nothing is diffed, so long lists and busy HUDs stay cheap ([benchmarks](docs/benchmarks.md)).
+- **State in plain Luau**: a ref is a function you call (`count()`, `count(5)`), `computed` caches a derived value, `reactive` tables let you write fields, and `watch` runs code when something changes. You never list dependencies.
+- **Cleanup is automatic**: effects, bindings and instances belong to whatever created them and are removed with it.
+- **UI in code or in Studio**: describe UI with `Lucy.new`, `show` and `each`, or `hydrate` a ScreenGui built in Studio and add the behaviour.
+- **Animation is state**: springs and tweens bind like any other value. Colours blend through Oklab, and nothing runs once every animation has stopped.
 - **Components you own**: buttons, dialogs, toasts, inputs, panels and more. Copy them into your game with one command, or install the Wally package.
-- **Styling runs in the engine**: themes are Universal Styling sheets, light and dark per base colour with an optional primary hue, switched at runtime. Hover and theme changes cost no Lua. Colours are defined in OKLCH.
-- **Every input, every screen**: mouse, keyboard, gamepad and touch on desktop, console, tablet and phone, with densities, adaptive scaling and responsive props built in.
-- **Lucy owns focus**: no Roblox selection rings or default borders; a themed focus ring only while navigating with keys or a gamepad.
-- **Preview in Studio**: write a story for any component or scene and see it in edit mode, no Play needed. Controls are refs, so they bind to components both ways, and every story doubles as a smoke test.
-- **One app, clean scenes**: one store drives every component, scene and toast. Title screen, game, menus and modals each own a layer and never steal input.
-- **Light and dependable**: one package with no runtime dependencies, strict types throughout, and hundreds of specs run in Studio.
+- **Styling runs in the engine**: themes are Universal Styling sheets, light and dark for each base colour, with an optional primary colour, switchable at runtime. Hover and theme changes run no Luau. Colours are defined in OKLCH.
+- **Every input, every screen**: mouse, keyboard, gamepad and touch on desktop, console, tablet and phone, with densities, scaling and responsive props built in.
+- **A focus ring you can see**: Lucy hides the Roblox selection ring and default borders and draws a themed ring, shown only while navigating with keys or a gamepad.
+- **Preview in Studio**: write a story for any component or scene and see it in edit mode without pressing Play. Story controls are refs, so they bind to components both ways, and every story also runs as a test.
+- **One app, separate scenes**: one store drives every component, scene and toast. The title screen, game, menus and modals each get their own layer and never take each other's input.
+- **Small and tested**: one package with no runtime dependencies, strict types throughout, and hundreds of specs run in Studio.
 
 ## Install
 

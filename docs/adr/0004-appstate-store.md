@@ -1,6 +1,6 @@
 # 0004: One AppState store for all UI state
 
-- Status: accepted
+- Status: accepted; amended by 0017 (the store is a living tree, same API)
 - Date: 2026-10-30
 
 ## Context
