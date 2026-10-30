@@ -16,40 +16,46 @@ iterations after 5 warmups. Times are per run of the benchmark, not per item.
 
 | Benchmark | Group | Size | Median (ms) | p95 (ms) | Heap (KB) |
 |---|---|---:|---:|---:|---:|
-| Mount a keyed list | Lists | 1,000 | 22.85 | 26.78 | 5219 |
-| Edit 100 rows, one write each | Lists | 1,000 | 0.55 | 0.65 | 25 |
-| Reverse a keyed list | Lists | 1,000 | 7.73 | 10.27 | 331 |
-| Append 100 rows | Lists | 1,000 | 3.75 | 5.31 | 781 |
-| Clear a keyed list | Lists | 1,000 | 10.29 | 14.71 | 1258 |
-| Destroy a mounted list | Lists | 1,000 | 12.25 | 15.37 | 1260 |
-| HUD frame: 50 values, 200 labels | HUD | 200 | 0.50 | 0.64 | 42 |
-| One value, 1,000 readers | HUD | 1,000 | 2.81 | 3.55 | 172 |
-| Mount Buttons | Components | 100 | 5.20 | 6.05 | 1247 |
-| Toggle Switches | Components | 100 | 3.70 | 9.51 | 968 |
-| Ref to computed to effect | Reactive core | 10,000 | 11.80 | 11.99 | 2188 |
-| Diamond: 1 ref, 1,000 computeds | Reactive core | 1,000 | 0.73 | 0.88 | 110 |
-| Mount 1,000 bound effects | Reactive core | 1,000 | 0.97 | 1.09 | 705 |
+| Mount a keyed list | Lists | 1,000 | 20.30 | 34.37 | 5282 |
+| Edit 100 rows, one write each | Lists | 1,000 | 0.53 | 0.64 | 8 |
+| Reverse a keyed list | Lists | 1,000 | 7.84 | 9.05 | 237 |
+| Append 100 rows | Lists | 1,000 | 4.15 | 5.08 | 787 |
+| Clear a keyed list | Lists | 1,000 | 8.21 | 10.62 | 94 |
+| Destroy a mounted list | Lists | 1,000 | 9.25 | 11.85 | 94 |
+| HUD frame: 50 values, 200 labels | HUD | 200 | 0.44 | 0.59 | 16 |
+| One value, 1,000 readers | HUD | 1,000 | 2.96 | 3.45 | 78 |
+| Mount Buttons | Components | 100 | 7.18 | 13.20 | 1031 |
+| Toggle Switches | Components | 100 | 2.93 | 3.28 | 519 |
+| Ref to computed to effect | Reactive core | 10,000 | 10.34 | 10.60 | 0 |
+| Diamond: 1 ref, 1,000 computeds | Reactive core | 1,000 | 0.56 | 0.59 | 0 |
+| Mount 1,000 bound effects | Reactive core | 1,000 | 0.93 | 1.41 | 627 |
 
-Medians move by up to about 15% between runs on the same machine.
+Medians move by up to about 15% between runs on the same machine; mount times,
+which create the most garbage, move the most.
 
 ## What the numbers mean
 
 - **Updates are fine-grained.** Editing one row of a 1,000-row list costs about
-  5.5 µs, and only that row's label runs again. A busy HUD frame, 50 values
+  5 µs, and only that row's label runs again. A busy HUD frame, 50 values
   feeding 200 labels in one batch, takes 0.5 ms: about 3% of a 60 FPS frame.
 - **A bound label costs about 3 µs to update.** One value read by 1,000 labels
-  updates all of them in 2.8 ms.
-- **The reactive core is cheap.** A write that flows through a computed into an
-  effect takes about 1.2 µs. A computed in a 1,000-node diamond costs under 1 µs,
-  and the effect at the bottom runs once.
+  updates all of them in 3 ms.
+- **The reactive core is cheap and allocation-free.** A write that flows through
+  a computed into an effect takes about 1 µs and allocates nothing. A computed in
+  a 1,000-node diamond costs under 1 µs, and the effect at the bottom runs once.
 - **Mounting is where the time goes.** A keyed row (a TextLabel with a bound
-  text) takes about 23 µs and about 5 KB of Luau heap to build. Most of that is
+  text) takes about 20 µs and about 5 KB of Luau heap to build. Most of that is
   creating and parenting the instance. Build long lists once and update them,
   rather than rebuilding them.
+- **Teardown is cheap.** Clearing or destroying a 1,000-row list unbinds each row
+  before its instance goes, so it costs under 100 KB of heap in total.
 - **Keyed lists keep their rows.** Reversing 1,000 rows moves every instance
-  instead of rebuilding it, in about a third of the time it takes to mount them.
-- **Components do more than bare instances.** A Button mounts in about 52 µs. A
-  Switch toggle takes about 37 µs, and that includes starting the thumb's tween.
+  instead of rebuilding it, in well under half the time it takes to mount them.
+- **Components do more than bare instances.** A Button mounts in about 50 to
+  70 µs. A Switch toggle takes about 30 µs, including its thumb animation.
+  Component state is copy-on-write, so each write copies the table that holds
+  every mounted component's state: that copy is most of a toggle's heap, and it
+  grows with the number of components on screen.
 
 ## Method
 

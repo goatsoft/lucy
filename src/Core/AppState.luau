@@ -36,6 +36,8 @@ export type AppState = typeof(setmetatable(
 		_subscribers: { Subscriber },
 		_batchDepth: number,
 		_batchRoot: any,
+		_notifying: number,
+		_dead: boolean,
 	},
 	AppState
 ))
@@ -91,6 +93,8 @@ function AppState.new(initial: { [string]: any }?): AppState
 		_subscribers = {} :: { Subscriber },
 		_batchDepth = 0,
 		_batchRoot = nil :: any,
+		_notifying = 0,
+		_dead = false,
 	}, AppState)
 end
 
@@ -98,8 +102,14 @@ function AppState.get(self: AppState, path: string?): any
 	return read(self._root, split(path))
 end
 
+-- Walks the subscriber list in place, up to its length at the start: subscribers
+-- added meanwhile wait for the next change, and ones removed meanwhile are only
+-- marked dead, then compacted once the outermost notify ends. No snapshot copy.
 function AppState._notify(self: AppState, oldRoot: any, newRoot: any)
-	for _, sub in table.clone(self._subscribers) do
+	local subs = self._subscribers
+	self._notifying += 1
+	for i = 1, #subs do
+		local sub = subs[i]
 		if sub.alive then
 			local old = read(oldRoot, sub.segments)
 			local new = read(newRoot, sub.segments)
@@ -109,6 +119,22 @@ function AppState._notify(self: AppState, oldRoot: any, newRoot: any)
 					warn(`[Lucy] state subscriber for "{sub.path}" errored: {err}`)
 				end
 			end
+		end
+	end
+	self._notifying -= 1
+	if self._notifying == 0 and self._dead then
+		self._dead = false
+		local live = self._subscribers
+		local n = 0
+		for i = 1, #live do
+			local sub = live[i]
+			if sub.alive then
+				n += 1
+				live[n] = sub
+			end
+		end
+		for i = #live, n + 1, -1 do
+			live[i] = nil
 		end
 	end
 end
@@ -169,6 +195,10 @@ function AppState.subscribe(self: AppState, path: string?, fn: (new: any, old: a
 			return
 		end
 		sub.alive = false
+		if self._notifying > 0 then
+			self._dead = true -- compacted when notifying ends; indices stay stable
+			return
+		end
 		local index = table.find(self._subscribers, sub)
 		if index then
 			table.remove(self._subscribers, index)

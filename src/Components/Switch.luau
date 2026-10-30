@@ -106,26 +106,54 @@ function Switch.new(props: { [string]: any }?)
 			end))
 			return root
 		end,
+		-- Incremental: only keys that changed touch the instances. A toggle is a tag
+		-- flip plus replaying one of two prebuilt thumb tweens.
 		update = function(h, state, previous)
-			h.Instance.Visible = state.visible
-			h.Instance.Interactable = not state.disabled
-			h.Instance.Selectable = not state.disabled
-			h.label.Text = state.label
-			h.label.Visible = state.label ~= ""
-			Component.setFlag(h.track, "ui-checked", state.checked)
-			Component.setFlag(h.track, "ui-disabled", state.disabled)
-			Component.setFlag(h.label, "ui-disabled", state.disabled)
-			if h.layoutThumb then
-				h.layoutThumb(previous ~= nil)
+			local first = previous == nil
+			local before: Component.State = previous or {}
+			if first or before.visible ~= state.visible then
+				h.Instance.Visible = state.visible
 			end
-			if previous and previous.checked ~= state.checked and p.onCheckedChange then
+			if first or before.disabled ~= state.disabled then
+				h.Instance.Interactable = not state.disabled
+				h.Instance.Selectable = not state.disabled
+				Component.setFlag(h.track, "ui-disabled", state.disabled)
+				Component.setFlag(h.label, "ui-disabled", state.disabled)
+			end
+			if first or before.label ~= state.label then
+				h.label.Text = state.label
+				h.label.Visible = state.label ~= ""
+			end
+			if first or before.checked ~= state.checked then
+				Component.setFlag(h.track, "ui-checked", state.checked)
+				if h.placeThumb then
+					h.placeThumb(not first)
+				end
+			end
+			if not first and before.checked ~= state.checked and p.onCheckedChange then
 				p.onCheckedChange(state.checked, h)
 			end
 		end,
 	})
 
-	-- Size from density and slide the thumb; animate only after the first layout.
-	function handle.layoutThumb(animate: boolean)
+	-- Size from density: runs once and on density changes, and rebuilds the two
+	-- thumb tweens (Play on one overrides the other, so they can be replayed).
+	local SLIDE = TweenInfo.new(0.15, Enum.EasingStyle.Quad)
+	local positions: { [boolean]: UDim2 } = {}
+	local tweens: { [boolean]: Tween } = {}
+
+	-- Moves the thumb to match `checked`; slides only when asked and on screen.
+	function handle.placeThumb(animate: boolean)
+		local checked = handle:get("checked") == true
+		if animate and handle.Instance.Parent then
+			tweens[checked]:Play()
+		else
+			tweens[not checked]:Cancel()
+			handle.thumb.Position = positions[checked]
+		end
+	end
+
+	Component.onDensity(handle, function()
 		local density = handle.app.theme:getDensity()
 		local size = TRACK[density] or TRACK.default
 		local knob = size.Y - 4
@@ -133,19 +161,15 @@ function Switch.new(props: { [string]: any }?)
 		handle.thumb.Size = UDim2.fromOffset(knob, knob)
 		handle.Instance.Size =
 			UDim2.fromOffset(0, math.max(Component.metric(handle.app, "ControlSm"), size.Y))
-		local target = if handle:get("checked")
-			then UDim2.new(0, size.X - knob - 2, 0.5, 0)
-			else UDim2.new(0, 2, 0.5, 0)
-		if animate and handle.Instance.Parent then
-			TweenService
-				:Create(handle.thumb, TweenInfo.new(0.15, Enum.EasingStyle.Quad), { Position = target })
-				:Play()
-		else
-			handle.thumb.Position = target
+		positions[true] = UDim2.new(0, size.X - knob - 2, 0.5, 0)
+		positions[false] = UDim2.new(0, 2, 0.5, 0)
+		for _, on in { true, false } do
+			if tweens[on] then
+				tweens[on]:Cancel()
+			end
+			tweens[on] = TweenService:Create(handle.thumb, SLIDE, { Position = positions[on] })
 		end
-	end
-	Component.onDensity(handle, function()
-		handle.layoutThumb(false)
+		handle.placeThumb(false)
 	end)
 
 	function handle.toggle(h)

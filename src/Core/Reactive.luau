@@ -50,8 +50,12 @@ local Reactive = {}
 local tracking: any = nil -- the computed / effect collecting sources right now
 local owner: any = nil -- the node that owns new effects, scopes and cleanups
 local batchDepth = 0
+-- Effects waiting to run, double-buffered so flushing never allocates. Indexed by
+-- count, never iterated with `for in` or cleared with table.clear: both cost the
+-- buffer's capacity, which stays large after one big flush.
 local queue: { any } = {}
-local queued: { [any]: boolean } = {}
+local spare: { any } = {}
+local queueSize = 0
 local flushing = false
 
 local nodeOf: { [any]: any } = setmetatable({}, { __mode = "k" }) :: any -- accessor -> node
@@ -94,14 +98,15 @@ local function adopt(node: any)
 	end
 end
 
+-- `execute` unlinks a node before running it, so `observers[t]` doubles as the
+-- seen-this-run check and tracking allocates nothing.
 local function track(source: any)
 	local t = tracking
-	if t ~= nil then
-		local seen = t.seen
-		if seen and not seen[source] then
-			seen[source] = true
+	if t ~= nil and not t.disposed then
+		local observers = source.observers
+		if not observers[t] then
+			observers[t] = true
 			table.insert(t.sources, source)
-			source.observers[t] = true
 		end
 	end
 end
@@ -153,9 +158,10 @@ dispose = function(node: any)
 end
 
 local function schedule(effect: any)
-	if not queued[effect] then
-		queued[effect] = true
-		table.insert(queue, effect)
+	if not effect.queued then
+		effect.queued = true
+		queueSize += 1
+		queue[queueSize] = effect
 	end
 end
 
@@ -182,23 +188,27 @@ local function flush()
 	end
 	flushing = true
 	local rounds = 0
-	while queue[1] ~= nil do
+	while queueSize > 0 do
 		rounds += 1
 		if rounds > MAX_ROUNDS then
-			for _, effect in queue do
-				queued[effect] = nil
+			for i = 1, queueSize do
+				local effect = queue[i]
+				queue[i] = nil
+				effect.queued = false
 				effect.state = CLEAN
 			end
-			table.clear(queue)
+			queueSize = 0
 			report(
 				"[Lucy] effects kept re-triggering each other; is a watchEffect writing to a ref another one reads?"
 			)
 			break
 		end
-		local current = queue
-		queue = {}
-		for _, effect in current do
-			queued[effect] = nil
+		local current, count = queue, queueSize
+		queue, queueSize = spare, 0
+		for i = 1, count do
+			local effect = current[i]
+			current[i] = nil
+			effect.queued = false -- false, not nil: keeps the key so the node never rehashes
 			if not effect.disposed then
 				local ok: boolean, err: any = pcall(refresh, effect)
 				if not ok then
@@ -207,6 +217,7 @@ local function flush()
 				end
 			end
 		end
+		spare = current
 	end
 	flushing = false
 end
@@ -226,12 +237,10 @@ end
 local function execute(node: any, ...): (boolean, any)
 	release(node)
 	unlink(node)
-	node.seen = {}
 	local previousTracking, previousOwner = tracking, owner
 	tracking, owner = node, node
 	local ok, result = pcall(node.fn, ...)
 	tracking, owner = previousTracking, previousOwner
-	node.seen = nil
 	return ok, result
 end
 

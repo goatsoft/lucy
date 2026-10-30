@@ -38,6 +38,13 @@ local ORDER_SLOT = 100000 -- LayoutOrder room per child position, for show/each 
 local CALLBACKS = { OnInvoke = true, OnClientInvoke = true, OnServerInvoke = true }
 
 local ordered: { [Instance]: boolean } = setmetatable({}, { __mode = "k" }) :: any
+-- each slot -> the function that stops its rows, so the host element can stop them
+-- before destroying itself (rather than its Destroy cascading into live rows).
+local slotCleanups: { [any]: () -> () } = setmetatable({}, { __mode = "k" }) :: any
+-- element instance -> its binding scope; an owned parent stops static children first.
+-- Strong on purpose (the scope reaches the instance through its bindings, so weak keys
+-- would never clear); each entry is removed when its scope stops.
+local scopes: { [Instance]: any } = {}
 
 local function key(kind: string, name: string?): any
 	return table.freeze({ [KEY] = kind, name = name })
@@ -154,11 +161,12 @@ local function bindAttributes(instance: Instance, attributes: { [string]: any })
 	end
 end
 
-local function connect(signal: RBXScriptSignal, handler: (...any) -> ())
+local function connect(signal: RBXScriptSignal, handler: (...any) -> ()): RBXScriptConnection
 	local connection = signal:Connect(handler)
 	Reactive.onCleanup(function()
 		connection:Disconnect()
 	end)
+	return connection
 end
 
 local function bindSpecial(instance: Instance, special: any, value: any)
@@ -211,16 +219,26 @@ local function order(child: Instance, layoutOrder: number)
 	end
 end
 
-local function bindChild(instance: Instance, child: any, position: number)
+local function bindChild(instance: Instance, child: any, position: number, owned: boolean)
 	local base = position * ORDER_SLOT
 	if type(child) ~= "function" then
 		for j, item in collect(child, {}) do
 			order(item, base + j)
 			item.Parent = instance
+			local childScope = owned and scopes[item]
+			if childScope then
+				Reactive.onCleanup(function()
+					childScope:stop()
+				end)
+			end
 		end
 		return
 	end
 	-- A reactive slot: show, each, or any getter returning children.
+	local stopRows = slotCleanups[child]
+	if stopRows then
+		Reactive.onCleanup(stopRows)
+	end
 	local current: { Instance } = {}
 	Reactive.watchEffect(function()
 		local children = collect(child, {})
@@ -243,7 +261,30 @@ end
 
 local function apply(instance: Instance, props: { [any]: any }, owned: boolean): Instance
 	local scope = Reactive.effectScope()
+	scopes[instance] = scope
 	scope:run(function()
+		Reactive.onCleanup(function()
+			scopes[instance] = nil
+		end)
+		-- Registered early so it runs late: bindings and slot rows stop before the
+		-- instance is destroyed. Destroying from outside stops the scope instead.
+		local destroying = false
+		local onDestroying = connect(instance.Destroying, function()
+			destroying = true
+			scope:stop()
+		end)
+		if owned then
+			Reactive.onCleanup(function()
+				if not destroying then
+					destroying = true
+					-- Disconnect first: a live Destroying handler costs a resumed thread
+					-- (about 1.2 KB) per instance, only to stop a scope already stopping.
+					onDestroying:Disconnect()
+					instance:Destroy()
+				end
+			end)
+		end
+
 		local parent = nil
 		for k, value in props do
 			if type(k) == "string" then
@@ -272,26 +313,12 @@ local function apply(instance: Instance, props: { [any]: any }, owned: boolean):
 		if children then
 			for _, child in children do
 				position += 1
-				bindChild(instance, child, position)
+				bindChild(instance, child, position, owned)
 			end
 		end
 		for i = 1, #props do
 			position += 1
-			bindChild(instance, props[i], position)
-		end
-
-		local destroying = false
-		connect(instance.Destroying, function()
-			destroying = true
-			scope:stop()
-		end)
-		if owned then
-			Reactive.onCleanup(function()
-				if not destroying then
-					destroying = true
-					instance:Destroy()
-				end
-			end)
+			bindChild(instance, props[i], position, owned)
 		end
 
 		if parent ~= nil then
@@ -358,16 +385,17 @@ function Element.each(
 	local keyOf = options and options.key
 	local cache: { [any]: { any } } = {}
 
-	Reactive.onCleanup(function()
+	local function stopAll()
 		for _, entries in cache do
 			for _, entry in entries do
 				entry.scope:stop()
 			end
 		end
 		table.clear(cache)
-	end)
+	end
+	Reactive.onCleanup(stopAll)
 
-	return function()
+	local slot = function()
 		local items = Reactive.toValue(list)
 		local nextCache: { [any]: { any } } = {}
 		local out = {}
@@ -407,6 +435,8 @@ function Element.each(
 		cache = nextCache
 		return out
 	end
+	slotCleanups[slot] = stopAll
+	return slot
 end
 
 return Element

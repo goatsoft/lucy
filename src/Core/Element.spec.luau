@@ -72,6 +72,37 @@ return function()
 			scope:stop()
 			expect(frame.Parent).to.equal(nil)
 		end)
+
+		it("stops children and each rows before destroying their parent", function()
+			-- A binding's cleanup records whether its instance was still in the tree:
+			-- children should be unbound top-down, not torn out by the parent's Destroy.
+			local seen = {}
+			local function watched(name: string)
+				local label
+				label = new("TextLabel")({
+					Text = function()
+						Reactive.onCleanup(function()
+							seen[name] = label.Parent ~= nil
+						end)
+						return name
+					end,
+				})
+				return label
+			end
+			local frame, scope = scoped(function()
+				return new("Frame")({
+					Parent = workspace,
+					watched("static"),
+					Element.each({ "row" }, function(item)
+						return watched(item)
+					end),
+				})
+			end)
+			scope:stop()
+			expect(frame.Parent).to.equal(nil)
+			expect(seen.static).to.equal(true)
+			expect(seen.row).to.equal(true)
+		end)
 	end)
 
 	describe("tags and attributes", function()

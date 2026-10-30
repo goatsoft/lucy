@@ -113,6 +113,30 @@ return function()
 			state:set("a", 2)
 			expect(calls).to.equal(1)
 		end)
+
+		it("handles subscribing and unsubscribing while notifying", function()
+			local state = AppState.new({ a = 1 })
+			local log = {}
+			local stopLater
+			state:subscribe("a", function(new)
+				table.insert(log, `first {new}`)
+				if new == 2 then
+					stopLater() -- a later subscriber, removed mid-notify: skipped
+					state:subscribe("a", function(v) -- added mid-notify: waits for the next change
+						table.insert(log, `added {v}`)
+					end)
+				end
+			end)
+			stopLater = state:subscribe("a", function(new)
+				table.insert(log, `later {new}`)
+			end)
+			state:subscribe("a", function(new)
+				table.insert(log, `last {new}`)
+			end)
+			state:set("a", 2)
+			state:set("a", 3)
+			expect(table.concat(log, ",")).to.equal("first 2,last 2,first 3,last 3,added 3")
+		end)
 	end)
 
 	describe("batch", function()
