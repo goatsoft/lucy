@@ -32,6 +32,7 @@ they work with nothing set up:
 | `lucy:close` | The close button of dialogs and sheets |
 | `lucy:chevron-down` | The arrow on a select |
 | `lucy:check` | The ticked options in a check select |
+| `lucy:minus`, `lucy:plus` | The buttons either side of a number field |
 | `lucy:chevron-up`, `lucy:chevron-left`, `lucy:chevron-right` | Kept for components to come |
 
 To use your own, register the name, and every component that draws it changes:

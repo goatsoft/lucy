@@ -17,9 +17,9 @@
 	names again. An unknown name fails the mount.
 
 	Lucy's own components draw a few slots, which Lucy fills from its own sheet
-	(Core/IconSheet): lucy:close, lucy:check and lucy:chevron-down / up / left /
-	right. Register a slot's name to change it everywhere; unregistering puts
-	Lucy's back.
+	(Core/IconSheet): lucy:close, lucy:check, lucy:chevron-down / up / left /
+	right, lucy:minus and lucy:plus. Register a slot's name to change it
+	everywhere; unregistering puts Lucy's back.
 
 	State keys: icon, size, variant, visible.
 ]]
@@ -91,6 +91,8 @@ local slots: { [string]: string } = {
 	["lucy:chevron-up"] = "lucide:chevron-up",
 	["lucy:chevron-left"] = "lucide:chevron-left",
 	["lucy:chevron-right"] = "lucide:chevron-right",
+	["lucy:minus"] = "lucide:minus",
+	["lucy:plus"] = "lucide:plus",
 }
 
 Icon.slots = slots

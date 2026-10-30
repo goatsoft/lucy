@@ -5,7 +5,7 @@
 -- Icon sets and their licences:
 --   lucide: Lucide, ISC https://github.com/lucide-icons/lucide/blob/main/LICENSE
 
-local sheet1 = "rbxassetid://126543493650331"
+local sheet1 = "rbxassetid://115710809460715"
 
 return {
 	["lucide:check"] = { image = sheet1, rect = { 4, 4, 64, 64 } },
@@ -13,5 +13,7 @@ return {
 	["lucide:chevron-left"] = { image = sheet1, rect = { 148, 4, 64, 64 } },
 	["lucide:chevron-right"] = { image = sheet1, rect = { 220, 4, 64, 64 } },
 	["lucide:chevron-up"] = { image = sheet1, rect = { 292, 4, 64, 64 } },
+	["lucide:minus"] = { image = sheet1, rect = { 436, 4, 64, 64 } },
+	["lucide:plus"] = { image = sheet1, rect = { 4, 76, 64, 64 } },
 	["lucide:x"] = { image = sheet1, rect = { 364, 4, 64, 64 } },
 }

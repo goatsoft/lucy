@@ -9,9 +9,11 @@
     "lucide:chevron-left",
     "lucide:chevron-right",
     "lucide:chevron-up",
-    "lucide:x"
+    "lucide:x",
+    "lucide:minus",
+    "lucide:plus"
   ],
   "sheets": {
-    "d455e229db48ac17df90a8fd5f261084": "126543493650331"
+    "7a4a4dfd6c6363021dd148a989a56f10": "115710809460715"
   }
 }

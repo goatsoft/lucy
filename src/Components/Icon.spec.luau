@@ -43,6 +43,8 @@ return function()
 				"lucy:chevron-up",
 				"lucy:chevron-left",
 				"lucy:chevron-right",
+				"lucy:minus",
+				"lucy:plus",
 			}
 		do
 			expect(Icon.has(slot)).to.equal(true)
