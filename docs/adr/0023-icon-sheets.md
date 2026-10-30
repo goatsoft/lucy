@@ -60,8 +60,9 @@ uploaded image asset, and uploads are limited per account per month.
   hash on any machine.
 - Holes left by removed icons waste sheet space until a repack; a repack
   re-uploads every sheet, so it is a deliberate step.
-- The tool names Iconify in its own docs; Lucy's component docs refer to it
-  as "the icon build".
+- Iconify support is optional: Icon works with a game's own images and no
+  tool. JB (2026-10-31): the docs name Iconify, since supporting it is a
+  feature; one guide page, Add icons, covers both ways and the tool's setup.
 
 ## Alternatives considered
 

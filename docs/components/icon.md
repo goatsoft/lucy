@@ -14,34 +14,20 @@ Lucy.Icon.new({ icon = "lucide:heart", variant = "destructive", Parent = row })
 
 ## Registering icons
 
-Lucy ships no icons. Your game registers its own once, before it builds any UI.
-
-The easiest way is the icon build,
-[lucy-icons](https://github.com/goatsoft/lucy/tree/main/libs/icons): name any
-of thousands of open icons in your code, such as `"lucide:heart"`, and it packs
-the ones you use into a few uploaded sheets and writes this map for you. Or
-write the map yourself:
+Lucy ships no icons. Your game registers a map of names to images once, before
+it builds any UI:
 
 ```lua
 Lucy.Icon.register({
-    ["lucide:heart"] = { image = 1234567, rect = { 0, 0, 96, 96 } },
-    ["lucide:star"] = { image = 1234567, rect = { 96, 0, 96, 96 } },
+    ["game:coin"] = { image = 1234567 },
     ["game:logo"] = { image = 7654321, tint = false },
 })
 ```
 
-Each name maps to:
-
-| Field | What it is |
-|---|---|
-| `image` | The asset id or url of the picture, or of a sheet holding many icons |
-| `rect` | Optional: `{ x, y, width, height }` of the icon's cell in a sheet, in pixels |
-| `tint` | Optional: `false` keeps the picture's own colours (a logo); otherwise the theme colours it |
-
-Icons that the theme colours should be drawn in white on a clear background.
-Keeping many icons in one sheet means one upload and one download for all of
-them. `Lucy.Icon.register` returns a function that removes those names again.
-Names are global to the game, so register each once.
+Write the map yourself for your own images, or let the lucy-icons build make it
+from any [Iconify](https://icon-sets.iconify.design) icon you name in your
+code, such as `"lucide:heart"`. [Add icons](../guide/icons.md) covers both,
+with every field of the map.
 
 ## Props
 
