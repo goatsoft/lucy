@@ -10,6 +10,7 @@
 			local height = Lucy.useMetric(h.app, "ControlMd")     -- pixels, follows density
 			Lucy.useBackHandler(h.app, open, function() h:close() return true end)
 			Lucy.useFocusScope(h.app, open, { root = content })
+			Lucy.useUiSound(h.app, { activate = playClick })     -- the game's own sounds
 			local gap = Lucy.useResponsive(h.app, { touch = 16, default = 8 })
 			...
 		end
@@ -21,6 +22,7 @@
 local Component = require(script.Parent.Core.Component)
 local Reactive = require(script.Parent.Core.Reactive)
 local Responsive = require(script.Parent.Core.Responsive)
+local UiEvents = require(script.Parent.Core.UiEvents)
 
 local Composables = {}
 
@@ -102,6 +104,19 @@ function Composables.useFocusScope(app: any, active: Reactive.MaybeRef<boolean>,
 			onCleanup(Reactive._untracked(app.input.pushScope, app.input, options))
 		end
 	end)
+end
+
+--[[
+	Maps the moments components report (activate, toggle, select, open, close) to
+	the game's own functions, for components made inside this owner. Lucy plays no
+	audio. The closest map that names an event wins and `false` silences it; a map
+	in a top-level scope also covers components made with no owner. Stops with its
+	owner. Each function gets (handle, value): toggle passes the new checked state,
+	select the picked value.
+]]
+function Composables.useUiSound(app: any, map: UiEvents.Map)
+	requireOwner("useUiSound")
+	UiEvents.listen(app, map)
 end
 
 return Composables

@@ -180,7 +180,9 @@ function Switch.new(props: { [string]: any }?)
 		if h:get("disabled") then
 			return
 		end
-		h:set("checked", not h:get("checked"))
+		local checked = not h:get("checked")
+		h:set("checked", checked)
+		h:emit("toggle", checked)
 	end
 	return handle
 end

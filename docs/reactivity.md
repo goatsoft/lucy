@@ -145,6 +145,7 @@ local height = Lucy.useMetric(app, "ControlMd")          -- pixels, follows dens
 local gap = Lucy.useResponsive(app, { touch = 16, default = 8 })
 Lucy.useBackHandler(app, isOpen, function() close() return true end)
 Lucy.useFocusScope(app, isOpen, { root = panel })
+Lucy.useUiSound(app, { activate = playClick })           -- the game's own sounds
 ```
 
 Write your own the same way: take refs or getters, return refs or computeds, and

@@ -17,6 +17,7 @@ Each component has its own page with its props, usage and examples:
 | [Dialog](dialog.md) | A modal window, and alert dialogs that ask for a yes or no |
 | [Input](input.md) | A text field on one line |
 | [Panel](panel.md) | A card with a header, content and footer |
+| [Pressable](pressable.md) | A surface the player can click that holds anything |
 | [Progress](progress.md) | A bar that fills from 0 to a maximum |
 | [Separator](separator.md) | A thin line between items |
 | [Skeleton](skeleton.md) | A pulsing placeholder while content loads |
@@ -96,8 +97,9 @@ landscape`), `default`. First match in that order wins.
 
 ## Writing a component
 
-A component is a table passed to `Lucy.Component.mount`. Its `render` runs once and
-describes the instances; bindings keep them in step with state from then on.
+A component is a spec, a table built once, passed to `Lucy.Component.mount` with
+each mount's props. Its `render` runs once per mount and describes the instances;
+bindings keep them in step with state from then on.
 
 ```lua
 local TweenService = game:GetService("TweenService")
@@ -116,42 +118,44 @@ local rules: { Lucy.Rule } = {
 }
 Stat.rules = rules
 
+-- Built once and shared by every Stat.
+local spec: Lucy.Spec = {
+    kind = "stat",
+    defaults = { label = "", value = 0, low = 10, visible = true }, -- the keys in ui.<id>
+    rules = Stat.rules,
+    render = function(h)
+        local label, value, low = h:ref("label"), h:ref("value"), h:ref("low")
+        -- Read by two bindings and a watcher, so a computed; trivial ones can be plain functions.
+        local isLow = Lucy.computed(function()
+            return value() <= low()
+        end)
+        local height = Lucy.useMetric(h.app, "ControlMd") -- follows density
+
+        local text = Lucy.new "TextLabel" {
+            Size = function() return UDim2.new(1, 0, 0, height()) end,
+            Text = function() return `{label()}: {value()}` end,
+            Tags = { "ui-stat-text" },
+        }
+
+        -- A side effect, so a watcher: pulse when the stat turns low.
+        local pulse = TweenService:Create(text, TweenInfo.new(0.2, Enum.EasingStyle.Quad,
+            Enum.EasingDirection.Out, 0, true), { TextTransparency = 0.5 })
+        Lucy.watch(isLow, function(nowLow)
+            if nowLow then pulse:Play() end
+        end)
+
+        return Lucy.new "Frame" {
+            Size = UDim2.fromScale(1, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            Visible = h:ref("visible"),
+            Tags = { "ui-stat", ["ui-low"] = isLow },
+            text,
+        }
+    end,
+}
+
 function Stat.new(props: Lucy.Props?): Lucy.Handle
-    return Lucy.Component.mount({
-        kind = "stat",
-        props = props,
-        defaults = { label = "", value = 0, low = 10, visible = true }, -- the keys in ui.<id>
-        rules = Stat.rules,
-        render = function(h)
-            local label, value, low = h:ref("label"), h:ref("value"), h:ref("low")
-            -- Read by two bindings and a watcher, so a computed; trivial ones can be plain functions.
-            local isLow = Lucy.computed(function()
-                return value() <= low()
-            end)
-            local height = Lucy.useMetric(h.app, "ControlMd") -- follows density
-
-            local text = Lucy.new "TextLabel" {
-                Size = function() return UDim2.new(1, 0, 0, height()) end,
-                Text = function() return `{label()}: {value()}` end,
-                Tags = { "ui-stat-text" },
-            }
-
-            -- A side effect, so a watcher: pulse when the stat turns low.
-            local pulse = TweenService:Create(text, TweenInfo.new(0.2, Enum.EasingStyle.Quad,
-                Enum.EasingDirection.Out, 0, true), { TextTransparency = 0.5 })
-            Lucy.watch(isLow, function(nowLow)
-                if nowLow then pulse:Play() end
-            end)
-
-            return Lucy.new "Frame" {
-                Size = UDim2.fromScale(1, 0),
-                AutomaticSize = Enum.AutomaticSize.Y,
-                Visible = h:ref("visible"),
-                Tags = { "ui-stat", ["ui-low"] = isLow },
-                text,
-            }
-        end,
-    })
+    return Lucy.Component.mount(spec, props)
 end
 
 return Stat
@@ -170,7 +174,15 @@ return Stat
   `function() return "ui-stat-tone-" .. tone() end`. Looks stay in rules.
 - **Static helpers can stay plain.** Layout objects with no bindings, such as a
   `UIListLayout`, can be `Lucy.Component.list(...)` or `Lucy.Component.create(...)`.
+- **Build the spec once.** A spec made at the top of the module costs nothing per
+  mount. Read each mount's own props (callbacks and the like) from `h.props`.
 - **Methods go on the handle** after `mount` returns: `function handle.toggle(h) ... end`.
+- **Clickable components** call `Lucy.Component.clickable(handle)` after `mount`:
+  it adds `handle.Activated`, `handle:click()` and the `onClick` prop, the same as
+  Button and Pressable.
+- **Report what the player did** with `h:emit(event, value)` (`activate`, `toggle`,
+  `open`, `close`), so games can play sounds for it through
+  [useUiSound](../reference/composables.md#useuisound).
 
 ### Watchers are a last resort
 

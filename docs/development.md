@@ -86,18 +86,19 @@ Gotchas:
        { selector = ".ui-thing", priority = 0, properties = { BackgroundColor3 = "$Card" } },
    }
    Thing.rules = rules
+   local spec: Component.Spec = { -- built once, shared by every Thing
+       kind = "thing", rules = Thing.rules,
+       defaults = { text = "", visible = true },  -- the keys that live in state
+       render = function(h)
+           return Element.new("TextLabel", {
+               Text = h:ref("text"),
+               Visible = h:ref("visible"),
+               Tags = { "ui-thing" },
+           })
+       end,
+   }
    function Thing.new(props: Component.Props?): Component.Handle
-       return Component.mount({
-           kind = "thing", props = props, rules = Thing.rules,
-           defaults = { text = "", visible = true },  -- the keys that live in state
-           render = function(h)
-               return Element.new("TextLabel", {
-                   Text = h:ref("text"),
-                   Visible = h:ref("visible"),
-                   Tags = { "ui-thing" },
-               })
-           end,
-       })
+       return Component.mount(spec, props)
    end
    return Thing
    ```

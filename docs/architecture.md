@@ -45,7 +45,8 @@ for previewing.
 
 ## Components
 
-A component is a table passed to `Component.mount`:
+A component is a spec, a table built once per kind, passed to `Component.mount`
+with each mount's props:
 
 - **State** lives at `ui.<id>`, starting from `defaults` and the props.
 - **`render(h)` runs once**, inside the component's scope. It builds the
@@ -53,7 +54,10 @@ A component is a table passed to `Component.mount`:
   getters. Everything it creates belongs to the component and is removed with it.
 - **Derived values** are `computed`s, or plain functions when the work is trivial.
 - **Shared behaviour** comes from composables: `useDensity`, `useMetric`,
-  `useResponsive`, `useBackHandler`, `useFocusScope`.
+  `useResponsive`, `useBackHandler`, `useFocusScope`, `useUiSound`.
+- **What the player did** (activate, toggle, open, close) is reported with
+  `h:emit`, so games can play their own sounds through `useUiSound`. Lucy plays
+  no audio.
 - **Watchers are for side effects only**: tweens, callbacks into game code, focus
   scopes, sounds. A watcher never sets a property, tag or attribute that a
   binding could own.

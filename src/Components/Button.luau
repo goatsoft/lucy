@@ -14,7 +14,8 @@
 		})
 
 	State keys: text, variant, size, disabled, visible.
-	Events: button.Activated (Signal). button:click() runs the click path in code/tests.
+	Events: button.Activated (Signal). button:click() runs the click path in code/tests
+	(Component.clickable).
 
 	Visuals live in Button.rules (Universal Styling); code only sets behaviour and
 	layout so a rule is never overridden by an instance property.
@@ -22,7 +23,6 @@
 
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
-local Signal = require(script.Parent.Parent.Core.Signal)
 
 local Button = {}
 
@@ -229,33 +229,8 @@ local spec: Component.Spec = {
 }
 
 function Button.new(props: { [string]: any }?)
-	local p: Component.Props = props or {}
-	local activated = Signal.new()
-
-	local handle = Component.mount(spec, p)
-
-	handle.Activated = activated
-	handle.maid:give(function()
-		activated:DisconnectAll()
-	end)
-
-	local lastClick = -math.huge
-	function handle.click(h)
-		if h.destroyed or h:get("disabled") then
-			return
-		end
-		-- Keyboard Enter can reach us twice (engine activation + InputManager); keep one.
-		local now = os.clock()
-		if now - lastClick < 0.05 then
-			return
-		end
-		lastClick = now
-		if p.onClick then
-			p.onClick(h)
-		end
-		activated:Fire(h)
-	end
-
+	local handle = Component.mount(spec, props)
+	Component.clickable(handle)
 	return handle
 end
 

@@ -49,7 +49,9 @@ local CollectionService = game:GetService("CollectionService")
 local Context = require(script.Parent.Context)
 local Maid = require(script.Parent.Maid)
 local Reactive = require(script.Parent.Reactive)
+local Signal = require(script.Parent.Signal)
 local Theme = require(script.Parent.Theme)
+local UiEvents = require(script.Parent.UiEvents)
 
 export type Rule = Theme.Rule
 export type Props = { [string]: any }
@@ -341,6 +343,43 @@ function Handle.destroy(self: Handle)
 	end
 end
 Handle.Destroy = Handle.destroy
+
+--[[
+	Gives a handle the click path every pressable component shares:
+	handle.Activated (a Signal) and handle:click(). A click is ignored while the
+	component is disabled or within 50 ms of the last one (keyboard Enter can
+	arrive twice: the engine's activation and InputManager's). It calls
+	props.onClick, fires Activated and reports "activate" for Lucy.useUiSound.
+]]
+function Component.clickable(handle: any)
+	local activated = Signal.new()
+	handle.Activated = activated
+	handle.maid:give(function()
+		activated:DisconnectAll()
+	end)
+	local lastClick = -math.huge
+	function handle.click(h)
+		if h.destroyed or h:get("disabled") then
+			return
+		end
+		local now = os.clock()
+		if now - lastClick < 0.05 then
+			return
+		end
+		lastClick = now
+		local onClick = h.props.onClick
+		if onClick then
+			onClick(h)
+		end
+		activated:Fire(h)
+		h:emit("activate")
+	end
+end
+
+-- Reports a moment (activate, toggle, select, open, close) for Lucy.useUiSound.
+function Handle.emit(self: Handle, event: string, value: any?)
+	UiEvents.emit(self, event, value)
+end
 
 export type Spec = {
 	kind: string,

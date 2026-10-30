@@ -15,13 +15,9 @@ render gets long and part of it is about one thing.
 
 ## The built in ones
 
-| Composable | Returns |
-|---|---|
-| `Lucy.useDensity(app)` | `"default"`, `"touch"` or `"tv"`, following the device |
-| `Lucy.useMetric(app, token)` | a control size in pixels (`"ControlMd"`), following density |
-| `Lucy.useResponsive(app, value)` | a getter for a responsive value such as `{ touch = 16, default = 8 }` |
-| `Lucy.useBackHandler(app, active, handler)` | nothing; Escape or ButtonB calls `handler` while `active` is true |
-| `Lucy.useFocusScope(app, active, options)` | nothing; keeps keyboard and gamepad focus inside `options.root` while `active` is true |
+Lucy comes with `useDensity`, `useMetric`, `useResponsive`, `useBackHandler`,
+`useFocusScope` and `useUiSound`. The [composables reference](../reference/composables.md)
+says what each takes and returns.
 
 ```lua
 render = function(h)

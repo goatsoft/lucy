@@ -265,8 +265,13 @@ function Dialog.new(props: { [string]: any }?)
 					layer += 1
 					root.ZIndex = 10 + layer
 				end
-				if (isOpen == true) ~= wasOpen and p.onOpenChange then
-					p.onOpenChange(isOpen, h)
+				if (isOpen == true) ~= wasOpen then
+					if previous ~= nil then -- not at mount
+						h:emit(if isOpen then "open" else "close")
+					end
+					if p.onOpenChange then
+						p.onOpenChange(isOpen, h)
+					end
 				end
 			end, { immediate = true })
 			return root

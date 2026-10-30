@@ -51,6 +51,7 @@ export type Scene = SceneManager.Scene
 export type Handle = Component.Handle
 export type Props = Component.Props
 export type Rule = Component.Rule
+export type Spec = Component.Spec
 export type Story = Preview.Story
 
 return {
@@ -91,6 +92,7 @@ return {
 	useBackHandler = Composables.useBackHandler,
 	useFocusScope = Composables.useFocusScope,
 	useResponsive = Composables.useResponsive,
+	useUiSound = Composables.useUiSound,
 
 	-- Animation (Core/Animate)
 	spring = Animate.spring,
@@ -122,6 +124,7 @@ return {
 	Dialog = require(Components.Dialog),
 	Input = require(Components.Input),
 	Panel = require(Components.Panel),
+	Pressable = require(Components.Pressable),
 	Progress = require(Components.Progress),
 	Separator = require(Components.Separator),
 	Skeleton = require(Components.Skeleton),

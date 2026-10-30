@@ -26,15 +26,17 @@ local Lucy = require(ReplicatedStorage.Packages.Lucy)
 
 local Stepper = {}
 
+-- Built once and shared by every Stepper.
+local spec: Lucy.Spec = {
+	kind = "stepper",
+	defaults = { label = "", value = 0, min = 0, max = 10, step = 1, visible = true },
+	render = function(h)
+		-- next section
+	end,
+}
+
 function Stepper.new(props: Lucy.Props?): Lucy.Handle
-	return Lucy.Component.mount({
-		kind = "stepper",
-		props = props,
-		defaults = { label = "", value = 0, min = 0, max = 10, step = 1, visible = true },
-		render = function(h)
-			-- next section
-		end,
-	})
+	return Lucy.Component.mount(spec, props)
 end
 
 return Stepper
@@ -46,6 +48,10 @@ return Stepper
 
 Because the state lives in the store, game code can drive a component without a
 reference to it: `app.state:set("ui.volume.value", 5)` moves the number.
+
+The spec is made once, when the module loads, and every Stepper shares it. Each
+`Stepper.new` passes its own props to `mount`, and `render` can read them from
+`h.props` (a callback, say).
 
 ## Render runs once
 
@@ -151,7 +157,7 @@ Methods go on the handle after `mount` returns. `h:get(key)` reads a key
 without following it, and `h:set(key, value)` writes one:
 
 ```lua
-local handle = Lucy.Component.mount({ ... })
+local handle = Lucy.Component.mount(spec, props)
 
 function handle.reset(h)
 	h:set("value", h:get("min"))
@@ -170,57 +176,59 @@ local Lucy = require(ReplicatedStorage.Packages.Lucy)
 
 local Stepper = {}
 
-function Stepper.new(props: Lucy.Props?): Lucy.Handle
-	local handle = Lucy.Component.mount({
-		kind = "stepper",
-		props = props,
-		defaults = { label = "", value = 0, min = 0, max = 10, step = 1, visible = true },
-		render = function(h)
-			local value, min, max, step = h:ref("value"), h:ref("min"), h:ref("max"), h:ref("step")
-			local atMin = Lucy.computed(function()
-				return value() <= min()
-			end)
-			local atMax = Lucy.computed(function()
-				return value() >= max()
-			end)
+-- Built once and shared by every Stepper.
+local spec: Lucy.Spec = {
+	kind = "stepper",
+	defaults = { label = "", value = 0, min = 0, max = 10, step = 1, visible = true },
+	render = function(h)
+		local value, min, max, step = h:ref("value"), h:ref("min"), h:ref("max"), h:ref("step")
+		local atMin = Lucy.computed(function()
+			return value() <= min()
+		end)
+		local atMax = Lucy.computed(function()
+			return value() >= max()
+		end)
 
-			return Lucy.new "Frame" {
-				BackgroundTransparency = 1,
-				AutomaticSize = Enum.AutomaticSize.XY,
-				Visible = h:ref("visible"),
-				Lucy.Component.list({
-					FillDirection = Enum.FillDirection.Horizontal,
-					VerticalAlignment = Enum.VerticalAlignment.Center,
-					Padding = UDim.new(0, 8),
-				}),
-				Lucy.Text.new({ text = h:ref("label"), variant = "label", autoWidth = true }),
-				Lucy.Button.new({
-					text = "-",
-					size = "icon",
-					variant = "outline",
-					disabled = atMin,
-					onClick = function()
-						value(math.max(min(), value() - step()))
-					end,
-				}),
-				Lucy.Text.new({
-					text = function()
-						return tostring(value())
-					end,
-					autoWidth = true,
-				}),
-				Lucy.Button.new({
-					text = "+",
-					size = "icon",
-					variant = "outline",
-					disabled = atMax,
-					onClick = function()
-						value(math.min(max(), value() + step()))
-					end,
-				}),
-			}
-		end,
-	})
+		return Lucy.new "Frame" {
+			BackgroundTransparency = 1,
+			AutomaticSize = Enum.AutomaticSize.XY,
+			Visible = h:ref("visible"),
+			Lucy.Component.list({
+				FillDirection = Enum.FillDirection.Horizontal,
+				VerticalAlignment = Enum.VerticalAlignment.Center,
+				Padding = UDim.new(0, 8),
+			}),
+			Lucy.Text.new({ text = h:ref("label"), variant = "label", autoWidth = true }),
+			Lucy.Button.new({
+				text = "-",
+				size = "icon",
+				variant = "outline",
+				disabled = atMin,
+				onClick = function()
+					value(math.max(min(), value() - step()))
+				end,
+			}),
+			Lucy.Text.new({
+				text = function()
+					return tostring(value())
+				end,
+				autoWidth = true,
+			}),
+			Lucy.Button.new({
+				text = "+",
+				size = "icon",
+				variant = "outline",
+				disabled = atMax,
+				onClick = function()
+					value(math.min(max(), value() + step()))
+				end,
+			}),
+		}
+	end,
+}
+
+function Stepper.new(props: Lucy.Props?): Lucy.Handle
+	local handle = Lucy.Component.mount(spec, props)
 
 	function handle.reset(h)
 		h:set("value", h:get("min"))
