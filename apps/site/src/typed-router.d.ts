@@ -73,6 +73,20 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/alert': RouteRecordInfo<
+      '/docs/components/alert',
+      '/docs/components/alert',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/avatar': RouteRecordInfo<
+      '/docs/components/avatar',
+      '/docs/components/avatar',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/badge': RouteRecordInfo<
       '/docs/components/badge',
       '/docs/components/badge',
@@ -101,9 +115,44 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/grid': RouteRecordInfo<
+      '/docs/components/grid',
+      '/docs/components/grid',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/icon': RouteRecordInfo<
+      '/docs/components/icon',
+      '/docs/components/icon',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/image': RouteRecordInfo<
+      '/docs/components/image',
+      '/docs/components/image',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/input': RouteRecordInfo<
       '/docs/components/input',
       '/docs/components/input',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/item': RouteRecordInfo<
+      '/docs/components/item',
+      '/docs/components/item',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/kbd': RouteRecordInfo<
+      '/docs/components/kbd',
+      '/docs/components/kbd',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -115,9 +164,30 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/pressable': RouteRecordInfo<
+      '/docs/components/pressable',
+      '/docs/components/pressable',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/progress': RouteRecordInfo<
       '/docs/components/progress',
       '/docs/components/progress',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/radio-group': RouteRecordInfo<
+      '/docs/components/radio-group',
+      '/docs/components/radio-group',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/scroll-area': RouteRecordInfo<
+      '/docs/components/scroll-area',
+      '/docs/components/scroll-area',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -136,6 +206,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/spinner': RouteRecordInfo<
+      '/docs/components/spinner',
+      '/docs/components/spinner',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/stack': RouteRecordInfo<
       '/docs/components/stack',
       '/docs/components/stack',
@@ -150,6 +227,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/tabs': RouteRecordInfo<
+      '/docs/components/tabs',
+      '/docs/components/tabs',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/text': RouteRecordInfo<
       '/docs/components/text',
       '/docs/components/text',
@@ -160,6 +244,20 @@ declare module 'vue-router/auto-routes' {
     '/docs/components/toaster': RouteRecordInfo<
       '/docs/components/toaster',
       '/docs/components/toaster',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/toggle': RouteRecordInfo<
+      '/docs/components/toggle',
+      '/docs/components/toggle',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/toggle-group': RouteRecordInfo<
+      '/docs/components/toggle-group',
+      '/docs/components/toggle-group',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -192,9 +290,23 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/guide/icons': RouteRecordInfo<
+      '/docs/guide/icons',
+      '/docs/guide/icons',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reactivity': RouteRecordInfo<
       '/docs/reactivity',
       '/docs/reactivity',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables': RouteRecordInfo<
+      '/docs/reference/composables',
+      '/docs/reference/composables',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -274,6 +386,22 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/alert.md': {
+      routes:
+        | '/docs/components/alert'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/avatar.md': {
+      routes:
+        | '/docs/components/avatar'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/badge.md': {
       routes:
         | '/docs/components/badge'
@@ -306,9 +434,49 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/grid.md': {
+      routes:
+        | '/docs/components/grid'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/icon.md': {
+      routes:
+        | '/docs/components/icon'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/image.md': {
+      routes:
+        | '/docs/components/image'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/input.md': {
       routes:
         | '/docs/components/input'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/item.md': {
+      routes:
+        | '/docs/components/item'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/kbd.md': {
+      routes:
+        | '/docs/components/kbd'
       views:
         | never
       pathParamNames:
@@ -322,9 +490,33 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/pressable.md': {
+      routes:
+        | '/docs/components/pressable'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/progress.md': {
       routes:
         | '/docs/components/progress'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/radio-group.md': {
+      routes:
+        | '/docs/components/radio-group'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/scroll-area.md': {
+      routes:
+        | '/docs/components/scroll-area'
       views:
         | never
       pathParamNames:
@@ -346,6 +538,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/spinner.md': {
+      routes:
+        | '/docs/components/spinner'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/stack.md': {
       routes:
         | '/docs/components/stack'
@@ -362,6 +562,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/tabs.md': {
+      routes:
+        | '/docs/components/tabs'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/text.md': {
       routes:
         | '/docs/components/text'
@@ -373,6 +581,22 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/toaster.md': {
       routes:
         | '/docs/components/toaster'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/toggle.md': {
+      routes:
+        | '/docs/components/toggle'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/toggle-group.md': {
+      routes:
+        | '/docs/components/toggle-group'
       views:
         | never
       pathParamNames:
@@ -410,9 +634,25 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/guide/icons.md': {
+      routes:
+        | '/docs/guide/icons'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/reactivity.md': {
       routes:
         | '/docs/reactivity'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables.md': {
+      routes:
+        | '/docs/reference/composables'
       views:
         | never
       pathParamNames:
