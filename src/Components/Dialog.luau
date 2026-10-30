@@ -61,7 +61,7 @@ local rules: { Component.Rule } = {
 		},
 	},
 	{
-		selector = ".ui-dialog-content::UIPadding",
+		selector = ".ui-dialog-inner::UIPadding",
 		priority = 0,
 		properties = {
 			PaddingTop = "$Space6",
@@ -69,6 +69,11 @@ local rules: { Component.Rule } = {
 			PaddingLeft = "$Space6",
 			PaddingRight = "$Space6",
 		},
+	},
+	{
+		selector = ".ui-dialog-inner",
+		priority = 0,
+		properties = { BackgroundTransparency = 1, BorderSizePixel = 0 },
 	},
 	{
 		selector = ".ui-dialog-title",
@@ -138,9 +143,18 @@ function Dialog.new(props: { [string]: any }?)
 				"UISizeConstraint",
 				{ MaxSize = Vector2.new(p.maxWidth or 448, math.huge), Parent = content }
 			)
-			Component.list({ Padding = Component.space(h.app, "Space4", 16), Parent = content })
+			-- Padding and layout live on an inner frame, so the close button can sit in
+			-- the content's own corner.
+			local inner = Component.create("Frame", {
+				Name = "Inner",
+				Size = UDim2.fromScale(1, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				Tags = { "ui-dialog-inner" },
+				Parent = content,
+			})
+			Component.list({ Padding = Component.space(h.app, "Space4", 16), Parent = inner })
 
-			local header = Component.box({ Name = "Header", LayoutOrder = 1, Parent = content })
+			local header = Component.box({ Name = "Header", LayoutOrder = 1, Parent = inner })
 			local text = Component.box({
 				Name = "Text",
 				Size = UDim2.new(1, if showClose then -44 else 0, 0, 0),
@@ -154,28 +168,26 @@ function Dialog.new(props: { [string]: any }?)
 			h.descriptionLabel.Parent = text
 
 			if showClose then
-				h.closeButton = Button.new({
+				h.closeButton = Button.close({
 					app = h.app,
-					text = "×",
-					variant = "ghost",
-					size = "icon",
-					name = "Close",
 					onClick = function()
 						h:close()
 					end,
 				})
+				local inset = Component.space(h.app, "Space2", 8).Offset
 				h.closeButton.Instance.AnchorPoint = Vector2.new(1, 0)
-				h.closeButton.Instance.Position = UDim2.new(1, 0, 0, -4)
-				h.closeButton.Instance.Parent = header
+				h.closeButton.Instance.Position = UDim2.new(1, -inset, 0, inset)
+				h.closeButton.Instance.ZIndex = 3
+				h.closeButton.Instance.Parent = content
 				h.maid:give(h.closeButton)
 			end
 
-			local body = Component.box({ Name = "Body", LayoutOrder = 2, Parent = content })
+			local body = Component.box({ Name = "Body", LayoutOrder = 2, Parent = inner })
 			Component.list({ Padding = Component.space(h.app, "Space4", 16), Parent = body })
 			Component.adopt(body, p.children)
 			body.Visible = p.children ~= nil
 
-			local footer = Component.box({ Name = "Footer", LayoutOrder = 3, Parent = content })
+			local footer = Component.box({ Name = "Footer", LayoutOrder = 3, Parent = inner })
 			Component.list({
 				FillDirection = Enum.FillDirection.Horizontal,
 				HorizontalAlignment = Enum.HorizontalAlignment.Right,

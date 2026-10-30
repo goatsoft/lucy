@@ -11,6 +11,23 @@ return function()
 		cleanup()
 	end)
 
+	it("makes a close button with a large glyph", function()
+		local clicked = 0
+		local close = Button.close({
+			app = app,
+			onClick = function()
+				clicked += 1
+			end,
+		})
+		close.Instance.Parent = gui
+		expect(close.Instance.Name).to.equal("Close")
+		expect(close.Instance:HasTag("ui-button-close")).to.equal(true)
+		close:click()
+		expect(clicked).to.equal(1)
+		Harness.flush()
+		expect(Harness.styled(close.Instance, "TextSize")).to.equal(app.theme:resolve("Text3xl"))
+	end)
+
 	it("follows reactive text and disabled", function()
 		local Reactive = require(script.Parent.Parent.Core.Reactive)
 		local count = Reactive.ref(0)

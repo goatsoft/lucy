@@ -102,6 +102,13 @@ Lucy.Button.new({ id = "play", text = "Play", Parent = frame })
 app.state:set("ui.play.disabled", true)
 ```
 
+A close button, the one dialogs and sheets put in their top right corner: a
+ghost icon button with a large ×. It takes the same props as `Button.new`.
+
+```lua
+local close = Lucy.Button.close({ onClick = hidePanel })
+```
+
 ## Preview
 
 In Studio, from the command bar: `Lucy.Preview.show("Button")`.

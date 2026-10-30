@@ -172,6 +172,19 @@ return function()
 		expect(app.input:focused()).to.equal(opener)
 	end)
 
+	it("puts the close button in the top right corner", function()
+		local dialog = Dialog.new({ app = app, open = true, title = "Hi" })
+		task.wait(0.2)
+		local close = dialog.closeButton.Instance
+		expect(close.Parent).to.equal(dialog.content)
+		local c = dialog.content
+		local right = c.AbsolutePosition.X + c.AbsoluteSize.X
+		local gapRight = right - (close.AbsolutePosition.X + close.AbsoluteSize.X)
+		local gapTop = close.AbsolutePosition.Y - c.AbsolutePosition.Y
+		expect(gapRight >= 0 and gapRight <= 12).to.equal(true)
+		expect(gapTop >= 0 and gapTop <= 12).to.equal(true)
+	end)
+
 	it("dims the screen with the overlay token", function()
 		local dialog = Dialog.new({ app = app, open = true })
 		Harness.flush()

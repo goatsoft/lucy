@@ -157,6 +157,9 @@ local rules: { Component.Rule } = {
 		properties = { PaddingLeft = "$Space0", PaddingRight = "$Space0" },
 	},
 
+	-- The close button of dialogs and sheets: an icon button with a glyph big enough to hit.
+	{ selector = ".ui-button-close", priority = VARIANT + 1, properties = { TextSize = "$Text3xl" } },
+
 	-- Disabled (the component also sets Interactable = false)
 	{ selector = ".ui-button.ui-disabled", priority = DISABLED, properties = { TextTransparency = 0.5 } },
 }
@@ -310,6 +313,21 @@ local spec: Component.Spec = {
 function Button.new(props: { [string]: any }?)
 	local handle = Component.mount(spec, props)
 	Component.clickable(handle)
+	return handle
+end
+
+--[[
+	The close button dialogs and sheets put in their top right corner: a ghost
+	icon button with a large "×". Takes the same props as Button.new.
+]]
+function Button.close(props: { [string]: any }?)
+	local p: { [string]: any } = table.clone(props or {})
+	p.text = p.text or "×"
+	p.variant = p.variant or "ghost"
+	p.size = p.size or "icon"
+	p.name = p.name or "Close"
+	local handle = Button.new(p)
+	handle.Instance:AddTag("ui-button-close")
 	return handle
 end
 
