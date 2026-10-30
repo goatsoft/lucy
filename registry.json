@@ -15,6 +15,7 @@
     "input": "Text field on one line",
     "item": "List row with media, title, description and actions",
     "kbd": "The key to press for the player's keyboard or controller",
+    "number-field": "A number with minus and plus buttons, typed or stepped",
     "panel": "Card with header, content and footer",
     "pressable": "Clickable surface that holds anything",
     "progress": "Bar that fills from 0 to a maximum",

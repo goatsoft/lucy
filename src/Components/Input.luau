@@ -177,6 +177,11 @@ local spec: Component.Spec = {
 			-- Typing writes state. Signals may be deferred, so compare with state
 			-- rather than flag our own writes: text that state already holds is ours.
 			[Element.changed("Text")] = function(text: string)
+				-- Text state already holds came from state (or is ours): leave it,
+				-- so the filters apply to typing only.
+				if text == value() then
+					return
+				end
 				if filtered then
 					-- Put the cleaned text back; that change comes round again clean.
 					local clean = Input.clean(text, p)
@@ -189,9 +194,6 @@ local spec: Component.Spec = {
 						end
 						return
 					end
-				end
-				if text == value() then
-					return
 				end
 				value(text)
 				if p.onChange then

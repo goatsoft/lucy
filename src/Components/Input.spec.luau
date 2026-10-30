@@ -145,4 +145,13 @@ return function()
 		app.input:setCaps(Harness.caps.console)
 		expect(five.Instance.Size.Y.Offset > before).to.equal(true)
 	end)
+
+	it("filters only what the player types, not values written to state", function()
+		local field = Input.new({ app = app, id = "weight", Parent = gui, numeric = true, maxLength = 3 })
+		app.state:set("ui.weight.value", "12.5 kg")
+		task.wait()
+		task.wait()
+		expect(field.Instance.Text).to.equal("12.5 kg")
+		expect(app.state:get("ui.weight.value")).to.equal("12.5 kg")
+	end)
 end

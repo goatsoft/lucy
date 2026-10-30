@@ -133,6 +133,7 @@ return {
 	Input = require(Components.Input),
 	Item = require(Components.Item),
 	Kbd = require(Components.Kbd),
+	NumberField = require(Components.NumberField),
 	Panel = require(Components.Panel),
 	Pressable = require(Components.Pressable),
 	Progress = require(Components.Progress),

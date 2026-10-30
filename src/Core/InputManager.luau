@@ -574,7 +574,13 @@ function InputManager._watch(self: InputManager)
 		-- Arrows go to a component around the focus first (a Slider), even when the
 		-- engine already used them to move gamepad selection.
 		local arrow = ARROWS[key]
-		if arrow and self._focused and self:isNavigating() and self:_hold(key, arrow) then
+		if
+			arrow
+			and self._focused
+			and self:isNavigating()
+			and UserInputService:GetFocusedTextBox() == nil
+			and self:_hold(key, arrow)
+		then
 			return
 		end
 		if processed and key ~= Enum.KeyCode.Tab then
@@ -622,7 +628,12 @@ function InputManager._watch(self: InputManager)
 		if held and held.key == Enum.KeyCode.Thumbstick1 then
 			self:_letGo()
 		end
-		if direction ~= Vector2.zero and self._focused and self:isNavigating() then
+		if
+			direction ~= Vector2.zero
+			and self._focused
+			and self:isNavigating()
+			and UserInputService:GetFocusedTextBox() == nil
+		then
 			self:_hold(Enum.KeyCode.Thumbstick1, direction)
 		end
 	end))

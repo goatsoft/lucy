@@ -164,6 +164,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/number-field': RouteRecordInfo<
+      '/docs/components/number-field',
+      '/docs/components/number-field',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/panel': RouteRecordInfo<
       '/docs/components/panel',
       '/docs/components/panel',
@@ -520,6 +527,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/kbd.md': {
       routes:
         | '/docs/components/kbd'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/number-field.md': {
+      routes:
+        | '/docs/components/number-field'
       views:
         | never
       pathParamNames:
