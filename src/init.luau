@@ -119,6 +119,7 @@ return {
 	Preview = Preview,
 
 	-- Components
+	Alert = require(Components.Alert),
 	Badge = require(Components.Badge),
 	Button = require(Components.Button),
 	Checkbox = require(Components.Checkbox),
@@ -133,6 +134,7 @@ return {
 	ScrollArea = require(Components.ScrollArea),
 	Separator = require(Components.Separator),
 	Skeleton = require(Components.Skeleton),
+	Spinner = require(Components.Spinner),
 	Stack = require(Components.Stack),
 	Switch = require(Components.Switch),
 	Tabs = require(Components.Tabs),

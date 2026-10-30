@@ -11,6 +11,7 @@ Each component has its own page with its props, usage and examples:
 
 | Component | What it is |
 |---|---|
+| [Alert](alert.md) | A box that calls attention to a message |
 | [Badge](badge.md) | A small label for a status or count |
 | [Button](button.md) | A button, in six variants and four sizes |
 | [Checkbox](checkbox.md) | A box that can be checked, with an optional label |
@@ -25,6 +26,7 @@ Each component has its own page with its props, usage and examples:
 | [Scroll Area](scroll-area.md) | A region that scrolls when its content does not fit |
 | [Separator](separator.md) | A thin line between items |
 | [Skeleton](skeleton.md) | A pulsing placeholder while content loads |
+| [Spinner](spinner.md) | A turning ring while something loads |
 | [Stack](stack.md) | A row or column that lays out its children |
 | [Switch](switch.md) | An on and off switch, with an optional label |
 | [Tabs](tabs.md) | A tab bar with one panel per tab |
@@ -221,7 +223,7 @@ a Button's text sets its `Text` again and nothing else. See
 Coming in 0.1.0, each working with mouse, touch, gamepad and TV:
 
 - **Layout and display:** Image and Icon, Avatar, Kbd
-  and key hints, Alert, Spinner, Table
+  and key hints, Table
 - **Selection:** Select
 - **Overlays:** Sheet (a bottom drawer on touch), and Dialog with a size and a
   scrolling body

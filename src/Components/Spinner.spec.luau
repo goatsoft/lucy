@@ -1,0 +1,73 @@
+return function()
+	local Spinner = require(script.Parent.Spinner)
+	local Reactive = require(script.Parent.Parent.Core.Reactive)
+	local Harness = require(script.Parent.Parent.Testing.Harness)
+
+	local app, cleanup, gui
+	beforeEach(function()
+		app, cleanup = Harness.app({ theme = "light" })
+		gui = Harness.mount(app)
+	end)
+	afterEach(function()
+		cleanup()
+	end)
+
+	it("draws a ring that turns while visible", function()
+		local visible = Reactive.ref(true)
+		local spinner = Spinner.new({ app = app, Parent = gui, visible = visible })
+		expect(spinner.stroke:IsA("UIStroke")).to.equal(true)
+		expect(spinner.stroke:FindFirstChildOfClass("UIGradient")).to.be.ok()
+		expect(spinner.spinning).to.equal(true)
+		local before = spinner.Instance.Rotation
+		task.wait(0.15)
+		expect(spinner.Instance.Rotation ~= before).to.equal(true)
+		visible(false)
+		expect(spinner.spinning).to.equal(false)
+		expect(spinner.Instance.Visible).to.equal(false)
+		visible(true)
+		expect(spinner.spinning).to.equal(true)
+	end)
+
+	it("stops turning when destroyed", function()
+		local spinner = Spinner.new({ app = app, Parent = gui })
+		local root = spinner.Instance
+		spinner:destroy()
+		expect(spinner.spinning).to.equal(false)
+		expect(root.Parent).to.equal(nil)
+	end)
+
+	it("comes in three sizes", function()
+		local size = Reactive.ref("sm")
+		local spinner = Spinner.new({ app = app, Parent = gui, size = size })
+		expect(spinner.Instance.Size).to.equal(UDim2.fromOffset(Spinner.sizes.sm, Spinner.sizes.sm))
+		size("lg")
+		expect(spinner.Instance.Size).to.equal(UDim2.fromOffset(Spinner.sizes.lg, Spinner.sizes.lg))
+		expect(spinner.Instance:HasTag("ui-spinner-size-lg")).to.equal(true)
+		expect(Spinner.sizes.sm < Spinner.sizes.md and Spinner.sizes.md < Spinner.sizes.lg).to.equal(true)
+	end)
+
+	it("tags its variant on the ring", function()
+		local spinner = Spinner.new({ app = app, Parent = gui, variant = "primary" })
+		expect(spinner.stroke:HasTag("ui-spinner-ring-primary")).to.equal(true)
+		spinner:set("variant", "muted")
+		expect(spinner.stroke:HasTag("ui-spinner-ring-primary")).to.equal(false)
+		expect(spinner.stroke:HasTag("ui-spinner-ring-muted")).to.equal(true)
+	end)
+
+	it("rejects an unknown variant or size", function()
+		expect(function()
+			Spinner.new({ app = app, Parent = gui, variant = "neon" })
+		end).to.throw()
+		expect(function()
+			Spinner.new({ app = app, Parent = gui, size = "xl" })
+		end).to.throw()
+	end)
+
+	it("uses the primary colour for the primary variant", function()
+		local spinner = Spinner.new({ app = app, Parent = gui, variant = "primary" })
+		Harness.flush()
+		expect(Harness.colorEq(Harness.styled(spinner.stroke, "Color"), app.theme:resolve("Primary"))).to.equal(
+			true
+		)
+	end)
+end
