@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Dialog and alert dialog
 
@@ -36,7 +37,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 
 local Dialog = {}
 
-Dialog.rules = {
+local rules: { Component.Rule } = {
 	{
 		selector = ".ui-dialog-overlay",
 		priority = 0,
@@ -92,6 +93,7 @@ Dialog.rules = {
 		},
 	},
 }
+Dialog.rules = rules
 
 local layer = 0
 
@@ -107,7 +109,7 @@ local function label(tag: string, order: number)
 end
 
 function Dialog.new(props: { [string]: any }?)
-	local p = props or {}
+	local p: Component.Props = props or {}
 	local dismissible = p.dismissible ~= false
 	local closeOnOverlay = dismissible and p.closeOnOverlay ~= false
 	local showClose = dismissible and p.showClose ~= false

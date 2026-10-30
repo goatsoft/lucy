@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Adaptive: proportional scaling and responsive helpers (ADR 0006).
 
@@ -47,7 +48,7 @@ Adaptive.bands = {
 }
 
 function Adaptive.computeScale(viewport: Vector2, options: { [string]: any }?): number
-	local opts = options or {}
+	local opts: { [string]: any } = options or {}
 	local base: Vector2 = opts.base or Adaptive.defaults.base
 	local min = opts.min or Adaptive.defaults.min
 	local max = opts.max or Adaptive.defaults.max
@@ -87,8 +88,8 @@ end
 	Returns a handle with .scale, :refresh(), :destroy().
 ]]
 function Adaptive.attach(gui: Instance, options: { [string]: any }?)
-	local opts = options or {}
-	local getViewport = opts.getViewport
+	local opts: { [string]: any } = options or {}
+	local getViewport: () -> Vector2 = opts.getViewport
 		or function()
 			if gui:IsA("ScreenGui") and gui.AbsoluteSize.X > 0 then
 				return gui.AbsoluteSize
@@ -96,14 +97,17 @@ function Adaptive.attach(gui: Instance, options: { [string]: any }?)
 			return cameraViewport()
 		end
 
-	local scale = gui:FindFirstChild("LucyScale")
-	if not scale then
+	local existing = gui:FindFirstChild("LucyScale")
+	local scale: UIScale
+	if existing and existing:IsA("UIScale") then
+		scale = existing
+	else
 		scale = Instance.new("UIScale")
 		scale.Name = "LucyScale"
 		scale.Parent = gui
 	end
 
-	local handle = { scale = scale, connections = {}, options = opts }
+	local handle: any = { scale = scale, connections = {} :: { RBXScriptConnection }, options = opts }
 
 	function handle.refresh(_self)
 		scale.Scale = Adaptive.computeScale(getViewport(), handle.options)
@@ -155,7 +159,7 @@ function Adaptive.aspect(
 	ratio: number,
 	options: { [string]: any }?
 ): UIAspectRatioConstraint
-	local opts = options or {}
+	local opts: { [string]: any } = options or {}
 	local constraint = Instance.new("UIAspectRatioConstraint")
 	constraint.AspectRatio = ratio
 	constraint.AspectType = opts.aspectType or Enum.AspectType.FitWithinMaxSize
@@ -175,10 +179,13 @@ end
 
 -- Creates StyleQuery instances so rules can use "@Compact", "@Regular" and "@Wide".
 function Adaptive.breakpoints(gui: Instance): { [string]: StyleQuery }
-	local queries = {}
+	local queries: { [string]: StyleQuery } = {}
 	for _, band in Adaptive.bands do
-		local query = gui:FindFirstChild(band.name)
-		if not (query and query:IsA("StyleQuery")) then
+		local found = gui:FindFirstChild(band.name)
+		local query: StyleQuery
+		if found and found:IsA("StyleQuery") then
+			query = found
+		else
 			query = Instance.new("StyleQuery")
 			query.Name = band.name
 			pcall(function()
@@ -186,11 +193,11 @@ function Adaptive.breakpoints(gui: Instance): { [string]: StyleQuery }
 				if band.max < math.huge then
 					conditions.MaxSize = Vector2.new(band.max, 100000)
 				end
-				(query :: StyleQuery):SetConditions(conditions)
+				query:SetConditions(conditions)
 			end)
 			query.Parent = gui
 		end
-		queries[band.name] = query :: StyleQuery
+		queries[band.name] = query
 	end
 	return queries
 end

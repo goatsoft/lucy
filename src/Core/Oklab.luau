@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Oklab / OKLCH colour maths (Björn Ottosson, https://bottosson.github.io/posts/oklab/).
 

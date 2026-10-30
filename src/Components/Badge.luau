@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Badge
 
@@ -12,7 +13,7 @@ local Badge = {}
 
 Badge.variants = { "default", "secondary", "destructive", "outline" }
 
-Badge.rules = {
+local rules: { Component.Rule } = {
 	{
 		selector = ".ui-badge",
 		priority = 0,
@@ -60,6 +61,7 @@ Badge.rules = {
 		},
 	},
 }
+Badge.rules = rules
 
 function Badge.new(props: { [string]: any }?)
 	return Component.mount({

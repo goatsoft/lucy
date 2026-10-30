@@ -67,10 +67,14 @@ Gotchas:
 1. `src/Components/Thing.spec.luau` first.
 2. `src/Components/Thing.luau`:
    ```lua
+   --!strict
    local Component = require(script.Parent.Parent.Core.Component)
    local Thing = {}
-   Thing.rules = { { selector = ".ui-thing", priority = 0, properties = { BackgroundColor3 = "$Card" } } }
-   function Thing.new(props)
+   local rules: { Component.Rule } = {
+       { selector = ".ui-thing", priority = 0, properties = { BackgroundColor3 = "$Card" } },
+   }
+   Thing.rules = rules
+   function Thing.new(props: Component.Props?): Component.Handle
        return Component.mount({
            kind = "thing", props = props, rules = Thing.rules,
            defaults = { text = "", visible = true },  -- the keys that live in state
@@ -80,6 +84,8 @@ Gotchas:
    end
    return Thing
    ```
+   Annotate the rules list as `{ Component.Rule }` so rules with different
+   properties type-check together.
 3. Visual properties go in `rules` with `$Token` values; layout and behaviour in code.
 4. Sizes that should grow on touch or console come from density tokens
    (`Component.metric(app, "ControlMd")` with `Component.onDensity`).
@@ -100,6 +106,12 @@ luau-lsp analyze --sourcemap=sourcemap.json --definitions=@roblox=globalTypes.d.
 selene src tests
 stylua --check src tests scripts
 ```
+
+Every source file starts with `--!strict` and `luau-lsp analyze` must report
+nothing. Specs stay in the default nonstrict mode (`.luaurc`) since TestEZ's
+globals are loosely typed. Classes declare their type next to the metatable
+(`export type AppState = typeof(setmetatable({} :: {...}, AppState))`) and
+write methods as `function AppState.get(self: AppState, ...)`.
 
 ## Regenerating the palette
 

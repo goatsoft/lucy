@@ -1,3 +1,4 @@
+--!strict
 --[[
 	SceneManager: title screen, game HUD, menus and modals that never fight (ADR 0005).
 
@@ -46,22 +47,50 @@ SceneManager.layerOrder = {
 	modal = 200,
 }
 
-function SceneManager.new(app)
-	local self = setmetatable({}, SceneManager)
-	self.app = app
-	self.Changed = Signal.new()
-	self._defs = {}
-	self._scenes = {}
-	self._active = {}
-	self._params = {}
-	self._current = nil
+-- What a scene's build/enter/exit get. Games may keep their own parts on it too.
+export type Scene = {
+	name: string,
+	layer: string,
+	gui: ScreenGui,
+	app: any,
+	maid: Maid.Maid,
+	params: any,
+	popScope: (() -> ())?,
+	[string]: any,
+}
+
+export type SceneManager = typeof(setmetatable(
+	{} :: {
+		app: any,
+		Changed: Signal.Signal,
+		_defs: { [string]: { [string]: any } },
+		_scenes: { [string]: Scene },
+		_active: { [string]: boolean },
+		_params: { [string]: any },
+		_current: string?,
+		_unsubscribe: () -> (),
+	},
+	SceneManager
+))
+
+function SceneManager.new(app: any): SceneManager
+	local self: SceneManager = setmetatable({
+		app = app,
+		Changed = Signal.new(),
+		_defs = {},
+		_scenes = {},
+		_active = {},
+		_params = {},
+		_current = nil,
+		_unsubscribe = function() end,
+	}, SceneManager)
 	self._unsubscribe = app.state:subscribe("scenes", function()
 		self:_reconcile()
 	end)
 	return self
 end
 
-function SceneManager:register(name: string, def: { [string]: any })
+function SceneManager.register(self: SceneManager, name: string, def: { [string]: any })
 	if self._defs[name] then
 		error(`[Lucy] scene "{name}" is already registered`, 2)
 	end
@@ -74,7 +103,7 @@ function SceneManager:register(name: string, def: { [string]: any })
 	self._defs[name] = copy
 end
 
-function SceneManager:_def(name: string, level: number?)
+function SceneManager._def(self: SceneManager, name: string, level: number?): { [string]: any }
 	local def = self._defs[name]
 	if not def then
 		error(`[Lucy] unknown scene "{name}"`, (level or 2) + 1)
@@ -82,19 +111,19 @@ function SceneManager:_def(name: string, level: number?)
 	return def
 end
 
-function SceneManager:get(name: string)
+function SceneManager.get(self: SceneManager, name: string): Scene?
 	return self._scenes[name]
 end
 
-function SceneManager:current(): string?
+function SceneManager.current(self: SceneManager): string?
 	return self._current
 end
 
-function SceneManager:isVisible(name: string): boolean
+function SceneManager.isVisible(self: SceneManager, name: string): boolean
 	return self._active[name] == true
 end
 
-function SceneManager:goTo(name: string, params: any?)
+function SceneManager.goTo(self: SceneManager, name: string, params: any?)
 	local def = self:_def(name)
 	if def.layer ~= "screen" then
 		error(`[Lucy] scene "{name}" is a {def.layer}; use push/show`, 2)
@@ -109,7 +138,7 @@ function SceneManager:goTo(name: string, params: any?)
 	self.app.state:set("scenes.current", name)
 end
 
-function SceneManager:push(name: string, params: any?)
+function SceneManager.push(self: SceneManager, name: string, params: any?)
 	local def = self:_def(name)
 	if def.layer == "screen" then
 		error(`[Lucy] scene "{name}" is a screen; use goTo`, 2)
@@ -124,7 +153,7 @@ function SceneManager:push(name: string, params: any?)
 	self.app.state:set("scenes.stack", stack)
 end
 
-function SceneManager:pop(): string?
+function SceneManager.pop(self: SceneManager): string?
 	local stack = table.clone(self.app.state:get("scenes.stack") or {})
 	local top = table.remove(stack)
 	if top then
@@ -133,7 +162,7 @@ function SceneManager:pop(): string?
 	return top
 end
 
-function SceneManager:show(name: string, params: any?)
+function SceneManager.show(self: SceneManager, name: string, params: any?)
 	local def = self:_def(name)
 	if def.layer == "screen" then
 		error(`[Lucy] scene "{name}" is a screen; use goTo`, 2)
@@ -142,28 +171,30 @@ function SceneManager:show(name: string, params: any?)
 	self.app.state:set(`scenes.visible.{name}`, true)
 end
 
-function SceneManager:hide(name: string)
+function SceneManager.hide(self: SceneManager, name: string)
 	self:_def(name)
 	self.app.state:set(`scenes.visible.{name}`, nil)
 end
 
-function SceneManager:_build(name: string)
+function SceneManager._build(self: SceneManager, name: string): Scene
 	local def = self._defs[name]
-	local scene = self._scenes[name]
-	if scene then
-		return scene
+	local existing = self._scenes[name]
+	if existing then
+		return existing
 	end
 	local gui = self.app:createGui("Scene_" .. name, {
 		displayOrder = SceneManager.layerOrder[def.layer],
 		enabled = false,
 		ignoreGuiInset = def.ignoreGuiInset,
 	})
-	scene = {
+	local scene: Scene = {
 		name = name,
 		layer = def.layer,
 		gui = gui,
 		app = self.app,
 		maid = Maid.new(),
+		params = nil,
+		popScope = nil,
 	}
 	if def.layer == "modal" then
 		-- Swallow clicks so nothing underneath reacts while a modal is up.
@@ -184,7 +215,7 @@ function SceneManager:_build(name: string)
 	return scene
 end
 
-function SceneManager:_enter(name: string, displayOrder: number?)
+function SceneManager._enter(self: SceneManager, name: string, displayOrder: number?)
 	local def = self._defs[name]
 	local scene = self:_build(name)
 	if displayOrder then
@@ -208,7 +239,7 @@ function SceneManager:_enter(name: string, displayOrder: number?)
 	end
 end
 
-function SceneManager:_exit(name: string)
+function SceneManager._exit(self: SceneManager, name: string)
 	local def = self._defs[name]
 	local scene = self._scenes[name]
 	self._active[name] = nil
@@ -224,14 +255,14 @@ function SceneManager:_exit(name: string)
 	end
 	scene.gui.Enabled = false
 	if def.keepAlive == false then
-		scene.maid:clean()
+		Maid.clean(scene.maid)
 		scene.gui:Destroy()
 		self._scenes[name] = nil
 	end
 end
 
 -- Makes the set of enabled scene guis match AppState.
-function SceneManager:_reconcile()
+function SceneManager._reconcile(self: SceneManager)
 	local state = self.app.state
 	local current = state:get("scenes.current")
 	local stack = state:get("scenes.stack") or {}
@@ -281,24 +312,24 @@ function SceneManager:_reconcile()
 end
 
 -- Escape / ButtonB: pop the top stacked scene, else ask the current screen.
-function SceneManager:back(): boolean
+function SceneManager.back(self: SceneManager): boolean
 	local stack = self.app.state:get("scenes.stack") or {}
 	if #stack > 0 then
 		self:pop()
 		return true
 	end
 	local current = self._current
-	local def = current and self._defs[current]
-	if def and def.onBack then
+	local def = if current then self._defs[current] else nil
+	if current and def and def.onBack then
 		return def.onBack(self._scenes[current]) ~= false
 	end
 	return false
 end
 
-function SceneManager:destroy()
+function SceneManager.destroy(self: SceneManager)
 	self._unsubscribe()
 	self.Changed:DisconnectAll()
-	for name, scene in self._scenes do
+	for name, scene in self._scenes :: { [string]: any } do
 		scene.maid:clean()
 		scene.gui:Destroy()
 		self._scenes[name] = nil

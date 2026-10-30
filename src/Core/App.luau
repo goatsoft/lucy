@@ -1,3 +1,4 @@
+--!strict
 --[[
 	App: the root object a game creates once on the client.
 
@@ -36,11 +37,35 @@ local Context = require(script.Parent.Context)
 local InputManager = require(script.Parent.InputManager)
 local Maid = require(script.Parent.Maid)
 local SceneManager = require(script.Parent.SceneManager)
+local Signal = require(script.Parent.Signal)
 local Theme = require(script.Parent.Theme)
 local Tokens = require(script.Parent.Tokens)
 
 local App = {}
 App.__index = App
+
+-- Optional services (app.toast, a test clock) are added later, hence the indexer.
+export type App = typeof(setmetatable(
+	{} :: {
+		config: { [string]: any },
+		namePrefix: string,
+		parent: Instance,
+		maid: Maid.Maid,
+		selectionImage: Frame,
+		theme: Theme.Theme,
+		state: AppState.AppState,
+		input: InputManager.InputManager,
+		scenes: SceneManager.SceneManager,
+		destroyed: boolean?,
+		_ids: { [string]: number },
+		_handles: { [string]: any },
+		_guis: { ScreenGui },
+		_portals: { [string]: ScreenGui },
+		_adaptive: { any },
+		[string]: any,
+	},
+	App
+))
 
 -- Display orders for shared portals. Scenes use 10-299 (see SceneManager).
 App.portalOrder = {
@@ -58,9 +83,10 @@ local function defaultParent(): Instance
 	return StarterGui
 end
 
-function App.new(config: { [string]: any }?)
-	local options = config or {}
-	local self = setmetatable({}, App)
+function App.new(config: { [string]: any }?): App
+	local options: { [string]: any } = config or {}
+	-- Fields are filled in below, in dependency order (theme, state, input, scenes).
+	local self: App = setmetatable({} :: any, App)
 	self.config = options
 	self.namePrefix = options.namePrefix or "Lucy_"
 	self.parent = options.parent or defaultParent()
@@ -100,7 +126,7 @@ function App.new(config: { [string]: any }?)
 	})
 	self.maid:give(self.theme)
 
-	local initial = table.clone(options.state or {})
+	local initial: { [string]: any } = table.clone(options.state or {})
 	initial.theme = self.theme:get()
 	initial.density = self.theme:getDensity()
 	self.state = AppState.new(initial)
@@ -113,7 +139,7 @@ function App.new(config: { [string]: any }?)
 	self.maid:give(self.input)
 
 	-- Density and scaling follow the device unless pinned in config.
-	local function onDevice(device)
+	local function onDevice(device: string?)
 		if device == nil then
 			return
 		end
@@ -134,7 +160,8 @@ function App.new(config: { [string]: any }?)
 	local components = script.Parent.Parent:FindFirstChild("Components")
 	local toaster = components and components:FindFirstChild("Toaster")
 	if toaster then
-		require(toaster).install(self)
+		-- A runtime lookup, so the type checker can't follow it.
+		(require :: any)(toaster).install(self)
 	end
 
 	if options.setCurrent ~= false then
@@ -144,8 +171,8 @@ function App.new(config: { [string]: any }?)
 end
 
 -- Two-way binding between a state key and a theme setting (theme, density).
-function App:_bindSetting(key: string, setter: string, getter: string, changed)
-	local theme = self.theme
+function App._bindSetting(self: App, key: string, setter: string, getter: string, changed: Signal.Signal)
+	local theme: any = self.theme
 	self.maid:give(self.state:subscribe(key, function(name)
 		if name == theme[getter](theme) then
 			return
@@ -161,7 +188,7 @@ function App:_bindSetting(key: string, setter: string, getter: string, changed)
 	end))
 end
 
-function App:_adaptiveOptions(getViewport)
+function App._adaptiveOptions(self: App, getViewport: (() -> Vector2)?): { [string]: any }
 	local device = self.state:get("input.device") or "desktop"
 	local merged = table.clone(Adaptive.profiles[device] or Adaptive.defaults)
 	if type(self.config.adaptive) == "table" then
@@ -173,38 +200,38 @@ function App:_adaptiveOptions(getViewport)
 	return merged
 end
 
-function App:nextId(kind: string): string
+function App.nextId(self: App, kind: string): string
 	local n = (self._ids[kind] or 0) + 1
 	self._ids[kind] = n
 	return `{kind}-{n}`
 end
 
 -- Component handle registry (used for keyboard activation and debugging).
-function App:registerHandle(handle)
+function App.registerHandle(self: App, handle: any)
 	self._handles[handle.id] = handle
 end
 
-function App:unregisterHandle(handle)
+function App.unregisterHandle(self: App, handle: any)
 	if self._handles[handle.id] == handle then
 		self._handles[handle.id] = nil
 	end
 end
 
-function App:handle(id: string)
+function App.handle(self: App, id: string): any
 	return self._handles[id]
 end
 
-function App:setTheme(name: string)
+function App.setTheme(self: App, name: string)
 	self.theme:set(name)
 end
 
-function App:setDensity(name: string)
+function App.setDensity(self: App, name: string)
 	self.theme:setDensity(name)
 end
 
 -- Creates a themed, adaptive ScreenGui. Used by portals and scenes.
-function App:createGui(name: string, options: { [string]: any }?): ScreenGui
-	local opts = options or {}
+function App.createGui(self: App, name: string, options: { [string]: any }?): ScreenGui
+	local opts: { [string]: any } = options or {}
 	local gui = Instance.new("ScreenGui")
 	gui.Name = self.namePrefix .. name
 	gui.ResetOnSpawn = false
@@ -236,7 +263,7 @@ function App:createGui(name: string, options: { [string]: any }?): ScreenGui
 end
 
 -- Enabled app guis, topmost first (keyboard navigation searches these).
-function App:activeGuis(): { ScreenGui }
+function App.activeGuis(self: App): { ScreenGui }
 	local out = {}
 	for _, gui in self._guis do
 		if gui.Enabled and gui.Parent then
@@ -250,12 +277,12 @@ function App:activeGuis(): { ScreenGui }
 end
 
 -- A shared, lazily created ScreenGui layer ("modal", "toast", ...) that components render into.
-function App:portal(name: string, options: { [string]: any }?): ScreenGui
+function App.portal(self: App, name: string, options: { [string]: any }?): ScreenGui
 	local existing = self._portals[name]
 	if existing and existing.Parent then
 		return existing
 	end
-	local opts = table.clone(options or {})
+	local opts: { [string]: any } = table.clone(options or {})
 	opts.displayOrder = opts.displayOrder or App.portalOrder[name] or 700
 	local gui = self:createGui("Portal_" .. name, opts)
 	self._portals[name] = gui
@@ -263,7 +290,7 @@ function App:portal(name: string, options: { [string]: any }?): ScreenGui
 	return gui
 end
 
-function App:destroy()
+function App.destroy(self: App)
 	if self.destroyed then
 		return
 	end

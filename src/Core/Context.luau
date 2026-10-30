@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Context: holds the "current" App so components can be created without passing
 	`app` every time. Kept separate from App to avoid require cycles.

@@ -20,7 +20,7 @@ A UI kit and app framework for Roblox, built on
 - **Every input, every screen**: mouse, keyboard, gamepad and touch on desktop, console, tablet and phone, with densities, adaptive scaling and responsive props built in.
 - **Lucy owns focus**: no Roblox selection rings or default borders; a themed focus ring only while navigating with keys or a gamepad.
 - **One app, clean scenes**: one store drives every component, scene and toast. Title screen, game, menus and modals each own a layer and never steal input.
-- **Light and dependable**: one package with no runtime dependencies, a typed Luau API, and hundreds of specs run in Studio.
+- **Light and dependable**: one package with no runtime dependencies, strict types throughout, and hundreds of specs run in Studio.
 
 ## Install
 

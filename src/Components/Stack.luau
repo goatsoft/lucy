@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Stack: a flex row or column.
 
@@ -37,7 +38,7 @@ local V = {
 }
 
 function Stack.new(props: { [string]: any }?)
-	local p = props or {}
+	local p: Component.Props = props or {}
 	return Component.mount({
 		kind = "stack",
 		props = p,
@@ -87,11 +88,10 @@ function Stack.new(props: { [string]: any }?)
 				local padding = Responsive.pick(app, p.padding)
 				local pad = frame:FindFirstChild("StackPadding") :: UIPadding?
 				if padding ~= nil then
-					if not pad then
-						pad = Component.create("UIPadding", { Name = "StackPadding", Parent = frame })
-					end
+					local target: UIPadding = pad
+						or Component.create("UIPadding", { Name = "StackPadding", Parent = frame })
 					local value = Component.space(app, padding, 0)
-					pad.PaddingTop, pad.PaddingBottom, pad.PaddingLeft, pad.PaddingRight =
+					target.PaddingTop, target.PaddingBottom, target.PaddingLeft, target.PaddingRight =
 						value, value, value, value
 				elseif pad then
 					pad:Destroy()

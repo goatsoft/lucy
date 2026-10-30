@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Checkbox
 
@@ -20,7 +21,7 @@ local Checkbox = {}
 
 local BOX = { default = 16, touch = 20, tv = 24 }
 
-Checkbox.rules = {
+local rules: { Component.Rule } = {
 	{
 		selector = ".ui-checkbox",
 		priority = 0,
@@ -57,9 +58,10 @@ Checkbox.rules = {
 	{ selector = ".ui-checkbox.ui-disabled", priority = 30, properties = { BackgroundTransparency = 0.5 } },
 	{ selector = ".ui-checkbox-label.ui-disabled", priority = 30, properties = { TextTransparency = 0.5 } },
 }
+Checkbox.rules = rules
 
 function Checkbox.new(props: { [string]: any }?)
-	local p = props or {}
+	local p: Component.Props = props or {}
 	local handle = Component.mount({
 		kind = "checkbox",
 		props = p,

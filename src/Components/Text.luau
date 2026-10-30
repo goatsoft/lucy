@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Text: headings, body copy and labels.
 
@@ -33,7 +34,7 @@ local ALIGN = {
 	right = Enum.TextXAlignment.Right,
 }
 
-Text.rules = {
+local rules: { Component.Rule } = {
 	{
 		selector = ".ui-text",
 		priority = 0,
@@ -45,12 +46,16 @@ Text.rules = {
 		},
 	},
 }
+Text.rules = rules
 for name, properties in Text.variants do
-	table.insert(Text.rules, { selector = `.ui-text-variant-{name}`, priority = 10, properties = properties })
+	table.insert(
+		Text.rules,
+		{ selector = `.ui-text-variant-{name}`, priority = 10, properties = properties :: { [string]: any } }
+	)
 end
 
 function Text.new(props: { [string]: any }?)
-	local p = props or {}
+	local p: Component.Props = props or {}
 	return Component.mount({
 		kind = "text",
 		props = p,

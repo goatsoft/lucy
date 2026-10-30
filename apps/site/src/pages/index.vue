@@ -17,7 +17,7 @@ const features = [
   { icon: 'focus', title: 'Lucy owns focus', text: 'No default selection rings or borders. A themed focus ring shows only while navigating with keys or a gamepad.' },
   { icon: 'devices', title: 'Every screen', text: 'Desktop, console, tablet and phone. Adaptive scaling, 44px touch targets, 10-foot sizes and responsive props.' },
   { icon: 'scenes', title: 'One app, clean scenes', text: 'One store drives every component, scene and toast. Title screen, game, menus and modals each own a layer and never steal input.' },
-  { icon: 'light', title: 'Light and dependable', text: 'One package with no runtime dependencies, a typed Luau API, and hundreds of specs run in Studio.' },
+  { icon: 'light', title: 'Light and dependable', text: 'One package with no runtime dependencies, strict types throughout, and hundreds of specs run in Studio.' },
 ] as const
 
 const install = 'lune run ~/Projects/Lucy/scripts/add -- button dialog --out src/shared/Lucy'

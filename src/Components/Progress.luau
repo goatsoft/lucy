@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Progress
 
@@ -11,7 +12,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 
 local Progress = {}
 
-Progress.rules = {
+local rules: { Component.Rule } = {
 	{
 		selector = ".ui-progress",
 		priority = 0,
@@ -29,6 +30,7 @@ Progress.rules = {
 		properties = { CornerRadius = "$RadiusFull" },
 	},
 }
+Progress.rules = rules
 
 function Progress.fraction(value: number, max: number): number
 	if max <= 0 then
@@ -38,7 +40,7 @@ function Progress.fraction(value: number, max: number): number
 end
 
 function Progress.new(props: { [string]: any }?)
-	local p = props or {}
+	local p: Component.Props = props or {}
 	return Component.mount({
 		kind = "progress",
 		props = p,

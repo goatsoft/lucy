@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Design tokens: the colour palette, semantic colours and per-device densities.
 

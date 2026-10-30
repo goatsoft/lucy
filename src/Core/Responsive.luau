@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Responsive: pick values by device, input mode, breakpoint or orientation.
 
@@ -26,7 +27,7 @@ Responsive.keys = {
 }
 
 local KNOWN = { default = true }
-for _, list in Responsive.keys do
+for _, list: { string } in Responsive.keys :: { [string]: { string } } do
 	for _, key in list do
 		KNOWN[key] = true
 	end

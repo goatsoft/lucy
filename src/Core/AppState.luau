@@ -1,3 +1,4 @@
+--!strict
 --[[
 	AppState: a small, synchronous, path-addressed store.
 
@@ -26,6 +27,18 @@ local Reactive = require(script.Parent.Reactive)
 
 local AppState = {}
 AppState.__index = AppState
+
+type Subscriber = { path: string, segments: { string }, fn: (new: any, old: any) -> (), alive: boolean }
+
+export type AppState = typeof(setmetatable(
+	{} :: {
+		_root: any,
+		_subscribers: { Subscriber },
+		_batchDepth: number,
+		_batchRoot: any,
+	},
+	AppState
+))
 
 local function split(path: string?): { string }
 	if path == nil or path == "" then
@@ -72,26 +85,26 @@ local function join(prefix: string, path: string?): string
 	return prefix .. "." .. path
 end
 
-function AppState.new(initial: { [string]: any }?)
-	local self = setmetatable({}, AppState)
-	self._root = if initial then table.clone(initial) else {}
-	self._subscribers = {}
-	self._batchDepth = 0
-	self._batchRoot = nil
-	return self
+function AppState.new(initial: { [string]: any }?): AppState
+	return setmetatable({
+		_root = if initial then table.clone(initial) else {},
+		_subscribers = {} :: { Subscriber },
+		_batchDepth = 0,
+		_batchRoot = nil :: any,
+	}, AppState)
 end
 
-function AppState:get(path: string?): any
+function AppState.get(self: AppState, path: string?): any
 	return read(self._root, split(path))
 end
 
-function AppState:_notify(oldRoot: any, newRoot: any)
+function AppState._notify(self: AppState, oldRoot: any, newRoot: any)
 	for _, sub in table.clone(self._subscribers) do
 		if sub.alive then
 			local old = read(oldRoot, sub.segments)
 			local new = read(newRoot, sub.segments)
 			if old ~= new then
-				local ok, err = pcall(sub.fn, new, old)
+				local ok: boolean, err: any = pcall(sub.fn, new, old)
 				if not ok then
 					warn(`[Lucy] state subscriber for "{sub.path}" errored: {err}`)
 				end
@@ -100,7 +113,7 @@ function AppState:_notify(oldRoot: any, newRoot: any)
 	end
 end
 
-function AppState:_commit(newRoot: any)
+function AppState._commit(self: AppState, newRoot: any)
 	local oldRoot = self._root
 	if oldRoot == newRoot then
 		return
@@ -111,7 +124,7 @@ function AppState:_commit(newRoot: any)
 	end
 end
 
-function AppState:set(path: string?, value: any)
+function AppState.set(self: AppState, path: string?, value: any)
 	local segments = split(path)
 	if read(self._root, segments) == value then
 		return
@@ -119,14 +132,14 @@ function AppState:set(path: string?, value: any)
 	self:_commit(write(self._root, segments, 1, value))
 end
 
-function AppState:update(path: string?, fn: (any) -> any)
+function AppState.update(self: AppState, path: string?, fn: (any) -> any)
 	self:set(path, fn(self:get(path)))
 end
 
 -- Shallow-merges `patch` into the table at `path`; only writes when something differs.
-function AppState:merge(path: string?, patch: { [string]: any })
+function AppState.merge(self: AppState, path: string?, patch: { [string]: any })
 	local current = self:get(path)
-	local base = if type(current) == "table" then current else {}
+	local base: { [string]: any } = if type(current) == "table" then current else {}
 	local changed = type(current) ~= "table"
 	for key, value in patch do
 		if base[key] ~= value then
@@ -144,12 +157,12 @@ function AppState:merge(path: string?, patch: { [string]: any })
 	self:set(path, merged)
 end
 
-function AppState:remove(path: string)
+function AppState.remove(self: AppState, path: string)
 	self:set(path, nil)
 end
 
-function AppState:subscribe(path: string?, fn: (new: any, old: any) -> ()): () -> ()
-	local sub = { path = path or "", segments = split(path), fn = fn, alive = true }
+function AppState.subscribe(self: AppState, path: string?, fn: (new: any, old: any) -> ()): () -> ()
+	local sub: Subscriber = { path = path or "", segments = split(path), fn = fn, alive = true }
 	table.insert(self._subscribers, sub)
 	return function()
 		if not sub.alive then
@@ -167,7 +180,7 @@ end
 	A writable ref onto `path`: reading tracks the value at the path, writing sets it.
 	The subscription ends with the current effect / scope (or lives with the store).
 ]]
-function AppState:ref(path: string?): Reactive.Ref<any>
+function AppState.ref(self: AppState, path: string?): Reactive.Ref<any>
 	local value = Reactive.ref(self:get(path))
 	local stop = self:subscribe(path, function(new)
 		value(new)
@@ -184,12 +197,12 @@ function AppState:ref(path: string?): Reactive.Ref<any>
 end
 
 -- Runs `fn` and delivers at most one notification per subscriber afterwards.
-function AppState:batch(fn: () -> ())
+function AppState.batch(self: AppState, fn: () -> ())
 	if self._batchDepth == 0 then
 		self._batchRoot = self._root
 	end
 	self._batchDepth += 1
-	local ok, err = pcall(fn)
+	local ok: boolean, err: any = pcall(fn)
 	self._batchDepth -= 1
 	if self._batchDepth == 0 then
 		local before = self._batchRoot
@@ -202,9 +215,9 @@ function AppState:batch(fn: () -> ())
 end
 
 -- A view of the store with every path prefixed, so a component can own "ui.<id>".
-function AppState:scope(prefix: string)
+function AppState.scope(self: AppState, prefix: string): any
 	local store = self
-	local scoped = {}
+	local scoped: any = {}
 	function scoped:get(path)
 		return store:get(join(prefix, path))
 	end
@@ -232,7 +245,7 @@ function AppState:scope(prefix: string)
 	return scoped
 end
 
-function AppState:destroy()
+function AppState.destroy(self: AppState)
 	for _, sub in self._subscribers do
 		sub.alive = false
 	end

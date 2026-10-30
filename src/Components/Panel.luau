@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Panel: a card with header, content and footer.
 
@@ -20,7 +21,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 
 local Panel = {}
 
-Panel.rules = {
+local rules: { Component.Rule } = {
 	{
 		selector = ".ui-panel",
 		priority = 0,
@@ -67,6 +68,7 @@ Panel.rules = {
 		},
 	},
 }
+Panel.rules = rules
 
 local function label(tag: string)
 	return Component.create("TextLabel", {
@@ -79,7 +81,7 @@ local function label(tag: string)
 end
 
 function Panel.new(props: { [string]: any }?)
-	local p = props or {}
+	local p: Component.Props = props or {}
 	return Component.mount({
 		kind = "panel",
 		props = p,

@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Skeleton: a pulsing placeholder while content loads.
 
@@ -13,7 +14,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 
 local Skeleton = {}
 
-Skeleton.rules = {
+local rules: { Component.Rule } = {
 	{
 		selector = ".ui-skeleton",
 		priority = 0,
@@ -26,11 +27,12 @@ Skeleton.rules = {
 		properties = { CornerRadius = "$RadiusFull" },
 	},
 }
+Skeleton.rules = rules
 
 Skeleton.pulse = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
 
 function Skeleton.new(props: { [string]: any }?)
-	local p = props or {}
+	local p: Component.Props = props or {}
 	local tween: Tween? = nil
 	return Component.mount({
 		kind = "skeleton",

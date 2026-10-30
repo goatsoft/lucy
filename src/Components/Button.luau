@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Button
 
@@ -29,7 +30,7 @@ Button.sizes = { "sm", "md", "lg", "icon" }
 
 local BASE, VARIANT, STATE, DISABLED = 0, 10, 20, 30
 
-Button.rules = {
+local rules: { Component.Rule } = {
 	{
 		selector = ".ui-button",
 		priority = BASE,
@@ -151,6 +152,7 @@ Button.rules = {
 	-- Disabled (the component also sets Interactable = false)
 	{ selector = ".ui-button.ui-disabled", priority = DISABLED, properties = { TextTransparency = 0.5 } },
 }
+Button.rules = rules
 -- Solid variants fade their background when disabled; transparent ones stay transparent.
 for _, variant in { "default", "destructive", "outline", "secondary" } do
 	table.insert(Button.rules, {
@@ -167,7 +169,7 @@ local function check(list: { string }, value: string, what: string)
 end
 
 function Button.new(props: { [string]: any }?)
-	local p = props or {}
+	local p: Component.Props = props or {}
 	local activated = Signal.new()
 
 	local handle = Component.mount({

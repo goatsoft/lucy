@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Lucy: a UI kit and app framework for Roblox.
 
@@ -27,11 +28,23 @@ local Components = script.Components
 local Reactive = require(Core.Reactive)
 local Element = require(Core.Element)
 local Animate = require(Core.Animate)
+local App = require(Core.App)
+local AppState = require(Core.AppState)
+local Component = require(Core.Component)
+local SceneManager = require(Core.SceneManager)
+local Theme = require(Core.Theme)
 
 export type Ref<T> = Reactive.Ref<T>
 export type Computed<T> = Reactive.Computed<T>
 export type MaybeRef<T> = Reactive.MaybeRef<T>
 export type Scope = Reactive.Scope
+export type App = App.App
+export type AppState = AppState.AppState
+export type Theme = Theme.Theme
+export type Scene = SceneManager.Scene
+export type Handle = Component.Handle
+export type Props = Component.Props
+export type Rule = Component.Rule
 
 return {
 	-- Reactivity (Core/Reactive)
@@ -70,17 +83,17 @@ return {
 	tween = Animate.tween,
 
 	-- Framework
-	App = require(Core.App),
-	AppState = require(Core.AppState),
-	Theme = require(Core.Theme),
+	App = App,
+	AppState = AppState,
+	Theme = Theme,
 	Tokens = require(Core.Tokens),
 	Oklab = require(Core.Oklab),
 	Palette = require(Core.Palette),
-	SceneManager = require(Core.SceneManager),
+	SceneManager = SceneManager,
 	InputManager = require(Core.InputManager),
 	Adaptive = require(Core.Adaptive),
 	Responsive = require(Core.Responsive),
-	Component = require(Core.Component),
+	Component = Component,
 	Reactive = Reactive,
 	Element = Element,
 	Animate = Animate,

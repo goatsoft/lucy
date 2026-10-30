@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Theme: builds the Universal Styling sheet graph and switches themes (ADR 0003).
 
@@ -39,6 +40,24 @@ export type Rule = {
 	transitions: { [string]: any }?,
 }
 
+export type Theme = typeof(setmetatable(
+	{} :: {
+		Changed: Signal.Signal,
+		DensityChanged: Signal.Signal,
+		folder: Folder,
+		design: StyleSheet,
+		_rules: { [string]: { StyleRule } },
+		_themes: { [string]: StyleSheet },
+		_densities: { [string]: StyleSheet },
+		_tokens: StyleSheet,
+		_themeDerive: StyleDerive,
+		_densityDerive: StyleDerive,
+		_current: string,
+		_density: string,
+	},
+	Theme
+))
+
 local RESET, FOCUS = -100, 100
 
 local GUI_CLASSES = {
@@ -54,7 +73,7 @@ local GUI_CLASSES = {
 	"VideoFrame",
 }
 
-Theme.baseRules = {}
+Theme.baseRules = {} :: { Rule }
 for _, className in GUI_CLASSES do
 	table.insert(
 		Theme.baseRules,
@@ -139,15 +158,16 @@ local function pickDefault(sets, wanted, fallback)
 	return (next(sets))
 end
 
-function Theme.new(config: { [string]: any }?)
-	local options = config or {}
+function Theme.new(config: { [string]: any }?): Theme
+	local options: { [string]: any } = config or {}
 	local primitives = options.primitives or Tokens.primitives
 	local themes = options.themes or Tokens.themes
 	local densities = options.densities or Tokens.densities
 	validateSets(themes, "theme")
 	validateSets(densities, "density")
 
-	local self = setmetatable({}, Theme)
+	-- Fields are filled in below, once the instances they point at exist.
+	local self: Theme = setmetatable({} :: any, Theme)
 	self.Changed = Signal.new()
 	self.DensityChanged = Signal.new()
 	self._rules = {}
@@ -208,7 +228,7 @@ function Theme.new(config: { [string]: any }?)
 	return self
 end
 
-function Theme:_applyTheme(name: string)
+function Theme._applyTheme(self: Theme, name: string)
 	local sheet = self._themes[name]
 	if not sheet then
 		error(`[Lucy] unknown theme "{name}"`, 3)
@@ -217,7 +237,7 @@ function Theme:_applyTheme(name: string)
 	self._themeDerive.StyleSheet = sheet
 end
 
-function Theme:_applyDensity(name: string)
+function Theme._applyDensity(self: Theme, name: string)
 	local sheet = self._densities[name]
 	if not sheet then
 		error(`[Lucy] unknown density "{name}"`, 3)
@@ -226,11 +246,11 @@ function Theme:_applyDensity(name: string)
 	self._densityDerive.StyleSheet = sheet
 end
 
-function Theme:get(): string
+function Theme.get(self: Theme): string
 	return self._current
 end
 
-function Theme:names(): { string }
+function Theme.names(self: Theme): { string }
 	local out = {}
 	for name in self._themes do
 		table.insert(out, name)
@@ -239,7 +259,7 @@ function Theme:names(): { string }
 	return out
 end
 
-function Theme:set(name: string)
+function Theme.set(self: Theme, name: string)
 	if name == self._current then
 		return
 	end
@@ -247,11 +267,11 @@ function Theme:set(name: string)
 	self.Changed:Fire(name)
 end
 
-function Theme:getDensity(): string
+function Theme.getDensity(self: Theme): string
 	return self._density
 end
 
-function Theme:setDensity(name: string)
+function Theme.setDensity(self: Theme, name: string)
 	if name == self._density then
 		return
 	end
@@ -271,7 +291,7 @@ local function read(self, name: string): any
 end
 
 -- Resolves a token through aliases to the raw value currently in effect.
-function Theme:resolve(token: string): any
+function Theme.resolve(self: Theme, token: string): any
 	local value = read(self, token)
 	local depth = 0
 	while Tokens.isAlias(value) and depth < 16 do
@@ -282,7 +302,7 @@ function Theme:resolve(token: string): any
 end
 
 -- Adds the Design StyleLink to a ScreenGui (only one sheet may apply per tree).
-function Theme:link(gui: Instance): StyleLink
+function Theme.link(self: Theme, gui: Instance): StyleLink
 	local existing = gui:FindFirstChildOfClass("StyleLink")
 	if existing then
 		existing.StyleSheet = self.design
@@ -295,11 +315,11 @@ function Theme:link(gui: Instance): StyleLink
 	return link
 end
 
-function Theme:hasRules(key: string): boolean
+function Theme.hasRules(self: Theme, key: string): boolean
 	return self._rules[key] ~= nil
 end
 
-function Theme:addRules(key: string, rules: { Rule })
+function Theme.addRules(self: Theme, key: string, rules: { Rule })
 	if self._rules[key] then
 		return
 	end
@@ -325,7 +345,7 @@ function Theme:addRules(key: string, rules: { Rule })
 	self._rules[key] = created
 end
 
-function Theme:removeRules(key: string)
+function Theme.removeRules(self: Theme, key: string)
 	local created = self._rules[key]
 	if not created then
 		return
@@ -336,7 +356,7 @@ function Theme:removeRules(key: string)
 	self._rules[key] = nil
 end
 
-function Theme:destroy()
+function Theme.destroy(self: Theme)
 	self.Changed:DisconnectAll()
 	self.DensityChanged:DisconnectAll()
 	self.folder:Destroy()

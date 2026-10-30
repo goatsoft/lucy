@@ -1,3 +1,4 @@
+--!strict
 --[[
 	InputManager: first-class mouse, keyboard, gamepad and touch (ADR 0007).
 
@@ -34,6 +35,21 @@ local Maid = require(script.Parent.Maid)
 
 local InputManager = {}
 InputManager.__index = InputManager
+
+export type Scope = { root: GuiObject | LayerCollector, defaultFocus: any? }
+
+export type InputManager = typeof(setmetatable(
+	{} :: {
+		app: any,
+		maid: Maid.Maid,
+		_scopes: { Scope },
+		_back: { () -> boolean? },
+		_focused: GuiObject?,
+		_caps: { [string]: any },
+		_mode: string,
+	},
+	InputManager
+))
 
 local MODES: { [Enum.UserInputType]: string } = {
 	[Enum.UserInputType.MouseButton1] = "mouse",
@@ -111,18 +127,18 @@ end
 		caps    fixed capabilities (tests); otherwise read from UserInputService
 		watch   listen to engine events (default true)
 ]]
-function InputManager.new(app, options: { [string]: any }?)
-	local opts = options or {}
-	local self = setmetatable({}, InputManager)
-	self.app = app
-	self.maid = Maid.new()
-	self._scopes = {}
-	self._back = {}
-	self._focused = nil
-	self._caps = opts.caps or readCaps()
-
-	local device = InputManager.deviceFor(self._caps)
-	self._mode = opts.mode or InputManager.defaultModeFor(device)
+function InputManager.new(app: any, options: { [string]: any }?): InputManager
+	local opts: { [string]: any } = options or {}
+	local caps: { [string]: any } = opts.caps or readCaps()
+	local self: InputManager = setmetatable({
+		app = app,
+		maid = Maid.new(),
+		_scopes = {} :: { Scope },
+		_back = {} :: { () -> boolean? },
+		_focused = nil :: GuiObject?,
+		_caps = caps,
+		_mode = (opts.mode or InputManager.defaultModeFor(InputManager.deviceFor(caps))) :: string,
+	}, InputManager)
 	self:_publish()
 
 	if opts.watch ~= false then
@@ -131,7 +147,7 @@ function InputManager.new(app, options: { [string]: any }?)
 	return self
 end
 
-function InputManager:_publish()
+function InputManager._publish(self: InputManager)
 	local caps = self._caps
 	local viewport: Vector2 = caps.viewport or Vector2.zero
 	local device = InputManager.deviceFor(caps)
@@ -148,19 +164,19 @@ function InputManager:_publish()
 	})
 end
 
-function InputManager:mode(): string
+function InputManager.mode(self: InputManager): string
 	return self._mode
 end
 
-function InputManager:device(): string
+function InputManager.device(self: InputManager): string
 	return self.app.state:get("input.device")
 end
 
-function InputManager:isNavigating(): boolean
+function InputManager.isNavigating(self: InputManager): boolean
 	return self._mode == "keyboard" or self._mode == "gamepad"
 end
 
-function InputManager:setMode(mode: string)
+function InputManager.setMode(self: InputManager, mode: string)
 	if mode == self._mode then
 		return
 	end
@@ -173,14 +189,14 @@ function InputManager:setMode(mode: string)
 	end
 end
 
-function InputManager:setCaps(caps: { [string]: any })
+function InputManager.setCaps(self: InputManager, caps: { [string]: any })
 	self._caps = caps
 	self:_publish()
 end
 
 -- Focus ring -----------------------------------------------------------------
 
-function InputManager:_clearRing()
+function InputManager._clearRing(self: InputManager)
 	local focused = self._focused
 	if focused and focused.Parent then
 		focused:RemoveTag("ui-focus-visible")
@@ -188,9 +204,10 @@ function InputManager:_clearRing()
 end
 
 -- Records `object` as focused and shows the ring if the player is navigating.
-function InputManager:markFocus(object: GuiObject?)
-	if self._focused and self._focused ~= object then
-		self._focused:RemoveTag("ui-focus-visible")
+function InputManager.markFocus(self: InputManager, object: GuiObject?)
+	local previous = self._focused
+	if previous and previous ~= object then
+		previous:RemoveTag("ui-focus-visible")
 	end
 	self._focused = object
 	if object and self:isNavigating() then
@@ -199,7 +216,7 @@ function InputManager:markFocus(object: GuiObject?)
 end
 
 -- Selects `object` for gamepad/keyboard navigation (no-op where the engine refuses).
-function InputManager:focus(object: GuiObject?)
+function InputManager.focus(self: InputManager, object: GuiObject?)
 	pcall(function()
 		GuiService.SelectedObject = object
 	end)
@@ -208,7 +225,7 @@ end
 
 -- Scopes ---------------------------------------------------------------------
 
-function InputManager:pushScope(scope: { root: GuiObject | LayerCollector, defaultFocus: any? }): () -> ()
+function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
 	table.insert(self._scopes, scope)
 	if self:isNavigating() then
 		self:focusDefault()
@@ -218,7 +235,8 @@ function InputManager:pushScope(scope: { root: GuiObject | LayerCollector, defau
 		if index then
 			table.remove(self._scopes, index)
 		end
-		if self._focused and scope.root and self._focused:IsDescendantOf(scope.root) then
+		local focused = self._focused
+		if focused and scope.root and focused:IsDescendantOf(scope.root) then
 			self:focus(nil)
 			if self:isNavigating() then
 				self:focusDefault()
@@ -227,7 +245,7 @@ function InputManager:pushScope(scope: { root: GuiObject | LayerCollector, defau
 	end
 end
 
-function InputManager:topScope()
+function InputManager.topScope(self: InputManager): Scope?
 	return self._scopes[#self._scopes]
 end
 
@@ -246,7 +264,7 @@ local function isShown(object: GuiObject): boolean
 end
 
 -- Selectable, visible, interactable GuiObjects under `root`, in reading order.
-function InputManager:selectables(root: Instance): { GuiObject }
+function InputManager.selectables(self: InputManager, root: Instance): { GuiObject }
 	local out = {}
 	for _, descendant in root:GetDescendants() do
 		if
@@ -268,7 +286,7 @@ function InputManager:selectables(root: Instance): { GuiObject }
 	return out
 end
 
-function InputManager:_scopeRoots(): { Instance }
+function InputManager._scopeRoots(self: InputManager): { Instance }
 	local top = self:topScope()
 	if top then
 		return { top.root }
@@ -276,7 +294,7 @@ function InputManager:_scopeRoots(): { Instance }
 	return self.app:activeGuis()
 end
 
-function InputManager:focusDefault()
+function InputManager.focusDefault(self: InputManager)
 	local top = self:topScope()
 	local target = top and top.defaultFocus
 	if type(target) == "function" then
@@ -299,7 +317,7 @@ function InputManager:focusDefault()
 end
 
 -- Moves keyboard focus by `step` through the current scope, wrapping around.
-function InputManager:move(step: number)
+function InputManager.move(self: InputManager, step: number)
 	local all = {}
 	for _, root in self:_scopeRoots() do
 		for _, object in self:selectables(root) do
@@ -309,19 +327,19 @@ function InputManager:move(step: number)
 	if #all == 0 then
 		return
 	end
-	local index = table.find(all, self._focused)
+	local index = table.find(all, self._focused :: any)
 	local nextIndex = if index then ((index - 1 + step) % #all) + 1 elseif step > 0 then 1 else #all
 	self:focus(all[nextIndex])
 end
 
 -- Activates the focused element (Enter / Space on keyboard).
-function InputManager:activate()
+function InputManager.activate(self: InputManager)
 	local focused = self._focused
 	if not focused then
 		return
 	end
 	local id = focused:GetAttribute("LucyId")
-	local handle = id and self.app:handle(id)
+	local handle: any = id and self.app:handle(id)
 	if handle and handle.click then
 		handle:click()
 	elseif handle and handle.toggle then
@@ -332,7 +350,7 @@ end
 -- Back -----------------------------------------------------------------------
 
 -- Registers a back handler; return true from it to stop further handling.
-function InputManager:pushBack(handler: () -> boolean?): () -> ()
+function InputManager.pushBack(self: InputManager, handler: () -> boolean?): () -> ()
 	table.insert(self._back, handler)
 	return function()
 		local index = table.find(self._back, handler)
@@ -342,7 +360,7 @@ function InputManager:pushBack(handler: () -> boolean?): () -> ()
 	end
 end
 
-function InputManager:back(): boolean
+function InputManager.back(self: InputManager): boolean
 	for index = #self._back, 1, -1 do
 		local handler = self._back[index]
 		if handler() ~= false then
@@ -357,7 +375,7 @@ end
 
 -- Engine wiring --------------------------------------------------------------
 
-function InputManager:_watch()
+function InputManager._watch(self: InputManager)
 	local maid = self.maid
 
 	maid:give(UserInputService.LastInputTypeChanged:Connect(function(inputType)
@@ -414,7 +432,7 @@ function InputManager:_watch()
 	end))
 end
 
-function InputManager:destroy()
+function InputManager.destroy(self: InputManager)
 	self:_clearRing()
 	self.maid:clean()
 	self._scopes = {}

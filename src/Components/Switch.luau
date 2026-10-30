@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Switch
 
@@ -25,7 +26,7 @@ local TRACK = {
 	tv = Vector2.new(52, 28),
 }
 
-Switch.rules = {
+local rules: { Component.Rule } = {
 	{
 		selector = ".ui-switch",
 		priority = 0,
@@ -57,9 +58,10 @@ Switch.rules = {
 	{ selector = ".ui-switch.ui-disabled", priority = 30, properties = { BackgroundTransparency = 0.5 } },
 	{ selector = ".ui-switch-label.ui-disabled", priority = 30, properties = { TextTransparency = 0.5 } },
 }
+Switch.rules = rules
 
 function Switch.new(props: { [string]: any }?)
-	local p = props or {}
+	local p: Component.Props = props or {}
 	local handle
 	handle = Component.mount({
 		kind = "switch",

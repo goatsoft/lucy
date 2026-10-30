@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Reactive: Lucy's fine-grained reactivity (ADR 0014), in plain Luau call
 	syntax: a ref is a function, call it to read, call it with a value to write.
@@ -199,7 +200,7 @@ local function flush()
 		for _, effect in current do
 			queued[effect] = nil
 			if not effect.disposed then
-				local ok, err = pcall(refresh, effect)
+				local ok: boolean, err: any = pcall(refresh, effect)
 				if not ok then
 					effect.state = CLEAN
 					report(err)
@@ -297,7 +298,7 @@ end
 function Reactive.ref<T>(initial: T, options: { equals: ((T, T) -> boolean)? }?): Ref<T>
 	local node = newNode("ref")
 	node.value = initial
-	local equals = (options and options.equals) or defaultEquals
+	local equals: (any, any) -> boolean = (options and options.equals) or defaultEquals :: any
 	local function accessor(...)
 		if select("#", ...) == 0 then
 			track(node)
@@ -385,7 +386,7 @@ function Reactive.watchEffect(fn: (onCleanup: OnCleanup) -> ()): StopHandle
 	adopt(node)
 	node.state = DIRTY
 	batchDepth += 1
-	local ok, err = pcall(refresh, node)
+	local ok: boolean, err: any = pcall(refresh, node)
 	batchDepth -= 1
 	if not ok then
 		report(err)
@@ -427,7 +428,7 @@ function Reactive.watch(
 	callback: (new: any, old: any, onCleanup: OnCleanup) -> (),
 	options: WatchOptions?
 ): StopHandle
-	local opts = options or {}
+	local opts: WatchOptions = options or {}
 	local getter: () -> any
 	local equals: (any, any) -> boolean = defaultEquals
 	local deep = opts.deep == true
@@ -521,7 +522,7 @@ function Reactive.effectScope(detached: boolean?): Scope
 		addCleanup(node, cleanup)
 	end
 	return setmetatable(scope, {
-		__index = function(_, key)
+		__index = function(_, key): any
 			if key == "active" then
 				return not node.disposed
 			end
@@ -542,7 +543,7 @@ function Reactive.batch<R...>(fn: (...any) -> R..., ...): R...
 	if not results[1] then
 		error(results[2], 0)
 	end
-	return table.unpack(results, 2, results.n)
+	return (table.unpack :: any)(results, 2, results.n)
 end
 
 function Reactive.untrack<R...>(fn: (...any) -> R..., ...): R...
@@ -553,7 +554,7 @@ function Reactive.untrack<R...>(fn: (...any) -> R..., ...): R...
 	if not results[1] then
 		error(results[2], 0)
 	end
-	return table.unpack(results, 2, results.n)
+	return (table.unpack :: any)(results, 2, results.n)
 end
 
 -- A value, ref, computed or getter, read as a plain value (tracked).

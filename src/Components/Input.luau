@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Input: a single-line text field.
 
@@ -21,7 +22,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 
 local Input = {}
 
-Input.rules = {
+local rules: { Component.Rule } = {
 	{
 		selector = ".ui-input",
 		priority = 0,
@@ -60,9 +61,10 @@ Input.rules = {
 		properties = { TextTransparency = 0.5, BackgroundTransparency = 0.5 },
 	},
 }
+Input.rules = rules
 
 function Input.new(props: { [string]: any }?)
-	local p = props or {}
+	local p: Component.Props = props or {}
 
 	local handle = Component.mount({
 		kind = "input",

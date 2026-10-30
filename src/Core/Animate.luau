@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Animate: springs and tweens that are themselves reactive sources (ADR 0014).
 

@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Lucy colour palette in OKLCH. Source: docs/adr/0010.
 

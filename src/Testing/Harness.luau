@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Test helpers shared by every spec.
 

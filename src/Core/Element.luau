@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Element: declarative instances bound to reactive state (ADR 0014).
 
@@ -377,7 +378,7 @@ function Element.each(
 				k = i
 			end
 			local entries = cache[k]
-			local entry = entries and table.remove(entries, 1)
+			local entry: any = entries and table.remove(entries, 1)
 			if entry then
 				entry.index(i)
 			else

@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Toaster: toast notifications.
 
@@ -33,7 +34,7 @@ local Toaster = {}
 Toaster.kinds = { "default", "success", "error", "warning", "info" }
 Toaster.defaults = { duration = 4, visibleToasts = 3, width = 356 }
 
-Toaster.rules = {
+local rules: { Component.Rule } = {
 	{
 		selector = ".ui-toast",
 		priority = 0,
@@ -86,6 +87,7 @@ Toaster.rules = {
 	},
 	{ selector = ".ui-toast-accent::UICorner", priority = 0, properties = { CornerRadius = "$RadiusFull" } },
 }
+Toaster.rules = rules
 for kind, token in { success = "$Success", error = "$Destructive", warning = "$Warning", info = "$Info" } do
 	table.insert(Toaster.rules, {
 		selector = `.ui-toast-accent-{kind}`,
@@ -138,7 +140,7 @@ end
 
 function Toaster.install(app)
 	local counter = 0
-	local mounted = nil
+	local mounted: Component.Handle? = nil
 
 	local function clock(): number
 		return if app.clock then app.clock() else os.clock()
@@ -152,7 +154,7 @@ function Toaster.install(app)
 	end
 
 	local function show(message: string, options: { [string]: any }?)
-		local opts = options or {}
+		local opts: { [string]: any } = options or {}
 		local kind = opts.kind or "default"
 		if not table.find(Toaster.kinds, kind) then
 			error(`[Lucy] unknown toast kind "{kind}"`, 3)
@@ -177,7 +179,7 @@ function Toaster.install(app)
 		return id
 	end
 
-	local api = setmetatable({}, {
+	local api: any = setmetatable({}, {
 		__call = function(_, message, options)
 			return show(message, options)
 		end,
@@ -321,7 +323,7 @@ local function destroyEntry(entry)
 end
 
 function Toaster.new(props: { [string]: any }?)
-	local p = props or {}
+	local p: Component.Props = props or {}
 	local entries = {}
 	local heartbeat: RBXScriptConnection? = nil
 
@@ -358,8 +360,8 @@ function Toaster.new(props: { [string]: any }?)
 			h.maid:give(h.app.state:subscribe("input.device", place))
 
 			-- Render from state.
-			local function render(list)
-				list = list or {}
+			local function render(state: { any }?)
+				local list: { any } = state or {}
 				local visibleCount = p.visibleToasts or Toaster.defaults.visibleToasts
 				local seen = {}
 				for index, toast in list do

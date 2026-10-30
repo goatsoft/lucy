@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Component: the shared base every Lucy component is built on (ADR 0002, 0004).
 
@@ -33,6 +34,11 @@ local CollectionService = game:GetService("CollectionService")
 local Context = require(script.Parent.Context)
 local Maid = require(script.Parent.Maid)
 local Reactive = require(script.Parent.Reactive)
+local Theme = require(script.Parent.Theme)
+
+export type Rule = Theme.Rule
+export type Props = { [string]: any }
+export type State = { [string]: any }
 
 local Component = {}
 
@@ -40,7 +46,7 @@ local SPECIAL = { Tags = true, Attributes = true, Children = true, Parent = true
 
 function Component.create(className: string, props: { [string]: any }?, children: { [any]: Instance }?): any
 	local instance = Instance.new(className)
-	local p = props or {}
+	local p: { [string]: any } = props or {}
 	for key, value in p do
 		if not SPECIAL[key] then
 			(instance :: any)[key] = value
@@ -238,7 +244,22 @@ end
 local Handle = {}
 Handle.__index = Handle
 
-function Handle:get(key: string?): any
+-- Components may keep their own parts on the handle too, hence the indexer.
+type HandleFields = {
+	app: any,
+	kind: string,
+	id: string,
+	path: string,
+	props: { [string]: any },
+	maid: Maid.Maid,
+	destroyed: boolean,
+	Instance: any,
+	scope: Reactive.Scope?,
+	[string]: any,
+}
+export type Handle = typeof(setmetatable({} :: HandleFields, Handle))
+
+function Handle.get(self: Handle, key: string?): any
 	local state = self.app.state:get(self.path)
 	if key == nil then
 		return state
@@ -246,11 +267,11 @@ function Handle:get(key: string?): any
 	return if state then state[key] else nil
 end
 
-function Handle:set(patch: { [string]: any })
+function Handle.set(self: Handle, patch: { [string]: any })
 	self.app.state:merge(self.path, patch)
 end
 
-function Handle:destroy()
+function Handle.destroy(self: Handle)
 	if self.destroyed then
 		return
 	end
@@ -266,8 +287,19 @@ function Handle:destroy()
 end
 Handle.Destroy = Handle.destroy
 
-function Component.mount(spec: { [string]: any })
-	local props = spec.props or {}
+export type Spec = {
+	kind: string,
+	props: Props?,
+	defaults: State?,
+	rules: { Rule }?,
+	ruleKey: string?,
+	render: (handle: Handle) -> any,
+	update: ((handle: Handle, state: State, previous: State?) -> ())?,
+	mounted: ((handle: Handle) -> ())?,
+}
+
+function Component.mount(spec: Spec): Handle
+	local props: Props = spec.props or {}
 	local app = Component.resolveApp(props)
 	local kind: string = spec.kind
 
@@ -280,7 +312,7 @@ function Component.mount(spec: { [string]: any })
 		error(`[Lucy] component id "{id}" must not contain "."`, 2)
 	end
 
-	local handle = setmetatable({
+	local fields: HandleFields = {
 		app = app,
 		kind = kind,
 		id = id,
@@ -288,7 +320,10 @@ function Component.mount(spec: { [string]: any })
 		props = props,
 		maid = Maid.new(),
 		destroyed = false,
-	}, Handle)
+		Instance = nil,
+		scope = nil,
+	}
+	local handle: Handle = setmetatable(fields, Handle)
 
 	-- Seed state: defaults <- props, then anything the app already set wins,
 	-- except keys bound to a reactive source, which always start from the source.
@@ -316,8 +351,8 @@ function Component.mount(spec: { [string]: any })
 	Component.claimSelection(app, root)
 	app:registerHandle(handle)
 
-	local previous = nil
-	local function apply(state)
+	local previous: { [string]: any }? = nil
+	local function apply(state: { [string]: any }?)
 		if handle.destroyed or state == nil then
 			return
 		end
