@@ -6,7 +6,32 @@ license = "MIT"
 authors = ["JB (GOATsoft)"]
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
-exclude = ["**/*.spec.luau", "tests", "examples", "docs", "scripts", ".github"]
+# Only the Luau package ships (ADR 0012). Wally 0.3 ignores `include`, so this is an
+# exclude list; CI fails if the package holds anything beyond src/, default.project.json,
+# wally.toml, README.md and LICENSE. Add new top-level folders and files here.
+exclude = [
+	"**/*.spec.luau",
+	"src/Testing",
+	"apps",
+	"docs",
+	"scripts",
+	"tests",
+	"examples",
+	"node_modules",
+	"package.json",
+	"pnpm-workspace.yaml",
+	"pnpm-lock.yaml",
+	"registry.json",
+	"AGENTS.md",
+	"rokit.toml",
+	"selene.toml",
+	"stylua.toml",
+	"testez.yml",
+	"test.project.json",
+	"sourcemap.json",
+	"DevPackages",
+	"Packages",
+]
 
 [dependencies]
 

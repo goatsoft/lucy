@@ -18,6 +18,15 @@ jobs:
           if grep -rn $'\xe2\x80\x94' --exclude-dir=.git --exclude-dir=DevPackages .; then
             echo "Em-dash found (see AGENTS.md rule 1)"; exit 1
           fi
+      - name: Package contains only the library
+        run: |
+          extra=$(wally package --list | grep -vE '^\./(src(/.*)?|wally\.toml|README\.md|LICENSE|default\.project\.json)$' || true)
+          if [ -n "$extra" ]; then
+            echo "Wally package would ship files outside the library (see ADR 0012):"; echo "$extra"; exit 1
+          fi
+          if wally package --list | grep -qE '\.spec\.luau$|^\./src/Testing'; then
+            echo "Specs or test helpers would ship"; exit 1
+          fi
       - name: Format
         run: stylua --check src tests scripts
       - name: Lint
