@@ -61,37 +61,39 @@ local function check(variant: string)
 	end
 end
 
-function Text.new(props: { [string]: any }?)
-	local p: Component.Props = props or {}
-	return Component.mount({
-		kind = "text",
-		props = p,
-		defaults = { text = "", variant = "p", align = "left", visible = true },
-		rules = Text.rules,
-		render = function(h)
-			check(h:get("variant")) -- an unknown variant fails the mount
-			local variant, align = h:ref("variant"), h:ref("align")
-			return Element.new("TextLabel", {
-				Size = if p.autoWidth then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0),
-				AutomaticSize = if p.autoWidth then Enum.AutomaticSize.XY else Enum.AutomaticSize.Y,
-				TextWrapped = not p.autoWidth,
-				RichText = p.richText == true,
-				Text = h:ref("text"),
-				Visible = h:ref("visible"),
-				TextXAlignment = function()
-					return ALIGN[align()] or Enum.TextXAlignment.Left
+-- Built once and shared by every mount (h.props holds each mount's props).
+local spec: Component.Spec = {
+	kind = "text",
+	defaults = { text = "", variant = "p", align = "left", visible = true },
+	rules = Text.rules,
+	render = function(h)
+		local p: Component.Props = h.props
+		check(h:get("variant")) -- an unknown variant fails the mount
+		local variant, align = h:ref("variant"), h:ref("align")
+		return Element.new("TextLabel", {
+			Size = if p.autoWidth then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0),
+			AutomaticSize = if p.autoWidth then Enum.AutomaticSize.XY else Enum.AutomaticSize.Y,
+			TextWrapped = not p.autoWidth,
+			RichText = p.richText == true,
+			Text = h:ref("text"),
+			Visible = h:ref("visible"),
+			TextXAlignment = function()
+				return ALIGN[align()] or Enum.TextXAlignment.Left
+			end,
+			Tags = {
+				"ui-text" :: any,
+				function()
+					local name = variant()
+					check(name)
+					return "ui-text-variant-" .. name
 				end,
-				Tags = {
-					"ui-text" :: any,
-					function()
-						local name = variant()
-						check(name)
-						return "ui-text-variant-" .. name
-					end,
-				},
-			})
-		end,
-	})
+			},
+		})
+	end,
+}
+
+function Text.new(props: { [string]: any }?)
+	return Component.mount(spec, props)
 end
 
 return Text

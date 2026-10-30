@@ -70,31 +70,33 @@ local function check(variant: string)
 	end
 end
 
+-- Built once and shared by every mount (h.props holds each mount's props).
+local spec: Component.Spec = {
+	kind = "badge",
+	defaults = { text = "Badge", variant = "default", visible = true },
+	rules = Badge.rules,
+	render = function(h)
+		check(h:get("variant")) -- an unknown variant fails the mount
+		local variant = h:ref("variant")
+		return Element.new("TextLabel", {
+			AutomaticSize = Enum.AutomaticSize.XY,
+			Size = UDim2.fromOffset(0, 0),
+			Text = h:ref("text"),
+			Visible = h:ref("visible"),
+			Tags = {
+				"ui-badge" :: any,
+				function()
+					local name = variant()
+					check(name)
+					return "ui-badge-variant-" .. name
+				end,
+			},
+		})
+	end,
+}
+
 function Badge.new(props: { [string]: any }?)
-	return Component.mount({
-		kind = "badge",
-		props = props,
-		defaults = { text = "Badge", variant = "default", visible = true },
-		rules = Badge.rules,
-		render = function(h)
-			check(h:get("variant")) -- an unknown variant fails the mount
-			local variant = h:ref("variant")
-			return Element.new("TextLabel", {
-				AutomaticSize = Enum.AutomaticSize.XY,
-				Size = UDim2.fromOffset(0, 0),
-				Text = h:ref("text"),
-				Visible = h:ref("visible"),
-				Tags = {
-					"ui-badge" :: any,
-					function()
-						local name = variant()
-						check(name)
-						return "ui-badge-variant-" .. name
-					end,
-				},
-			})
-		end,
-	})
+	return Component.mount(spec, props)
 end
 
 return Badge

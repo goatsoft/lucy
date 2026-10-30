@@ -21,30 +21,30 @@ local rules: { Component.Rule } = {
 }
 Separator.rules = rules
 
-function Separator.new(props: { [string]: any }?)
-	return Component.mount({
-		kind = "separator",
-		props = props,
-		defaults = { orientation = "horizontal", visible = true },
-		rules = Separator.rules,
-		render = function(h)
-			local orientation = h:ref("orientation")
-			return Element.new("Frame", {
-				Size = function()
-					return if orientation() == "vertical"
-						then UDim2.new(0, 1, 1, 0)
-						else UDim2.new(1, 0, 0, 1)
+-- Built once and shared by every mount (h.props holds each mount's props).
+local spec: Component.Spec = {
+	kind = "separator",
+	defaults = { orientation = "horizontal", visible = true },
+	rules = Separator.rules,
+	render = function(h)
+		local orientation = h:ref("orientation")
+		return Element.new("Frame", {
+			Size = function()
+				return if orientation() == "vertical" then UDim2.new(0, 1, 1, 0) else UDim2.new(1, 0, 0, 1)
+			end,
+			Visible = h:ref("visible"),
+			Tags = {
+				"ui-separator" :: any,
+				function()
+					return "ui-separator-orientation-" .. orientation()
 				end,
-				Visible = h:ref("visible"),
-				Tags = {
-					"ui-separator" :: any,
-					function()
-						return "ui-separator-orientation-" .. orientation()
-					end,
-				},
-			})
-		end,
-	})
+			},
+		})
+	end,
+}
+
+function Separator.new(props: { [string]: any }?)
+	return Component.mount(spec, props)
 end
 
 return Separator

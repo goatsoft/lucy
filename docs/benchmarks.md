@@ -18,7 +18,7 @@ operation 100 times per run.
 
 | Benchmark | Group | Size | Median (ms) | p95 (ms) | Heap (KB) |
 |---|---|---:|---:|---:|---:|
-| Mount a keyed list | Lists | 1,000 | 18.36 | 20.38 | 2207 |
+| Mount a keyed list | Lists | 1,000 | 18.36 | 20.38 | 2160 |
 | Edit 100 rows, one write each | Lists | 1,000 | 0.44 | 0.53 | 0 |
 | Reverse a keyed list | Lists | 1,000 | 6.34 | 7.87 | 158 |
 | Append 100 rows | Lists | 1,000 | 3.13 | 5.41 | 480 |
@@ -26,8 +26,8 @@ operation 100 times per run.
 | Destroy a mounted list | Lists | 1,000 | 5.70 | 6.93 | 0 |
 | HUD frame: 50 values, 200 labels | HUD | 200 | 0.39 | 0.51 | 0 |
 | One value, 1,000 readers | HUD | 1,000 | 2.00 | 2.50 | 0 |
-| Mount Buttons | Components | 100 | 4.92 | 5.45 | 867 |
-| Mount Switches | Components | 100 | 12.16 | 14.37 | 1407 |
+| Mount Buttons | Components | 100 | 4.92 | 5.45 | 745 |
+| Mount Switches | Components | 100 | 12.16 | 14.37 | 1260 |
 | Toggle Switches | Components | 100 | 0.66 | 0.84 | 0 |
 | Set Button text | Components | 100 | 0.37 | 0.49 | 0 |
 | Set Button disabled | Components | 100 | 0.78 | 0.91 | 0 |
@@ -39,7 +39,7 @@ operation 100 times per run.
 | Set a table equal to the stored one | Store | 1,000 | 2.83 | 2.95 | 0 |
 | Ref to computed to effect | Reactive core | 10,000 | 10.05 | 10.24 | 0 |
 | 1 ref, 1,000 computeds, 1 effect | Reactive core | 1,000 | 0.54 | 0.59 | 0 |
-| Mount 1,000 bound effects | Reactive core | 1,000 | 0.74 | 0.83 | 408 |
+| Mount 1,000 bound effects | Reactive core | 1,000 | 0.74 | 0.83 | 361 |
 
 Medians move by up to about 15% between runs on the same machine; mount times,
 which create the most garbage, move the most.
@@ -58,7 +58,7 @@ which create the most garbage, move the most.
   thumb animation included, takes about 7 µs.
 - **Mounting is where the cost is paid.** A keyed row (a TextLabel with a bound
   text) takes about 18 µs and 2.2 KB to build. A Button takes about 50 µs and
-  9 KB, a Switch about 120 µs and 14 KB, much of it creating and parenting
+  7.5 KB, a Switch about 120 µs and 12.6 KB, much of it creating and parenting
   instances. Each bound
   state key adds a binding, which is what lets later updates skip everything
   else. Build UI once and update it, rather than rebuilding it.

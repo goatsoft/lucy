@@ -40,31 +40,33 @@ function Progress.fraction(value: number, max: number): number
 	return math.clamp(value / max, 0, 1)
 end
 
+-- Built once and shared by every mount (h.props holds each mount's props).
+local spec: Component.Spec = {
+	kind = "progress",
+	defaults = { value = 0, max = 100, visible = true },
+	rules = Progress.rules,
+	render = function(h)
+		local p: Component.Props = h.props
+		local value, max = h:ref("value"), h:ref("max")
+		h.indicator = Element.new("Frame", {
+			Name = "Indicator",
+			Size = function()
+				return UDim2.fromScale(Progress.fraction(value(), max()), 1)
+			end,
+			Tags = { "ui-progress-indicator" },
+		})
+		return Element.new("Frame", {
+			Size = UDim2.new(1, 0, 0, p.height or 8),
+			ClipsDescendants = true,
+			Visible = h:ref("visible"),
+			Tags = { "ui-progress" },
+			h.indicator,
+		})
+	end,
+}
+
 function Progress.new(props: { [string]: any }?)
-	local p: Component.Props = props or {}
-	return Component.mount({
-		kind = "progress",
-		props = p,
-		defaults = { value = 0, max = 100, visible = true },
-		rules = Progress.rules,
-		render = function(h)
-			local value, max = h:ref("value"), h:ref("max")
-			h.indicator = Element.new("Frame", {
-				Name = "Indicator",
-				Size = function()
-					return UDim2.fromScale(Progress.fraction(value(), max()), 1)
-				end,
-				Tags = { "ui-progress-indicator" },
-			})
-			return Element.new("Frame", {
-				Size = UDim2.new(1, 0, 0, p.height or 8),
-				ClipsDescendants = true,
-				Visible = h:ref("visible"),
-				Tags = { "ui-progress" },
-				h.indicator,
-			})
-		end,
-	})
+	return Component.mount(spec, props)
 end
 
 return Progress

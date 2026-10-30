@@ -276,6 +276,31 @@ return function()
 			expect(least < 400).to.equal(true)
 		end)
 
+		it("keeps an effect's sources in the effect itself", function()
+			local sources = {}
+			for i = 1, 1000 do
+				sources[i] = ref(i)
+			end
+			local least = math.huge
+			for _ = 1, 5 do
+				local scope = Reactive.effectScope(true)
+				local before = gcinfo()
+				scope:run(function()
+					for i = 1, 1000 do
+						local source = sources[i]
+						Reactive._effect(function()
+							source()
+						end)
+					end
+				end)
+				least = math.min(least, gcinfo() - before)
+				scope:stop()
+			end
+			-- Under 290 bytes for an effect reading one ref, closure included: no separate
+			-- table for its sources (gcinfo is in KB, 1,000 effects).
+			expect(least < 290).to.equal(true)
+		end)
+
 		it("disposes effects created inside it when it re-runs", function()
 			local outer, inner = ref(0), ref(0)
 			local innerRuns = 0

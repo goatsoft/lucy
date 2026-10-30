@@ -48,6 +48,32 @@ return function()
 			label:Destroy()
 		end)
 
+		it("runs a getter once for every property and tag bound to it", function()
+			local disabled = ref(false)
+			local calls = 0
+			local function enabled()
+				calls += 1
+				return not disabled()
+			end
+			local button, scope = scoped(function()
+				return new("TextButton", {
+					Interactable = enabled,
+					Selectable = enabled,
+					Tags = { ["ui-enabled"] = enabled },
+				})
+			end)
+			expect(calls).to.equal(1)
+			expect(button.Interactable).to.equal(true)
+			expect(button.Selectable).to.equal(true)
+			expect(button:HasTag("ui-enabled")).to.equal(true)
+			disabled(true)
+			expect(calls).to.equal(2)
+			expect(button.Interactable).to.equal(false)
+			expect(button.Selectable).to.equal(false)
+			expect(button:HasTag("ui-enabled")).to.equal(false)
+			scope:stop()
+		end)
+
 		it("names the property in errors", function()
 			local ok, err = pcall(function()
 				new("Frame")({ NotAProperty = 1 })

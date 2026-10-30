@@ -5,23 +5,23 @@
 	create(className, props, children)  instance factory (Tags, Attributes, Children)
 	setVariant(inst, base, key, value)  "ui-button-variant-outline" style tags for rules
 	setFlag(inst, tag, on)              boolean tags such as "ui-disabled"
-	mount(spec)                         state-bound handle, see below
+	mount(spec, props)                  state-bound handle, see below
 
 	A mounted component keeps its stateful props in AppState at "ui.<id>" (ADR 0004,
 	0017). The app controls it by writing there; the component's render binds to
 	those keys, so only what changed is touched (ADR 0018).
 
-		local handle = Component.mount({
+		local spec = {                     -- one per kind, shared by every mount
 			kind = "switch",
-			props = props,                 -- may include app, id, Parent, persist
 			defaults = { checked = false, ... }, -- the keys that live in state
 			rules = Switch.rules,          -- registered on the theme once per kind
-			render = function(h)           -- runs once, inside the component's scope
+			render = function(h)           -- runs once per mount, in the component's scope
 				local checked = h:ref("checked")
 				Lucy.watch(checked, function(on) ... end) -- side effects only
 				return Lucy.new "Frame" { Tags = { "ui-switch", ["ui-checked"] = checked } }
 			end,
-		})
+		}
+		local handle = Component.mount(spec, props) -- props may include app, id, Parent, persist
 		handle:set("checked", true) ; handle:set({ label = "Go" }) ; handle:get("checked")
 		handle:destroy()
 
@@ -38,6 +38,10 @@
 	derived key: it follows the source, a local write overrides it, and the
 	source's next change wins. A component created inside an effect, a scope or an
 	`each` item is destroyed when that owner stops.
+
+	A spec built once and shared costs nothing per mount; render reads per-mount
+	props (callbacks and the like) from `h.props`. `mount({ ..., props = props })`
+	still works.
 ]]
 
 local CollectionService = game:GetService("CollectionService")
@@ -348,8 +352,8 @@ export type Spec = {
 	mounted: ((handle: Handle) -> ())?,
 }
 
-function Component.mount(spec: Spec): Handle
-	local props: Props = spec.props or {}
+function Component.mount(spec: Spec, props: Props?): Handle
+	local props: Props = props or spec.props or {}
 	local app = Component.resolveApp(props)
 	local kind: string = spec.kind
 

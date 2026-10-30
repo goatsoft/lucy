@@ -107,6 +107,106 @@ local function bindProperty(instance: Instance, property: string, value: any)
 	end
 end
 
+--[[
+	Getter bindings (properties and keyed tags) are gathered while `bind` reads the
+	props, then bound once per getter: properties and tags that share a getter run it
+	once, in one effect (Button's Interactable and Selectable read one getter). The
+	three arrays are a stack shared by every bind: a getter that makes elements while
+	it runs binds above the entries still being bound, then pops its own.
+]]
+local pendingGetter: { any } = {}
+local pendingName: { string } = {}
+local pendingTag: { boolean } = {}
+local pendingTop = 0
+
+local function defer(getter: any, name: string, isTag: boolean)
+	local top = pendingTop + 1
+	pendingTop = top
+	pendingGetter[top] = getter
+	pendingName[top] = name
+	pendingTag[top] = isTag
+end
+
+local function setTag(instance: Instance, tag: string, on: any)
+	if on then
+		instance:AddTag(tag)
+	else
+		instance:RemoveTag(tag)
+	end
+end
+
+local function bindTag(instance: Instance, tag: string, getter: any)
+	Reactive._effect(function()
+		setTag(instance, tag, getter())
+	end)
+end
+
+-- One effect for every property and tag bound to `getter`.
+local function bindShared(instance: Instance, getter: any, properties: { string }?, tags: { string }?)
+	Reactive._effect(function()
+		local value = getter()
+		if properties then
+			for _, property in properties do
+				assign(instance, property, value)
+			end
+		end
+		if tags then
+			for _, tag in tags do
+				setTag(instance, tag, value)
+			end
+		end
+	end)
+end
+
+-- Binds the entries above `from`, then pops them.
+local function bindPending(instance: Instance, from: number)
+	local top = pendingTop
+	for i = from + 1, top do
+		local getter = pendingGetter[i]
+		if getter then
+			local shared = false
+			for j = i + 1, top do
+				if pendingGetter[j] == getter then
+					shared = true
+					break
+				end
+			end
+			if not shared then
+				if pendingTag[i] then
+					bindTag(instance, pendingName[i], getter)
+				else
+					bindProperty(instance, pendingName[i], getter)
+				end
+			else
+				local properties: { string }? = nil
+				local tags: { string }? = nil
+				for j = i, top do
+					if pendingGetter[j] == getter then
+						pendingGetter[j] = false
+						local name = pendingName[j]
+						if pendingTag[j] then
+							local list: { string } = tags or {}
+							tags = list
+							table.insert(list, name)
+						else
+							local list: { string } = properties or {}
+							properties = list
+							table.insert(list, name)
+						end
+					end
+				end
+				bindShared(instance, getter, properties, tags)
+			end
+		end
+	end
+	for i = from + 1, top do
+		pendingGetter[i] = nil
+		pendingName[i] = nil
+		pendingTag[i] = nil
+	end
+	pendingTop = from
+end
+
 local function collectTags(value: any, into: { [string]: boolean })
 	if type(value) == "string" then
 		into[value] = true
@@ -161,13 +261,7 @@ local function bindTags(instance: Instance, tags: any)
 				instance:AddTag(v)
 			end
 		elseif type(v) == "function" then
-			Reactive._effect(function()
-				if v() then
-					instance:AddTag(k)
-				else
-					instance:RemoveTag(k)
-				end
-			end)
+			defer(v, k, true)
 		elseif v then
 			instance:AddTag(k)
 		end
@@ -284,7 +378,9 @@ local function bindChild(instance: Instance, child: any, position: number, owned
 	end)
 end
 
-local function bind(instance: Instance, props: { [any]: any }, owned: boolean)
+-- Reads the props: static values are set now, getters are gathered (see defer).
+-- Returns the Parent prop, which is bound last.
+local function readProps(instance: Instance, props: { [any]: any }): any
 	local parent = nil
 	for k, value in props do
 		if type(k) == "string" then
@@ -300,13 +396,32 @@ local function bind(instance: Instance, props: { [any]: any }, owned: boolean)
 						child.Name = name
 					end
 				end
+			elseif type(value) == "function" and not CALLBACKS[k] then
+				defer(value, k, false)
 			else
-				bindProperty(instance, k, value)
+				assign(instance, k, value)
 			end
 		elseif type(k) == "table" and k[KEY] then
 			bindSpecial(instance, k, value)
 		end
 	end
+	return parent
+end
+
+local function bind(instance: Instance, props: { [any]: any }, owned: boolean)
+	local from = pendingTop
+	local ok: boolean, parent: any = pcall(readProps, instance, props)
+	if not ok then
+		-- Pop what was gathered before the error, then report it as before.
+		for i = from + 1, pendingTop do
+			pendingGetter[i] = nil
+			pendingName[i] = nil
+			pendingTag[i] = nil
+		end
+		pendingTop = from
+		error(parent, 0)
+	end
+	bindPending(instance, from)
 
 	local position = 0
 	local children = props.Children

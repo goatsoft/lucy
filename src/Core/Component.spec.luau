@@ -145,6 +145,24 @@ return function()
 			end).to.throw()
 		end)
 
+		it("mounts one shared spec with the props passed separately", function()
+			local spec: Component.Spec = {
+				kind = "shared",
+				defaults = { label = "" },
+				render = function(h)
+					return Element.new("TextLabel", { Text = h:ref("label") })
+				end,
+			}
+			local first = Component.mount(spec, { app = app, label = "First" })
+			local second = Component.mount(spec, { app = app, label = "Second" })
+			expect(first.Instance.Text).to.equal("First")
+			expect(second.Instance.Text).to.equal("Second")
+			expect(first.props.label).to.equal("First")
+			expect(spec.props).to.equal(nil)
+			first:destroy()
+			second:destroy()
+		end)
+
 		it("keeps a mounted component small", function()
 			local Reactive = require(script.Parent.Reactive)
 			local spec = {

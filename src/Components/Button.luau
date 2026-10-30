@@ -188,49 +188,51 @@ local function variantTags(variant: string, size: string): { string }
 	return list
 end
 
+-- Built once and shared by every mount (h.props holds each mount's props).
+local spec: Component.Spec = {
+	kind = "button",
+	defaults = { text = "Button", variant = "default", size = "md", disabled = false, visible = true },
+	rules = Button.rules,
+	render = function(h)
+		-- An unknown variant or size fails the mount; later writes report like any effect.
+		check(Button.variants, h:get("variant"), "variant")
+		check(Button.sizes, h:get("size"), "size")
+		local variant, size, disabled = h:ref("variant"), h:ref("size"), h:ref("disabled")
+		local function enabled(): boolean
+			return not disabled()
+		end
+		return Element.new("TextButton", {
+			AutoButtonColor = false,
+			Text = h:ref("text"),
+			Visible = h:ref("visible"),
+			Interactable = enabled,
+			Selectable = enabled,
+			AutomaticSize = function()
+				return if size() == "icon" then Enum.AutomaticSize.None else Enum.AutomaticSize.X
+			end,
+			Tags = {
+				"ui-button" :: any,
+				-- Variant and size in one binding: they rarely change, so one effect, not two.
+				function()
+					local v, s = variant(), size()
+					check(Button.variants, v, "variant")
+					check(Button.sizes, s, "size")
+					return variantTags(v, s)
+				end,
+				["ui-disabled"] = disabled,
+			},
+			[ACTIVATED] = function()
+				h:click()
+			end,
+		})
+	end,
+}
+
 function Button.new(props: { [string]: any }?)
 	local p: Component.Props = props or {}
 	local activated = Signal.new()
 
-	local handle = Component.mount({
-		kind = "button",
-		props = p,
-		defaults = { text = "Button", variant = "default", size = "md", disabled = false, visible = true },
-		rules = Button.rules,
-		render = function(h)
-			-- An unknown variant or size fails the mount; later writes report like any effect.
-			check(Button.variants, h:get("variant"), "variant")
-			check(Button.sizes, h:get("size"), "size")
-			local variant, size, disabled = h:ref("variant"), h:ref("size"), h:ref("disabled")
-			local function enabled(): boolean
-				return not disabled()
-			end
-			return Element.new("TextButton", {
-				AutoButtonColor = false,
-				Text = h:ref("text"),
-				Visible = h:ref("visible"),
-				Interactable = enabled,
-				Selectable = enabled,
-				AutomaticSize = function()
-					return if size() == "icon" then Enum.AutomaticSize.None else Enum.AutomaticSize.X
-				end,
-				Tags = {
-					"ui-button" :: any,
-					-- Variant and size in one binding: they rarely change, so one effect, not two.
-					function()
-						local v, s = variant(), size()
-						check(Button.variants, v, "variant")
-						check(Button.sizes, s, "size")
-						return variantTags(v, s)
-					end,
-					["ui-disabled"] = disabled,
-				},
-				[ACTIVATED] = function()
-					h:click()
-				end,
-			})
-		end,
-	})
+	local handle = Component.mount(spec, p)
 
 	handle.Activated = activated
 	handle.maid:give(function()

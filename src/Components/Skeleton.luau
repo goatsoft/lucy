@@ -33,37 +33,39 @@ Skeleton.rules = rules
 
 Skeleton.pulse = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
 
-function Skeleton.new(props: { [string]: any }?)
-	local p: Component.Props = props or {}
-	return Component.mount({
-		kind = "skeleton",
-		props = p,
-		defaults = { visible = true },
-		rules = Skeleton.rules,
-		render = function(h)
-			local visible = h:ref("visible")
-			local frame = Element.new("Frame", {
-				Size = p.size or UDim2.new(1, 0, 0, 16),
-				Visible = visible,
-				Tags = if p.circle then { "ui-skeleton", "ui-skeleton-circle" } else { "ui-skeleton" },
-			})
-			-- Side effect: the pulse plays while visible.
-			local pulse = TweenService:Create(frame, Skeleton.pulse, { BackgroundTransparency = 0.5 })
-			Reactive.watchEffect(function()
-				local on = visible() == true
-				if on then
-					pulse:Play()
-				else
-					pulse:Cancel()
-				end
-				h.pulsing = on
-			end)
-			Reactive.onCleanup(function()
+-- Built once and shared by every mount (h.props holds each mount's props).
+local spec: Component.Spec = {
+	kind = "skeleton",
+	defaults = { visible = true },
+	rules = Skeleton.rules,
+	render = function(h)
+		local p: Component.Props = h.props
+		local visible = h:ref("visible")
+		local frame = Element.new("Frame", {
+			Size = p.size or UDim2.new(1, 0, 0, 16),
+			Visible = visible,
+			Tags = if p.circle then { "ui-skeleton", "ui-skeleton-circle" } else { "ui-skeleton" },
+		})
+		-- Side effect: the pulse plays while visible.
+		local pulse = TweenService:Create(frame, Skeleton.pulse, { BackgroundTransparency = 0.5 })
+		Reactive.watchEffect(function()
+			local on = visible() == true
+			if on then
+				pulse:Play()
+			else
 				pulse:Cancel()
-			end)
-			return frame
-		end,
-	})
+			end
+			h.pulsing = on
+		end)
+		Reactive.onCleanup(function()
+			pulse:Cancel()
+		end)
+		return frame
+	end,
+}
+
+function Skeleton.new(props: { [string]: any }?)
+	return Component.mount(spec, props)
 end
 
 return Skeleton

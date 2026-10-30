@@ -86,12 +86,13 @@ end
 -- field the kind usually holds (false for "not yet"), so the table is sized once
 -- and never grows. Fields are reset to false, never nil, for the same reason.
 -- Effects are built in `newEffect` and are the only nodes without a `kind`.
+-- Computeds and effects keep the sources they read in their own array part
+-- (node[1], node[2], ...), so no node has a separate table for them.
 local function newNode(kind: string): any
 	if kind == "computed" then
 		return {
 			kind = kind,
 			state = CLEAN,
-			sources = {},
 			observers = {},
 			fn = false,
 			equals = false,
@@ -136,20 +137,18 @@ local function track(source: any)
 		local observers = source.observers or source
 		if not observers[t] then
 			observers[t] = true
-			table.insert(t.sources, source)
+			t[#t + 1] = source
 		end
 	end
 end
 
+-- Clears from the end, so the array part keeps its size for the next run.
 local function unlink(node: any)
-	local sources = node.sources
-	if sources == nil then
-		return
-	end
-	for _, source in sources do
+	for i = #node, 1, -1 do
+		local source = node[i]
+		node[i] = nil
 		(source.observers or source)[node] = nil
 	end
-	table.clear(sources)
 end
 
 local dispose: (node: any) -> ()
@@ -315,7 +314,8 @@ refresh = function(node: any)
 		return
 	end
 	if node.state == CHECK then
-		for _, source in node.sources do
+		for i = 1, #node do
+			local source = node[i]
 			if source.kind == "computed" then
 				if not pcall(refresh, source) then
 					node.state = DIRTY -- re-run so the error surfaces where it is read
@@ -421,19 +421,19 @@ end
 
 -- Effects ---------------------------------------------------------------------------
 
--- An effect node holds four fields (five with onCleanup), sized once. It starts
--- DIRTY and runs now, so it is not queued.
+-- An effect node holds three fields (four with onCleanup) and its sources in its
+-- array part. It starts DIRTY and runs now, so it is not queued.
 local function newEffect(fn: (onCleanup: OnCleanup) -> ()): any
 	local node: any
 	-- Only an effect that takes an argument can use onCleanup; most bindings don't.
 	local params, vararg = debug.info(fn, "a")
 	if params > 0 or vararg then
-		node = { state = DIRTY, sources = {}, fn = fn, owner = false, onCleanup = false }
+		node = { state = DIRTY, fn = fn, owner = false, onCleanup = false }
 		node.onCleanup = function(cleanup: () -> ())
 			addCleanup(node, cleanup)
 		end
 	else
-		node = { state = DIRTY, sources = {}, fn = fn, owner = false }
+		node = { state = DIRTY, fn = fn, owner = false }
 	end
 	adopt(node)
 	batchDepth += 1
