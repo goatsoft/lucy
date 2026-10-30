@@ -41,48 +41,44 @@ Create one App on the client. It owns the state, theme, input, scenes and toasts
 
 ```luau [StarterPlayerScripts/UI.client.luau]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
 local Lucy = require(ReplicatedStorage.Shared.Lucy) -- or ReplicatedStorage.Packages.Lucy
 
 local app = Lucy.App.new({
 	theme = "dark",
 	baseColor = "zinc",
 	primary = "violet",
-	state = { coins = 0 },
+	state = { settings = { volume = 50 } },
 })
 ```
 
 ## Build a scene
 
 Each scene owns one ScreenGui. Only one screen shows at a time; modals and
-overlays sit above it. This one shows the player's coins and a button that adds
-to them.
+overlays sit above it. This one is a settings menu: a volume slider the game
+reads, and a theme picker that switches the whole UI.
 
 ```luau
--- coins() reads the value, coins(10) writes it.
-local coins = app.state:ref("coins")
-
-app.scenes:register("Hud", {
+app.scenes:register("Settings", {
 	build = function(scene)
 		Lucy.Stack.new({
-			direction = "horizontal",
+			size = UDim2.fromScale(1, 1),
 			align = "center",
-			gap = "Space4",
-			padding = "Space6",
+			justify = "center",
 			children = {
-				Lucy.Text.new({
-					-- A function is followed: the label updates when coins changes.
-					text = function()
-						return `Coins: {coins()}`
-					end,
-					variant = "h3",
-					autoWidth = true,
-				}),
-				Lucy.Button.new({
-					id = "collect", -- its state lives at ui.collect
-					text = "Collect 10",
-					onClick = function()
-						coins(coins() + 10)
-					end,
+				Lucy.Panel.new({
+					title = "Settings",
+					maxWidth = 400,
+					children = {
+						-- Each control is bound to a value in state, both ways.
+						Lucy.Text.new({ text = "Volume", variant = "label" }),
+						Lucy.Slider.new({ value = app.state:ref("settings.volume"), showValue = true }),
+						Lucy.Text.new({ text = "Theme", variant = "label" }),
+						Lucy.Select.new({
+							items = { { value = "dark", label = "Dark" }, { value = "light", label = "Light" } },
+							value = app.state:ref("theme"), -- pick Light and the whole UI switches
+						}),
+					},
 				}),
 			},
 			Parent = scene.gui,
@@ -90,10 +86,12 @@ app.scenes:register("Hud", {
 	end,
 })
 
-app.scenes:goTo("Hud")
+app.scenes:goTo("Settings")
 
--- Change state from anywhere in your game and the UI follows.
-app.state:set("coins", 100)
+-- The game reads the same state. No glue code in between.
+app.state:subscribe("settings.volume", function(volume)
+	SoundService.Music.Volume = volume / 100
+end)
 ```
 
 On a screen the player moves around with keys or a gamepad, give the scene a
@@ -103,7 +101,7 @@ On a screen the player moves around with keys or a gamepad, give the scene a
 ## Drive anything from app state
 
 ```luau
-app.state:set("ui.collect.disabled", true)    -- any component, by id
+app.state:set("ui.quit.open", true)           -- any component, by id
 app.state:set("theme", "light")               -- switch theme
 app.state:set("scenes.current", "Game")       -- navigate
 app.state:subscribe("input.device", print)    -- "desktop" | "console" | "tablet" | "mobile"
