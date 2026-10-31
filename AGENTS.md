@@ -27,5 +27,11 @@ Rules:
   `require(game.ReplicatedStorage.LucyTests.Runner).run()`. JB serves Rojo himself (port 38574).
 - Shell commands on JB's Mac run through zsh: `zsh -lc "cd ~/Projects/Lucy && ..."`.
 - Format before committing: `stylua src tests scripts examples` (CI runs `stylua --check`).
+- Commit messages are semantic: `type(scope): summary`, lower case, no full stop,
+  in the imperative ("fix(select): close on back"). Types: `feat` (something new
+  for games), `fix` (a bug), `docs`, `refactor`, `perf`, `test`, `build`, `ci`,
+  `chore`. The scope is optional: a component (`button`), a core part (`scenes`,
+  `actions`), or `site`, `icons`, `skills`, `devtools`. Breaking changes add `!`
+  after the type and say what breaks in the body.
 - Commits carry no attribution trailers (no `Co-Authored-By`, no session links);
   attribution is handled at the project level.
