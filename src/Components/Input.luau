@@ -52,6 +52,8 @@ local rules: { Component.Rule } = {
 			Color = "$Input",
 			Thickness = "$StrokeThin",
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			-- Inside the edge, so the focus ring grows inward, never past the field.
+			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
 		},
 	},
 	{

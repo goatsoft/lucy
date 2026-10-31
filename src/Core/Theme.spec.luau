@@ -279,4 +279,16 @@ return function()
 			gui:Destroy()
 		end)
 	end)
+
+	it("draws every focus ring inside its element, never past its edge", function()
+		local found = 0
+		for _, rule in Theme.baseRules do
+			local props = rule.properties or {}
+			if props.Thickness == "$FocusRing" then
+				found += 1
+				expect(props.BorderStrokePosition).to.equal(Enum.BorderStrokePosition.Inner)
+			end
+		end
+		expect(found >= 2).to.equal(true)
+	end)
 end

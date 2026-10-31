@@ -44,7 +44,10 @@ Everything that can be pressed can be reached without a mouse or touch:
 | Escape, gamepad B | go back: close the top modal, or call the screen's `onBack` |
 
 - The focused control shows a focus ring in the theme's `Ring` colour, only
-  while the player navigates with keys or a gamepad.
+  while the player navigates with keys or a gamepad. The ring is drawn inside
+  the control's edge, so it never spills over its neighbours or gets cut off.
+  On a checkbox, switch or radio it goes round the box, track or circle, not
+  the label; on a slider it goes round the thumb.
 - A modal or menu keeps focus inside it until it closes, then gives it back to
   where it was.
 - Each screen starts focus on its `defaultFocus`, or on the first thing that can

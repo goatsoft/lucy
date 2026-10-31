@@ -110,6 +110,7 @@ local rules: { Component.Rule } = {
 			Thickness = "$FocusRing",
 			Transparency = 1,
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
 		},
 	},
 	{
@@ -326,8 +327,10 @@ local spec: Component.Spec = {
 			AnchorPoint = CENTRE,
 			ZIndex = 2,
 			Position = thumbPosition,
+			-- The ring is drawn inside the halo, so the halo leaves room for it
+			-- (and a hairline gap) all round the thumb.
 			Size = function()
-				local k = thumbPx() + 2 * theme:resolve("StrokeThin")
+				local k = thumbPx() + 2 * (theme:resolve("FocusRing") + theme:resolve("StrokeThin"))
 				return UDim2.fromOffset(k, k)
 			end,
 			Tags = { "ui-slider-halo" },

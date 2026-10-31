@@ -154,4 +154,20 @@ return function()
 		expect(field.Instance.Text).to.equal("12.5 kg")
 		expect(app.state:get("ui.weight.value")).to.equal("12.5 kg")
 	end)
+
+	it("draws its border and focus ring inside its edge, so focus never grows it", function()
+		local found = 0
+		for _, rule in Input.rules do
+			if
+				rule.selector == ".ui-input::UIStroke"
+				or rule.selector == ".ui-input.ui-focused::UIStroke"
+			then
+				found += 1
+			end
+			if rule.selector == ".ui-input::UIStroke" then
+				expect(rule.properties.BorderStrokePosition).to.equal(Enum.BorderStrokePosition.Inner)
+			end
+		end
+		expect(found).to.equal(2)
+	end)
 end

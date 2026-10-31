@@ -117,6 +117,8 @@ table.insert(Theme.baseRules, {
 		Thickness = "$FocusRing",
 		Transparency = 0,
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		-- Inside the edge, so a ring never spills past its element or gets clipped.
+		BorderStrokePosition = Enum.BorderStrokePosition.Inner,
 	},
 })
 
@@ -140,6 +142,7 @@ table.insert(Theme.baseRules, {
 		Thickness = "$FocusRing",
 		Transparency = 1,
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		BorderStrokePosition = Enum.BorderStrokePosition.Inner,
 	},
 })
 table.insert(Theme.baseRules, {
