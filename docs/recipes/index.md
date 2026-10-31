@@ -1,6 +1,6 @@
 ---
 title: Recipes
-description: Whole screens from Club Lucy you can copy into a game and change: audio settings that save, a pause menu, a dance floor HUD and an emote shop.
+description: "Whole screens from Club Lucy you can copy into a game and change: audio settings that save, a pause menu, a dance floor HUD and an emote shop."
 order: 1
 ---
 
