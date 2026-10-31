@@ -25,6 +25,7 @@
 		app.state:set("ui.quit.open", true)   -- same thing, from anywhere
 
 		Dialog.alert({ title, description, confirmText, cancelText, destructive, onConfirm, onCancel })
+		-- back presses Cancel (backCancels = false to block it); destroyed once closed
 
 	An action closes the dialog after its onClick unless onClick returns false.
 	The body (dialog.body holds the children) scrolls when the dialog would be
@@ -289,6 +290,7 @@ function Dialog.new(props: { [string]: any }?)
 				modal = modal,
 				scrim = if p.scrim == false then false else nil,
 				dismissible = dismissible,
+				onBack = p._onBack,
 				closeOnOutside = closeOnOverlay,
 				parent = false,
 				id = h.id,
@@ -338,10 +340,37 @@ function Dialog.new(props: { [string]: any }?)
 end
 
 -- A confirm/cancel dialog that must be answered (no overlay or close button).
+-- Back presses Cancel unless backCancels = false. It is destroyed once it
+-- closes, so each alert is used once.
 function Dialog.alert(props: { [string]: any })
 	local p = table.clone(props)
 	p.dismissible = false
 	p.open = if p.open == nil then true else p.open
+	local handle: any = nil
+	if props.backCancels ~= false then
+		p._onBack = function()
+			if handle and not handle.destroyed then
+				handle.actions[1]:click()
+			end
+		end
+	end
+	local onOpenChange = props.onOpenChange
+	local wasOpen = false
+	p.onOpenChange = function(isOpen: boolean, h: any)
+		if onOpenChange then
+			onOpenChange(isOpen, h)
+		end
+		if isOpen then
+			wasOpen = true
+		elseif wasOpen then
+			-- After the close has run its course (sounds, focus going back).
+			task.defer(function()
+				if not h.destroyed then
+					h:destroy()
+				end
+			end)
+		end
+	end
 	p.actions = {
 		{
 			text = props.cancelText or "Cancel",
@@ -354,7 +383,8 @@ function Dialog.alert(props: { [string]: any })
 			onClick = props.onConfirm,
 		},
 	}
-	return Dialog.new(p)
+	handle = Dialog.new(p)
+	return handle
 end
 
 return Dialog

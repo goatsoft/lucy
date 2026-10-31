@@ -97,9 +97,37 @@ return function()
 		expect(app.input:back()).to.equal(true)
 		expect(dialog:get("open")).to.equal(false)
 
-		local alert = Dialog.alert({ app = app, title = "Sure?" })
+		local alert = Dialog.alert({ app = app, title = "Sure?", backCancels = false })
 		expect(app.input:back()).to.equal(true)
 		expect(alert:get("open")).to.equal(true)
+	end)
+
+	it("cancels an alert on back", function()
+		local cancelled, confirmed = false, false
+		local alert = Dialog.alert({
+			app = app,
+			title = "Leave?",
+			onCancel = function()
+				cancelled = true
+			end,
+			onConfirm = function()
+				confirmed = true
+			end,
+		})
+		expect(app.input:back()).to.equal(true)
+		expect(cancelled).to.equal(true)
+		expect(confirmed).to.equal(false)
+		expect(alert:get("open")).to.equal(false)
+	end)
+
+	it("destroys an alert once it closes", function()
+		local alert = Dialog.alert({ app = app, title = "Buy?" })
+		local id = alert.id
+		alert.actions[2]:click()
+		task.wait()
+		expect(alert.destroyed).to.equal(true)
+		expect(app:handle(id)).to.equal(nil)
+		expect(app.state:get("ui." .. id)).to.equal(nil)
 	end)
 
 	it("is a focus scope while open", function()

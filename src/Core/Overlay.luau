@@ -16,6 +16,7 @@
 			modal = true,               -- false: no focus trap, presses pass through
 			scrim = nil,                -- the dim backdrop; defaults to modal and not a popup
 			dismissible = true,         -- back closes it (and outside presses, when modal)
+			onBack = nil,               -- runs on back in place of closing (an alert's cancel)
 			closeOnOutside = nil,       -- defaults to dismissible when modal, false otherwise
 			defaultFocus = fn,          -- what keyboard and gamepad select first
 			onClose = fn,               -- (reason) "back" | "outside" | "anchor" | "code"
@@ -507,7 +508,9 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 	Composables.useBackHandler(app, function()
 		return open() and (modal or dismissible)
 	end, function()
-		if dismissible then
+		if options.onBack then
+			options.onBack()
+		elseif dismissible then
 			close("back")
 		end
 		return true
