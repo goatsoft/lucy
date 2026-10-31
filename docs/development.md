@@ -1,6 +1,6 @@
 ---
 title: Contributing
-description: Toolchain, the TDD loop, writing a component and releasing.
+description: Toolchain, the TDD loop, writing a component, pull requests and how releases happen.
 order: 1
 ---
 
@@ -171,7 +171,25 @@ pnpm site:typecheck
 - If a build logs a hydration mismatch, `LUCY_DEBUG_HYDRATION=1 pnpm site:build`
   explains it in the browser console.
 
-## Releasing
+## Pull requests
 
-1. Bump `version` in `wally.toml`, note changes in the README.
-2. `wally publish`.
+Changes come in as pull requests to `main`:
+
+1. Fork the repository and make a branch.
+2. Work as above: a spec that fails first, then the code, then the static checks.
+   CI runs the same checks on every pull request.
+3. If you change lucy-icons, add a changeset with `pnpm changeset`.
+4. Open the pull request saying what changed and why.
+
+The maintainer reviews every pull request. It merges once it is approved and CI
+passes.
+
+## Releases
+
+Only the maintainer releases. Merging a pull request never publishes anything,
+and contributors never publish to Wally or npm.
+
+- **Lucy** goes to Wally when the maintainer bumps `version` in `wally.toml`,
+  notes the changes and publishes.
+- **lucy-icons** goes to npm through changesets: merged changesets open a
+  "Version Packages" pull request, and the maintainer merging it publishes.
