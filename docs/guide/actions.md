@@ -1,7 +1,7 @@
 ---
 title: Hotkeys and modal input
 description: Name your game's actions once for keyboard and gamepad, switch them off while a menu is open, and stop the character moving under a dialog.
-order: 6
+order: 8
 ---
 
 # Hotkeys and modal input

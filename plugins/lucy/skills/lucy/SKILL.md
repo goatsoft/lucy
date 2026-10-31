@@ -38,10 +38,14 @@ they are exact; this page only says where things are and what agents get wrong.
   same values, and `Lucy.show` / `Lucy.each` handle conditions and lists.
 - **Scenes** own one ScreenGui each: one screen at a time, overlays (HUD) and
   stacked modal scenes above it. Dialogs, sheets and selects float on the
-  overlay layer above everything.
+  overlay layer above everything. See
+  [Build screens with scenes](references/guide/scenes.md).
 - **Looks come from the theme.** Colours, fonts, sizes and radius are style
   rules with `$Token` values (`$Primary`, `$Card`, `$Border`, `$FontSansSemibold`,
   `ControlMd`), switched by theme (light, dark) and density (default, touch, tv).
+  The game picks colours with `baseColor` and `primary` on `App.new`, or its own
+  `themes`; see [Add a theme](references/guide/themes.md) and the
+  [theming reference](references/reference/theming.md) for every token.
 
 ## Rules
 
@@ -49,15 +53,19 @@ they are exact; this page only says where things are and what agents get wrong.
    instances. A Lucy Button, Select or Slider already handles focus, gamepad,
    touch and disabled states.
 2. **Never hard code colours, fonts or text sizes** on instances. Use a
-   component variant, or tags with style rules and `$Token` values. Setting
+   component variant, or tag the instance and add a rule with
+   `app.theme:addRules(key, rules)` whose values are `$Token`s. Setting
    `BackgroundTransparency = 1` on a layout frame is fine; a colour is not.
+   To change the game's look, change the theme, not each instance.
 3. **Bind, don't watch.** A property that follows state gets a ref or a getter.
    `Lucy.watch` and `Lucy.watchEffect` are only for side effects (tweens,
    sounds, calling game code), never to set a property a binding could own.
 4. **Derive with `Lucy.computed`** when more than one binding reads the result;
    a plain getter otherwise.
-5. **Give every screen a `defaultFocus`** and test it with keys and a gamepad:
-   a console player cannot click.
+5. **Give every screen and modal scene a `defaultFocus`**, and an `onBack` on
+   screens where back should do something. Test with keys and a gamepad: a
+   console player cannot click. Menus go on the scene stack with
+   `app.scenes:push`, not as screens.
 6. **Icons, not text glyphs.** Use `Lucy.Icon` with a registered name
    (`"lucide:heart"` with lucy-icons, or the game's own images). See the
    `lucy-icons` skill.
@@ -134,7 +142,10 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Work with app state](references/guide/app-state.md): Keep game data in the app's store and bind UI to it with state:ref, state.root, lists and subscribers.
 - [Build a component](references/guide/components.md): Write a Stepper component step by step, with state keys, h:ref, bindings, methods and a value bound to app state.
 - [Share logic with composables](references/guide/composables.md): Use Lucy's built in composables and write your own, such as a cooldown for an ability button.
+- [Build screens with scenes](references/guide/scenes.md): Split your UI into scenes, move between screens, show a HUD over them, open a pause menu on top, and handle back with a gamepad.
+- [Add a theme](references/guide/themes.md): Pick your game's colours, let players switch light and dark, make a theme of your own, and style your own UI with the same tokens.
 - [Stories and preview](references/stories.md): Write stories for your UI and preview them in Studio, in edit mode or in Play.
 - [Composables](references/reference/composables.md): Every composable Lucy comes with, what each one takes and returns, and when to use it.
 - [The store](references/reference/store.md): How app.state works, what it holds, every method, and the rules for reading, writing and following it.
+- [Theming](references/reference/theming.md): Every theme option, colour token, primitive and density value, the Tokens helpers, app.theme's methods and how style rules work.
 <!-- /generated:guides -->

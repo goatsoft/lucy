@@ -80,6 +80,9 @@ Tags are classes: `ui-<component>`, `ui-<component>-<key>-<value>` for variants,
 Styled values are read with `instance:GetStyled(prop)`; plain reads return the
 unstyled value. Styles apply a few frames after a change.
 
+Every token, option and method is in the [theming reference](reference/theming.md);
+[Add a theme](guide/themes.md) walks through using them.
+
 ## Scenes and layers
 
 | Layer | DisplayOrder | Shown | Examples |
@@ -89,6 +92,8 @@ unstyled value. Styles apply a few frames after a change.
 | modal | 200+ | stacked (`scenes.stack`) | Pause, Settings |
 | portal: modal | 900 | dialogs and anything else floating, newest on top | Dialog, Dialog.alert |
 | portal: toast | 1000 | toasts | app.toast |
+
+[Build screens with scenes](guide/scenes.md) shows how to register and move between them.
 
 ## Input and focus
 

@@ -367,6 +367,20 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/guide/scenes': RouteRecordInfo<
+      '/docs/guide/scenes',
+      '/docs/guide/scenes',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/guide/themes': RouteRecordInfo<
+      '/docs/guide/themes',
+      '/docs/guide/themes',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reactivity': RouteRecordInfo<
       '/docs/reactivity',
       '/docs/reactivity',
@@ -384,6 +398,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/reference/store': RouteRecordInfo<
       '/docs/reference/store',
       '/docs/reference/store',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/theming': RouteRecordInfo<
+      '/docs/reference/theming',
+      '/docs/reference/theming',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -792,6 +813,22 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/guide/scenes.md': {
+      routes:
+        | '/docs/guide/scenes'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/guide/themes.md': {
+      routes:
+        | '/docs/guide/themes'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/reactivity.md': {
       routes:
         | '/docs/reactivity'
@@ -811,6 +848,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/store.md': {
       routes:
         | '/docs/reference/store'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/theming.md': {
+      routes:
+        | '/docs/reference/theming'
       views:
         | never
       pathParamNames:

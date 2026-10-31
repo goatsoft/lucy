@@ -1,7 +1,7 @@
 ---
 title: Add icons
 description: Use your own images as icons, or any Iconify icon by name with the lucy-icons build.
-order: 5
+order: 7
 ---
 
 # Add icons

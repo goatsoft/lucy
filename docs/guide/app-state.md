@@ -1,7 +1,7 @@
 ---
 title: Work with app state
 description: Keep game data in the app's store and bind UI to it with state:ref, state.root, lists and subscribers.
-order: 3
+order: 5
 ---
 
 # Work with app state

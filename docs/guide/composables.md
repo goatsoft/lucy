@@ -1,7 +1,7 @@
 ---
 title: Share logic with composables
 description: Use Lucy's built in composables and write your own, such as a cooldown for an ability button.
-order: 4
+order: 6
 ---
 
 # Share logic with composables
