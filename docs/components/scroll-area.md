@@ -78,7 +78,9 @@ While there is more to scroll past an edge, that edge fades into the surface
 behind the area: the page background, a Panel's card or a Select's list. A
 control the edge cuts through then reads as going on, not as broken. The fades
 come and go as the player scrolls, and never take clicks. Turn them off with
-`fade = false`, for an area over a picture, say, where a solid fade would show.
+`fade = false` for an area over a picture or a see-through panel: a fade is a
+colour laid over the content, so over anything see-through it shows as a darker
+band, even in the panel's own colour.
 
 ## Gamepad and keyboard
 

@@ -214,6 +214,25 @@ return function()
 		end)
 	end)
 
+	it("keeps horizontal content clear of the scrollbar once it scrolls", function()
+		local child = Instance.new("Frame")
+		child.Size = UDim2.new(0, 60, 1, 0)
+		local area = ScrollArea.new({
+			app = app,
+			Parent = gui,
+			direction = "horizontal",
+			size = UDim2.fromOffset(200, 100),
+			children = { child },
+		})
+		Harness.flush()
+		local frame = area.Instance
+		expect(math.abs(area.content.AbsoluteSize.Y - frame.AbsoluteSize.Y) < 1).to.equal(true)
+		child.Size = UDim2.new(0, 600, 1, 0)
+		Harness.flush()
+		expect(frame.AbsoluteWindowSize.Y < frame.AbsoluteSize.Y).to.equal(true)
+		expect(area.content.AbsoluteSize.Y <= frame.AbsoluteWindowSize.Y + 0.5).to.equal(true)
+	end)
+
 	it("follows a reactive maxHeight", function()
 		local cap = Reactive.ref(150)
 		local area = ScrollArea.new({
