@@ -33,6 +33,13 @@ useHead({ description: SITE.description })
 // The hero's background follows the pointer over the whole section.
 const hero = ref<HTMLElement>()
 
+// The quick start opens on the picture of what the code makes; Code shows the script.
+const quickstartViews = [
+  { id: 'preview', label: 'Preview' },
+  { id: 'code', label: 'Code' },
+] as const
+const quickstartView = ref<'preview' | 'code'>('preview')
+
 // The feature panels' glow is a light that follows the pointer across the panel.
 function movePanelLight(event: PointerEvent): void {
   const panel = event.currentTarget as HTMLElement
@@ -203,7 +210,32 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
         <h2 class="mx-auto mt-4 max-w-2xl text-center font-display text-heading font-semibold tracking-tight text-balance">
           A settings menu
         </h2>
-        <div class="prose mt-10">
+        <div class="mt-10 flex justify-center">
+          <div
+            role="tablist"
+            aria-label="Quick start"
+            class="glass inline-flex gap-1 rounded-full p-1"
+          >
+            <button
+              v-for="view in quickstartViews"
+              :key="view.id"
+              role="tab"
+              type="button"
+              :aria-selected="quickstartView === view.id"
+              class="inline-flex h-9 items-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4"
+              :class="quickstartView === view.id ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'"
+              @click="quickstartView = view.id"
+            >
+              <ILxEyeFilled v-if="view.id === 'preview'" />
+              <ILxFileCodeFilled v-else />
+              {{ view.label }}
+            </button>
+          </div>
+        </div>
+        <div
+          class="prose quickstart mt-6"
+          :data-view="quickstartView"
+        >
           <Quickstart />
         </div>
         <div class="mt-8 flex justify-center">

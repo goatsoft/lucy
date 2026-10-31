@@ -25,6 +25,8 @@ declare module 'vue' {
     ILcX: typeof import('~icons/lucide/x')['default']
     ILxBookOpenDuotone: typeof import('~icons/lucide-extended/book-open-duotone')['default']
     ILxCopyDuotone: typeof import('~icons/lucide-extended/copy-duotone')['default']
+    ILxEyeFilled: typeof import('~icons/lucide-extended/eye-filled')['default']
+    ILxFileCodeFilled: typeof import('~icons/lucide-extended/file-code-filled')['default']
     ILxHouseDuotone: typeof import('~icons/lucide-extended/house-duotone')['default']
     ILxMonitorDuotone: typeof import('~icons/lucide-extended/monitor-duotone')['default']
     ILxMoonDuotone: typeof import('~icons/lucide-extended/moon-duotone')['default']
