@@ -1,9 +1,9 @@
 <!-- Made by scripts/skills.ts from docs/recipes/settings.md. Edit the doc, not this file. -->
 # Settings menu that saves
 
-A settings screen with a volume slider and a theme picker. Each control is
-bound to app state, the game reads the same state, and the server keeps the
-settings between sessions.
+An audio settings screen for Club Lucy: Music, Sound effects and Crowd volume
+sliders, and a theme picker. Each control is bound to app state, the game reads
+the same state, and the server keeps the settings between sessions.
 
 Lucy's part is the menu and the state. Saving is your game's: Lucy never
 talks to the server. Here the server keeps the settings in a DataStore and the
@@ -21,7 +21,7 @@ local saved = ReplicatedStorage:WaitForChild("LoadSettings"):InvokeServer()
 
 local app = Lucy.App.new({
     theme = saved.theme,
-    state = { settings = { volume = saved.volume } },
+    state = { settings = { music = saved.music, sfx = saved.sfx, crowd = saved.crowd } },
 })
 
 app.scenes:register("Settings", {
@@ -36,8 +36,12 @@ app.scenes:register("Settings", {
                     maxWidth = 400,
                     children = {
                         -- Each control is bound to a value in state, both ways.
-                        Lucy.Text.new({ text = "Volume", variant = "label" }),
-                        Lucy.Slider.new({ value = app.state:ref("settings.volume"), showValue = true }),
+                        Lucy.Text.new({ text = "Music", variant = "label" }),
+                        Lucy.Slider.new({ value = app.state:ref("settings.music"), showValue = true }),
+                        Lucy.Text.new({ text = "Sound effects", variant = "label" }),
+                        Lucy.Slider.new({ value = app.state:ref("settings.sfx"), showValue = true }),
+                        Lucy.Text.new({ text = "Crowd", variant = "label" }),
+                        Lucy.Slider.new({ value = app.state:ref("settings.crowd"), showValue = true }),
                         Lucy.Text.new({ text = "Theme", variant = "label" }),
                         Lucy.Select.new({
                             items = { { value = "dark", label = "Dark" }, { value = "light", label = "Light" } },
@@ -53,10 +57,13 @@ app.scenes:register("Settings", {
 
 app.scenes:goTo("Settings")
 
--- The game reads the same state. No glue code in between.
-app.state:subscribe("settings.volume", function(volume)
-    SoundService.Music.Volume = volume / 100
-end)
+-- The game reads the same state. No glue code in between. Music, SFX and Crowd
+-- are the game's own Sounds in SoundService.
+for key, name in { music = "Music", sfx = "SFX", crowd = "Crowd" } do
+    app.state:subscribe(`settings.{key}`, function(volume)
+        SoundService[name].Volume = volume / 100
+    end)
+end
 ```
 
 On a screen the player moves around with keys or a gamepad, give the scene a
@@ -65,7 +72,7 @@ On a screen the player moves around with keys or a gamepad, give the scene a
 
 ## Tell the server
 
-Send the settings when they change. Dragging the slider changes the volume many
+Send the settings when they change. Dragging a slider changes the volume many
 times a second, so wait a moment and send once:
 
 ```luau
@@ -79,16 +86,17 @@ local function saveSoon()
     waiting = true
     task.delay(1, function()
         waiting = false
-        SaveSettings:FireServer(app.state:get("settings.volume"), app.state:get("theme"))
+        local volumes = app.state:get("settings")
+        SaveSettings:FireServer(volumes.music, volumes.sfx, volumes.crowd, app.state:get("theme"))
     end)
 end
 
-app.state:subscribe("settings.volume", saveSoon)
+app.state:subscribe("settings", saveSoon)
 app.state:subscribe("theme", saveSoon)
 ```
 
-Subscribers are for work outside the UI like this; see
-[Subscribers](../reference/store.md#subscribers).
+A subscriber on `settings` hears all three sliders. Subscribers are for work
+outside the UI like this; see [Subscribers](../reference/store.md#subscribers).
 
 ## The server
 
@@ -100,7 +108,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local DEFAULTS = { volume = 50, theme = "dark" }
+local DEFAULTS = { music = 80, sfx = 60, crowd = 40, theme = "dark" }
 local settings = {} -- [player] = their settings
 
 local load = Instance.new("RemoteFunction")
@@ -130,12 +138,19 @@ load.OnServerInvoke = function(player)
     return settings[player]
 end
 
+local function volume(value)
+    return math.clamp(math.round(value), 0, 100)
+end
+
 -- A client can send anything, so check it before keeping it.
-save.OnServerEvent:Connect(function(player, volume, theme)
-    if type(volume) ~= "number" or (theme ~= "dark" and theme ~= "light") then
+save.OnServerEvent:Connect(function(player, music, sfx, crowd, theme)
+    if type(music) ~= "number" or type(sfx) ~= "number" or type(crowd) ~= "number" then
         return
     end
-    settings[player] = { volume = math.clamp(math.round(volume), 0, 100), theme = theme }
+    if theme ~= "dark" and theme ~= "light" then
+        return
+    end
+    settings[player] = { music = volume(music), sfx = volume(sfx), crowd = volume(crowd), theme = theme }
 end)
 
 local function saveFor(player)

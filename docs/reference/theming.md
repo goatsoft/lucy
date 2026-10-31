@@ -141,8 +141,8 @@ relative luminance, and `Oklab.onColor(fill, min?, tint?)` and
 A theme of your own can work out its text the same way:
 
 ```luau
-local themes = Lucy.Tokens.themesFor("slate", { primary = "lime" })
-themes.dark.Primary = "$Lime300"
+local themes = Lucy.Tokens.themesFor("zinc", { primary = "fuchsia" })
+themes.dark.Primary = "$Fuchsia300"
 themes.dark.PrimaryForeground = Lucy.Tokens.onColor("$Primary")
 ```
 

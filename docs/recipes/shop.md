@@ -1,15 +1,18 @@
 ---
 title: Shop
-description: A shop dialog with a grid of items, Buy buttons that grey out when the player can't afford them, a confirm before buying, a hotkey and a HUD button.
+description: An Emote Shop dialog with a grid of dances, Buy buttons that grey out when the player can't afford them, a confirm before buying, a hotkey and a HUD button.
 order: 5
 ---
 
 # Shop
 
-A shop in a dialog: a grid of item cards, each with a Buy button that greys out
-when the player can't afford it. Buying asks first, then takes the coins and
+The Emote Shop in a dialog: a grid of dance cards, each with a Buy button that
+greys out when the player can't afford it. Buying asks first, then takes the coins and
 shows a toast. B on a keyboard, X on a gamepad and a HUD button open and close
 it, and the character stops while it is open.
+
+<!-- preview screen then="shop:open()" -->
+<figure class="example-preview example-screen"><img class="example-light" src="/images/examples/recipes-shop-light.webp" alt="Shop example" loading="lazy"><img class="example-dark" src="/images/examples/recipes-shop-dark.webp" alt="Shop example" loading="lazy"></figure>
 
 ```luau [StarterPlayerScripts/Shop.client.luau]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -20,12 +23,12 @@ local app = Lucy.App.new({
 })
 
 local ITEMS = {
-    { name = "Iron Sword", price = 120, icon = "lucide:sword" },
-    { name = "Oak Shield", price = 90, icon = "lucide:shield" },
-    { name = "Health Potion", price = 25, icon = "lucide:flask-conical" },
-    { name = "Ruby", price = 300, icon = "lucide:gem" },
-    { name = "Brass Key", price = 60, icon = "lucide:key-round" },
-    { name = "Apple", price = 5, icon = "lucide:apple" },
+    { name = "Moonwalk", price = 300, icon = "lucide-extended:sparkles-filled" },
+    { name = "Robot", price = 120, icon = "lucide-extended:star-filled" },
+    { name = "Shuffle", price = 90, icon = "lucide-extended:flame-filled" },
+    { name = "Twirl", price = 60, icon = "lucide-extended:zap-filled" },
+    { name = "Wave", price = 25, icon = "lucide-extended:heart-filled" },
+    { name = "Groove", price = 500, icon = "lucide-extended:party-popper-filled" },
 }
 
 local coins = app.state:ref("player.coins")
@@ -33,7 +36,7 @@ local coins = app.state:ref("player.coins")
 local function buy(item)
     Lucy.Dialog.alert({
         title = `Buy {item.name}?`,
-        description = `This costs {item.price} coins.`,
+        description = `The {item.name} emote costs {item.price} coins.`,
         confirmText = "Buy",
         onConfirm = function()
             -- In a real game, ask the server to buy and let it change the coins.
@@ -42,7 +45,7 @@ local function buy(item)
                 return
             end
             coins(coins() - item.price)
-            app.toast.success(`Bought {item.name}`, { description = `-{item.price} coins` })
+            app.toast.success(`{item.name} unlocked`, { description = `-{item.price} coins` })
         end,
     })
 end
@@ -77,7 +80,7 @@ for _, item in ITEMS do
 end
 
 local shop = Lucy.Dialog.new({
-    title = "Shop",
+    title = "Emote Shop",
     size = "lg",
     maxHeight = 520,
     children = {
@@ -109,8 +112,8 @@ app.scenes:register("ShopButton", {
     layer = "overlay",
     build = function(scene)
         local button = Lucy.Button.new({
-            icon = "lucide:shopping-cart",
-            text = "Shop",
+            icon = "lucide-extended:shopping-bag-filled",
+            text = "Emote Shop",
             hint = { keyboard = Enum.KeyCode.B, gamepad = Enum.KeyCode.ButtonX },
             onClick = function()
                 shop:toggle()
@@ -141,7 +144,7 @@ How it fits together:
 - **The confirm** is an alert: it opens on top of the shop, and back (B or
   Backspace) picks Cancel. See [Alert dialogs](../components/dialog.md#alert-dialogs).
 - **The grid** has 2 columns on a phone and 3 elsewhere; the dialog's body
-  scrolls when the items don't fit, so the grid needs no scroll of its own.
+  scrolls when the dances don't fit, so the grid needs no scroll of its own.
 - **The hotkey** still fires while the confirm is open, so pressing B there
   closes the shop under it. To stop that, see
   [While a menu is open](../guide/actions.md#while-a-menu-is-open).
@@ -149,4 +152,4 @@ How it fits together:
   the server owns them: send a buy request, check it on the server, and set the
   new total from there.
 - **Icons** need your icon build; see [Icons](../guide/icons.md). Until then the
-  item icons are blank and the HUD button shows its text.
+  emote icons are blank and the HUD button shows its text.

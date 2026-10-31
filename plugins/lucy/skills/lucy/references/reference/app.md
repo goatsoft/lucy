@@ -11,8 +11,8 @@ local Lucy = require(ReplicatedStorage.Packages.Lucy)
 local app = Lucy.App.new({
     theme = "dark",
     baseColor = "zinc",
-    primary = "violet",
-    state = { player = { coins = 0 } },
+    primary = "fuchsia",
+    state = { player = { name = "DJ Lucy", coins = 0 } },
 })
 ```
 

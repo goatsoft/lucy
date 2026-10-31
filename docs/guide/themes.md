@@ -19,7 +19,7 @@ Give the App a base colour and, if you like, a primary colour:
 local app = Lucy.App.new({
     theme = "dark",
     baseColor = "slate",
-    primary = "emerald",
+    primary = "fuchsia",
 })
 ```
 
@@ -44,6 +44,9 @@ app.state:set("theme", "light")
 
 To let players choose, bind a control to it. This Select switches the whole UI
 as soon as a player picks:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/guide-themes-light.webp" alt="Add a theme example" loading="lazy"><img class="example-dark" src="/images/examples/guide-themes-dark.webp" alt="Add a theme example" loading="lazy"></figure>
 
 ```luau
 Lucy.Select.new({
@@ -106,15 +109,15 @@ Your own instances can use the theme too, so they change with it. Tag them, and
 add rules that match the tags:
 
 ```luau
-app.theme:addRules("shop", {
-    { selector = ".shop-price", properties = { TextColor3 = "$Warning", FontFace = "$FontSansBold" } },
-    { selector = ".shop-card", properties = { BackgroundColor3 = "$Card" } },
-    { selector = ".shop-card:Hover", priority = 20, properties = { BackgroundColor3 = "$Accent" } },
+app.theme:addRules("emoteShop", {
+    { selector = ".emote-price", properties = { TextColor3 = "$Warning", FontFace = "$FontSansBold" } },
+    { selector = ".emote-card", properties = { BackgroundColor3 = "$Card" } },
+    { selector = ".emote-card:Hover", priority = 20, properties = { BackgroundColor3 = "$Accent" } },
 })
 
 Lucy.new "TextLabel" {
-    Tags = { "shop-price" },
-    Text = "250",
+    Tags = { "emote-price" },
+    Text = "250 coins",
     Parent = card,
 }
 ```

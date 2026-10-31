@@ -73,8 +73,11 @@ component's page for its name. To place a component, put it in a
 [Stack](stack.md) or [Grid](grid.md), or set layout properties on its root
 after making it:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-index-light.webp" alt="Components example" loading="lazy"><img class="example-dark" src="/images/examples/components-index-dark.webp" alt="Components example" loading="lazy"></figure>
+
 ```luau
-local gear = Lucy.Button.new({ icon = "lucide:settings", size = "icon", Parent = scene.gui })
+local gear = Lucy.Button.new({ icon = "lucide-extended:settings-filled", size = "icon", Parent = scene.gui })
 gear.Instance.AnchorPoint = Vector2.new(1, 0)
 gear.Instance.Position = UDim2.new(1, -16, 0, 16)
 ```
@@ -93,20 +96,23 @@ so for a list from state, put `Lucy.each` in a `Lucy.new` frame and pass that
 Every state key listed on a component's page also accepts a ref, a computed or a
 getter function. The component follows it and nothing else runs again.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-index-2-light.webp" alt="Components example" loading="lazy"><img class="example-dark" src="/images/examples/components-index-2-dark.webp" alt="Components example" loading="lazy"></figure>
+
 ```luau
 local coins = Lucy.ref(0)
 local isBusy = Lucy.ref(false)
-local music = Lucy.ref(true)
+local lights = Lucy.ref(true)
 
 Lucy.Button.new({
     text = function() return `Buy ({coins()})` end,
     disabled = isBusy,
 })
-Lucy.Switch.new({ label = "Music", checked = music })
+Lucy.Switch.new({ label = "Club lights", checked = lights })
 ```
 
 - **Writable sources bind both ways.** A ref, or a computed made with `{ get, set }`,
-  is written back when the key changes: the player flips the Switch and `music`
+  is written back when the key changes: the player flips the Switch and `lights`
   becomes `false`. `checked`, `value` and `open` are the usual ones to bind this way.
 - **Getters only flow in.** A plain getter, or a computed without `set`, is read
   but never written back. If the app or the player changes that key, the next

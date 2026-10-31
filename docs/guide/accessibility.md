@@ -20,14 +20,14 @@ your rule stays right when the theme changes.
 ```luau
 local rules = {
     {
-        selector = ".shop-badge",
+        selector = ".emote-new-badge",
         properties = {
             BackgroundColor3 = "$Primary",
             TextColor3 = "$PrimaryForeground",
         },
     },
     {
-        selector = ".shop-sold-out",
+        selector = ".emote-locked",
         properties = {
             BackgroundColor3 = "$DestructiveSubtle",
             TextColor3 = "$DestructiveSubtleForeground",
@@ -46,8 +46,8 @@ If you add a colour token, give it a foreground with `Lucy.Tokens.onColor`
 rather than picking one by eye:
 
 ```luau
-local themes = Lucy.Tokens.themesFor("slate", { primary = "lime" })
-themes.dark.Primary = "$Lime300"
+local themes = Lucy.Tokens.themesFor("slate", { primary = "fuchsia" })
+themes.dark.Primary = "$Fuchsia300"
 themes.dark.PrimaryForeground = Lucy.Tokens.onColor("$Primary")
 ```
 
@@ -73,7 +73,7 @@ the thing they most likely want, such as Play on a title screen:
 ```luau
 app.scenes:register("Title", {
     build = function(scene)
-        scene.play = Lucy.Button.new({ text = "Play", Parent = scene.gui })
+        scene.play = Lucy.Button.new({ text = "Hit the floor", Parent = scene.gui })
         -- ...
     end,
     defaultFocus = function(scene)
@@ -98,7 +98,7 @@ height gets cut off. Size your own controls with the density tokens
 ```luau
 local rules = {
     {
-        selector = ".shop-buy",
+        selector = ".emote-buy",
         properties = { Size = "$ControlMd", AutomaticSize = Enum.AutomaticSize.X },
     },
 }
@@ -152,6 +152,9 @@ end)
 
 If your game has its own settings menu, a Reduce motion switch can drive the
 same setting:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/guide-accessibility-light.webp" alt="Make your UI accessible example" loading="lazy"><img class="example-dark" src="/images/examples/guide-accessibility-dark.webp" alt="Make your UI accessible example" loading="lazy"></figure>
 
 ```luau
 Lucy.Switch.new({

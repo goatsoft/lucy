@@ -9,16 +9,22 @@ arrows move focus as usual. It can lie flat or stand up, and grows on touch and
 console.
 
 ```luau
-Lucy.Slider.new({
-    value = 80,
-    showValue = true,
-    format = function(value)
-        return `{value}%`
-    end,
-    onValueCommit = function(value)
-        settings:save("volume", value)
-    end,
-    Parent = settings,
+Lucy.Stack.new({
+    gap = "Space2",
+    children = {
+        Lucy.Text.new({ text = "Music volume", variant = "label" }),
+        Lucy.Slider.new({
+            value = app.state:ref("settings.music"),
+            showValue = true,
+            format = function(value)
+                return `{value}%`
+            end,
+            onValueCommit = function(value)
+                app.toast(`Music at {value}%`)
+            end,
+        }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -58,22 +64,22 @@ runs once per drag. The `select` event (for UI sounds) is sent at the same time.
 Keep a setting in app state, preview it live and save it when the player lets go:
 
 ```luau
-local sensitivity = app.state:ref("settings.sensitivity")
+local danceSpeed = app.state:ref("settings.danceSpeed")
 
 Lucy.Slider.new({
-    value = sensitivity,
+    value = danceSpeed,
     min = 0.1,
     max = 2,
     step = 0.1,
     showValue = true,
     onValueCommit = function(value)
-        remotes.SaveSetting:FireServer("sensitivity", value)
+        remotes.SaveSetting:FireServer("danceSpeed", value)
     end,
     Parent = settings,
 })
 ```
 
-A small slider standing up, beside a music track list:
+A small slider standing up, beside the Queue:
 
 ```luau
 Lucy.Slider.new({
@@ -81,7 +87,7 @@ Lucy.Slider.new({
     orientation = "vertical",
     size = "sm",
     length = 120,
-    Parent = sidebar,
+    Parent = queue,
 })
 ```
 

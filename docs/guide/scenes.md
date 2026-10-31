@@ -15,7 +15,7 @@ fight over input.
 
 | Layer | Shown | For |
 |---|---|---|
-| `screen` | exactly one at a time | Title, Lobby, Game |
+| `screen` | exactly one at a time | Title, Lobby, Dance Floor |
 | `overlay` | any number, alongside the screen | HUD, chat, minimap |
 | `modal` | stacked on top, newest above | Pause, Settings, Shop |
 
@@ -41,9 +41,9 @@ app.scenes:register("Title", {
     layer = "screen",
     build = function(scene)
         scene.play = Lucy.Button.new({
-            text = "Play",
+            text = "Hit the floor",
             onClick = function()
-                app.scenes:goTo("Game")
+                app.scenes:goTo("DanceFloor")
             end,
             Parent = scene.gui,
         })
@@ -84,8 +84,8 @@ shows.
 ## Move between screens
 
 ```luau
-app.scenes:goTo("Game")
-app.scenes:goTo("Results", { score = 1200, place = 2 })
+app.scenes:goTo("DanceFloor")
+app.scenes:goTo("DanceOffResults", { score = 1200, place = 2 })
 ```
 
 The old screen hides and the new one shows. Calling `goTo` on the screen already
@@ -98,7 +98,7 @@ modals open; to go back to the title from a pause menu, close them first with
 Overlays show next to whatever screen is up:
 
 ```luau
-local coins = app.state:ref("coins")
+local coins = app.state:ref("player.coins")
 
 app.scenes:register("Hud", {
     layer = "overlay",
@@ -189,8 +189,8 @@ B on a gamepad and Backspace on a keyboard, when nothing else, such as an open
 select, takes them first:
 
 ```luau
-app.scenes:register("Game", {
-    build = buildGame,
+app.scenes:register("DanceFloor", {
+    build = buildDanceFloor,
     onBack = function()
         app.scenes:push("Pause")
     end,
@@ -210,8 +210,8 @@ Scenes are app state, so you can read and follow them like anything else:
 | `scenes.stack` | the names of the open modals, top last; nil until the first `push` |
 | `scenes.visible` | `{ [name] = true }` for each overlay shown |
 
-Writing them navigates too: `app.state:set("scenes.current", "Game")` is the same
-as `goTo("Game")`. `app.scenes:current()`, `isVisible(name)` and `get(name)` (the
+Writing them navigates too: `app.state:set("scenes.current", "DanceFloor")` is the same
+as `goTo("DanceFloor")`. `app.scenes:current()`, `isVisible(name)` and `get(name)` (the
 scene table, once built) read them directly, and `app.scenes.Changed` fires with
 the new and old screen.
 

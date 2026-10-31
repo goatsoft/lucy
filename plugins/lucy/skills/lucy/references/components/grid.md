@@ -7,10 +7,18 @@ fixed cell size and it fits as many on a row as it can.
 
 ```luau
 Lucy.Grid.new({
-    columns = 4,
+    columns = 3,
+    cellHeight = 40,
     gap = "Space2",
-    children = cards,
-    Parent = shop,
+    children = {
+        Lucy.Button.new({ text = "Moonwalk", icon = "lucide-extended:star-filled", variant = "outline" }),
+        Lucy.Button.new({ text = "Robot", icon = "lucide-extended:zap-filled", variant = "outline" }),
+        Lucy.Button.new({ text = "Shuffle", icon = "lucide-extended:footprints-filled", variant = "outline" }),
+        Lucy.Button.new({ text = "Twirl", icon = "lucide-extended:sparkles-filled", variant = "outline" }),
+        Lucy.Button.new({ text = "Wave", icon = "lucide-extended:heart-filled", variant = "outline" }),
+        Lucy.Button.new({ text = "Groove", icon = "lucide-extended:music-filled", variant = "outline" }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -50,8 +58,8 @@ table instead of a value:
 Lucy.Grid.new({
     columns = { mobile = 2, console = 3, default = 5 },
     gap = { touch = "Space3", default = "Space2" },
-    children = cards,
-    Parent = shop,
+    children = emoteCards,
+    Parent = emoteShop,
 })
 ```
 
@@ -73,15 +81,15 @@ Lucy.Grid.new({
 })
 ```
 
-Song cards in three columns, a little wider than they are tall:
+Track cards in three columns, a little wider than they are tall:
 
 ```luau
 Lucy.Grid.new({
     columns = 3,
     aspectRatio = 4 / 3,
     gap = "Space3",
-    children = songCards,
-    Parent = list,
+    children = trackCards,
+    Parent = queue,
 })
 ```
 

@@ -5,7 +5,29 @@ A small picture that takes its colour from the theme, so it changes with light
 and dark mode and with the text around it. Name it, or give it an asset id.
 
 ```luau
-Lucy.Icon.new({ icon = "lucide:heart", variant = "destructive", Parent = row })
+local function stat(icon, variant, text)
+    return Lucy.Stack.new({
+        direction = "horizontal",
+        gap = "Space2",
+        align = "center",
+        children = {
+            Lucy.Icon.new({ icon = icon, variant = variant, size = "lg" }),
+            Lucy.Text.new({ text = text, variant = "large", autoWidth = true }),
+        },
+    })
+end
+
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space6",
+    align = "center",
+    children = {
+        stat("lucide-extended:heart-duotone", "destructive", "72 hype"),
+        stat("lucide-extended:flame-duotone", "warning", "8x combo"),
+        stat("lucide-extended:coins-duotone", "primary", "1250 coins"),
+    },
+    Parent = parent,
+})
 ```
 
 ## Registering icons
@@ -16,14 +38,14 @@ images once, before it builds any UI:
 
 ```luau
 Lucy.Icon.register({
-    ["game:coin"] = { image = 1234567 },
-    ["game:logo"] = { image = 7654321, tint = false },
+    ["club:coin"] = { image = 1234567 },
+    ["club:logo"] = { image = 7654321, tint = false },
 })
 ```
 
 Write the map yourself for your own images, or let the lucy-icons build make it
 from any [Iconify](https://icon-sets.iconify.design) icon you name in your
-code, such as `"lucide:heart"`. [Add icons](../../../lucy-icons/references/guide/icons.md) covers both,
+code, such as `"lucide-extended:heart-duotone"`. [Add icons](../../../lucy-icons/references/guide/icons.md) covers both,
 with every field of the map.
 
 ## Props
@@ -54,7 +76,7 @@ Lucy.Stack.new({
     gap = "Space2",
     align = "center",
     children = {
-        Lucy.Icon.new({ icon = "lucide:music", variant = "muted" }),
+        Lucy.Icon.new({ icon = "lucide-extended:music-filled", variant = "muted" }),
         Lucy.Text.new({ text = "Now playing", autoWidth = true }),
     },
     Parent = header,
@@ -66,7 +88,7 @@ As the media of a list row:
 ```luau
 Lucy.Item.new({
     title = "Streamer mode",
-    media = Lucy.Icon.new({ icon = "lucide:radio", size = "lg" }),
+    media = Lucy.Icon.new({ icon = "lucide-extended:radio-filled", size = "lg" }),
     actions = { Lucy.Switch.new({ checked = streamerMode }) },
     Parent = settings,
 })

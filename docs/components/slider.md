@@ -12,17 +12,26 @@ keyboard and gamepad, one step at a time and faster while held; the other
 arrows move focus as usual. It can lie flat or stand up, and grows on touch and
 console.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-slider-light.webp" alt="Slider example" loading="lazy"><img class="example-dark" src="/images/examples/components-slider-dark.webp" alt="Slider example" loading="lazy"></figure>
+
 ```luau
-Lucy.Slider.new({
-    value = 80,
-    showValue = true,
-    format = function(value)
-        return `{value}%`
-    end,
-    onValueCommit = function(value)
-        settings:save("volume", value)
-    end,
-    Parent = settings,
+Lucy.Stack.new({
+    gap = "Space2",
+    children = {
+        Lucy.Text.new({ text = "Music volume", variant = "label" }),
+        Lucy.Slider.new({
+            value = app.state:ref("settings.music"),
+            showValue = true,
+            format = function(value)
+                return `{value}%`
+            end,
+            onValueCommit = function(value)
+                app.toast(`Music at {value}%`)
+            end,
+        }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -61,23 +70,29 @@ runs once per drag. The `select` event (for UI sounds) is sent at the same time.
 
 Keep a setting in app state, preview it live and save it when the player lets go:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-slider-2-light.webp" alt="Slider example" loading="lazy"><img class="example-dark" src="/images/examples/components-slider-2-dark.webp" alt="Slider example" loading="lazy"></figure>
+
 ```luau
-local sensitivity = app.state:ref("settings.sensitivity")
+local danceSpeed = app.state:ref("settings.danceSpeed")
 
 Lucy.Slider.new({
-    value = sensitivity,
+    value = danceSpeed,
     min = 0.1,
     max = 2,
     step = 0.1,
     showValue = true,
     onValueCommit = function(value)
-        remotes.SaveSetting:FireServer("sensitivity", value)
+        remotes.SaveSetting:FireServer("danceSpeed", value)
     end,
     Parent = settings,
 })
 ```
 
-A small slider standing up, beside a music track list:
+A small slider standing up, beside the Queue:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-slider-3-light.webp" alt="Slider example" loading="lazy"><img class="example-dark" src="/images/examples/components-slider-3-dark.webp" alt="Slider example" loading="lazy"></figure>
 
 ```luau
 Lucy.Slider.new({
@@ -85,7 +100,7 @@ Lucy.Slider.new({
     orientation = "vertical",
     size = "sm",
     length = 120,
-    Parent = sidebar,
+    Parent = queue,
 })
 ```
 

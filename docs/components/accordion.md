@@ -9,17 +9,24 @@ A stack of sections with a header each: a settings menu, a list of quests, the
 help pages of a game. By default one section is open at a time, and pressing the
 open one closes it. Each section is a [Collapsible](collapsible.md).
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-accordion-light.webp" alt="Accordion example" loading="lazy"><img class="example-dark" src="/images/examples/components-accordion-dark.webp" alt="Accordion example" loading="lazy"></figure>
+
 ```luau
 Lucy.Accordion.new({
     value = "audio",
     items = {
-        { value = "audio", text = "Audio", content = audioSettings },
-        { value = "video", text = "Video", content = videoSettings },
-        { value = "controls", text = "Controls", content = function()
-            return buildControls()
+        { value = "audio", text = "Music volume", content = function()
+            return Lucy.Slider.new({ value = app.state:ref("settings.music"), showValue = true })
         end },
+        { value = "lights", text = "Lights", content = function()
+            return Lucy.Switch.new({ label = "Light show", checked = app.state:ref("settings.lights") })
+        end },
+        { value = "controls", text = "Controls", content = Lucy.Text.new({
+            text = "E to dance, Q for the queue", variant = "muted",
+        }) },
     },
-    Parent = settingsPanel,
+    Parent = parent,
 })
 ```
 
@@ -60,18 +67,21 @@ sections without reporting a press, set the state:
 
 ## Examples
 
-Let the player keep several sections open, starting with two:
+Let the player keep several sections of the Queue open, starting with two:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-accordion-2-light.webp" alt="Accordion example" loading="lazy"><img class="example-dark" src="/images/examples/components-accordion-2-dark.webp" alt="Accordion example" loading="lazy"></figure>
 
 ```luau
 Lucy.Accordion.new({
     type = "multiple",
-    value = { "daily", "weekly" },
+    value = { "upNext", "requests" },
     items = {
-        { value = "daily", text = "Daily quests", content = dailyList },
-        { value = "weekly", text = "Weekly quests", content = weeklyList },
-        { value = "event", text = "Event", content = eventList, disabled = not eventLive },
+        { value = "upNext", text = "Up next", content = upNextList },
+        { value = "requests", text = "Requests", content = requestList },
+        { value = "party", text = "Party night", content = partyList, disabled = not partyLive },
     },
-    Parent = questPanel,
+    Parent = queuePanel,
 })
 ```
 

@@ -6,12 +6,19 @@ is the hit area, and it grows on touch and console so it is easy to hit with a
 thumb or a gamepad.
 
 ```luau
-Lucy.Checkbox.new({
-    label = "Mute music",
-    onCheckedChange = function(checked)
-        music.Volume = if checked then 0 else 0.5
-    end,
-    Parent = settings,
+Lucy.Stack.new({
+    gap = "Space2",
+    children = {
+        Lucy.Checkbox.new({
+            label = "Mute music",
+            onCheckedChange = function(checked)
+                app.state:set("settings.music", if checked then 0 else 80)
+            end,
+        }),
+        Lucy.Checkbox.new({ label = "Light show", checked = true }),
+        Lucy.Checkbox.new({ label = "Show my dance combo", checked = true }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -41,7 +48,7 @@ the box writes the ref:
 ```luau
 local muted = Lucy.ref(false)
 
-Lucy.Checkbox.new({ label = "Mute music", checked = muted, Parent = settings })
+Lucy.Checkbox.new({ label = "Mute the crowd", checked = muted, Parent = settings })
 
 muted(true) -- the box is now checked
 ```
@@ -49,10 +56,10 @@ muted(true) -- the box is now checked
 Read it from app state by id:
 
 ```luau
-Lucy.Checkbox.new({ id = "terms", label = "I agree to the rules", Parent = form })
+Lucy.Checkbox.new({ id = "rules", label = "I agree to the club rules", Parent = welcome })
 
-if app.state:get("ui.terms.checked") then
-    startGame()
+if app.state:get("ui.rules.checked") then
+    enterLobby()
 end
 ```
 

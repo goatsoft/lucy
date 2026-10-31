@@ -8,11 +8,11 @@ inside it and the back button (B or Backspace) closes it.
 ```luau
 local quit = Lucy.Dialog.new({
     id = "quit",
-    title = "Leave match?",
-    description = "You will drop your cash.",
+    title = "Leave the club?",
+    description = "Your dance combo resets. Your coins are saved.",
     actions = {
-        { text = "Stay", variant = "outline" },
-        { text = "Leave", variant = "destructive", onClick = leaveMatch },
+        { text = "Keep dancing", variant = "outline" },
+        { text = "Leave", variant = "destructive", onClick = function() app.toast("See you next time") end },
     },
 })
 
@@ -79,12 +79,12 @@ it do nothing instead.
 
 ```luau
 Lucy.Dialog.alert({
-    title = "Delete this save?",
-    description = "This cannot be undone.",
+    title = "Delete this outfit?",
+    description = "It leaves your Wardrobe for good.",
     confirmText = "Delete",  -- default "Continue"
     cancelText = "Keep",     -- default "Cancel"
     destructive = true,      -- a red confirm button
-    onConfirm = deleteSave,
+    onConfirm = deleteOutfit,
     onCancel = function() end,
 })
 ```
@@ -104,19 +104,19 @@ Keep the dialog open when a check fails:
 
 ```luau
 Lucy.Dialog.new({
-    title = "Name your team",
-    children = { Lucy.Input.new({ id = "teamName", placeholder = "Team name" }) },
+    title = "Name your crew",
+    children = { Lucy.Input.new({ id = "crewName", placeholder = "Crew name" }) },
     actions = {
         { text = "Cancel", variant = "outline" },
         {
             text = "Create",
             onClick = function()
-                local name = app.state:get("ui.teamName.value")
+                local name = app.state:get("ui.crewName.value")
                 if name == "" then
                     app.toast.error("Pick a name first")
                     return false -- stay open
                 end
-                createTeam(name)
+                createCrew(name)
             end,
         },
     },

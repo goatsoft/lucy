@@ -66,14 +66,14 @@ fields, such as `scene.play`.
 ## Build a scene
 
 Each scene owns one ScreenGui. Only one screen shows at a time; modals and
-overlays sit above it. This title screen has a Play button that switches to
-the game screen:
+overlays sit above it. This title screen has a "Hit the floor" button that
+switches to the game screen:
 
 ```luau
 app.scenes:register("Title", {
     build = function(scene)
         scene.play = Lucy.Button.new({
-            text = "Play",
+            text = "Hit the floor",
             size = "lg",
             onClick = function()
                 app.scenes:goTo("Game")
@@ -85,7 +85,7 @@ app.scenes:register("Title", {
             justify = "center",
             gap = "Space4",
             children = {
-                Lucy.Text.new({ text = "My Game", variant = "h1", align = "center" }),
+                Lucy.Text.new({ text = "Club Lucy", variant = "h1", align = "center" }),
                 scene.play,
             },
             Parent = scene.gui,
@@ -121,7 +121,7 @@ saves, a pause menu, a HUD and a shop.
 ## Drive anything from app state
 
 ```luau
-app.state:set("ui.quit.open", true)           -- any component, by id
+app.state:set("ui.leave.open", true)          -- any component, by id
 app.state:set("theme", "light")               -- switch theme
 app.state:set("scenes.current", "Game")       -- navigate
 app.state:subscribe("input.device", print)    -- "desktop" | "console" | "tablet" | "mobile"
@@ -130,18 +130,18 @@ app.state:subscribe("input.device", print)    -- "desktop" | "console" | "tablet
 ## Dialogs and toasts
 
 ```luau
-local quit = Lucy.Dialog.new({
-    id = "quit",
-    title = "Leave match?",
-    description = "You will drop your cash.",
+local leave = Lucy.Dialog.new({
+    id = "leave",
+    title = "Leave the club?",
+    description = "Your combo will reset.",
     actions = {
-        { text = "Stay", variant = "outline" },
-        { text = "Leave", variant = "destructive", onClick = leaveMatch },
+        { text = "Keep dancing", variant = "outline" },
+        { text = "Leave", variant = "destructive", onClick = leaveClub },
     },
 })
-quit:open() -- or app.state:set("ui.quit.open", true)
+leave:open() -- or app.state:set("ui.leave.open", true)
 
-app.toast.success("Round won", { description = "+$250" })
+app.toast.success("Dance-off won", { description = "+250 coins" })
 ```
 
 ## Next

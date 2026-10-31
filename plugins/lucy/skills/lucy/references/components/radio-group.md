@@ -8,15 +8,16 @@ circle grows on touch and console.
 ```luau
 Lucy.RadioGroup.new({
     items = {
-        { value = "easy", label = "Easy" },
-        { value = "normal", label = "Normal" },
-        { value = "hard", label = "Hard" },
+        { value = "house", label = "House" },
+        { value = "disco", label = "Disco" },
+        { value = "techno", label = "Techno" },
+        { value = "pop", label = "Pop", disabled = true },
     },
-    value = "normal",
-    onValueChange = function(level)
-        Remotes.SetDifficulty:FireServer(level)
+    value = "house",
+    onValueChange = function(genre)
+        app.toast(`Next up: {genre}`)
     end,
-    Parent = form,
+    Parent = parent,
 })
 ```
 
@@ -61,9 +62,9 @@ Keep the choice in app state:
 
 ```luau
 Lucy.RadioGroup.new({
-    items = { "Oceania", "Asia", "Europe", "Americas" },
-    value = app.state:ref("settings.region"),
-    Parent = settings,
+    items = { "House", "Disco", "Hip hop", "Techno" },
+    value = app.state:ref("booth.genre"),
+    Parent = booth,
 })
 ```
 

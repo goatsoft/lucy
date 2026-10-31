@@ -5,7 +5,15 @@ A grey shape that pulses while content loads, in place of the text or picture
 that will be there. The pulse stops while it is hidden and when it is destroyed.
 
 ```luau
-Lucy.Skeleton.new({ size = UDim2.fromOffset(250, 16), Parent = card })
+Lucy.Stack.new({
+    gap = "Space2",
+    children = {
+        Lucy.Skeleton.new({ size = UDim2.fromOffset(360, 120) }),
+        Lucy.Skeleton.new({ size = UDim2.fromOffset(240, 16) }),
+        Lucy.Skeleton.new({ size = UDim2.fromOffset(150, 12) }),
+    },
+    Parent = parent,
+})
 ```
 
 ## Props
@@ -20,7 +28,7 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 ## Examples
 
-A placeholder profile card:
+A placeholder card for a Crew member:
 
 ```luau
 Lucy.Stack.new({
@@ -30,7 +38,7 @@ Lucy.Stack.new({
         Lucy.Skeleton.new({ size = UDim2.fromOffset(160, 16) }),
         Lucy.Skeleton.new({ size = UDim2.fromOffset(100, 12) }),
     },
-    Parent = card,
+    Parent = crewCard,
 })
 ```
 
@@ -39,10 +47,10 @@ Show it until data arrives:
 ```luau
 local loading = Lucy.ref(true)
 
-Lucy.Skeleton.new({ visible = loading, Parent = card })
+Lucy.Skeleton.new({ visible = loading, Parent = topDancers })
 
 task.spawn(function()
-    loadProfile()
+    loadTopDancers()
     loading(false)
 end)
 ```

@@ -9,8 +9,19 @@ Text in the theme's fonts and colours: headings, body copy, muted notes and
 labels. It wraps to fill its parent's width unless you ask it to fit the text.
 `handle.Instance` is the TextLabel.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-text-light.webp" alt="Text example" loading="lazy"><img class="example-dark" src="/images/examples/components-text-dark.webp" alt="Text example" loading="lazy"></figure>
+
 ```luau
-Lucy.Text.new({ text = "My Game", variant = "h1", align = "center", Parent = frame })
+Lucy.Stack.new({
+    gap = "Space1",
+    children = {
+        Lucy.Text.new({ text = "Club Lucy", variant = "h1", align = "center" }),
+        Lucy.Text.new({ text = "DJ Lucy is on the decks tonight", variant = "lead", align = "center" }),
+        Lucy.Text.new({ text = "Now playing: Neon Nights, 124 BPM", variant = "muted", align = "center" }),
+    },
+    Parent = parent,
+})
 ```
 
 ## Props
@@ -40,6 +51,9 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 A label that follows game state:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-text-2-light.webp" alt="Text example" loading="lazy"><img class="example-dark" src="/images/examples/components-text-2-dark.webp" alt="Text example" loading="lazy"></figure>
+
 ```luau
 local coins = app.state:ref("player.coins")
 
@@ -52,14 +66,20 @@ Lucy.Text.new({
 
 Text that fits itself, for use in a row:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-text-3-light.webp" alt="Text example" loading="lazy"><img class="example-dark" src="/images/examples/components-text-3-dark.webp" alt="Text example" loading="lazy"></figure>
+
 ```luau
 Lucy.Text.new({ text = "Level 12", variant = "small", autoWidth = true, Parent = row })
 ```
 
 Rich text:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-text-4-light.webp" alt="Text example" loading="lazy"><img class="example-dark" src="/images/examples/components-text-4-dark.webp" alt="Text example" loading="lazy"></figure>
+
 ```luau
-Lucy.Text.new({ text = "Press <b>E</b> to open", richText = true, Parent = prompt })
+Lucy.Text.new({ text = "Press <b>E</b> to dance", richText = true, Parent = prompt })
 ```
 
 ## Preview

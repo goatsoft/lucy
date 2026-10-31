@@ -6,13 +6,18 @@ rules in a dialog. It works with the mouse wheel, touch and gamepad, and keeps
 the focused item in view when the player moves with Tab or the arrow keys.
 
 ```luau
+local trackRows = {}
+for i, title in { "Neon Nights", "Bassline Bounce", "Sunset Groove", "Midnight Drop", "Disco Satellite", "Cosmic Shuffle" } do
+    trackRows[i] = Lucy.Item.new({ title = title, variant = "outline", size = "sm" })
+end
+
 Lucy.ScrollArea.new({
-    size = UDim2.new(1, 0, 0, 300),
+    size = UDim2.new(1, 0, 0, 180),
     padding = "Space2",
     children = {
-        Lucy.Stack.new({ gap = "Space1", children = songRows }),
+        Lucy.Stack.new({ gap = "Space1", children = trackRows }),
     },
-    Parent = panel,
+    Parent = parent,
 })
 ```
 
@@ -86,20 +91,20 @@ A dialog body that grows with its text and scrolls past 320 pixels:
 Lucy.ScrollArea.new({
     maxHeight = 320,
     children = {
-        Lucy.Text.new({ text = rules, variant = "p" }),
+        Lucy.Text.new({ text = clubRules, variant = "p" }),
     },
     Parent = body,
 })
 ```
 
-A row of cards that scrolls sideways:
+A row of emote cards that scrolls sideways:
 
 ```luau
 Lucy.ScrollArea.new({
     direction = "horizontal",
     size = UDim2.new(1, 0, 0, 220),
     children = {
-        Lucy.Stack.new({ direction = "horizontal", gap = "Space3", children = cards }),
+        Lucy.Stack.new({ direction = "horizontal", gap = "Space3", children = emoteCards }),
     },
     Parent = shop,
 })

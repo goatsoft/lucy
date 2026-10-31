@@ -7,11 +7,19 @@ settings groups.
 
 ```luau
 Lucy.Panel.new({
-    title = "Loadout",
-    description = "Pick a weapon",
-    children = { weaponList },
-    footer = { Lucy.Button.new({ text = "Save" }) },
-    Parent = frame,
+    title = "Moonwalk",
+    description = "Glide backwards across the Dance Floor",
+    size = UDim2.fromOffset(360, 0),
+    children = { Lucy.Text.new({ text = "300 coins", variant = "large" }) },
+    footer = {
+        Lucy.Button.new({
+            text = "Buy",
+            icon = "lucide-extended:shopping-bag-filled",
+            onClick = function() app.toast("Moonwalk unlocked") end,
+        }),
+        Lucy.Button.new({ text = "Try it on", variant = "outline" }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -49,7 +57,7 @@ local panel = Lucy.Panel.new({
     size = UDim2.fromOffset(360, 0),
     children = {
         Lucy.Switch.new({ label = "Music", checked = true }),
-        Lucy.Switch.new({ label = "Sound effects", checked = true }),
+        Lucy.Switch.new({ label = "Club lights", checked = true }),
     },
     footer = { Lucy.Button.new({ text = "Done", onClick = closeSettings }) },
     Parent = frame,
@@ -59,7 +67,7 @@ local panel = Lucy.Panel.new({
 Add content later:
 
 ```luau
-Lucy.Text.new({ text = "Saved 2 minutes ago", variant = "muted", Parent = panel.content })
+Lucy.Text.new({ text = "Crowd volume saved", variant = "muted", Parent = panel.content })
 ```
 
 ## Preview

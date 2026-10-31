@@ -5,7 +5,16 @@ A small ring that turns while something loads: finding a server, saving, or
 waiting on a purchase.
 
 ```luau
-Lucy.Spinner.new({ size = "sm", Parent = row })
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space3",
+    align = "center",
+    children = {
+        Lucy.Spinner.new({ variant = "primary" }),
+        Lucy.Text.new({ text = "DJ Lucy is mixing the next track", autoWidth = true }),
+    },
+    Parent = parent,
+})
 ```
 
 It only turns while it is visible, so a hidden spinner costs nothing. When the
@@ -35,7 +44,7 @@ Lucy.Stack.new({
     align = "center",
     children = {
         Lucy.Spinner.new({ size = "sm", variant = "muted" }),
-        Lucy.Text.new({ text = "Finding a server", variant = "muted", autoWidth = true }),
+        Lucy.Text.new({ text = "Finding a dance floor", variant = "muted", autoWidth = true }),
     },
     Parent = footer,
 })
@@ -46,11 +55,11 @@ Shown only while a request is out:
 ```luau
 local saving = Lucy.ref(false)
 
-Lucy.Spinner.new({ visible = saving, Parent = header })
+Lucy.Spinner.new({ visible = saving, Parent = wardrobe })
 
 task.spawn(function()
     saving(true)
-    save() -- yields until the server answers
+    saveOutfit() -- yields until the server answers
     saving(false)
 end)
 ```

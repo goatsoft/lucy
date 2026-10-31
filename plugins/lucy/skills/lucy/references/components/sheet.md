@@ -13,11 +13,11 @@ for `app:modalOpen()`; see [Hotkeys and modal input](../guide/actions.md#while-a
 ```luau
 local settings = Lucy.Sheet.new({
     id = "settings",
-    title = "Settings",
+    title = "Club settings",
     description = "Saved to your profile.",
     children = {
-        Lucy.Switch.new({ id = "music", label = "Music", checked = true }),
-        Lucy.Switch.new({ id = "hints", label = "Show hints" }),
+        Lucy.Switch.new({ id = "lights", label = "Light show", checked = true }),
+        Lucy.Switch.new({ id = "hints", label = "Show dance hints" }),
     },
     actions = {
         { text = "Done" },
@@ -78,15 +78,15 @@ Open a sheet from anywhere by its id:
 app.state:set("ui.settings.open", true)
 ```
 
-A friends list on the left that leaves the game playable behind it:
+The Crew list on the left, leaving the dance floor playable behind it:
 
 ```luau
 Lucy.Sheet.new({
-    title = "Friends",
+    title = "Crew",
     side = "left",
     modal = false,
     scrim = false,
-    children = friendRows,
+    children = crewRows,
 })
 ```
 

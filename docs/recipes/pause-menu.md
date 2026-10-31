@@ -6,30 +6,33 @@ order: 3
 
 # Pause menu
 
-A title screen, a game screen and a pause menu. On the game screen, B on a
-gamepad, Backspace on a keyboard and a Pause button all open the menu. Options
-open on top of it, Leave asks first, and gameplay keys and the character stop
-while any menu is open.
+A title screen, the dance floor and a pause menu for Club Lucy. On the dance
+floor, B on a gamepad, Backspace on a keyboard and a Pause button all open the
+menu. Options open on top of it, Leave asks first, and gameplay keys and the
+character stop while any menu is open.
 
 Escape can't open it: Roblox opens its own menu on Escape, and a game cannot
 stop that. See [Known issues](../known-issues.md#escape-always-opens-robloxs-menu).
+
+<!-- preview screen then="app.scenes:goTo('Game') app.scenes:push('Pause')" -->
+<figure class="example-preview example-screen"><img class="example-light" src="/images/examples/recipes-pause-menu-light.webp" alt="Pause menu example" loading="lazy"><img class="example-dark" src="/images/examples/recipes-pause-menu-dark.webp" alt="Pause menu example" loading="lazy"></figure>
 
 ```luau [StarterPlayerScripts/UI.client.luau]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lucy = require(ReplicatedStorage.Packages.Lucy)
 
 local app = Lucy.App.new({
-    state = { settings = { showFps = false } },
+    state = { settings = { lights = true } },
 })
 
 local current = app.state:ref("scenes.current")
 
 -- Gameplay keys, kept apart from menu keys so they can be switched off.
 app.actions:define("gameplay", {
-    interact = { Enum.KeyCode.E, Enum.KeyCode.ButtonX },
+    dance = { Enum.KeyCode.E, Enum.KeyCode.ButtonX },
 })
-app.actions:on("interact", function()
-    print("interact")
+app.actions:on("dance", function()
+    app.toast("Nice moves")
 end)
 
 -- Gameplay keys and the character stop on any screen but the game, and while
@@ -71,7 +74,7 @@ end
 app.scenes:register("Title", {
     build = function(scene)
         scene.play = Lucy.Button.new({
-            text = "Play",
+            text = "Hit the floor",
             size = "lg",
             onClick = function()
                 app.scenes:goTo("Game")
@@ -82,7 +85,7 @@ app.scenes:register("Title", {
             align = "center",
             justify = "center",
             gap = "Space4",
-            children = { Lucy.Text.new({ text = "My Game", variant = "h1", align = "center" }), scene.play },
+            children = { Lucy.Text.new({ text = "Club Lucy", variant = "h1", align = "center" }), scene.play },
             Parent = scene.gui,
         })
     end,
@@ -95,7 +98,7 @@ app.scenes:register("Game", {
     build = function(scene)
         -- A button for mouse and touch, showing the key for keyboard and gamepad.
         local pause = Lucy.Button.new({
-            icon = "lucide:pause",
+            icon = "lucide-extended:pause-filled",
             text = "Pause",
             variant = "secondary",
             hint = { keyboard = Enum.KeyCode.Backspace, gamepad = Enum.KeyCode.ButtonB },
@@ -135,11 +138,11 @@ app.scenes:register("Pause", {
                         end,
                     }),
                     Lucy.Button.new({
-                        text = "Leave game",
+                        text = "Leave the club",
                         variant = "destructive",
                         onClick = function()
                             Lucy.Dialog.alert({
-                                title = "Leave the game?",
+                                title = "Leave the club?",
                                 description = "You will go back to the title screen.",
                                 confirmText = "Leave",
                                 cancelText = "Stay",
@@ -163,8 +166,8 @@ app.scenes:register("Pause", {
 app.scenes:register("Options", {
     layer = "modal",
     build = function(scene)
-        scene.fps = Lucy.Switch.new({ label = "Show FPS", checked = app.state:ref("settings.showFps") })
-        menu(scene, "Options", { scene.fps }, {
+        scene.lights = Lucy.Switch.new({ label = "Club lights", checked = app.state:ref("settings.lights") })
+        menu(scene, "Options", { scene.lights }, {
             Lucy.Button.new({
                 text = "Back",
                 variant = "outline",
@@ -175,7 +178,7 @@ app.scenes:register("Options", {
         })
     end,
     defaultFocus = function(scene)
-        return scene.fps
+        return scene.lights
     end,
 })
 

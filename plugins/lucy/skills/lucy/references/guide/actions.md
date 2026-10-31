@@ -1,7 +1,7 @@
 <!-- Made by scripts/skills.ts from docs/guide/actions.md. Edit the doc, not this file. -->
 # Hotkeys and modal input
 
-Give each thing a player can do a name, such as `inventory`, and list the keys
+Give each thing a player can do a name, such as `queue`, and list the keys
 and buttons that do it. Your code then listens for the name, never for a key, so
 changing a key is one line and players on a keyboard and a gamepad share the
 same code.
@@ -13,13 +13,13 @@ Actions live in sets. A set is switched on and off as a whole: turn off your
 
 ```luau
 app.actions:define("gameplay", {
-    interact = { Enum.KeyCode.E, Enum.KeyCode.ButtonX },
-    dances = { Enum.KeyCode.G, Enum.KeyCode.ButtonR1 },
+    dance = { Enum.KeyCode.E, Enum.KeyCode.ButtonX },
 })
 
 app.actions:define("menus", {
-    inventory = { Enum.KeyCode.I, Enum.KeyCode.ButtonL1 },
-    shop = { Enum.KeyCode.B, Enum.KeyCode.DPadRight },
+    queue = { Enum.KeyCode.Q, Enum.KeyCode.ButtonY },
+    emoteShop = { Enum.KeyCode.B, Enum.KeyCode.DPadRight },
+    crew = { Enum.KeyCode.Tab, Enum.KeyCode.DPadUp },
 })
 ```
 
@@ -42,8 +42,8 @@ Behind the scenes each set is a Roblox `InputContext`, each action an
 ## Listen for an action
 
 ```luau
-local stop = app.actions:on("inventory", function()
-    inventory:toggle()
+local stop = app.actions:on("queue", function()
+    queue:toggle()
 end)
 ```
 
@@ -60,17 +60,17 @@ Give each one a button too, calling the same function, for example in a HUD
 [overlay scene](scenes.md):
 
 ```luau
-local function toggleShop()
-    shop:toggle()
+local function toggleEmoteShop()
+    emoteShop:toggle()
 end
 
-app.actions:on("shop", toggleShop)
+app.actions:on("emoteShop", toggleEmoteShop)
 
 Lucy.Button.new({
-    icon = "lucide:shopping-cart",
-    text = "Shop",
+    icon = "lucide-extended:shopping-bag-filled",
+    text = "Emote Shop",
     hint = { keyboard = Enum.KeyCode.B, gamepad = Enum.KeyCode.DPadRight },
-    onClick = toggleShop,
+    onClick = toggleEmoteShop,
     Parent = scene.gui,
 })
 ```
@@ -89,18 +89,18 @@ see the [pause menu recipe](../recipes/pause-menu.md).
 ## Change keys
 
 ```luau
-app.actions:bind("inventory", { Enum.KeyCode.Tab, Enum.KeyCode.ButtonL1 })
+app.actions:bind("crew", { Enum.KeyCode.C, Enum.KeyCode.DPadUp })
 
 -- several at once, such as the keys a player saved
 app.actions:bind({
-    inventory = { Enum.KeyCode.Tab, Enum.KeyCode.ButtonL1 },
-    shop = { Enum.KeyCode.P, Enum.KeyCode.DPadRight },
+    crew = { Enum.KeyCode.C, Enum.KeyCode.DPadUp },
+    emoteShop = { Enum.KeyCode.P, Enum.KeyCode.DPadRight },
 })
 ```
 
 `bind` replaces the keys. Saving a player's choice is up to your game.
 
-To show a key in your UI, `app.actions:keys("inventory")` gives the keys for the
+To show a key in your UI, `app.actions:keys("queue")` gives the keys for the
 input the player is using right now: the gamepad buttons on a gamepad, nothing
 on touch, the rest otherwise. Read it in a binding and it updates when the
 player picks up a controller or you change the keys.
@@ -150,7 +150,7 @@ local current = app.state:ref("scenes.current") -- nil until the first goTo
 
 Lucy.effectScope():run(function()
     Lucy.useWhile(function()
-        return app:modalOpen() or current() ~= "Game"
+        return app:modalOpen() or current() ~= "DanceFloor"
     end, function()
         return app.actions:disable("gameplay", "movement")
     end)

@@ -11,12 +11,12 @@ call it to read, call it with a value to write. There is no `.value` and no
 unwrapping magic.
 
 ```luau
-local count = Lucy.ref(0)
-count()        -- 0
-count(5)       -- write: everything that read count updates
+local combo = Lucy.ref(0)
+combo()        -- 0
+combo(5)       -- write: everything that read combo updates
 ```
 
-When `count` changes, only the properties and effects that read it run again.
+When `combo` changes, only the properties and effects that read it run again.
 Nothing is rebuilt and nothing is diffed.
 
 ## State
@@ -24,10 +24,10 @@ Nothing is rebuilt and nothing is diffed.
 ### ref
 
 ```luau
-local name = Lucy.ref("Lucy")
-name("Goat")              -- write
-name(nil)                 -- writing nil is fine
-Lucy.trigger(list)        -- notify after mutating a ref's table in place
+local track = Lucy.ref("Neon Nights")
+track("Midnight Drop")    -- write
+track(nil)                -- writing nil is fine
+Lucy.trigger(queue)       -- notify after mutating a ref's table in place
 ```
 
 Writing the value a ref already holds does nothing.
@@ -38,41 +38,41 @@ A cached, lazy derivation. It runs when first read, and again only when somethin
 it read has changed.
 
 ```luau
-local double = Lucy.computed(function()
-    return count() * 2
+local bonus = Lucy.computed(function()
+    return combo() * 10
 end)
 ```
 
 Make it writable by passing `get` and `set`:
 
 ```luau
-local fullName = Lucy.computed({
-    get = function() return `{first()} {last()}` end,
+local nowPlaying = Lucy.computed({
+    get = function() return `{title()} - {artist()}` end,
     set = function(value)
-        local a, b = string.match(value, "^(%S+) (%S+)$")
-        first(a)
-        last(b)
+        local a, b = string.match(value, "^(.-) %- (.+)$")
+        title(a)
+        artist(b)
     end,
 })
-fullName("Goat Soft")
+nowPlaying("Bassline Bounce - Pixel Pulse")
 ```
 
 A computed that ends up with the same value stops the update there, so
-`isAlive = computed(function() return hp() > 0 end)` only notifies when it flips.
+`onFire = computed(function() return hype() > 90 end)` only notifies when it flips.
 
 ### reactive
 
 A deep, reactive view of a table, for state you would rather write as fields.
 
 ```luau
-local player = Lucy.reactive({ coins = 0, bag = {} })
-player.coins += 10                 -- only readers of `coins` update
-Lucy.insert(player.bag, "sword")   -- lists: use Lucy.insert / Lucy.remove
-for i, item in player.bag do end   -- generalized iteration and # are tracked
+local player = Lucy.reactive({ coins = 0, emotes = {} })
+player.coins += 10                     -- only readers of `coins` update
+Lucy.insert(player.emotes, "Robot")    -- lists: use Lucy.insert / Lucy.remove
+for i, emote in player.emotes do end   -- generalized iteration and # are tracked
 ```
 
-The `table` library works on raw tables, so `table.insert(player.bag, x)` would
-bypass tracking. Use `Lucy.insert` and `Lucy.remove`, or assign `bag[#bag + 1] = x`.
+The `table` library works on raw tables, so `table.insert(player.emotes, x)` would
+bypass tracking. Use `Lucy.insert` and `Lucy.remove`, or assign `emotes[#emotes + 1] = x`.
 `Lucy.toRaw(proxy)` returns the plain table. Frozen tables are left as they are.
 
 ### App state
@@ -102,8 +102,8 @@ local stop = Lucy.watchEffect(function(onCleanup)
     onCleanup(function() end)   -- before the next run, and on stop
 end)
 
-Lucy.watch(count, function(new, old, onCleanup) end)                 -- lazy
-Lucy.watch(count, callback, { immediate = true })                    -- run now too
+Lucy.watch(combo, function(new, old, onCleanup) end)                 -- lazy
+Lucy.watch(combo, callback, { immediate = true })                    -- run now too
 Lucy.watch({ a, b }, function(values, previous) end)                 -- several sources
 Lucy.watch(function() return player.coins end, callback)             -- a getter
 Lucy.watch(player, callback)                                         -- deep, any change
@@ -154,9 +154,9 @@ local gap = Lucy.useResponsive(app, { touch = 16, default = 8 })
 Lucy.useBackHandler(app, isOpen, function() close() return true end)
 Lucy.useFocusScope(app, isOpen, { root = panel })
 Lucy.useUiSound(app, { activate = playClick })           -- the game's own sounds
-local board = Lucy.useTable({ data = players, columns = columns })  -- sorted rows
-Lucy.useWhile(isOpen, function() return signal:Connect(onFire) end)  -- only while open
-local timer = Lucy.useCountdown(endsAt)                    -- timer.remaining(), timer.done()
+local board = Lucy.useTable({ data = dancers, columns = columns })  -- sorted rows
+Lucy.useWhile(isOpen, function() return signal:Connect(onBeat) end)  -- only while open
+local timer = Lucy.useCountdown(setEndsAt)                 -- timer.remaining(), timer.done()
 ```
 
 Write your own the same way: take refs or getters, return refs or computeds, and
@@ -167,14 +167,14 @@ register cleanup with `Lucy.onCleanup`.
 `Lucy.new` creates an instance. Any property can be a ref, a computed or a getter.
 
 ```luau
-local count = Lucy.ref(0)
+local hypes = Lucy.ref(0)
 
 Lucy.new "TextButton" {
     Size = UDim2.fromOffset(200, 40),
-    Text = function() return `Clicked {count()}` end,
+    Text = function() return `Hyped {hypes()} times` end,
     Tags = { "card", ["card-active"] = isActive },
-    Attributes = { Health = hp },
-    [Lucy.on "Activated"] = function() count(count() + 1) end,
+    Attributes = { Hype = hype },
+    [Lucy.on "Activated"] = function() hypes(hypes() + 1) end,
     Parent = gui,
 
     Lucy.new "UICorner" {},
@@ -203,16 +203,16 @@ you set one.
 ```luau
 Lucy.new "Frame" {
     Lucy.show(isOpen, function()
-        return Lucy.new "TextLabel" { Text = "Open" }
+        return Lucy.new "TextLabel" { Text = "Booth open" }
     end, function()
-        return Lucy.new "TextLabel" { Text = "Closed" }   -- optional fallback
+        return Lucy.new "TextLabel" { Text = "Booth closed" }   -- optional fallback
     end),
 
-    Lucy.each(items, function(item, index)
+    Lucy.each(queue, function(track, index)
         return Lucy.new "TextLabel" {
-            Text = function() return `{index()}. {item.name}` end,
+            Text = function() return `{index()}. {track.title}` end,
         }
-    end, { key = function(item) return item.id end }),
+    end, { key = function(track) return track.id end }),
 }
 ```
 
@@ -231,7 +231,7 @@ you only add behaviour:
 ```luau
 local hud = playerGui.HUD
 Lucy.hydrate(hud.Coins) { Text = function() return tostring(coins()) end }
-Lucy.hydrate(hud.Shop) { [Lucy.on "Activated"] = openShop }
+Lucy.hydrate(hud.EmoteShop) { [Lucy.on "Activated"] = openEmoteShop }
 ```
 
 Hydrated instances are unbound when their owner stops, never destroyed.

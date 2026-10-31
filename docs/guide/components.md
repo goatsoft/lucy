@@ -12,7 +12,7 @@ need: state keys, `h:ref`, bindings, child components, methods and binding a
 value to app state.
 
 ```
-Volume   [ - ]  4  [ + ]
+Crowd   [ - ]  4  [ + ]
 ```
 
 ## The state keys
@@ -42,12 +42,12 @@ end
 return Stepper
 ```
 
-`Stepper.new({ id = "volume", label = "Volume", max = 10 })` stores
-`{ label = "Volume", value = 0, min = 0, max = 10, step = 1, visible = true }` at
-`ui.volume`. Without an `id`, Lucy makes one up (`stepper-1`, `stepper-2`...).
+`Stepper.new({ id = "crowd", label = "Crowd", max = 10 })` stores
+`{ label = "Crowd", value = 0, min = 0, max = 10, step = 1, visible = true }` at
+`ui.crowd`. Without an `id`, Lucy makes one up (`stepper-1`, `stepper-2`...).
 
 Because the state lives in the store, game code can drive a component without a
-reference to it: `app.state:set("ui.volume.value", 5)` moves the number.
+reference to it: `app.state:set("ui.crowd.value", 5)` moves the number.
 
 The spec is made once, when the module loads, and every Stepper shares it. Each
 `Stepper.new` passes its own props to `mount`, and `render` can read them from
@@ -243,12 +243,12 @@ return Stepper
 ## Use it
 
 ```luau
-local volume = Stepper.new({ id = "volume", label = "Volume", max = 10, Parent = scene.gui })
+local crowd = Stepper.new({ id = "crowd", label = "Crowd", max = 10, Parent = scene.gui })
 
-volume:set("value", 4)              -- from code that holds the handle
-app.state:set("ui.volume.value", 4) -- from anywhere else
-volume:reset()
-volume:destroy()                    -- stops its bindings and removes ui.volume
+crowd:set("value", 4)              -- from code that holds the handle
+app.state:set("ui.crowd.value", 4) -- from anywhere else
+crowd:reset()
+crowd:destroy()                    -- stops its bindings and removes ui.crowd
 ```
 
 ## Bind it to your own state
@@ -257,16 +257,18 @@ Give a prop a ref and the key follows it both ways. Here the Stepper's `value`
 is the player's saved setting, so there is no copy to keep in sync:
 
 ```luau
-local app = Lucy.App.new({ state = { settings = { volume = 6 } } })
+local app = Lucy.App.new({ state = { settings = { crowd = 40 } } })
 
 Stepper.new({
-    label = "Volume",
-    value = app.state:ref("settings.volume"),
+    label = "Crowd",
+    max = 100,
+    step = 10,
+    value = app.state:ref("settings.crowd"),
     Parent = scene.gui,
 })
 ```
 
-Clicking plus writes `settings.volume`, and setting `settings.volume` from game
+Clicking plus writes `settings.crowd`, and setting `settings.crowd` from game
 code moves the number. Any writable ref works the same way: `Lucy.ref`, a
 computed with `get` and `set`, or `app.state:ref`. A getter that only reads, such
 as `max = function() return level() * 5 end`, is followed one way: the key takes

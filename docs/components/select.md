@@ -9,19 +9,29 @@ A button that opens a list of options to pick one from: a server region, a sort
 order, a game mode. It shows the option picked, or a placeholder until there is
 one.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-select-light.webp" alt="Select example" loading="lazy"><img class="example-dark" src="/images/examples/components-select-dark.webp" alt="Select example" loading="lazy"></figure>
+
 ```luau
-local region = Lucy.Select.new({
-    id = "region",
-    placeholder = "Region",
-    items = {
-        { value = "eu", label = "Europe" },
-        { value = "na", label = "North America" },
-        "Oceania",
+Lucy.Stack.new({
+    gap = "Space2",
+    children = {
+        Lucy.Text.new({ text = "Next set", variant = "label" }),
+        Lucy.Select.new({
+            id = "genre",
+            placeholder = "Genre",
+            value = "house",
+            items = {
+                { value = "house", label = "House" },
+                { value = "disco", label = "Disco" },
+                "Techno",
+            },
+            onValueChange = function(value)
+                app.toast(`Next set: {value}`)
+            end,
+        }),
     },
-    onValueChange = function(value)
-        joinRegion(value)
-    end,
-    Parent = settings,
+    Parent = parent,
 })
 ```
 
@@ -59,13 +69,16 @@ pick several. Each press ticks or unticks an option and the list stays open.
 The value is an array in the order of `items`, and the button shows the first
 label and how many more, such as "Pop +2".
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-select-2-light.webp" alt="Select example" loading="lazy"><img class="example-dark" src="/images/examples/components-select-2-dark.webp" alt="Select example" loading="lazy"></figure>
+
 ```luau
 Lucy.Select.new({
     multiple = true,
     placeholder = "Genres",
-    items = { "Pop", "Hip hop", "House", "Rock" },
+    items = { "Pop", "Hip hop", "House", "Techno" },
     onValueChange = function(genres)
-        setFilter(genres)
+        app.toast(`{#genres} genres in the mix`)
     end,
 })
 ```
@@ -104,11 +117,14 @@ When the player picks an option, it reports `select` with the value, for
 Read or change the value from anywhere by its id:
 
 ```luau
-app.state:get("ui.region.value")
-app.state:set("ui.region.value", "na")
+app.state:get("ui.genre.value")
+app.state:set("ui.genre.value", "disco")
 ```
 
 Keep it in step with a ref:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-select-3-light.webp" alt="Select example" loading="lazy"><img class="example-dark" src="/images/examples/components-select-3-dark.webp" alt="Select example" loading="lazy"></figure>
 
 ```luau
 local sort = Lucy.ref("newest")

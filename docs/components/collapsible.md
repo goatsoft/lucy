@@ -9,19 +9,23 @@ A header the player presses to show or hide what is under it: advanced
 settings, the rules of a round, a long list they rarely need. For a set of
 sections where opening one can close the others, use an [Accordion](accordion.md).
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-collapsible-light.webp" alt="Collapsible example" loading="lazy"><img class="example-dark" src="/images/examples/components-collapsible-dark.webp" alt="Collapsible example" loading="lazy"></figure>
+
 ```luau
 Lucy.Collapsible.new({
-    text = "Advanced",
+    text = "Booth extras",
+    open = true,
     content = function()
         return Lucy.Stack.new({
             gap = "Space2",
             children = {
-                Lucy.Switch.new({ label = "Show ping" }),
-                Lucy.Switch.new({ label = "Show frame rate" }),
+                Lucy.Switch.new({ label = "Sync lights to the beat", checked = true }),
+                Lucy.Switch.new({ label = "Show BPM on the decks" }),
             },
         })
     end,
-    Parent = settingsPanel,
+    Parent = parent,
 })
 ```
 
@@ -68,9 +72,12 @@ To open or close it without reporting a press, set the state:
 
 Keep it open across visits with app state:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-collapsible-2-light.webp" alt="Collapsible example" loading="lazy"><img class="example-dark" src="/images/examples/components-collapsible-2-dark.webp" alt="Collapsible example" loading="lazy"></figure>
+
 ```luau
 Lucy.Collapsible.new({
-    text = "Show the rules",
+    text = "Show the club rules",
     variant = "details",
     open = app.state:ref("settings.rulesOpen"),
     content = rulesText,

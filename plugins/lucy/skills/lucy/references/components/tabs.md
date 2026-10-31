@@ -8,10 +8,18 @@ tab stays picked.
 ```luau
 Lucy.Tabs.new({
     items = {
-        { value = "emotes", text = "Emotes", content = emoteGrid },
-        { value = "outfits", text = "Outfits", content = outfitGrid },
+        { value = "emotes", text = "Emotes", content = Lucy.Stack.new({
+            direction = "horizontal",
+            gap = "Space2",
+            children = {
+                Lucy.Button.new({ text = "Moonwalk 300", icon = "lucide-extended:coins-filled", variant = "outline" }),
+                Lucy.Button.new({ text = "Robot 150", icon = "lucide-extended:coins-filled", variant = "outline" }),
+                Lucy.Button.new({ text = "Twirl 50", icon = "lucide-extended:coins-filled", variant = "outline" }),
+            },
+        }) },
+        { value = "outfits", text = "Outfits", content = Lucy.Text.new({ text = "New outfits drop every Friday", variant = "muted" }) },
     },
-    Parent = shop,
+    Parent = parent,
 })
 ```
 

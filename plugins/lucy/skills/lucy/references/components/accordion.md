@@ -9,13 +9,17 @@ open one closes it. Each section is a [Collapsible](collapsible.md).
 Lucy.Accordion.new({
     value = "audio",
     items = {
-        { value = "audio", text = "Audio", content = audioSettings },
-        { value = "video", text = "Video", content = videoSettings },
-        { value = "controls", text = "Controls", content = function()
-            return buildControls()
+        { value = "audio", text = "Music volume", content = function()
+            return Lucy.Slider.new({ value = app.state:ref("settings.music"), showValue = true })
         end },
+        { value = "lights", text = "Lights", content = function()
+            return Lucy.Switch.new({ label = "Light show", checked = app.state:ref("settings.lights") })
+        end },
+        { value = "controls", text = "Controls", content = Lucy.Text.new({
+            text = "E to dance, Q for the queue", variant = "muted",
+        }) },
     },
-    Parent = settingsPanel,
+    Parent = parent,
 })
 ```
 
@@ -56,18 +60,18 @@ sections without reporting a press, set the state:
 
 ## Examples
 
-Let the player keep several sections open, starting with two:
+Let the player keep several sections of the Queue open, starting with two:
 
 ```luau
 Lucy.Accordion.new({
     type = "multiple",
-    value = { "daily", "weekly" },
+    value = { "upNext", "requests" },
     items = {
-        { value = "daily", text = "Daily quests", content = dailyList },
-        { value = "weekly", text = "Weekly quests", content = weeklyList },
-        { value = "event", text = "Event", content = eventList, disabled = not eventLive },
+        { value = "upNext", text = "Up next", content = upNextList },
+        { value = "requests", text = "Requests", content = requestList },
+        { value = "party", text = "Party night", content = partyList, disabled = not partyLive },
     },
-    Parent = questPanel,
+    Parent = queuePanel,
 })
 ```
 

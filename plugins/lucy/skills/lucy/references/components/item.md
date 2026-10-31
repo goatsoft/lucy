@@ -6,13 +6,27 @@ the middle, and buttons or a switch on the right. Use it for song lists,
 inventories, settings and friend lists.
 
 ```luau
-Lucy.Item.new({
-    title = "Moonwalk",
-    description = "Unlocked at level 5",
-    media = icon,
-    actions = { Lucy.Button.new({ text = "Equip", size = "sm" }) },
-    variant = "outline",
-    Parent = list,
+Lucy.Stack.new({
+    gap = "Space2",
+    size = UDim2.fromOffset(420, 0),
+    automaticSize = Enum.AutomaticSize.Y,
+    children = {
+        Lucy.Item.new({
+            title = "Moonwalk",
+            description = "Unlocked at level 5",
+            media = Lucy.Icon.new({ icon = "lucide-extended:sparkles-filled", size = "lg" }),
+            actions = { Lucy.Button.new({ text = "Equip", size = "sm" }) },
+            variant = "outline",
+        }),
+        Lucy.Item.new({
+            title = "Robot",
+            description = "150 coins",
+            media = Lucy.Icon.new({ icon = "lucide-extended:zap-filled", size = "lg" }),
+            actions = { Lucy.Button.new({ text = "Buy", size = "sm", variant = "secondary" }) },
+            variant = "outline",
+        }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -60,20 +74,20 @@ accent background and gets a ring around it.
 
 ## Examples
 
-A song list where one song is picked at a time:
+A track list where one track is picked at a time:
 
 ```luau
-local picked = Lucy.ref(songs[1].id)
+local picked = Lucy.ref(tracks[1].id)
 
 local rows = {}
-for _, song in songs do
+for _, track in tracks do
     table.insert(rows, Lucy.Item.new({
-        title = song.name,
-        description = `{song.genre}, {song.bpm} BPM`,
-        media = cover(song),
+        title = track.name,
+        description = `{track.artist}, {track.bpm} BPM`,
+        media = cover(track),
         variant = "outline",
-        selected = function() return picked() == song.id end,
-        onClick = function() picked(song.id) end,
+        selected = function() return picked() == track.id end,
+        onClick = function() picked(track.id) end,
     }))
 end
 

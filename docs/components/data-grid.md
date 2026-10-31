@@ -10,19 +10,27 @@ friends. Pressing a header sorts by that column, pressing it again flips the
 order, and a third press goes back to the order of your data. It works the
 same with a mouse, touch or a gamepad.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-data-grid-light.webp" alt="DataGrid example" loading="lazy"><img class="example-dark" src="/images/examples/components-data-grid-dark.webp" alt="DataGrid example" loading="lazy"></figure>
+
 ```luau
 Lucy.DataGrid.new({
     id = "shop",
-    data = items,
-    rowId = function(item) return item.id end,
+    data = {
+        { id = "moonwalk", name = "Moonwalk", price = 300, level = 10 },
+        { id = "robot", name = "Robot", price = 150, level = 4 },
+        { id = "shuffle", name = "Shuffle", price = 50, level = 1 },
+        { id = "groove", name = "Groove", price = 500, level = 15 },
+    },
+    rowId = function(emote) return emote.id end,
     columns = {
-        { key = "name", header = "Item", width = { fill = 2 } },
-        { key = "price", header = "Price", width = 96, align = "right", descFirst = true },
-        { key = "owned", header = "Owned", width = 88, align = "right" },
+        { key = "name", header = "Emote", width = { fill = 2 } },
+        { key = "price", header = "Coins", width = 96, align = "right", descFirst = true },
+        { key = "level", header = "Level", width = 88, align = "right" },
     },
     sorting = { id = "price", desc = true },
-    onRowClick = function(item) openItem(item) end,
-    Parent = shop,
+    onRowClick = function(emote) app.toast(`{emote.name}: {emote.price} coins`) end,
+    Parent = parent,
 })
 ```
 
@@ -68,7 +76,7 @@ The sort lives at `ui.<id>.sorting`, so you can save it with the player's
 settings and put it back, or change it from anywhere:
 
 ```luau
-app.state:set("ui.shop.sorting", { id = "owned", desc = true })
+app.state:set("ui.shop.sorting", { id = "level", desc = true })
 ```
 
 A sorted header shows `lucy:chevron-up` or `lucy:chevron-down`. To use your own
@@ -86,7 +94,7 @@ Pressing a header reports `activate`, for [game sounds](../reference/composables
 
 ## Examples
 
-Sort by a custom order, such as item rarity:
+Sort by a custom order, such as emote rarity:
 
 ```luau
 local order = { Common = 1, Rare = 2, Epic = 3, Legendary = 4 }
@@ -99,11 +107,14 @@ local order = { Common = 1, Rare = 2, Epic = 3, Legendary = 4 }
 }
 ```
 
-A server sorted leaderboard that loads more as the player scrolls:
+A server sorted Top Dancers board that loads more as the player scrolls:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-data-grid-2-light.webp" alt="DataGrid example" loading="lazy"><img class="example-dark" src="/images/examples/components-data-grid-2-dark.webp" alt="DataGrid example" loading="lazy"></figure>
 
 ```luau
 Lucy.DataGrid.new({
-    data = players,                    -- a ref you add pages to
+    data = dancers,                    -- a ref you add pages to
     columns = columns,
     manual = true,                     -- the server sorts
     onSortingChange = function(sorting) reloadSortedBy(sorting) end,

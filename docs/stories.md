@@ -15,14 +15,14 @@ doubles as a smoke test.
 Name a ModuleScript `<Name>.story` anywhere in your game and return a table:
 
 ```luau
--- Shop/ItemCard.story.luau
+-- EmoteShop/EmoteCard.story.luau
 return {
-    group = "Shop",
-    description = "One item in the shop grid.",
+    group = "Emote Shop",
+    description = "One emote in the Emote Shop grid.",
     width = 320,
     controls = {
-        name = "Rocket boots",
-        price = { min = 0, max = 5000, step = 50, default = 750 },
+        name = "Moonwalk",
+        price = { min = 50, max = 500, step = 50, default = 300 },
         rarity = { "common", "rare", "legendary" },
         owned = false,
     },
@@ -31,7 +31,7 @@ return {
         local c = ctx.controls
         return Lucy.Panel.new({
             title = c.name,
-            description = function() return `{c.rarity()} · ${c.price()}` end,
+            description = function() return `{c.rarity()} · {c.price()} coins` end,
             footer = {
                 Lucy.Button.new({
                     text = function() return if c.owned() then "Equip" else "Buy" end,
@@ -84,7 +84,7 @@ ReplicatedStorage:
 
 ```luau
 local Lucy = require(game.ReplicatedStorage.Packages.Lucy)
-Lucy.Preview.show("ItemCard", { theme = "light", device = "mobile" })
+Lucy.Preview.show("EmoteCard", { theme = "light", device = "mobile" })
 Lucy.Preview.clear()
 ```
 

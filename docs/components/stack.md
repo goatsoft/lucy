@@ -8,15 +8,19 @@ description: A row or column that lays out its children.
 A row or a column that lays out its children with even spacing. Use it to
 build most layouts: a menu, a row of buttons, a form.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-stack-light.webp" alt="Stack example" loading="lazy"><img class="example-dark" src="/images/examples/components-stack-dark.webp" alt="Stack example" loading="lazy"></figure>
+
 ```luau
 Lucy.Stack.new({
     gap = "Space4",
     children = {
-        Lucy.Text.new({ text = "Settings", variant = "h2" }),
-        Lucy.Switch.new({ label = "Music" }),
-        Lucy.Button.new({ text = "Done" }),
+        Lucy.Text.new({ text = "Club settings", variant = "h2" }),
+        Lucy.Switch.new({ label = "Light show", checked = true }),
+        Lucy.Switch.new({ label = "Crowd cheers" }),
+        Lucy.Button.new({ text = "Done", icon = "lucide-extended:sparkles-filled" }),
     },
-    Parent = frame,
+    Parent = parent,
 })
 ```
 
@@ -50,12 +54,15 @@ row grows both ways to fit. With a `size`, it stays that size.
 `direction`, `gap`, `align`, `justify`, `padding` and `size` can change with the
 device or input. Pass a table instead of a value:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-stack-2-light.webp" alt="Stack example" loading="lazy"><img class="example-dark" src="/images/examples/components-stack-2-dark.webp" alt="Stack example" loading="lazy"></figure>
+
 ```luau
 Lucy.Stack.new({
     direction = { mobile = "vertical", default = "horizontal" },
     gap = { console = "Space6", touch = "Space4", default = "Space2" },
-    children = buttons,
-    Parent = frame,
+    children = boothButtons,
+    Parent = booth,
 })
 ```
 
@@ -63,7 +70,10 @@ See [Responsive values](index.md#responsive-values) for every key you can use.
 
 ## Examples
 
-Centre a title screen:
+Centre the Lobby title screen:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-stack-3-light.webp" alt="Stack example" loading="lazy"><img class="example-dark" src="/images/examples/components-stack-3-dark.webp" alt="Stack example" loading="lazy"></figure>
 
 ```luau
 Lucy.Stack.new({
@@ -72,14 +82,17 @@ Lucy.Stack.new({
     justify = "center",
     gap = "Space6",
     children = {
-        Lucy.Text.new({ text = "My Game", variant = "h1", align = "center" }),
-        Lucy.Button.new({ text = "Play", size = "lg" }),
+        Lucy.Text.new({ text = "Club Lucy", variant = "h1", align = "center" }),
+        Lucy.Button.new({ text = "Hit the floor", size = "lg" }),
     },
     Parent = scene.gui,
 })
 ```
 
 A row with buttons at each end:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-stack-4-light.webp" alt="Stack example" loading="lazy"><img class="example-dark" src="/images/examples/components-stack-4-dark.webp" alt="Stack example" loading="lazy"></figure>
 
 ```luau
 Lucy.Stack.new({
@@ -88,7 +101,7 @@ Lucy.Stack.new({
     size = UDim2.new(1, 0, 0, 40),
     children = {
         Lucy.Button.new({ text = "Back", variant = "ghost" }),
-        Lucy.Button.new({ text = "Next" }),
+        Lucy.Button.new({ text = "Next track" }),
     },
     Parent = footer,
 })

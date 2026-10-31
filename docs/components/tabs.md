@@ -9,13 +9,24 @@ A tab bar with one panel per tab, showing the picked one: a shop's sections, a
 booth's queue and effects. The bar is a [Toggle Group](toggle-group.md) where a
 tab stays picked.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-tabs-light.webp" alt="Tabs example" loading="lazy"><img class="example-dark" src="/images/examples/components-tabs-dark.webp" alt="Tabs example" loading="lazy"></figure>
+
 ```luau
 Lucy.Tabs.new({
     items = {
-        { value = "emotes", text = "Emotes", content = emoteGrid },
-        { value = "outfits", text = "Outfits", content = outfitGrid },
+        { value = "emotes", text = "Emotes", content = Lucy.Stack.new({
+            direction = "horizontal",
+            gap = "Space2",
+            children = {
+                Lucy.Button.new({ text = "Moonwalk 300", icon = "lucide-extended:coins-filled", variant = "outline" }),
+                Lucy.Button.new({ text = "Robot 150", icon = "lucide-extended:coins-filled", variant = "outline" }),
+                Lucy.Button.new({ text = "Twirl 50", icon = "lucide-extended:coins-filled", variant = "outline" }),
+            },
+        }) },
+        { value = "outfits", text = "Outfits", content = Lucy.Text.new({ text = "New outfits drop every Friday", variant = "muted" }) },
     },
-    Parent = shop,
+    Parent = parent,
 })
 ```
 
@@ -73,6 +84,9 @@ panel frame.
 ## Examples
 
 Open the shop on a tab kept in app state:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-tabs-2-light.webp" alt="Tabs example" loading="lazy"><img class="example-dark" src="/images/examples/components-tabs-2-dark.webp" alt="Tabs example" loading="lazy"></figure>
 
 ```luau
 local section = app.state:ref("shop.section")

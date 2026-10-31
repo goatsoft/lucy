@@ -1,17 +1,21 @@
 ---
 title: HUD
-description: A heads-up display with a level badge, coins that pop when they change, a health bar that turns red when low, and a level-up toast.
+description: A dance floor heads-up display with a combo badge, coins that pop when they change, a hype meter that fills with the crowd, and a toast for combo milestones.
 order: 4
 ---
 
 # HUD
 
-A HUD that shows over every screen: a level badge and coins in the top left,
-and a health bar at the bottom. The coins pop when they change, the bar turns
-red below a quarter, and a toast cheers each level up.
+A dance floor HUD that shows over every screen: a combo badge and coins in the
+top left, and a hype meter at the bottom. The coins pop when they change, the
+meter turns from amber to green once the crowd is hyped, and a toast cheers
+every 10 combo.
 
-The server keeps coins and level as attributes on the player; the client copies
-them into app state, and the HUD shows app state.
+The server keeps coins, hype and combo as attributes on the player; the client
+copies them into app state, and the HUD shows app state.
+
+<!-- preview screen -->
+<figure class="example-preview example-screen"><img class="example-light" src="/images/examples/recipes-hud-light.webp" alt="HUD example" loading="lazy"><img class="example-dark" src="/images/examples/recipes-hud-dark.webp" alt="HUD example" loading="lazy"></figure>
 
 ```luau [StarterPlayerScripts/Hud.client.luau]
 local Players = game:GetService("Players")
@@ -21,54 +25,36 @@ local Lucy = require(ReplicatedStorage.Packages.Lucy)
 local player = Players.LocalPlayer
 
 local app = Lucy.App.new({
-    toastPosition = "top-center", -- clear of the health bar
+    toastPosition = "top-center", -- clear of the hype meter
     state = {
         player = {
             coins = player:GetAttribute("Coins") or 0,
-            level = player:GetAttribute("Level") or 1,
-            health = 100,
-            maxHealth = 100,
+            hype = player:GetAttribute("Hype") or 0, -- 0 to 100
+            combo = player:GetAttribute("Combo") or 0,
         },
     },
 })
 
 -- Game data into app state ------------------------------------------------
 
-for _, name in { "Coins", "Level" } do
+for _, name in { "Coins", "Hype", "Combo" } do
     player:GetAttributeChangedSignal(name):Connect(function()
         app.state:set(`player.{string.lower(name)}`, player:GetAttribute(name) or 0)
     end)
 end
 
-local function follow(character)
-    local humanoid = character:WaitForChild("Humanoid")
-    local function sync()
-        app.state:batch(function()
-            app.state:set("player.maxHealth", math.max(1, humanoid.MaxHealth))
-            app.state:set("player.health", humanoid.Health)
-        end)
-    end
-    sync()
-    humanoid.HealthChanged:Connect(sync)
-end
-player.CharacterAdded:Connect(follow)
-if player.Character then
-    task.spawn(follow, player.Character)
-end
-
--- A toast for each level up: a side effect, so a subscriber.
-app.state:subscribe("player.level", function(new, old)
-    if new > old then
-        app.toast.success(`Level {new}!`)
+-- A toast every 10 combo: a side effect, so a subscriber.
+app.state:subscribe("player.combo", function(new, old)
+    if new > old and new // 10 > old // 10 then
+        app.toast.success(`x{new} combo!`)
     end
 end)
 
 -- The HUD --------------------------------------------------------------------
 
 local coins = app.state:ref("player.coins")
-local level = app.state:ref("player.level")
-local health = app.state:ref("player.health")
-local maxHealth = app.state:ref("player.maxHealth")
+local hype = app.state:ref("player.hype")
+local combo = app.state:ref("player.combo")
 
 app.scenes:register("Hud", {
     layer = "overlay",
@@ -107,10 +93,10 @@ app.scenes:register("Hud", {
             children = {
                 Lucy.Badge.new({
                     text = function()
-                        return `Lv {level()}`
+                        return `x{combo()} combo`
                     end,
                 }),
-                Lucy.Icon.new({ icon = "lucide:coins", size = "lg", variant = "warning" }),
+                Lucy.Icon.new({ icon = "lucide-extended:coins-duotone", size = "lg", variant = "warning" }),
                 coinText,
             },
             Parent = scene.gui,
@@ -121,11 +107,11 @@ app.scenes:register("Hud", {
             size = { mobile = UDim2.new(0.8, 0, 0, 14), default = UDim2.fromOffset(360, 14) },
             children = {
                 Lucy.Progress.new({
-                    value = health,
-                    max = maxHealth,
+                    value = hype,
+                    max = 100,
                     height = 14,
                     variant = function()
-                        return if health() / maxHealth() < 0.25 then "destructive" else "success"
+                        return if hype() < 50 then "warning" else "success"
                     end,
                 }),
             },
@@ -141,16 +127,16 @@ app.scenes:show("Hud")
 
 How it fits together:
 
-- **Game data in, UI out.** Nothing in the HUD reads attributes or the
-  Humanoid; it only reads app state. To test the HUD alone, set the state:
+- **Game data in, UI out.** Nothing in the HUD reads attributes; it only reads
+  app state. To test the HUD alone, set the state:
   `app.state:set("player.coins", 999)`.
 - **Overlays** show over whatever screen is up, and take no focus; see
   [Show a HUD](../guide/scenes.md#show-a-hud).
 - **Placing parts.** The top left Stack sits at the corner by default; the
   bottom one is moved with `AnchorPoint` and `Position`. See
   [Using a component](../components/index.md#using-a-component).
-- **Sizes by device.** The bar's `size` is a responsive value: 80% of the width
-  on a phone, 360 pixels elsewhere. See
+- **Sizes by device.** The meter's `size` is a responsive value: 80% of the
+  width on a phone, 360 pixels elsewhere. See
   [Responsive values](../components/index.md#responsive-values).
 - **Springs** are explained under [Animation](../reactivity.md#animation).
   With reduced motion on, springs jump instead of moving, which would turn the

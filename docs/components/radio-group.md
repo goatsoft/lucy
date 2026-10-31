@@ -9,18 +9,22 @@ A list of options where the player picks exactly one, for forms and settings:
 difficulty, server region, a report reason. Each row is the hit area, and the
 circle grows on touch and console.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-radio-group-light.webp" alt="Radio Group example" loading="lazy"><img class="example-dark" src="/images/examples/components-radio-group-dark.webp" alt="Radio Group example" loading="lazy"></figure>
+
 ```luau
 Lucy.RadioGroup.new({
     items = {
-        { value = "easy", label = "Easy" },
-        { value = "normal", label = "Normal" },
-        { value = "hard", label = "Hard" },
+        { value = "house", label = "House" },
+        { value = "disco", label = "Disco" },
+        { value = "techno", label = "Techno" },
+        { value = "pop", label = "Pop", disabled = true },
     },
-    value = "normal",
-    onValueChange = function(level)
-        Remotes.SetDifficulty:FireServer(level)
+    value = "house",
+    onValueChange = function(genre)
+        app.toast(`Next up: {genre}`)
     end,
-    Parent = form,
+    Parent = parent,
 })
 ```
 
@@ -63,11 +67,14 @@ it. When the player picks one, it reports `select` with that value for
 
 Keep the choice in app state:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-radio-group-2-light.webp" alt="Radio Group example" loading="lazy"><img class="example-dark" src="/images/examples/components-radio-group-2-dark.webp" alt="Radio Group example" loading="lazy"></figure>
+
 ```luau
 Lucy.RadioGroup.new({
-    items = { "Oceania", "Asia", "Europe", "Americas" },
-    value = app.state:ref("settings.region"),
-    Parent = settings,
+    items = { "House", "Disco", "Hip hop", "Techno" },
+    value = app.state:ref("booth.genre"),
+    Parent = booth,
 })
 ```
 

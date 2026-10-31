@@ -161,7 +161,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Hotkeys and modal input](references/guide/actions.md): Name your game's actions once for keyboard and gamepad, switch them off while a menu is open, and stop the character moving under a dialog.
 - [Work with app state](references/guide/app-state.md): Keep game data in the app's store and bind UI to it with state:ref, state.root, lists and subscribers.
 - [Build a component](references/guide/components.md): Write a Stepper component step by step, with state keys, h:ref, bindings, methods and a value bound to app state.
-- [Share logic with composables](references/guide/composables.md): Use Lucy's built in composables and write your own, such as a cooldown for an ability button.
+- [Share logic with composables](references/guide/composables.md): Use Lucy's built in composables and write your own, such as a cooldown for a hype button.
 - [Build screens with scenes](references/guide/scenes.md): Split your UI into scenes, move between screens, show a HUD over them, open a pause menu on top, and handle back with a gamepad.
 - [Add a theme](references/guide/themes.md): Pick your game's colours, let players switch light and dark, make a theme of your own, and style your own UI with the same tokens.
 - [Stories and preview](references/stories.md): Write stories for your UI and preview them in Studio, in edit mode or in Play.
@@ -173,9 +173,9 @@ they are exact; this page only says where things are and what agents get wrong.
 - [The store](references/reference/store.md): How app.state works, what it holds, every method, and the rules for reading, writing and following it.
 - [Theming](references/reference/theming.md): Every theme option, colour token, primitive and density value, the Tokens helpers, app.theme's methods and how style rules work.
 - [Known issues](references/known-issues.md): Problems Lucy cannot fix on its own, what you will see, why, and what to do instead.
-- [HUD](references/recipes/hud.md): A heads-up display with a level badge, coins that pop when they change, a health bar that turns red when low, and a level-up toast.
-- [Recipes](references/recipes/index.md): Whole screens you can copy into a game and change: a settings menu that saves, a pause menu, a HUD and a shop.
+- [HUD](references/recipes/hud.md): A dance floor heads-up display with a combo badge, coins that pop when they change, a hype meter that fills with the crowd, and a toast for combo milestones.
+- [Recipes](references/recipes/index.md): Whole screens from Club Lucy you can copy into a game and change: audio settings that save, a pause menu, a dance floor HUD and an emote shop.
 - [Pause menu](references/recipes/pause-menu.md): A pause menu that opens on B or Backspace and from a button, with a dimmed backdrop, options on top, a confirm before leaving, and gameplay keys off while it is open.
-- [Settings menu that saves](references/recipes/settings.md): A volume slider and a theme picker bound to app state, loaded when the player joins and saved when they leave.
-- [Shop](references/recipes/shop.md): A shop dialog with a grid of items, Buy buttons that grey out when the player can't afford them, a confirm before buying, a hotkey and a HUD button.
+- [Settings menu that saves](references/recipes/settings.md): Music, sound effects and crowd volume sliders and a theme picker bound to app state, loaded when the player joins and saved when they leave.
+- [Shop](references/recipes/shop.md): An Emote Shop dialog with a grid of dances, Buy buttons that grey out when the player can't afford them, a confirm before buying, a hotkey and a HUD button.
 <!-- /generated:guides -->

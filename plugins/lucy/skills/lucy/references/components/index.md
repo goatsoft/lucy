@@ -68,7 +68,7 @@ component's page for its name. To place a component, put it in a
 after making it:
 
 ```luau
-local gear = Lucy.Button.new({ icon = "lucide:settings", size = "icon", Parent = scene.gui })
+local gear = Lucy.Button.new({ icon = "lucide-extended:settings-filled", size = "icon", Parent = scene.gui })
 gear.Instance.AnchorPoint = Vector2.new(1, 0)
 gear.Instance.Position = UDim2.new(1, -16, 0, 16)
 ```
@@ -90,17 +90,17 @@ getter function. The component follows it and nothing else runs again.
 ```luau
 local coins = Lucy.ref(0)
 local isBusy = Lucy.ref(false)
-local music = Lucy.ref(true)
+local lights = Lucy.ref(true)
 
 Lucy.Button.new({
     text = function() return `Buy ({coins()})` end,
     disabled = isBusy,
 })
-Lucy.Switch.new({ label = "Music", checked = music })
+Lucy.Switch.new({ label = "Club lights", checked = lights })
 ```
 
 - **Writable sources bind both ways.** A ref, or a computed made with `{ get, set }`,
-  is written back when the key changes: the player flips the Switch and `music`
+  is written back when the key changes: the player flips the Switch and `lights`
   becomes `false`. `checked`, `value` and `open` are the usual ones to bind this way.
 - **Getters only flow in.** A plain getter, or a computed without `set`, is read
   but never written back. If the app or the player changes that key, the next

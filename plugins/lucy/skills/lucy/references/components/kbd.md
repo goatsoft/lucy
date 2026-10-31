@@ -6,10 +6,28 @@ key on a keyboard, the button on a controller, and nothing on a phone. It
 changes the moment the player picks up a controller or goes back to the mouse.
 
 ```luau
-Lucy.Kbd.new({
-    keyboard = Enum.KeyCode.E,
-    gamepad = Enum.KeyCode.DPadUp,
-    Parent = row,
+local function hint(key, button, label)
+    return Lucy.Stack.new({
+        direction = "horizontal",
+        gap = "Space2",
+        align = "center",
+        children = {
+            Lucy.Kbd.new({ keyboard = key, gamepad = button }),
+            Lucy.Text.new({ text = label, variant = "muted", autoWidth = true }),
+        },
+    })
+end
+
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space6",
+    align = "center",
+    children = {
+        hint(Enum.KeyCode.E, Enum.KeyCode.ButtonX, "Dance"),
+        hint(Enum.KeyCode.Q, Enum.KeyCode.ButtonY, "Queue"),
+        hint(Enum.KeyCode.B, Enum.KeyCode.DPadRight, "Emote Shop"),
+    },
+    Parent = parent,
 })
 ```
 
@@ -68,7 +86,7 @@ A key that changes with game state:
 ```luau
 local key = Lucy.ref(Enum.KeyCode.One)
 
-Lucy.Kbd.new({ keyboard = key, Parent = slot })
+Lucy.Kbd.new({ keyboard = key, Parent = emoteSlot })
 key(Enum.KeyCode.Two)
 ```
 

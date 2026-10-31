@@ -11,8 +11,8 @@ check its own work.
 local Devtools = require(game.ReplicatedStorage.Packages.Lucy).Devtools
 
 Devtools.tree()                       -- every component on screen
-Devtools.press("shop-open")           -- click the shop button
-Devtools.state("player.coins")        -- 500
+Devtools.press("emote-shop")          -- click the Emote Shop button
+Devtools.state("player.coins")        -- 1250
 ```
 
 Devtools works in Studio only. In Play, run it on the client: in the command
@@ -79,11 +79,11 @@ sounds play and a disabled button stays put: `press` returns `ok = false` with
 a reason instead.
 
 ```luau
-Devtools.press("shop-open")
+Devtools.press("emote-shop")
 Devtools.press("theme", "light")      -- a toggle group
-Devtools.press("volume", 40)          -- a slider
+Devtools.press("music", 40)           -- a slider
 Devtools.set("player.coins", 10)
-Devtools.press("buy-sword")           -- { ok = false, reason = '"buy-sword" is disabled' }
+Devtools.press("buy-moonwalk")        -- { ok = false, reason = '"buy-moonwalk" is disabled' }
 ```
 
 Hotkeys go through their keys as usual; Devtools does not press actions.

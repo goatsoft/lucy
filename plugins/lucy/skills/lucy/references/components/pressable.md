@@ -10,22 +10,32 @@ holds its own buttons, such as a shop item with a Buy button, use a
 [Panel](panel.md).
 
 ```luau
-Lucy.Pressable.new({
-    size = UDim2.fromOffset(160, 200),
-    padding = "Space3",
-    onClick = function()
-        buy(item)
-    end,
-    children = {
-        Lucy.Stack.new({
-            gap = "Space2",
-            children = {
-                Lucy.Text.new({ text = item.name, variant = "large" }),
-                Lucy.Text.new({ text = `{item.price} coins`, variant = "muted" }),
-            },
-        }),
-    },
-    Parent = grid,
+local function emote(name, price, icon)
+    return Lucy.Pressable.new({
+        size = UDim2.fromOffset(160, 124),
+        padding = "Space3",
+        selected = name == "Moonwalk",
+        onClick = function()
+            app.toast(`{name} added to your cart`)
+        end,
+        children = {
+            Lucy.Stack.new({
+                gap = "Space2",
+                children = {
+                    Lucy.Icon.new({ icon = icon, size = 48, variant = "primary" }),
+                    Lucy.Text.new({ text = name, variant = "large" }),
+                    Lucy.Text.new({ text = `{price} coins`, variant = "muted" }),
+                },
+            }),
+        },
+    })
+end
+
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space3",
+    children = { emote("Moonwalk", 300, "lucide-extended:sparkles-filled"), emote("Robot", 150, "lucide-extended:zap-filled") },
+    Parent = parent,
 })
 ```
 
@@ -80,13 +90,13 @@ for _, genre in { "House", "Techno", "Hip hop" } do
 end
 ```
 
-A locked shop item that cannot be clicked:
+A locked emote that cannot be clicked:
 
 ```luau
 Lucy.Pressable.new({
-    disabled = function() return not owned(item.id) end,
+    disabled = function() return not owned(emote.id) end,
     children = { icon, name },
-    Parent = shop,
+    Parent = emoteShop,
 })
 ```
 

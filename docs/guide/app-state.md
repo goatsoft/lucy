@@ -9,7 +9,7 @@ order: 3
 Every App has one store, `app.state`: a tree of plain tables that holds the UI's
 state and, if you like, the game data the UI shows. Anything that reads a key
 runs again when that key changes, and nothing else does. This guide builds a
-small inventory HUD to show how to read, write and bind to it.
+small track queue for the Booth to show how to read, write and bind to it.
 
 ## Start with your data
 
@@ -20,14 +20,15 @@ when they are created, so keep your data beside it:
 local app = Lucy.App.new({
     theme = "dark",
     state = {
-        player = { coins = 0, bag = {} },
-        settings = { music = true },
+        player = { coins = 0 },
+        booth = { queue = {} },
+        settings = { lights = true },
     },
 })
 ```
 
 Paths are dot separated: `"player.coins"`. A part made only of digits is an
-array index, so `"player.bag.1.name"` is the first item's name.
+array index, so `"booth.queue.1.title"` is the first track's title.
 
 ## Read and write
 
@@ -76,13 +77,16 @@ as `nil`, and the ref picks it up when it appears.
 ### Bind a component prop
 
 Pass a ref as a component prop and the component's key follows it both ways.
-A Switch bound to `settings.music` writes the setting when clicked and moves
+A Switch bound to `settings.lights` writes the setting when clicked and moves
 when the setting changes:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/guide-app-state-light.webp" alt="Work with app state example" loading="lazy"><img class="example-dark" src="/images/examples/guide-app-state-dark.webp" alt="Work with app state example" loading="lazy"></figure>
 
 ```luau
 Lucy.Switch.new({
-    label = "Music",
-    checked = app.state:ref("settings.music"),
+    label = "Club lights",
+    checked = app.state:ref("settings.lights"),
     Parent = scene.gui,
 })
 ```
@@ -99,10 +103,10 @@ subscribers see it:
 local root = app.state.root
 
 root.player.coins += 1
-for i, item in root.player.bag do
-    print(i, item.name)
+for i, track in root.booth.queue do
+    print(i, track.title)
 end
-print(#root.player.bag)
+print(#root.booth.queue)
 ```
 
 A loop or `#` follows the whole table, so it runs again when anything in it
@@ -114,37 +118,37 @@ changes. Reading one key follows only that key.
 changes, rows for items that stay are kept and moved, not rebuilt:
 
 ```luau
-local bag = app.state:ref("player.bag")
+local queue = app.state:ref("booth.queue")
 local root = app.state.root
 
 Lucy.new "Frame" {
     Parent = scene.gui,
     Lucy.Component.list({ Padding = UDim.new(0, 4) }),
-    Lucy.each(bag, function(item, index)
+    Lucy.each(queue, function(track, index)
         return Lucy.new "TextLabel" {
-            Name = item.id,
+            Name = track.id,
             Text = function()
-                local entry = root.player.bag[index()]
-                return if entry then `{entry.name} x{entry.count}` else ""
+                local entry = root.booth.queue[index()]
+                return if entry then `{entry.title} ({entry.votes} votes)` else ""
             end,
         }
-    end, { key = function(item)
-        return item.id
+    end, { key = function(track)
+        return track.id
     end }),
 }
 ```
 
-`item` is the item as it was when its row was made: use it for things that
+`track` is the item as it was when its row was made: use it for things that
 never change, such as the id. For fields that do change, read the store
 through `index()`, which follows the row as it moves. Then a write such as
-`root.player.bag[2].count += 1` updates that one label.
+`root.booth.queue[2].votes += 1` updates that one label.
 
-To add or remove items, set the list:
+To add or remove tracks, set the list:
 
 ```luau
-local items = table.clone(app.state:get("player.bag"))
-table.insert(items, { id = "bow", name = "Bow", count = 1 })
-app.state:set("player.bag", items)
+local tracks = table.clone(app.state:get("booth.queue"))
+table.insert(tracks, { id = "sunset-groove", title = "Sunset Groove", votes = 1 })
+app.state:set("booth.queue", tracks)
 ```
 
 ## Control components from game code
@@ -152,12 +156,15 @@ app.state:set("player.bag", items)
 A component's state lives at `ui.<id>`. Give it an `id` and any code can drive
 it without holding the handle:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/guide-app-state-2-light.webp" alt="Work with app state example" loading="lazy"><img class="example-dark" src="/images/examples/guide-app-state-2-dark.webp" alt="Work with app state example" loading="lazy"></figure>
+
 ```luau
-Lucy.Button.new({ id = "buy", text = "Buy", Parent = scene.gui })
+Lucy.Button.new({ id = "buyMoonwalk", text = "Buy Moonwalk", Parent = scene.gui })
 
 -- elsewhere
-app.state:set("ui.buy.disabled", app.state:get("player.coins") < 100)
-app.state:merge("ui.buy", { text = "Sold out", disabled = true })
+app.state:set("ui.buyMoonwalk.disabled", app.state:get("player.coins") < 300)
+app.state:merge("ui.buyMoonwalk", { text = "Owned", disabled = true })
 ```
 
 ## Run code when a value changes
@@ -185,8 +192,8 @@ and subscribers run once at the end, with the final values:
 ```luau
 app.state:batch(function()
     app.state:set("player.coins", 0)
-    app.state:set("player.bag", {})
-    app.state:set("ui.buy.disabled", true)
+    app.state:set("booth.queue", {})
+    app.state:set("ui.buyMoonwalk.disabled", true)
 end)
 ```
 

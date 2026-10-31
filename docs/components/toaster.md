@@ -10,8 +10,12 @@ their own. Every App gets one when the Toaster component is in the package
 (always with Wally; when copying components in, add `toaster`), so you never
 create it yourself: call `app.toast`.
 
+<!-- preview solo -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-toaster-light.webp" alt="Toaster example" loading="lazy"><img class="example-dark" src="/images/examples/components-toaster-dark.webp" alt="Toaster example" loading="lazy"></figure>
+
 ```luau
-app.toast.success("Round won", { description = "+$250" })
+app.toast("Now playing: Neon Nights", { description = "DJ Lucy, 124 BPM" })
+app.toast.success("Set complete", { description = "+250 coins" })
 ```
 
 Toasts sit in the bottom right corner on desktop and across the bottom on
@@ -75,16 +79,19 @@ devices they run full width, at the top or the bottom.
 A toast that updates as work finishes:
 
 ```luau
-local id = app.toast("Uploading...", { duration = math.huge })
-upload()
-app.toast.success("Uploaded", { id = id }) -- replaces it and starts its timer
+local id = app.toast("Saving your outfit...", { duration = math.huge })
+saveOutfit()
+app.toast.success("Outfit saved", { id = id }) -- replaces it and starts its timer
 ```
 
 A toast with a button:
 
+<!-- preview solo -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-toaster-2-light.webp" alt="Toaster example" loading="lazy"><img class="example-dark" src="/images/examples/components-toaster-2-dark.webp" alt="Toaster example" loading="lazy"></figure>
+
 ```luau
-app.toast("Party invite", {
-    action = { label = "Join", onClick = joinParty },
+app.toast("Nova wants to dance", {
+    action = { label = "Join", onClick = joinCrew },
 })
 ```
 

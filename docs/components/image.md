@@ -8,12 +8,31 @@ description: A picture from an asset id or a thumbnail.
 A picture: a dance icon, a song cover, a shop item. Give it an asset id or any
 content url.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-image-light.webp" alt="Image example" loading="lazy"><img class="example-dark" src="/images/examples/components-image-dark.webp" alt="Image example" loading="lazy"></figure>
+
 ```luau
-Lucy.Image.new({
-    image = move.iconId,
-    size = UDim2.fromOffset(64, 64),
-    rounded = "lg",
-    Parent = card,
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space3",
+    align = "center",
+    children = {
+        Lucy.Image.new({
+            image = "rbxthumb://type=AvatarHeadShot&id=1&w=150&h=150",
+            size = UDim2.fromOffset(64, 64),
+            rounded = "lg",
+        }),
+        Lucy.Stack.new({
+            gap = "Space1",
+            size = UDim2.fromOffset(240, 0),
+            automaticSize = Enum.AutomaticSize.Y,
+            children = {
+                Lucy.Text.new({ text = "DJ Lucy", variant = "large" }),
+                Lucy.Text.new({ text = "Resident DJ, live in the Booth", variant = "muted" }),
+            },
+        }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -46,11 +65,11 @@ are. An id of `0` gives an empty image.
 
 ## Examples
 
-A song cover that fills its card, cut to fit:
+A track cover that fills its card, cut to fit:
 
 ```luau
 Lucy.Image.new({
-    image = song.coverId,
+    image = track.coverId,
     fit = "cover",
     size = UDim2.fromScale(1, 1),
     rounded = "md",
@@ -58,11 +77,11 @@ Lucy.Image.new({
 })
 ```
 
-A product's own picture from Roblox:
+A coin pack's own picture from Roblox:
 
 ```luau
 Lucy.Image.new({
-    image = `rbxthumb://type=DeveloperProduct&id={productId}&w=150&h=150`,
+    image = `rbxthumb://type=DeveloperProduct&id={coinPackId}&w=150&h=150`,
     size = UDim2.fromOffset(72, 72),
     Parent = shopRow,
 })

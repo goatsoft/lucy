@@ -14,7 +14,7 @@ Give the App a base colour and, if you like, a primary colour:
 local app = Lucy.App.new({
     theme = "dark",
     baseColor = "slate",
-    primary = "emerald",
+    primary = "fuchsia",
 })
 ```
 
@@ -101,15 +101,15 @@ Your own instances can use the theme too, so they change with it. Tag them, and
 add rules that match the tags:
 
 ```luau
-app.theme:addRules("shop", {
-    { selector = ".shop-price", properties = { TextColor3 = "$Warning", FontFace = "$FontSansBold" } },
-    { selector = ".shop-card", properties = { BackgroundColor3 = "$Card" } },
-    { selector = ".shop-card:Hover", priority = 20, properties = { BackgroundColor3 = "$Accent" } },
+app.theme:addRules("emoteShop", {
+    { selector = ".emote-price", properties = { TextColor3 = "$Warning", FontFace = "$FontSansBold" } },
+    { selector = ".emote-card", properties = { BackgroundColor3 = "$Card" } },
+    { selector = ".emote-card:Hover", priority = 20, properties = { BackgroundColor3 = "$Accent" } },
 })
 
 Lucy.new "TextLabel" {
-    Tags = { "shop-price" },
-    Text = "250",
+    Tags = { "emote-price" },
+    Text = "250 coins",
     Parent = card,
 }
 ```

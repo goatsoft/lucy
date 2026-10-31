@@ -49,7 +49,7 @@ end)
 
 ## Write your own: a cooldown
 
-An ability button shows its name when ready, counts down after it is used, and
+A hype button shows its name when ready, counts down after it is used, and
 cannot be pressed until the count reaches zero. The timing is the part worth
 sharing, so it goes in a composable:
 
@@ -92,19 +92,19 @@ Use it in render like any other value:
 
 ```luau
 render = function(h)
-    local dash = useCooldown(3)
+    local hype = useCooldown(3)
 
     return Lucy.new "Frame" {
         BackgroundTransparency = 1,
         AutomaticSize = Enum.AutomaticSize.XY,
         Lucy.Button.new({
             text = function()
-                return if dash.ready() then "Dash" else string.format("%.1f s", dash.remaining())
+                return if hype.ready() then "Hype the crowd" else string.format("%.1f s", hype.remaining())
             end,
             disabled = function()
-                return not dash.ready()
+                return not hype.ready()
             end,
-            onClick = dash.start,
+            onClick = hype.start,
         }),
     }
 end,

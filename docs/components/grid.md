@@ -9,12 +9,23 @@ Lays out its children in rows of equal cells: shop items, emotes, songs,
 avatars. Give it a number of columns and the cells share the width, or a
 fixed cell size and it fits as many on a row as it can.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-grid-light.webp" alt="Grid example" loading="lazy"><img class="example-dark" src="/images/examples/components-grid-dark.webp" alt="Grid example" loading="lazy"></figure>
+
 ```luau
 Lucy.Grid.new({
-    columns = 4,
+    columns = 3,
+    cellHeight = 40,
     gap = "Space2",
-    children = cards,
-    Parent = shop,
+    children = {
+        Lucy.Button.new({ text = "Moonwalk", icon = "lucide-extended:star-filled", variant = "outline" }),
+        Lucy.Button.new({ text = "Robot", icon = "lucide-extended:zap-filled", variant = "outline" }),
+        Lucy.Button.new({ text = "Shuffle", icon = "lucide-extended:footprints-filled", variant = "outline" }),
+        Lucy.Button.new({ text = "Twirl", icon = "lucide-extended:sparkles-filled", variant = "outline" }),
+        Lucy.Button.new({ text = "Wave", icon = "lucide-extended:heart-filled", variant = "outline" }),
+        Lucy.Button.new({ text = "Groove", icon = "lucide-extended:music-filled", variant = "outline" }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -50,12 +61,15 @@ children in the frame any time.
 `columns`, `cellSize` and `gap` can change with the device or input. Pass a
 table instead of a value:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-grid-2-light.webp" alt="Grid example" loading="lazy"><img class="example-dark" src="/images/examples/components-grid-2-dark.webp" alt="Grid example" loading="lazy"></figure>
+
 ```luau
 Lucy.Grid.new({
     columns = { mobile = 2, console = 3, default = 5 },
     gap = { touch = "Space3", default = "Space2" },
-    children = cards,
-    Parent = shop,
+    children = emoteCards,
+    Parent = emoteShop,
 })
 ```
 
@@ -67,6 +81,9 @@ more columns in a wide window than in a narrow one. See
 
 Emote buttons that fill a panel, as many as fit at 96 pixels or more:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-grid-3-light.webp" alt="Grid example" loading="lazy"><img class="example-dark" src="/images/examples/components-grid-3-dark.webp" alt="Grid example" loading="lazy"></figure>
+
 ```luau
 Lucy.Grid.new({
     minCellWidth = 96,
@@ -77,15 +94,18 @@ Lucy.Grid.new({
 })
 ```
 
-Song cards in three columns, a little wider than they are tall:
+Track cards in three columns, a little wider than they are tall:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-grid-4-light.webp" alt="Grid example" loading="lazy"><img class="example-dark" src="/images/examples/components-grid-4-dark.webp" alt="Grid example" loading="lazy"></figure>
 
 ```luau
 Lucy.Grid.new({
     columns = 3,
     aspectRatio = 4 / 3,
     gap = "Space3",
-    children = songCards,
-    Parent = list,
+    children = trackCards,
+    Parent = queue,
 })
 ```
 

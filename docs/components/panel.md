@@ -9,13 +9,24 @@ A card with a title and description at the top, your content in the middle and
 an optional row of buttons at the bottom. Use it for menus, shop items and
 settings groups.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-panel-light.webp" alt="Panel example" loading="lazy"><img class="example-dark" src="/images/examples/components-panel-dark.webp" alt="Panel example" loading="lazy"></figure>
+
 ```luau
 Lucy.Panel.new({
-    title = "Loadout",
-    description = "Pick a weapon",
-    children = { weaponList },
-    footer = { Lucy.Button.new({ text = "Save" }) },
-    Parent = frame,
+    title = "Moonwalk",
+    description = "Glide backwards across the Dance Floor",
+    size = UDim2.fromOffset(360, 0),
+    children = { Lucy.Text.new({ text = "300 coins", variant = "large" }) },
+    footer = {
+        Lucy.Button.new({
+            text = "Buy",
+            icon = "lucide-extended:shopping-bag-filled",
+            onClick = function() app.toast("Moonwalk unlocked") end,
+        }),
+        Lucy.Button.new({ text = "Try it on", variant = "outline" }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -47,13 +58,16 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 A fixed width panel with a form:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-panel-2-light.webp" alt="Panel example" loading="lazy"><img class="example-dark" src="/images/examples/components-panel-2-dark.webp" alt="Panel example" loading="lazy"></figure>
+
 ```luau
 local panel = Lucy.Panel.new({
     title = "Settings",
     size = UDim2.fromOffset(360, 0),
     children = {
         Lucy.Switch.new({ label = "Music", checked = true }),
-        Lucy.Switch.new({ label = "Sound effects", checked = true }),
+        Lucy.Switch.new({ label = "Club lights", checked = true }),
     },
     footer = { Lucy.Button.new({ text = "Done", onClick = closeSettings }) },
     Parent = frame,
@@ -63,7 +77,7 @@ local panel = Lucy.Panel.new({
 Add content later:
 
 ```luau
-Lucy.Text.new({ text = "Saved 2 minutes ago", variant = "muted", Parent = panel.content })
+Lucy.Text.new({ text = "Crowd volume saved", variant = "muted", Parent = panel.content })
 ```
 
 ## Preview

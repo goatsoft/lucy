@@ -5,12 +5,21 @@ A button the player can click, tap or select with a gamepad. It comes in six
 variants and four sizes.
 
 ```luau
-Lucy.Button.new({
-    text = "Play",
-    onClick = function()
-        app.scenes:goTo("Game")
-    end,
-    Parent = frame,
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space2",
+    children = {
+        Lucy.Button.new({
+            text = "Hit the floor",
+            icon = "lucide-extended:music-filled",
+            onClick = function()
+                app.toast("See you on the dance floor")
+            end,
+        }),
+        Lucy.Button.new({ text = "Emote Shop", icon = "lucide-extended:shopping-bag-filled", variant = "secondary" }),
+        Lucy.Button.new({ text = "Settings", variant = "outline" }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -45,8 +54,8 @@ A disabled button ignores clicks, and a gamepad skips over it. Clicks within
 With no text, the icon shows alone; use `size = "icon"` for a square button.
 
 ```luau
-Lucy.Button.new({ text = "Settings", icon = "lucide:settings", variant = "outline", Parent = bar })
-Lucy.Button.new({ icon = "lucide:settings", size = "icon", variant = "ghost", Parent = bar })
+Lucy.Button.new({ text = "Queue", icon = "lucide-extended:list-music-filled", variant = "outline", Parent = bar })
+Lucy.Button.new({ icon = "lucide-extended:settings-filled", size = "icon", variant = "ghost", Parent = bar })
 ```
 
 `button.icon` is the [Icon](icon.md), and `button:set("icon", name)` changes it.
@@ -60,9 +69,9 @@ input: the keyboard key, the controller's button, and nothing on touch.
 
 ```luau
 Lucy.Button.new({
-    text = "Join",
-    hint = { keyboard = Enum.KeyCode.E, gamepad = Enum.KeyCode.DPadUp },
-    onClick = join,
+    text = "Dance",
+    hint = { keyboard = Enum.KeyCode.E, gamepad = Enum.KeyCode.ButtonX },
+    onClick = dance,
     Parent = hud,
 })
 ```
@@ -90,18 +99,19 @@ for _, variant in { "default", "secondary", "outline", "ghost", "destructive", "
 end
 ```
 
-A buy button that follows the player's coins and turns off while a purchase runs:
+A buy button for an emote that follows the player's coins and turns off while
+the purchase runs (`buyEmote` is your game's own function):
 
 ```luau
 local coins = app.state:ref("player.coins")
 local buying = Lucy.ref(false)
 
 Lucy.Button.new({
-    text = function() return `Buy for 100 ({coins()} left)` end,
-    disabled = function() return buying() or coins() < 100 end,
+    text = function() return `Buy Moonwalk for 300 ({coins()} left)` end,
+    disabled = function() return buying() or coins() < 300 end,
     onClick = function()
         buying(true)
-        buyItem()
+        buyEmote("Moonwalk")
         buying(false)
     end,
     Parent = shop,
@@ -111,16 +121,16 @@ Lucy.Button.new({
 Disable a button from anywhere by its id:
 
 ```luau
-Lucy.Button.new({ id = "play", text = "Play", Parent = frame })
+Lucy.Button.new({ id = "startSet", text = "Start your set", Parent = booth })
 
-app.state:set("ui.play.disabled", true)
+app.state:set("ui.startSet.disabled", true) -- someone else is on the decks
 ```
 
 A close button, the one dialogs and sheets put in their top right corner: a
 ghost icon button with a large ×. It takes the same props as `Button.new`.
 
 ```luau
-local close = Lucy.Button.close({ onClick = hidePanel })
+local close = Lucy.Button.close({ onClick = closeQueue })
 ```
 
 ## Preview

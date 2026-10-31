@@ -76,7 +76,7 @@ gets it too. The newest handler goes first.
 ## useFocusScope
 
 ```luau
-Lucy.useFocusScope(app, isOpen, { root = panel, defaultFocus = playButton })
+Lucy.useFocusScope(app, isOpen, { root = booth, defaultFocus = startSetButton })
 ```
 
 While `active` is true, keyboard and gamepad focus stays inside `root`, starting
@@ -88,8 +88,8 @@ on `defaultFocus` (an Instance, or a function returning one).
 Lucy.useUiSound(app, {
     activate = function(handle) playClick() end,
     toggle = function(handle, checked) playSwitch(checked) end,
-    open = playWhoosh,
-    close = playWhoosh,
+    open = playScratch,
+    close = playScratch,
 })
 ```
 
@@ -129,13 +129,13 @@ it for its headers, and you can use it for any list you sort yourself.
 
 ```luau
 local board = Lucy.useTable({
-    data = players,             -- an array, a ref or a getter
-    rowId = function(player) return player.userId end,
+    data = dancers,             -- an array, a ref or a getter
+    rowId = function(dancer) return dancer.userId end,
     columns = {
-        { key = "name", header = "Player" },
+        { key = "name", header = "Dancer" },
         { key = "score", header = "Score", descFirst = true },
         { key = "rank", header = "Rank", invert = true },
-        { id = "kd", header = "K/D", get = function(player) return player.kills / math.max(1, player.deaths) end },
+        { id = "accuracy", header = "On beat", get = function(dancer) return dancer.hits / math.max(1, dancer.steps) end },
         { id = "invite", sortable = false },
     },
     sorting = { id = "score", desc = true },
@@ -222,11 +222,11 @@ end)
 ## useCountdown
 
 ```luau
-local timer = Lucy.useCountdown(roundEndsAt)
+local timer = Lucy.useCountdown(setEndsAt)
 
 Lucy.Text.new({
     text = function()
-        return `{timer.remaining()}s left`
+        return `{timer.remaining()}s left in the set`
     end,
 })
 ```

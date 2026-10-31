@@ -7,8 +7,19 @@ description: A thin line between items.
 
 A thin line between items, across a column or down a row.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-separator-light.webp" alt="Separator example" loading="lazy"><img class="example-dark" src="/images/examples/components-separator-dark.webp" alt="Separator example" loading="lazy"></figure>
+
 ```luau
-Lucy.Separator.new({ Parent = menu })
+Lucy.Stack.new({
+    gap = "Space3",
+    children = {
+        Lucy.Text.new({ text = "Neon Nights", variant = "large" }),
+        Lucy.Separator.new(),
+        Lucy.Text.new({ text = "DJ Lucy · 124 BPM", variant = "muted" }),
+    },
+    Parent = parent,
+})
 ```
 
 ## Props
@@ -24,6 +35,9 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 Between sections of a column:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-separator-2-light.webp" alt="Separator example" loading="lazy"><img class="example-dark" src="/images/examples/components-separator-2-dark.webp" alt="Separator example" loading="lazy"></figure>
+
 ```luau
 Lucy.Stack.new({
     gap = "Space4",
@@ -31,8 +45,8 @@ Lucy.Stack.new({
         Lucy.Text.new({ text = "Audio", variant = "h4" }),
         Lucy.Switch.new({ label = "Music" }),
         Lucy.Separator.new(),
-        Lucy.Text.new({ text = "Video", variant = "h4" }),
-        Lucy.Switch.new({ label = "Shadows" }),
+        Lucy.Text.new({ text = "Lights", variant = "h4" }),
+        Lucy.Switch.new({ label = "Light show" }),
     },
     Parent = settings,
 })
@@ -41,6 +55,9 @@ Lucy.Stack.new({
 Between items in a row. A vertical line takes the full height of what it is in,
 so give the row a height:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-separator-3-light.webp" alt="Separator example" loading="lazy"><img class="example-dark" src="/images/examples/components-separator-3-dark.webp" alt="Separator example" loading="lazy"></figure>
+
 ```luau
 Lucy.Stack.new({
     direction = "horizontal",
@@ -48,11 +65,11 @@ Lucy.Stack.new({
     align = "center",
     size = UDim2.new(1, 0, 0, 24),
     children = {
-        Lucy.Text.new({ text = "Wins: 12", autoWidth = true }),
+        Lucy.Text.new({ text = "Level 12", autoWidth = true }),
         Lucy.Separator.new({ orientation = "vertical" }),
-        Lucy.Text.new({ text = "Losses: 4", autoWidth = true }),
+        Lucy.Text.new({ text = "Combo x8", autoWidth = true }),
     },
-    Parent = stats,
+    Parent = hud,
 })
 ```
 

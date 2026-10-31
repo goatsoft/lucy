@@ -4,7 +4,17 @@
 A small label for a status or a count, such as "New" on a shop item.
 
 ```luau
-Lucy.Badge.new({ text = "New", Parent = card })
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space2",
+    children = {
+        Lucy.Badge.new({ text = "New" }),
+        Lucy.Badge.new({ text = "Owned", variant = "secondary" }),
+        Lucy.Badge.new({ text = "Sold out", variant = "destructive" }),
+        Lucy.Badge.new({ text = "128 BPM", variant = "outline" }),
+    },
+    Parent = parent,
+})
 ```
 
 ## Props
@@ -27,16 +37,16 @@ for _, variant in { "default", "secondary", "destructive", "outline" } do
 end
 ```
 
-A count that follows a value:
+A count of track requests that follows a value:
 
 ```luau
-local unread = Lucy.ref(3)
+local requests = Lucy.ref(3)
 
 Lucy.Badge.new({
-    text = function() return tostring(unread()) end,
+    text = function() return tostring(requests()) end,
     variant = "destructive",
-    visible = function() return unread() > 0 end,
-    Parent = header,
+    visible = function() return requests() > 0 end,
+    Parent = queueTab,
 })
 ```
 

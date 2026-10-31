@@ -9,14 +9,17 @@ A modal window above every scene, with a title, a description, any content and
 a row of action buttons. While it is open, keyboard and gamepad focus stay
 inside it and the back button (B or Backspace) closes it.
 
+<!-- preview solo -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-dialog-light.webp" alt="Dialog example" loading="lazy"><img class="example-dark" src="/images/examples/components-dialog-dark.webp" alt="Dialog example" loading="lazy"></figure>
+
 ```luau
 local quit = Lucy.Dialog.new({
     id = "quit",
-    title = "Leave match?",
-    description = "You will drop your cash.",
+    title = "Leave the club?",
+    description = "Your dance combo resets. Your coins are saved.",
     actions = {
-        { text = "Stay", variant = "outline" },
-        { text = "Leave", variant = "destructive", onClick = leaveMatch },
+        { text = "Keep dancing", variant = "outline" },
+        { text = "Leave", variant = "destructive", onClick = function() app.toast("See you next time") end },
     },
 })
 
@@ -81,14 +84,17 @@ Clicking outside it does nothing and it has no close button, so the player has
 to choose. Back (B or Backspace) picks Cancel; pass `backCancels = false` to make
 it do nothing instead.
 
+<!-- preview solo -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-dialog-2-light.webp" alt="Dialog example" loading="lazy"><img class="example-dark" src="/images/examples/components-dialog-2-dark.webp" alt="Dialog example" loading="lazy"></figure>
+
 ```luau
 Lucy.Dialog.alert({
-    title = "Delete this save?",
-    description = "This cannot be undone.",
+    title = "Delete this outfit?",
+    description = "It leaves your Wardrobe for good.",
     confirmText = "Delete",  -- default "Continue"
     cancelText = "Keep",     -- default "Cancel"
     destructive = true,      -- a red confirm button
-    onConfirm = deleteSave,
+    onConfirm = deleteOutfit,
     onCancel = function() end,
 })
 ```
@@ -106,21 +112,24 @@ app.state:set("ui.quit.open", true)
 
 Keep the dialog open when a check fails:
 
+<!-- preview solo -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-dialog-3-light.webp" alt="Dialog example" loading="lazy"><img class="example-dark" src="/images/examples/components-dialog-3-dark.webp" alt="Dialog example" loading="lazy"></figure>
+
 ```luau
 Lucy.Dialog.new({
-    title = "Name your team",
-    children = { Lucy.Input.new({ id = "teamName", placeholder = "Team name" }) },
+    title = "Name your crew",
+    children = { Lucy.Input.new({ id = "crewName", placeholder = "Crew name" }) },
     actions = {
         { text = "Cancel", variant = "outline" },
         {
             text = "Create",
             onClick = function()
-                local name = app.state:get("ui.teamName.value")
+                local name = app.state:get("ui.crewName.value")
                 if name == "" then
                     app.toast.error("Pick a name first")
                     return false -- stay open
                 end
-                createTeam(name)
+                createCrew(name)
             end,
         },
     },

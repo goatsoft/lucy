@@ -4,7 +4,15 @@
 A thin line between items, across a column or down a row.
 
 ```luau
-Lucy.Separator.new({ Parent = menu })
+Lucy.Stack.new({
+    gap = "Space3",
+    children = {
+        Lucy.Text.new({ text = "Neon Nights", variant = "large" }),
+        Lucy.Separator.new(),
+        Lucy.Text.new({ text = "DJ Lucy · 124 BPM", variant = "muted" }),
+    },
+    Parent = parent,
+})
 ```
 
 ## Props
@@ -27,8 +35,8 @@ Lucy.Stack.new({
         Lucy.Text.new({ text = "Audio", variant = "h4" }),
         Lucy.Switch.new({ label = "Music" }),
         Lucy.Separator.new(),
-        Lucy.Text.new({ text = "Video", variant = "h4" }),
-        Lucy.Switch.new({ label = "Shadows" }),
+        Lucy.Text.new({ text = "Lights", variant = "h4" }),
+        Lucy.Switch.new({ label = "Light show" }),
     },
     Parent = settings,
 })
@@ -44,11 +52,11 @@ Lucy.Stack.new({
     align = "center",
     size = UDim2.new(1, 0, 0, 24),
     children = {
-        Lucy.Text.new({ text = "Wins: 12", autoWidth = true }),
+        Lucy.Text.new({ text = "Level 12", autoWidth = true }),
         Lucy.Separator.new({ orientation = "vertical" }),
-        Lucy.Text.new({ text = "Losses: 4", autoWidth = true }),
+        Lucy.Text.new({ text = "Combo x8", autoWidth = true }),
     },
-    Parent = stats,
+    Parent = hud,
 })
 ```
 

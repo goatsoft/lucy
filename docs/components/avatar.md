@@ -8,11 +8,21 @@ description: A player's headshot, or a monogram for a bot or an empty slot.
 A player's headshot in a circle. Bots and empty slots, which have no Roblox
 account, show the first letters of their name instead.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-avatar-light.webp" alt="Avatar example" loading="lazy"><img class="example-dark" src="/images/examples/components-avatar-dark.webp" alt="Avatar example" loading="lazy"></figure>
+
 ```luau
-Lucy.Avatar.new({
-    userId = player.UserId,
-    name = player.DisplayName,
-    Parent = row,
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space2",
+    children = {
+        Lucy.Avatar.new({ name = "DJ Lucy", size = "lg" }), -- no userId: shows DL
+        Lucy.Avatar.new({ name = "Nova", size = "lg" }),
+        Lucy.Avatar.new({ name = "Beatrix", size = "lg" }),
+        Lucy.Avatar.new({ name = "Kai", size = "lg" }),
+        Lucy.Avatar.new({ name = "Juno", size = "lg" }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -37,10 +47,10 @@ headshot url on its own, and `Lucy.Avatar.initials(name)` the letters.
 
 ## Examples
 
-A roster slot that changes as players and bots come and go:
+A Top Dancers slot that changes as players and bots come and go:
 
 ```luau
-local slot = app.state:ref("roster.1") -- { userId = number, name = string }
+local slot = app.state:ref("topDancers.1") -- { userId = number, name = string }
 
 Lucy.Avatar.new({
     userId = function() return slot().userId end,
@@ -50,14 +60,17 @@ Lucy.Avatar.new({
 })
 ```
 
-In a list row:
+In a row of the Crew list:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-avatar-2-light.webp" alt="Avatar example" loading="lazy"><img class="example-dark" src="/images/examples/components-avatar-2-dark.webp" alt="Avatar example" loading="lazy"></figure>
 
 ```luau
 Lucy.Item.new({
     title = friend.DisplayName,
     description = `@{friend.Name}`,
     media = Lucy.Avatar.new({ userId = friend.UserId, name = friend.DisplayName }),
-    Parent = friends,
+    Parent = crewList,
 })
 ```
 

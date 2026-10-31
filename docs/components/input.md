@@ -10,14 +10,26 @@ height grows on touch and console, and a focus ring shows while the player
 types in it. It can also limit what the player types: a number only, or a
 maximum length.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-input-light.webp" alt="Input example" loading="lazy"><img class="example-dark" src="/images/examples/components-input-dark.webp" alt="Input example" loading="lazy"></figure>
+
 ```luau
-Lucy.Input.new({
-    id = "playerName",
-    placeholder = "Display name",
-    onSubmit = function(name)
-        setDisplayName(name)
-    end,
-    Parent = form,
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space2",
+    align = "center",
+    children = {
+        Lucy.Input.new({
+            id = "playerName",
+            placeholder = "Your DJ name",
+            width = UDim.new(0, 280),
+            onSubmit = function(name)
+                app.toast(`See you on the floor, {name}`)
+            end,
+        }),
+        Lucy.Button.new({ text = "Save", icon = "lucide-extended:sparkles-filled" }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -58,18 +70,21 @@ local name = app.state:get("ui.playerName.value")
 
 Keep a ref and the field in step:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-input-2-light.webp" alt="Input example" loading="lazy"><img class="example-dark" src="/images/examples/components-input-2-dark.webp" alt="Input example" loading="lazy"></figure>
+
 ```luau
 local search = Lucy.ref("")
 
-Lucy.Input.new({ placeholder = "Search items", value = search, Parent = shop })
+Lucy.Input.new({ placeholder = "Search emotes", value = search, Parent = emoteShop })
 
--- The items whose name has the search text, for a list's `data`
+-- The emotes whose name has the search text, for a list's `data`
 local shown = Lucy.computed(function()
     local text = string.lower(search())
     local found = {}
-    for _, item in items do
-        if string.find(string.lower(item.name), text, 1, true) then
-            table.insert(found, item)
+    for _, emote in emotes do
+        if string.find(string.lower(emote.name), text, 1, true) then
+            table.insert(found, emote)
         end
     end
     return found
@@ -78,9 +93,12 @@ end)
 
 A message box that holds 200 characters:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-input-3-light.webp" alt="Input example" loading="lazy"><img class="example-dark" src="/images/examples/components-input-3-dark.webp" alt="Input example" loading="lazy"></figure>
+
 ```luau
 Lucy.Input.new({
-    placeholder = "Message",
+    placeholder = "Message your crew",
     multiline = true,
     rows = 4,
     maxLength = 200,
@@ -88,16 +106,22 @@ Lucy.Input.new({
 })
 ```
 
-A code of six digits:
+A party code of six digits:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-input-4-light.webp" alt="Input example" loading="lazy"><img class="example-dark" src="/images/examples/components-input-4-dark.webp" alt="Input example" loading="lazy"></figure>
 
 ```luau
-Lucy.Input.new({ placeholder = "Code", numeric = true, maxLength = 6, Parent = form })
+Lucy.Input.new({ placeholder = "Party code", numeric = true, maxLength = 6, Parent = form })
 ```
 
 A fixed width:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-input-5-light.webp" alt="Input example" loading="lazy"><img class="example-dark" src="/images/examples/components-input-5-dark.webp" alt="Input example" loading="lazy"></figure>
+
 ```luau
-Lucy.Input.new({ placeholder = "Code", width = UDim.new(0, 160), Parent = row })
+Lucy.Input.new({ placeholder = "Party code", width = UDim.new(0, 160), Parent = row })
 ```
 
 ## Preview

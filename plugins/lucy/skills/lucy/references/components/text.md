@@ -6,7 +6,15 @@ labels. It wraps to fill its parent's width unless you ask it to fit the text.
 `handle.Instance` is the TextLabel.
 
 ```luau
-Lucy.Text.new({ text = "My Game", variant = "h1", align = "center", Parent = frame })
+Lucy.Stack.new({
+    gap = "Space1",
+    children = {
+        Lucy.Text.new({ text = "Club Lucy", variant = "h1", align = "center" }),
+        Lucy.Text.new({ text = "DJ Lucy is on the decks tonight", variant = "lead", align = "center" }),
+        Lucy.Text.new({ text = "Now playing: Neon Nights, 124 BPM", variant = "muted", align = "center" }),
+    },
+    Parent = parent,
+})
 ```
 
 ## Props
@@ -55,7 +63,7 @@ Lucy.Text.new({ text = "Level 12", variant = "small", autoWidth = true, Parent =
 Rich text:
 
 ```luau
-Lucy.Text.new({ text = "Press <b>E</b> to open", richText = true, Parent = prompt })
+Lucy.Text.new({ text = "Press <b>E</b> to dance", richText = true, Parent = prompt })
 ```
 
 ## Preview

@@ -1,13 +1,30 @@
 <!-- Made by scripts/skills.ts from docs/components/progress.md. Edit the doc, not this file. -->
 # Progress
 
-A bar that fills from 0 to a maximum, for reloads, loading and health. It is
+A bar that fills from 0 to a maximum, for hype, loading and a track's time left. It is
 as wide as its parent, so put it in a sized frame or Stack.
 
 ```luau
-Lucy.Progress.new({ id = "reload", value = 30, Parent = hud })
+Lucy.Stack.new({
+    gap = "Space2",
+    size = UDim2.fromOffset(360, 0),
+    automaticSize = Enum.AutomaticSize.Y,
+    children = {
+        Lucy.Stack.new({
+            direction = "horizontal",
+            gap = "Space2",
+            align = "center",
+            children = {
+                Lucy.Icon.new({ icon = "lucide-extended:flame-filled", variant = "warning" }),
+                Lucy.Text.new({ text = "Crowd hype", variant = "label", autoWidth = true }),
+            },
+        }),
+        Lucy.Progress.new({ id = "hype", value = 30, height = 12 }),
+    },
+    Parent = parent,
+})
 
-app.state:set("ui.reload.value", 75)
+app.state:set("ui.hype.value", 75)
 ```
 
 ## Props
@@ -24,17 +41,17 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 ## Examples
 
-A health bar that follows app state and turns red when low:
+A hype meter that follows app state and turns red when the crowd goes cold:
 
 ```luau
-local health = app.state:ref("player.health")
+local hype = app.state:ref("player.hype")
 
 Lucy.Progress.new({
-    value = health,
+    value = hype,
     max = 100,
     height = 12,
     variant = function()
-        return if health() < 25 then "destructive" else "success"
+        return if hype() < 25 then "destructive" else "success"
     end,
     Parent = hud,
 })
@@ -45,9 +62,9 @@ A loading bar driven by a count:
 ```luau
 local loaded = Lucy.ref(0)
 
-Lucy.Progress.new({ value = loaded, max = #assets, Parent = loadingScreen })
+Lucy.Progress.new({ value = loaded, max = #clubAssets, Parent = loadingScreen })
 
-for _, asset in assets do
+for _, asset in clubAssets do
     ContentProvider:PreloadAsync({ asset })
     loaded(loaded() + 1)
 end

@@ -9,12 +9,24 @@ A box with a title and a line or two of text that stays on screen: a server
 notice, a failed purchase, a rule the player should know. For a message that
 comes and goes on its own, use a [toast](toaster.md) instead.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-alert-light.webp" alt="Alert example" loading="lazy"><img class="example-dark" src="/images/examples/components-alert-dark.webp" alt="Alert example" loading="lazy"></figure>
+
 ```luau
 Lucy.Alert.new({
-    title = "Server restarting in 5 minutes",
-    description = "Your progress is saved. You will join a new server.",
-    variant = "warning",
-    Parent = frame,
+    title = "Party night starts in 5 minutes",
+    description = "DJ Lucy takes the Booth at 8. Grab a spot on the dance floor.",
+    variant = "info",
+    icon = Lucy.Icon.new({ icon = "lucide-extended:party-popper-filled" }),
+    children = {
+        Lucy.Button.new({
+            text = "Hit the floor",
+            size = "sm",
+            variant = "outline",
+            onClick = function() app.toast("See you on the dance floor") end,
+        }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -47,27 +59,30 @@ See [Accessibility](../reference/accessibility.md).
 
 A failed purchase with a way to try again:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-alert-2-light.webp" alt="Alert example" loading="lazy"><img class="example-dark" src="/images/examples/components-alert-2-dark.webp" alt="Alert example" loading="lazy"></figure>
+
 ```luau
 Lucy.Alert.new({
     variant = "destructive",
-    title = "Purchase failed",
+    title = "Couldn't buy Moonwalk",
     description = "You were not charged. Try again in a moment.",
     children = {
         Lucy.Button.new({ text = "Try again", size = "sm", variant = "outline", onClick = retry }),
     },
-    Parent = shop,
+    Parent = emoteShop,
 })
 ```
 
 A notice that follows game state:
 
 ```luau
-local restartIn = Lucy.ref(0)
+local partyIn = Lucy.ref(0)
 
 Lucy.Alert.new({
-    variant = "warning",
-    title = function() return `Server restarting in {restartIn()} minutes` end,
-    visible = function() return restartIn() > 0 end,
+    variant = "info",
+    title = function() return `Party night starts in {partyIn()} minutes` end,
+    visible = function() return partyIn() > 0 end,
     Parent = hud,
 })
 ```

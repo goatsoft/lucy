@@ -2,20 +2,29 @@
 # Number Field
 
 A number in a field, with a minus button before it and a plus button after it,
-for counts and amounts: players in a lobby, rounds, items to buy. Press the
+for counts and amounts: dancers in a party, a track's BPM, emotes to buy. Press the
 buttons, or hold them to keep going faster, or type a number. On keyboard and
 gamepad the field is one stop: left and right change the number, like a
 slider, and the confirm button starts typing.
 
 ```luau
-Lucy.NumberField.new({
-    value = 4,
-    min = 1,
-    max = 16,
-    onValueCommit = function(players)
-        lobby:setMaxPlayers(players)
-    end,
-    Parent = settings,
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space4",
+    align = "center",
+    children = {
+        Lucy.Text.new({ text = "Party size", variant = "large", autoWidth = true }),
+        Lucy.NumberField.new({
+            value = 4,
+            min = 1,
+            max = 16,
+            width = UDim.new(0, 160),
+            onValueCommit = function(dancers)
+                app.toast(`Room for {dancers} dancers`)
+            end,
+        }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -54,23 +63,23 @@ The buttons draw the `lucy:minus` and `lucy:plus` icons. To use your own, see
 
 ## Examples
 
-Keep a setting in app state and save it once the player has picked:
+Keep the Booth's BPM in app state and save it once the player has picked:
 
 ```luau
-local rounds = app.state:ref("settings.rounds")
+local bpm = app.state:ref("booth.bpm")
 
 Lucy.NumberField.new({
-    value = rounds,
-    min = 1,
-    max = 10,
+    value = bpm,
+    min = 60,
+    max = 180,
     onValueCommit = function(value)
-        remotes.SaveSetting:FireServer("rounds", value)
+        remotes.SaveSetting:FireServer("bpm", value)
     end,
-    Parent = settings,
+    Parent = booth,
 })
 ```
 
-A speed in quarter steps, shown with a suffix:
+A track's playback speed in quarter steps, shown with a suffix:
 
 ```luau
 Lucy.NumberField.new({
@@ -82,7 +91,7 @@ Lucy.NumberField.new({
     format = function(value)
         return string.format("%.2fx", value)
     end,
-    Parent = settings,
+    Parent = booth,
 })
 ```
 

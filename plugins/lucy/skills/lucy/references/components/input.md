@@ -7,13 +7,22 @@ types in it. It can also limit what the player types: a number only, or a
 maximum length.
 
 ```luau
-Lucy.Input.new({
-    id = "playerName",
-    placeholder = "Display name",
-    onSubmit = function(name)
-        setDisplayName(name)
-    end,
-    Parent = form,
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space2",
+    align = "center",
+    children = {
+        Lucy.Input.new({
+            id = "playerName",
+            placeholder = "Your DJ name",
+            width = UDim.new(0, 280),
+            onSubmit = function(name)
+                app.toast(`See you on the floor, {name}`)
+            end,
+        }),
+        Lucy.Button.new({ text = "Save", icon = "lucide-extended:sparkles-filled" }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -57,15 +66,15 @@ Keep a ref and the field in step:
 ```luau
 local search = Lucy.ref("")
 
-Lucy.Input.new({ placeholder = "Search items", value = search, Parent = shop })
+Lucy.Input.new({ placeholder = "Search emotes", value = search, Parent = emoteShop })
 
--- The items whose name has the search text, for a list's `data`
+-- The emotes whose name has the search text, for a list's `data`
 local shown = Lucy.computed(function()
     local text = string.lower(search())
     local found = {}
-    for _, item in items do
-        if string.find(string.lower(item.name), text, 1, true) then
-            table.insert(found, item)
+    for _, emote in emotes do
+        if string.find(string.lower(emote.name), text, 1, true) then
+            table.insert(found, emote)
         end
     end
     return found
@@ -76,7 +85,7 @@ A message box that holds 200 characters:
 
 ```luau
 Lucy.Input.new({
-    placeholder = "Message",
+    placeholder = "Message your crew",
     multiline = true,
     rows = 4,
     maxLength = 200,
@@ -84,16 +93,16 @@ Lucy.Input.new({
 })
 ```
 
-A code of six digits:
+A party code of six digits:
 
 ```luau
-Lucy.Input.new({ placeholder = "Code", numeric = true, maxLength = 6, Parent = form })
+Lucy.Input.new({ placeholder = "Party code", numeric = true, maxLength = 6, Parent = form })
 ```
 
 A fixed width:
 
 ```luau
-Lucy.Input.new({ placeholder = "Code", width = UDim.new(0, 160), Parent = row })
+Lucy.Input.new({ placeholder = "Party code", width = UDim.new(0, 160), Parent = row })
 ```
 
 ## Preview

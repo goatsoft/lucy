@@ -8,14 +8,25 @@ description: A button that stays pressed until it is clicked again.
 A button that stays pressed until it is clicked again: mute, a filter, show
 the map. For one choice out of several, use a [Toggle Group](toggle-group.md).
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-toggle-light.webp" alt="Toggle example" loading="lazy"><img class="example-dark" src="/images/examples/components-toggle-dark.webp" alt="Toggle example" loading="lazy"></figure>
+
 ```luau
-Lucy.Toggle.new({
-    text = "Voice chat",
-    pressed = true,
-    onPressedChange = function(on)
-        voice.Enabled = on
-    end,
-    Parent = toolbar,
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space2",
+    children = {
+        Lucy.Toggle.new({
+            text = "Crowd cheers",
+            pressed = true,
+            onPressedChange = function(on)
+                app.toast(if on then "Let them cheer" else "Crowd muted")
+            end,
+        }),
+        Lucy.Toggle.new({ text = "Lights", pressed = true, variant = "outline" }),
+        Lucy.Toggle.new({ text = "Shuffle", variant = "outline" }),
+    },
+    Parent = parent,
 })
 ```
 
@@ -47,10 +58,13 @@ When the player turns it on or off, it reports `toggle` with the new value for
 
 Keep it in step with a setting:
 
-```luau
-local showMap = app.state:ref("settings.map")
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-toggle-2-light.webp" alt="Toggle example" loading="lazy"><img class="example-dark" src="/images/examples/components-toggle-2-dark.webp" alt="Toggle example" loading="lazy"></figure>
 
-Lucy.Toggle.new({ text = "Map", pressed = showMap, variant = "outline", Parent = hud })
+```luau
+local lights = app.state:ref("settings.lights")
+
+Lucy.Toggle.new({ text = "Lights", pressed = lights, variant = "outline", Parent = hud })
 ```
 
 ## Preview

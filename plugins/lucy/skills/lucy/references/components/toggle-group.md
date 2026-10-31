@@ -7,12 +7,12 @@ like one.
 
 ```luau
 Lucy.ToggleGroup.new({
-    items = { "House", "Techno", { value = "hiphop", text = "Hip hop" } },
+    items = { "House", "Disco", "Techno", { value = "hiphop", text = "Hip hop" } },
     value = "House",
     onValueChange = function(genre)
-        showSongs(genre)
+        if genre then app.toast(`Queue: {genre} tracks`) end
     end,
-    Parent = header,
+    Parent = parent,
 })
 ```
 
@@ -67,7 +67,7 @@ local genres = Lucy.ref({})
 
 Lucy.ToggleGroup.new({
     type = "multiple",
-    items = { "House", "Techno", "Pop", "Rock" },
+    items = { "House", "Techno", "Pop", "Disco" },
     value = genres,
     size = "sm",
     variant = "outline",
@@ -75,21 +75,21 @@ Lucy.ToggleGroup.new({
 })
 ```
 
-A vote from 1 to 5 with a star in each item:
+Rate the DJ's set from 1 to 5, with a star in each item:
 
 ```luau
 local items = {}
 for stars = 1, 5 do
-    table.insert(items, { value = stars, children = { starIcon(stars) } })
+    table.insert(items, { value = stars, children = { Lucy.Icon.new({ icon = "lucide-extended:star-filled" }) } })
 end
 
 Lucy.ToggleGroup.new({
     items = items,
     required = true,
     onValueChange = function(stars)
-        Remotes.Vote:FireServer(stars)
+        Remotes.RateSet:FireServer(stars)
     end,
-    Parent = votePanel,
+    Parent = ratePanel,
 })
 ```
 

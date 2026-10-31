@@ -7,17 +7,18 @@ sections where opening one can close the others, use an [Accordion](accordion.md
 
 ```luau
 Lucy.Collapsible.new({
-    text = "Advanced",
+    text = "Booth extras",
+    open = true,
     content = function()
         return Lucy.Stack.new({
             gap = "Space2",
             children = {
-                Lucy.Switch.new({ label = "Show ping" }),
-                Lucy.Switch.new({ label = "Show frame rate" }),
+                Lucy.Switch.new({ label = "Sync lights to the beat", checked = true }),
+                Lucy.Switch.new({ label = "Show BPM on the decks" }),
             },
         })
     end,
-    Parent = settingsPanel,
+    Parent = parent,
 })
 ```
 
@@ -66,7 +67,7 @@ Keep it open across visits with app state:
 
 ```luau
 Lucy.Collapsible.new({
-    text = "Show the rules",
+    text = "Show the club rules",
     variant = "details",
     open = app.state:ref("settings.rulesOpen"),
     content = rulesText,

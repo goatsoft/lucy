@@ -9,18 +9,26 @@ Rows and columns: a leaderboard, a friends list, an inventory, match history.
 Table draws the rows you give it in the order you give them. For headers the
 player can press to sort, use [DataGrid](data-grid.md).
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-table-light.webp" alt="Table example" loading="lazy"><img class="example-dark" src="/images/examples/components-table-dark.webp" alt="Table example" loading="lazy"></figure>
+
 ```luau
 Lucy.Table.new({
-    rows = players,
-    rowId = function(player) return player.userId end,
+    rows = {
+        { rank = 1, name = "Nova", hype = 9840 },
+        { rank = 2, name = "DJ Lucy", hype = 9125 },
+        { rank = 3, name = "Kai", hype = 8410 },
+        { rank = 4, name = "Juno", hype = 7360 },
+    },
+    rowId = function(dancer) return dancer.name end,
     columns = {
         { key = "rank", header = "#", width = 56, align = "center" },
-        { key = "name", header = "Player", width = { fill = 2 } },
-        { key = "score", header = "Score", width = { fill = 1 }, align = "right" },
+        { key = "name", header = "Dancer", width = { fill = 2 } },
+        { key = "hype", header = "Hype", width = { fill = 1 }, align = "right" },
     },
-    highlight = function(player) return player.userId == myId end,
+    highlight = function(dancer) return dancer.name == app.state:get("player.name") end,
     maxHeight = 360,
-    Parent = leaderboard,
+    Parent = parent,
 })
 ```
 
@@ -96,20 +104,20 @@ once for each row count. Load the next rows and add them to your data, and it
 is ready to fire again:
 
 ```luau
-local players = Lucy.ref({})
+local dancers = Lucy.ref({})
 
 Lucy.Table.new({
-    rows = players,
-    rowId = function(player) return player.userId end,
+    rows = dancers,
+    rowId = function(dancer) return dancer.userId end,
     columns = columns,
     virtual = true,
     rowHeight = 40,
     maxHeight = 400,
     onEndReached = function()
-        local more = fetchNextPlayers(#players())
-        local all = table.clone(players())
+        local more = fetchNextDancers(#dancers())
+        local all = table.clone(dancers())
         table.move(more, 1, #more, #all + 1, all)
-        players(all)
+        dancers(all)
     end,
 })
 ```

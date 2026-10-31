@@ -14,7 +14,7 @@ in one of two ways:
 - **Your own images.** Upload them yourself and register them by name, or pass
   an asset id straight to `icon`. Nothing else to install.
 - **Iconify icons.** Name any of the open icons on
-  [Iconify](https://icon-sets.iconify.design), such as `"lucide:heart"`, and
+  [Iconify](https://icon-sets.iconify.design), such as `"lucide-extended:heart-duotone"`, and
   the lucy-icons build packs the ones you use, uploads them and registers them
   for you. It needs Node.
 
@@ -63,12 +63,12 @@ To use names, register a map:
 
 ```luau
 Lucy.Icon.register({
-    ["game:coin"] = { image = 1234567 },
-    ["game:trophy"] = { image = 2345678 },
-    ["game:logo"] = { image = 3456789, tint = false },
+    ["club:coin"] = { image = 1234567 },
+    ["club:disco-ball"] = { image = 2345678 },
+    ["club:logo"] = { image = 3456789, tint = false },
 })
 
-Lucy.Icon.new({ icon = "game:coin", variant = "warning", Parent = hud })
+Lucy.Icon.new({ icon = "club:coin", variant = "warning", Parent = hud })
 ```
 
 Each name maps to:
@@ -91,7 +91,7 @@ to the game, so register each once.
 lucy-icons is a command line tool, run while you build your game, not in it.
 
 1. It scans your game's source for quoted `"set:name"` strings whose set is an
-   Iconify set, such as `"lucide:heart"` or `"mdi:home"`.
+   Iconify set, such as `"lucide-extended:heart-duotone"` or `"mdi:home"`.
 2. It draws those icons into 1024 pixel sheets: one colour icons in white,
    colour sets (emoji, logos) in their own colours.
 3. It uploads any new sheet to Roblox through Open Cloud.
@@ -177,7 +177,7 @@ such as `"lucide:" .. genre`, needs listing in `include`:
 
 ```json
 {
-  "include": ["lucide:music", "lucide:disc", "lucide:mic"]
+  "include": ["lucide-extended:music-duotone", "lucide-extended:disc-duotone", "lucide-extended:mic-duotone"]
 }
 ```
 

@@ -6,18 +6,25 @@ order, a game mode. It shows the option picked, or a placeholder until there is
 one.
 
 ```luau
-local region = Lucy.Select.new({
-    id = "region",
-    placeholder = "Region",
-    items = {
-        { value = "eu", label = "Europe" },
-        { value = "na", label = "North America" },
-        "Oceania",
+Lucy.Stack.new({
+    gap = "Space2",
+    children = {
+        Lucy.Text.new({ text = "Next set", variant = "label" }),
+        Lucy.Select.new({
+            id = "genre",
+            placeholder = "Genre",
+            value = "house",
+            items = {
+                { value = "house", label = "House" },
+                { value = "disco", label = "Disco" },
+                "Techno",
+            },
+            onValueChange = function(value)
+                app.toast(`Next set: {value}`)
+            end,
+        }),
     },
-    onValueChange = function(value)
-        joinRegion(value)
-    end,
-    Parent = settings,
+    Parent = parent,
 })
 ```
 
@@ -59,9 +66,9 @@ label and how many more, such as "Pop +2".
 Lucy.Select.new({
     multiple = true,
     placeholder = "Genres",
-    items = { "Pop", "Hip hop", "House", "Rock" },
+    items = { "Pop", "Hip hop", "House", "Techno" },
     onValueChange = function(genres)
-        setFilter(genres)
+        app.toast(`{#genres} genres in the mix`)
     end,
 })
 ```
@@ -100,8 +107,8 @@ When the player picks an option, it reports `select` with the value, for
 Read or change the value from anywhere by its id:
 
 ```luau
-app.state:get("ui.region.value")
-app.state:set("ui.region.value", "na")
+app.state:get("ui.genre.value")
+app.state:set("ui.genre.value", "disco")
 ```
 
 Keep it in step with a ref:

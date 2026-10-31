@@ -17,8 +17,8 @@ level keys; the rest is yours.
 ```
 app.state
 ├─ ui            one table per component, at ui.<id>
-│  ├─ play       { text = "Play", variant = "default", disabled = false, ... }
-│  └─ volume     { label = "Volume", value = 4, min = 0, max = 10, ... }
+│  ├─ dance      { text = "Dance", variant = "default", disabled = false, ... }
+│  └─ music      { label = "Music", value = 80, min = 0, max = 100, ... }
 ├─ scenes        { current = "Title", stack = { ... }, visible = { ... } }
 ├─ toasts        the toasts on screen, in order
 ├─ input         { device, mode, density, orientation, breakpoint, viewport, touch, gamepad, keyboard }
@@ -31,12 +31,12 @@ Pass your starting data to `App.new`:
 
 ```luau
 local app = Lucy.App.new({
-    state = { player = { coins = 0, bag = {} }, settings = { music = true } },
+    state = { player = { coins = 0, emotes = {} }, settings = { lights = true } },
 })
 ```
 
 Writing Lucy's keys does what you would expect: `app.state:set("theme", "light")`
-switches the theme, and `app.state:set("ui.play.disabled", true)` disables that
+switches the theme, and `app.state:set("ui.dance.disabled", true)` disables that
 button.
 
 ## Paths
@@ -44,7 +44,7 @@ button.
 A path names one place in the tree, with dots between the keys:
 
 - `"player.coins"` is the `coins` key of the `player` table.
-- A part made only of digits is an array index: `"player.bag.1.name"`.
+- A part made only of digits is an array index: `"player.emotes.1.name"`.
 - No path, or `nil`, is the whole tree.
 - Empty parts (`"player..coins"`) are an error.
 
@@ -160,9 +160,9 @@ Every form goes through `set`, so they all copy, compare and notify the same
 way. To change a list, copy it, change the copy and set it:
 
 ```luau
-local bag = table.clone(state:get("player.bag"))
-table.insert(bag, { id = "bow", name = "Bow" })
-state:set("player.bag", bag)
+local emotes = table.clone(state:get("player.emotes"))
+table.insert(emotes, { id = "moonwalk", name = "Moonwalk" })
+state:set("player.emotes", emotes)
 ```
 
 Only the new item notifies; the items that were already there compare equal.
@@ -193,8 +193,8 @@ end)
 ```luau
 app.state:batch(function()
     app.state:set("player.coins", 0)
-    app.state:set("player.bag", {})
-    app.state:set("ui.shop.visible", false)
+    app.state:set("player.emotes", {})
+    app.state:set("ui.emoteShop.visible", false)
 end)
 ```
 
@@ -207,7 +207,7 @@ the same batch, so you can mix refs and store writes inside one.
 Each component keeps its state keys at `ui.<id>`. The keys are the component's
 `defaults`; props with those names set the starting values.
 
-- **Give it an `id`** and any code can drive it: `app.state:set("ui.play.text", "Go")`.
+- **Give it an `id`** and any code can drive it: `app.state:set("ui.dance.text", "Groove")`.
   Without one, Lucy makes one up (`button-1`, `button-2`...).
 - **State already in the store wins.** If `ui.<id>` exists when the component is
   created, its keys override the defaults and props. Set a component's state
@@ -215,8 +215,8 @@ Each component keeps its state keys at `ui.<id>`. The keys are the component's
   exception: they start from the ref.
 - **Destroying a component removes `ui.<id>`**, unless it was created with
   `persist = true`, which keeps its state for next time.
-- **A ref as a prop binds both ways.** `checked = app.state:ref("settings.music")`
-  makes the Switch's `checked` key and `settings.music` one value: a write to
+- **A ref as a prop binds both ways.** `checked = app.state:ref("settings.lights")`
+  makes the Switch's `checked` key and `settings.lights` one value: a write to
   either is a write to both, inside the same `set`, before any subscriber runs.
   Any writable ref works (`Lucy.ref`, a computed with `get` and `set`).
 - **A getter as a prop is followed one way.** The key takes the getter's value
@@ -228,10 +228,10 @@ Each component keeps its state keys at `ui.<id>`. The keys are the component's
 Hand one to code that should only see its own part of the tree:
 
 ```luau
-local inventory = app.state:scope("player.bag")
-inventory:set("1.count", 3)                  -- player.bag.1.count
-inventory:subscribe(nil, function(bag) end)  -- player.bag
-local shop = inventory:scope("shop")         -- player.bag.shop
+local emotes = app.state:scope("player.emotes")
+emotes:set("1.plays", 3)                       -- player.emotes.1.plays
+emotes:subscribe(nil, function(list) end)      -- player.emotes
+local favourites = emotes:scope("favourites")  -- player.emotes.favourites
 ```
 
 ## Examples
@@ -243,25 +243,25 @@ Game code writes the store; the HUD follows it. Neither knows about the other.
 ```luau
 -- HUD
 local coins = app.state:ref("player.coins")
-local hp = app.state:ref("player.hp")
+local hype = app.state:ref("player.hype")
 
 Lucy.new "Frame" {
     Parent = hud,
     Lucy.new "TextLabel" { Text = function() return `{coins()} coins` end },
-    Lucy.Progress.new({ value = hp, max = 100 }),
+    Lucy.Progress.new({ value = hype, max = 100 }),
 }
 
 -- Game code
-app.state:merge("player", { coins = 120, hp = 75 })
+app.state:merge("player", { coins = 120, hype = 75 })
 ```
 
 ### Settings bound to saved data
 
 ```luau
-local app = Lucy.App.new({ state = { settings = saved or { music = true, volume = 6 } } })
+local app = Lucy.App.new({ state = { settings = saved or { lights = true, music = 80 } } })
 
-Lucy.Switch.new({ label = "Music", checked = app.state:ref("settings.music"), Parent = menu })
-Stepper.new({ label = "Volume", value = app.state:ref("settings.volume"), Parent = menu })
+Lucy.Switch.new({ label = "Club lights", checked = app.state:ref("settings.lights"), Parent = menu })
+Stepper.new({ label = "Music", value = app.state:ref("settings.music"), max = 100, Parent = menu })
 
 app.state:subscribe("settings", function(settings)
     remote:FireServer("SaveSettings", settings)
@@ -275,11 +275,11 @@ once per change, as a frozen copy that is safe to send.
 
 ```luau
 local coins = app.state:ref("player.coins")
-local price = 100
+local price = 120
 
 Lucy.Button.new({
-    id = "buy",
-    text = `Buy ({price})`,
+    id = "buy-robot",
+    text = `Buy Robot ({price})`,
     disabled = function()
         return coins() < price
     end,
