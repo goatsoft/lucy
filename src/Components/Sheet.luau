@@ -251,6 +251,8 @@ local spec: Component.Spec = {
 			layoutOrder = 3,
 			name = "Body",
 		})
+		-- Several children stack, as in a Dialog's body.
+		Component.list({ Padding = UDim.new(0, gap), Parent = body.content })
 
 		-- In a panel the footer sits at the bottom; this takes the space between.
 		local spacer = Element.new("Frame", {
