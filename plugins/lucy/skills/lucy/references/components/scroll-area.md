@@ -31,7 +31,7 @@ Lucy.ScrollArea.new({
 | `padding` | spacing | none | | Space around the inside edge of the content |
 | `scrollbar` | string | `"hover"` | | When the scroll bar shows, see [Scroll bar](#scroll-bar) |
 | `hideDelay` | number | `0.6` | | Seconds the bar stays after scrolling stops |
-| `fade` | boolean | `true` | | Fade the edges there is more to scroll past, see [Edge fades](#edge-fades) |
+| `fade` | boolean or string | `true` | | Fade the edges there is more to scroll past: `true`, `false` or `"content"`, see [Edge fades](#edge-fades) |
 | `children` | table | | | Instances, handles or functions to put in it |
 | `visible` | boolean | `true` | yes | Shows or hides the area |
 
@@ -40,8 +40,9 @@ It also takes the [props every component takes](index.md#using-a-component).
 A spacing value is a token name (`"Space0"` to `"Space6"`, `"Space8"`), a
 number of pixels or a UDim.
 
-`handle.Instance` is the ScrollingFrame and `handle.content` is the frame inside
-it that holds the children. The area lays out nothing itself: put a
+`handle.Instance` is the ScrollingFrame (with `fade = "content"`, a
+CanvasGroup around it). `handle.frame` is always the ScrollingFrame, and
+`handle.content` is the frame inside it that holds the children. The area lays out nothing itself: put a
 [Stack](stack.md) inside to arrange a list.
 
 With `maxHeight`, the area takes its width from `size` (or fills the parent) and
@@ -68,12 +69,38 @@ moves when it shows.
 ## Edge fades
 
 While there is more to scroll past an edge, that edge fades into the surface
-behind the area: the page background, a Panel's card or a Select's list. A
-control the edge cuts through then reads as going on, not as broken. The fades
-come and go as the player scrolls, and never take clicks. Turn them off with
-`fade = false` for an area over a picture or a see-through panel: a fade is a
-colour laid over the content, so over anything see-through it shows as a darker
-band, even in the panel's own colour.
+behind the area. A control the edge cuts through then reads as going on, not
+as broken. The fades come and go as the player scrolls, and never take clicks.
+
+A fade takes the colour of the nearest thing behind the area that has a
+background: a Panel's card, a Select's list, or a frame of your own, however
+deeply the area is nested. It follows that colour when the theme or the
+player's background setting changes. With nothing behind it, it uses the page
+background.
+
+A fade is a colour laid over the content, so it only works over a solid
+surface. Over a see-through panel or a picture, it shows as a darker band. There
+you have two choices:
+
+- `fade = false`: no fades.
+- `fade = "content"`: the content itself fades out at the edges, over whatever
+  is behind it. The area is drawn into a CanvasGroup to do this, which costs
+  texture memory: about its width times its height times 4 bytes, times the
+  screen's pixel density squared (a 360 by 600 list on a phone is about 8 MB).
+  Roblox caps the total for all CanvasGroups on screen, lower at low graphics
+  quality, and past the cap it draws every one of them at a lower resolution,
+  so text goes soft, your game's own CanvasGroups included. Use it for one or
+  two areas, not every list. Only the scrolling direction fades, top and bottom
+  for `direction = "both"`, and the scroll bar fades with the content.
+
+```luau
+Lucy.ScrollArea.new({
+    fade = "content",
+    padding = "Space3",
+    children = { trackList },
+    Parent = hudPanel,
+})
+```
 
 ## Gamepad and keyboard
 

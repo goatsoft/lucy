@@ -212,6 +212,91 @@ return function()
 			local color = Harness.styled(area.fades.top, "BackgroundColor3")
 			expect(Harness.colorEq(color, app.theme:resolve("Background"))).to.equal(true)
 		end)
+
+		it("takes the colour of the surface it sits on, however deep", function()
+			local surface = Instance.new("Frame")
+			surface.Size = UDim2.fromOffset(240, 160)
+			surface.BackgroundColor3 = Color3.fromRGB(40, 90, 160)
+			surface.BackgroundTransparency = 0.25
+			surface.Parent = gui
+			local clear = Instance.new("Frame")
+			clear.Size = UDim2.fromScale(1, 1)
+			clear.BackgroundTransparency = 1
+			clear.Parent = surface
+			local area = ScrollArea.new({
+				app = app,
+				Parent = clear,
+				size = UDim2.fromOffset(200, 100),
+				children = { block(400) },
+			})
+			Harness.flush()
+			local top = area.fades.top
+			expect(Harness.colorEq(top.BackgroundColor3, Color3.fromRGB(40, 90, 160))).to.equal(true)
+			expect(top.BackgroundTransparency).to.be.near(0.25, 0.001)
+			surface.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
+			Harness.flush()
+			expect(Harness.colorEq(top.BackgroundColor3, Color3.fromRGB(200, 30, 30))).to.equal(true)
+		end)
+
+		it("takes a Panel's card colour from the theme", function()
+			local Panel = require(script.Parent.Panel)
+			local area = ScrollArea.new({
+				app = app,
+				size = UDim2.fromOffset(200, 100),
+				children = { block(400) },
+			})
+			Panel.new({ app = app, Parent = gui, children = { area } })
+			Harness.flush()
+			local color = area.fades.top.BackgroundColor3
+			expect(Harness.colorEq(color, app.theme:resolve("Card"))).to.equal(true)
+		end)
+	end)
+
+	describe("content fade", function()
+		local function firstLast(area): (number, number)
+			local gradient = area.Instance:FindFirstChildOfClass("UIGradient") :: UIGradient
+			local points = gradient.Transparency.Keypoints
+			return points[1].Value, points[#points].Value
+		end
+
+		it("wraps the window in a CanvasGroup and fades the content itself", function()
+			local area = ScrollArea.new({
+				app = app,
+				Parent = gui,
+				size = UDim2.fromOffset(200, 100),
+				fade = "content",
+				children = { block(400) },
+			})
+			Harness.flush()
+			expect(area.Instance:IsA("CanvasGroup")).to.equal(true)
+			expect(area.frame:IsA("ScrollingFrame")).to.equal(true)
+			expect(area.frame.Parent).to.equal(area.Instance)
+			expect((next(area.fades))).to.equal(nil)
+			local first, last = firstLast(area)
+			expect(first).to.equal(0)
+			expect(last).to.equal(1)
+			area.frame.CanvasPosition = Vector2.new(0, 50)
+			Harness.flush()
+			first, last = firstLast(area)
+			expect(first).to.equal(1)
+			expect(last).to.equal(1)
+			area.frame.CanvasPosition = Vector2.new(0, 10000)
+			Harness.flush()
+			first, last = firstLast(area)
+			expect(first).to.equal(1)
+			expect(last).to.equal(0)
+		end)
+
+		it("keeps handle.frame as the ScrollingFrame in the default mode", function()
+			local area = ScrollArea.new({ app = app, Parent = gui, children = { block(40) } })
+			expect(area.frame).to.equal(area.Instance)
+		end)
+
+		it("rejects an unknown fade", function()
+			expect(function()
+				ScrollArea.new({ app = app, fade = "blur" })
+			end).to.throw()
+		end)
 	end)
 
 	it("keeps horizontal content clear of the scrollbar once it scrolls", function()

@@ -126,7 +126,7 @@ local rules = {
 Text over a see-through panel has to stay readable over whatever the game shows
 behind it, so check it against the busiest scene, not the panel colour. A
 [ScrollArea](../components/scroll-area.md#edge-fades) in such a panel takes
-`fade = false`.
+`fade = false`, or `fade = "content"` if it should still fade its edges.
 
 ## Animate through Lucy
 

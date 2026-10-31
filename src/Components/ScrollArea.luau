@@ -9,14 +9,15 @@
 			padding = "Space4",       -- optional: a spacing token, pixels or a UDim
 			scrollbar = "hover",      -- hover | auto | always | scroll | glimpse
 			hideDelay = 0.6,          -- seconds the bar stays after scrolling (scroll, hover, glimpse)
-			fade = true,              -- fade the edges there is more to scroll past
+			fade = true,              -- true | false | "content" (see below)
 			children = { ... },       -- instances, handles or functions
 			visible = true,
 			Parent = frame,
 		})
 
-	handle.Instance is the ScrollingFrame; handle.content is the frame inside it
-	that holds the children. It lays out nothing itself: put a Stack inside to
+	handle.Instance is the ScrollingFrame (a CanvasGroup around it with
+	fade = "content"); handle.frame is always the ScrollingFrame, and
+	handle.content is the frame inside it that holds the children. It lays out nothing itself: put a Stack inside to
 	arrange a list. maxHeight takes a number, a ref or a getter; with it, the
 	area keeps the width from `size` (or fills the parent) and its height
 	follows the content up to the cap.
@@ -37,10 +38,19 @@
 	The bar is hidden by fading it (tag ui-scroll-bar-visible), so the space it
 	takes stays put and the content does not move when it shows.
 
-	Each edge with more to scroll past fades into the surface behind it (the
-	background, a Panel's card, a Select's popover), so a control cut by the
-	edge reads as continuing. handle.fades holds them by side (top, bottom,
-	left, right); fade = false leaves them out.
+	Each edge with more to scroll past fades into the surface behind it, so a
+	control cut by the edge reads as continuing. The fade takes the colour and
+	transparency of the nearest ancestor with a visible background (a Panel's
+	card, a Select's popover, a game's own frame), else $Background, and follows
+	it through theme and transparency changes. handle.fades holds them by side
+	(top, bottom, left, right); fade = false leaves them out.
+
+	fade = "content" fades the content itself instead: the window sits in a
+	CanvasGroup with a UIGradient, so it works over see-through panels and
+	pictures. A CanvasGroup costs texture memory (width x height x 4 bytes at
+	the screen's density) and Roblox blurs every CanvasGroup on screen once
+	their total passes its budget, so it is opt-in. Only the scrolling axis
+	fades (top and bottom for "both").
 
 	State keys: visible.
 ]]
@@ -124,19 +134,26 @@ ScrollArea.rules = {
 		priority = 0,
 		properties = { BackgroundTransparency = 1, BorderSizePixel = 0 },
 	},
-	-- Edge fades take the colour of the surface the area sits on.
-	{
-		selector = ".ui-scroll-fade",
-		priority = 0,
-		properties = { BackgroundColor3 = "$Background", BackgroundTransparency = 0, BorderSizePixel = 0 },
-	},
-	{ selector = ".ui-panel >> .ui-scroll-fade", priority = 1, properties = { BackgroundColor3 = "$Card" } },
-	{
-		selector = ".ui-select-content >> .ui-scroll-fade",
-		priority = 1,
-		properties = { BackgroundColor3 = "$Popover" },
-	},
+	-- Edge fades take their colour from the surface they sit on, in code.
+	{ selector = ".ui-scroll-fade", priority = 0, properties = { BorderSizePixel = 0 } },
 } :: { Component.Rule }
+
+ScrollArea.fades = { true, false, "content" } :: { any }
+
+-- The nearest ancestor of `object` with a background that shows, up to its gui.
+function ScrollArea.surfaceOf(object: Instance): GuiObject?
+	local node = object.Parent
+	while node and not node:IsA("LayerCollector") do
+		if node:IsA("GuiObject") and node.Visible then
+			local transparency = node:GetStyled("BackgroundTransparency") :: number
+			if transparency < 1 then
+				return node
+			end
+		end
+		node = node.Parent
+	end
+	return nil
+end
 
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
@@ -156,6 +173,10 @@ local spec: Component.Spec = {
 			error(`ScrollArea: unknown scrollbar "{mode}" (hover, auto, always, scroll or glimpse)`, 0)
 		end
 		h.scrollbar = mode
+		local fadeMode: any = if p.fade == nil then true else p.fade
+		if not table.find(ScrollArea.fades, fadeMode) then
+			error(`ScrollArea: unknown fade "{tostring(fadeMode)}" (true, false or "content")`, 0)
+		end
 
 		-- What the bar's visibility depends on: overflow, the pointer, and recent scrolling.
 		local canvas = Reactive.ref(Vector2.zero)
@@ -288,7 +309,7 @@ local spec: Component.Spec = {
 		local position = Reactive.ref(Vector2.zero)
 		local fades: { [string]: Frame } = {}
 		h.fades = fades
-		if p.fade ~= false then
+		if fadeMode == true then
 			local reach = ScrollArea.fadeSize
 			local function scale(): number
 				return Scroll.scaleOf(content)
@@ -360,8 +381,9 @@ local spec: Component.Spec = {
 			Selectable = false,
 			content,
 		})
+		local grouped = fadeMode == "content"
 		local frame = Element.new("ScrollingFrame", {
-			Size = size,
+			Size = if grouped then UDim2.fromScale(1, 1) else size,
 			CanvasSize = function(): UDim2
 				local m, s = measured(), Scroll.scaleOf(content)
 				return UDim2.fromOffset(if axis.x then m.X / s else 0, if axis.y then m.Y / s else 0)
@@ -373,7 +395,7 @@ local spec: Component.Spec = {
 			Selectable = function(): boolean
 				return not hasSelectable() and overflows()
 			end,
-			Visible = h:ref("visible"),
+			Visible = if grouped then true else h:ref("visible"),
 			Tags = { "ui-scroll-area" :: any, ["ui-scroll-bar-visible"] = barVisible },
 			[OUT_CANVAS] = canvas :: any,
 			[OUT_WINDOW] = window :: any,
@@ -394,7 +416,94 @@ local spec: Component.Spec = {
 		for _, fade in fades do
 			fade.Parent = frame
 		end
-		return frame
+		h.frame = frame
+
+		-- Colour fades follow the surface they sit on: its styled colour and
+		-- transparency, read again whenever an ancestor's look or the ancestry changes.
+		if next(fades) then
+			local fallback = h.app.theme:resolve("Background")
+			local watching: { RBXScriptConnection } = {}
+			local function apply()
+				local surface = ScrollArea.surfaceOf(frame)
+				local color: Color3 = if surface then surface:GetStyled("BackgroundColor3") else fallback
+				local transparency: number = if surface
+					then surface:GetStyled("BackgroundTransparency")
+					else 0
+				for _, fade in fades do
+					fade.BackgroundColor3 = color
+					fade.BackgroundTransparency = transparency
+				end
+			end
+			local function rewatch()
+				for _, connection in watching do
+					connection:Disconnect()
+				end
+				table.clear(watching)
+				local node = frame.Parent
+				while node and not node:IsA("LayerCollector") do
+					if node:IsA("GuiObject") then
+						table.insert(watching, node.StyledPropertiesChanged:Connect(apply))
+						table.insert(
+							watching,
+							node:GetPropertyChangedSignal("BackgroundColor3"):Connect(apply)
+						)
+						table.insert(
+							watching,
+							node:GetPropertyChangedSignal("BackgroundTransparency"):Connect(apply)
+						)
+						table.insert(watching, node:GetPropertyChangedSignal("Visible"):Connect(apply))
+					end
+					node = node.Parent
+				end
+				apply()
+			end
+			local moved = frame.AncestryChanged:Connect(rewatch)
+			rewatch()
+			Reactive.onCleanup(function()
+				moved:Disconnect()
+				for _, connection in watching do
+					connection:Disconnect()
+				end
+			end)
+		end
+
+		if not grouped then
+			return frame
+		end
+
+		-- fade = "content": the window in a CanvasGroup whose gradient fades the
+		-- ends with more to scroll past.
+		local vertical = key ~= "horizontal"
+		local function sequence(): NumberSequence
+			local w, c, at = window(), canvas(), position()
+			local length = if vertical then w.Y else w.X
+			if length <= 0 then
+				return NumberSequence.new(0)
+			end
+			local reach = math.min(ScrollArea.fadeSize * Scroll.scaleOf(content) / length, 0.45)
+			local before = if vertical then at.Y > 0.5 else at.X > 0.5
+			local after = if vertical then at.Y + w.Y < c.Y - 0.5 else at.X + w.X < c.X - 0.5
+			local points = { NumberSequenceKeypoint.new(0, if before then 1 else 0) }
+			if before then
+				table.insert(points, NumberSequenceKeypoint.new(reach, 0))
+			end
+			if after then
+				table.insert(points, NumberSequenceKeypoint.new(1 - reach, 0))
+			end
+			table.insert(points, NumberSequenceKeypoint.new(1, if after then 1 else 0))
+			return NumberSequence.new(points)
+		end
+		return Element.new("CanvasGroup", {
+			Size = size,
+			BackgroundTransparency = 1,
+			Visible = h:ref("visible"),
+			Tags = { "ui-scroll-group" },
+			Element.new("UIGradient", {
+				Rotation = if vertical then 90 else 0,
+				Transparency = sequence,
+			}),
+			frame,
+		})
 	end,
 }
 
