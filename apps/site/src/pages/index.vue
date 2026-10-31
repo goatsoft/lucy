@@ -50,7 +50,7 @@ function movePanelLight(event: PointerEvent): void {
 
 // The four that matter most, as cards.
 const features = [
-  { icon: Boxes, title: '35 components', text: 'Buttons, dialogs, selects, tables, sliders, tabs and more, ready for menus, HUDs and shops.' },
+  { icon: Boxes, title: '36 components', text: 'Buttons, dialogs, selects, tables, sliders, tabs and more, ready for menus, HUDs and shops.' },
   { icon: Atom, title: 'One source of truth', text: 'All UI and app state in one store. Change a value and only the properties that read it are updated.' },
   { icon: Gamepad, title: 'Any input, any device', text: 'Mouse, keyboard, gamepad and touch, on desktop, console, tablet and phone. Controls grow for touch and TV.' },
   { icon: SwatchBook, title: 'Themes', text: 'Light and dark themes, switched while the game runs. Hover and theme changes run no Luau.' },

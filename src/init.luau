@@ -146,6 +146,7 @@ local Lucy = {
 	Input = require(Components.Input),
 	Item = require(Components.Item),
 	Kbd = require(Components.Kbd),
+	Marquee = require(Components.Marquee),
 	NumberField = require(Components.NumberField),
 	Panel = require(Components.Panel),
 	Pressable = require(Components.Pressable),

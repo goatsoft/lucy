@@ -17,6 +17,7 @@
     "input": "Text field on one line",
     "item": "List row with media, title, description and actions",
     "kbd": "The key to press for the player's keyboard or controller",
+    "marquee": "One line of text that scrolls when it is too long to fit",
     "number-field": "A number with minus and plus buttons, typed or stepped",
     "panel": "Card with header, content and footer",
     "pressable": "Clickable surface that holds anything",
