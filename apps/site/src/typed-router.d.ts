@@ -325,6 +325,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/guide/accessibility': RouteRecordInfo<
+      '/docs/guide/accessibility',
+      '/docs/guide/accessibility',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/guide/actions': RouteRecordInfo<
       '/docs/guide/actions',
       '/docs/guide/actions',
@@ -767,6 +774,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/development.md': {
       routes:
         | '/docs/development'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/guide/accessibility.md': {
+      routes:
+        | '/docs/guide/accessibility'
       views:
         | never
       pathParamNames:
