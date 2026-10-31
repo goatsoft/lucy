@@ -23,10 +23,11 @@
  *   node scripts/doc-previews.ts list     print the marked examples as JSON
  *   node scripts/doc-previews.ts blocks   print every luau block, marked or not
  *   node scripts/doc-previews.ts serve    serve the marked examples to Studio's renderer
- *                                         (scripts/doc-pictures.luau) on 127.0.0.1:38991
+ *                                         (scripts/doc-pictures.luau) on 127.0.0.1:38991,
+ *                                         and turn the pixels it sends back into pictures
  *   node scripts/doc-previews.ts crop <dark capture> <light capture>
- *                                         cut the pictures out of a pair of captures; the
- *                                         renderer's box lines come on stdin
+ *                                         the same from two screen captures, with the
+ *                                         renderer's box lines on stdin
  *   node scripts/doc-previews.ts write    put each picture pair under its marker
  *   node scripts/doc-previews.ts --check  change nothing; fail when a page is out of date
  *
@@ -38,6 +39,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } fro
 import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { gunzipSync } from 'node:zlib'
 
 const ROOT = join(import.meta.dirname, '..')
 const DOCS = join(ROOT, 'docs')
@@ -215,9 +217,48 @@ function drawn(image: Image, [x0, y0, x1, y1]: Rect): Rect | undefined {
   return box
 }
 
-// One picture pair per box line: the box (viewport pixels) is scaled to the capture,
-// then tightened to what differs from the background in either theme, so light and
-// dark get the same frame. A box that is the whole viewport (a screen) is kept whole.
+// The frame both pictures of a pair share: what either theme drew inside `area`,
+// plus PAD, kept inside `area`.
+function frame(dark: Image, light: Image, area: Rect): Rect | undefined {
+  const a = drawn(dark, area)
+  const b = drawn(light, area)
+  const ink = a && b ? ([Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])] as Rect) : (a ?? b)
+  if (!ink) return undefined
+  return [
+    Math.max(area[0], ink[0] - PAD),
+    Math.max(area[1], ink[1] - PAD),
+    Math.min(area[2], ink[2] + PAD),
+    Math.min(area[3], ink[3] + PAD),
+  ]
+}
+
+// Writes `rect` of `image` as apps/site/public/images/examples/<file>.
+function writeWebp(image: Image, [x0, y0, x1, y1]: Rect, file: string) {
+  const dir = mkdtempSync(join(tmpdir(), 'lucy-pictures-'))
+  const width = x1 - x0
+  const height = y1 - y0
+  const rows = Buffer.alloc(width * height * 3)
+  for (let y = 0; y < height; y++) {
+    const from = ((y0 + y) * image.width + x0) * 3
+    image.data.copy(rows, y * width * 3, from, from + width * 3)
+  }
+  const ppm = join(dir, 'a.ppm')
+  writeFileSync(ppm, Buffer.concat([Buffer.from(`P6\n${width} ${height}\n255\n`, 'latin1'), rows]))
+  execFileSync('cwebp', ['-quiet', '-q', '90', '-m', '6', ppm, '-o', join(IMAGES, file)])
+}
+
+// A picture pair from a dark and a light image of the same place: cut to what was
+// drawn inside `area`, or the whole of it for a screen.
+function writePair(name: string, dark: Image, light: Image, area: Rect, whole: boolean): string {
+  const rect = whole ? area : frame(dark, light, area)
+  if (!rect) return `${name}: nothing drawn`
+  writeWebp(dark, rect, `${name}-dark.webp`)
+  writeWebp(light, rect, `${name}-light.webp`)
+  return `${name} ${rect[2] - rect[0]}x${rect[3] - rect[1]}`
+}
+
+// One picture pair per box line: the box (viewport pixels) is scaled to the capture
+// and padded. A box that is the whole viewport (a screen) is kept whole.
 function crop(darkFile: string, lightFile: string, lines: string[]): string[] {
   const dark = decode(darkFile)
   const light = decode(lightFile)
@@ -232,43 +273,80 @@ function crop(darkFile: string, lightFile: string, lines: string[]): string[] {
     const name = m[1] as string
     const [bx0, by0, bx1, by1, vw, vh] = m.slice(2).map(Number) as [number, number, number, number, number, number]
     const scale = dark.width / vw
-    let rect: Rect
-    if (bx0 <= 0 && by0 <= 0 && bx1 >= vw && by1 >= vh) {
-      rect = [0, 0, dark.width, Math.min(dark.height, Math.round(vh * scale))]
-    } else {
-      const outer: Rect = [
-        Math.max(0, Math.floor(bx0 * scale) - PAD),
-        Math.max(0, Math.floor(by0 * scale) - PAD),
-        Math.min(dark.width, Math.ceil(bx1 * scale) + PAD),
-        Math.min(dark.height, Math.ceil(by1 * scale) + PAD),
-      ]
-      const a = drawn(dark, outer)
-      const b = drawn(light, outer)
-      const ink = a && b ? ([Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])] as Rect) : (a ?? b)
-      if (!ink) {
-        report.push(`${name}: nothing drawn`)
-        continue
-      }
-      rect = [
-        Math.max(outer[0], ink[0] - PAD),
-        Math.max(outer[1], ink[1] - PAD),
-        Math.min(outer[2], ink[2] + PAD),
-        Math.min(outer[3], ink[3] + PAD),
-      ]
-    }
-    const [x0, y0, x1, y1] = rect
-    for (const [theme, file] of [['dark', darkFile], ['light', lightFile]]) {
-      execFileSync('cwebp', ['-quiet', '-q', '90', '-m', '6', '-crop', `${x0}`, `${y0}`, `${x1 - x0}`, `${y1 - y0}`, file as string, '-o', join(IMAGES, `${name}-${theme}.webp`)])
-    }
-    report.push(`${name} ${x1 - x0}x${y1 - y0}`)
+    const whole = bx0 <= 0 && by0 <= 0 && bx1 >= vw && by1 >= vh
+    const area: Rect = whole
+      ? [0, 0, dark.width, Math.min(dark.height, Math.round(vh * scale))]
+      : [
+          Math.max(0, Math.floor(bx0 * scale) - PAD),
+          Math.max(0, Math.floor(by0 * scale) - PAD),
+          Math.min(dark.width, Math.ceil(bx1 * scale) + PAD),
+          Math.min(dark.height, Math.ceil(by1 * scale) + PAD),
+        ]
+    report.push(writePair(name, dark, light, area, whole))
   }
   return report
+}
+
+// Pixels the renderer sent, by picture name, until both themes are in, and rows
+// of an image still coming in.
+const waiting = new Map<string, { [theme: string]: Image }>()
+const arriving = new Map<string, { image: Image; rows: number }>()
+
+// The renderer posts each example's area as raw RGBA rows (gzipped), in strips
+// under Roblox's 1 MB limit:
+// POST /pixels?name=components-button&theme=dark&w=848&h=130&y=0&whole=0
+function receive(query: URLSearchParams, body: Buffer): string {
+  const name = query.get('name') ?? ''
+  const theme = query.get('theme') ?? ''
+  const width = Number(query.get('w'))
+  const height = Number(query.get('h'))
+  const y = Number(query.get('y') ?? 0)
+  if (!/^[a-z0-9-]+$/.test(name) || (theme !== 'dark' && theme !== 'light')) throw new Error('bad picture name or theme')
+  const rows = body.length / (width * 4)
+  if (!Number.isInteger(rows) || y < 0 || y + rows > height) throw new Error(`${name}: rows do not fit ${width}x${height}`)
+  const key = `${name}/${theme}`
+  const part = arriving.get(key) ?? { image: { width, height, data: Buffer.alloc(width * height * 3) }, rows: 0 }
+  arriving.set(key, part)
+  for (let i = 0, j = y * width * 3; i < body.length; i += 4, j += 3) {
+    part.image.data[j] = body[i]!
+    part.image.data[j + 1] = body[i + 1]!
+    part.image.data[j + 2] = body[i + 2]!
+  }
+  part.rows += rows
+  if (part.rows < height) return `${name}: ${theme} rows ${part.rows} of ${height}`
+  arriving.delete(key)
+  const pair = waiting.get(name) ?? {}
+  pair[theme] = part.image
+  waiting.set(name, pair)
+  const { dark, light } = pair
+  if (!dark || !light) return `${name}: ${theme} in, waiting for the other theme`
+  waiting.delete(name)
+  const w = Math.min(dark.width, light.width)
+  const h = Math.min(dark.height, light.height)
+  const line = writePair(name, dark, light, [0, 0, w, h], query.get('whole') === '1')
+  console.log(line)
+  return line
 }
 
 const mode = process.argv[2]
 if (mode === 'serve') {
   createServer((request, response) => {
-    if (request.url?.split('?')[0] !== '/examples.json') {
+    const url = new URL(request.url ?? '/', `http://127.0.0.1:${PORT}`)
+    if (request.method === 'POST' && url.pathname === '/pixels') {
+      const chunks: Buffer[] = []
+      request.on('data', (chunk: Buffer) => chunks.push(chunk))
+      request.on('end', () => {
+        try {
+          let body = Buffer.concat(chunks)
+          if (request.headers['content-encoding'] === 'gzip') body = gunzipSync(body)
+          response.writeHead(200).end(receive(url.searchParams, body))
+        } catch (err) {
+          response.writeHead(400).end((err as Error).message)
+        }
+      })
+      return
+    }
+    if (url.pathname !== '/examples.json') {
       response.writeHead(404).end()
       return
     }
