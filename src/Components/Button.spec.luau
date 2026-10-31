@@ -216,6 +216,16 @@ return function()
 			expect(button.hint.destroyed).to.equal(true)
 		end)
 
+		it("takes an action name and shows its keys", function()
+			app.actions:define("specButton", { specQueue = { Enum.KeyCode.Q, Enum.KeyCode.ButtonY } })
+			app.input:setMode("keyboard")
+			local button = Button.new({ app = app, Parent = gui, text = "Queue", hint = "specQueue" })
+			expect(button.label.Text).to.equal("Queue")
+			expect(button.hint.text.Text).to.equal("Q")
+			app.actions:bind("specQueue", { Enum.KeyCode.R })
+			expect(button.hint.text.Text).to.equal("R")
+		end)
+
 		it("draws an icon before its text", function()
 			local button = Button.new({ app = app, Parent = gui, text = "Settings", icon = "lucy:check" })
 			local root = button.Instance

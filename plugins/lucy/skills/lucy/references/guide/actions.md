@@ -69,7 +69,7 @@ app.actions:on("emoteShop", toggleEmoteShop)
 Lucy.Button.new({
     icon = "lucide-extended:shopping-bag-filled",
     text = "Emote Shop",
-    hint = { keyboard = Enum.KeyCode.B, gamepad = Enum.KeyCode.DPadRight },
+    hint = "emoteShop",
     onClick = toggleEmoteShop,
     Parent = scene.gui,
 })
@@ -100,10 +100,13 @@ app.actions:bind({
 
 `bind` replaces the keys. Saving a player's choice is up to your game.
 
-To show a key in your UI, `app.actions:keys("queue")` gives the keys for the
-input the player is using right now: the gamepad buttons on a gamepad, nothing
-on touch, the rest otherwise. Read it in a binding and it updates when the
-player picks up a controller or you change the keys.
+To show a key in your UI, give a [Button](../components/button.md#key-hints)
+`hint = "queue"`, or a [Kbd](../components/kbd.md) `action = "queue"`: it shows
+the action's key for the player's input and follows `bind`. For anything else,
+`app.actions:keys("queue")` gives the keys for the input the player is using
+right now: the gamepad buttons on a gamepad, nothing on touch, the rest
+otherwise. Read it in a binding and it updates when the player picks up a
+controller or you change the keys.
 
 ## Switch sets off
 

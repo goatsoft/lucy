@@ -6,6 +6,7 @@
 			keyboard = Enum.KeyCode.E,      -- a KeyCode or text
 			gamepad = Enum.KeyCode.DPadUp,  -- shown as the controller's own picture
 			touch = "Hold",                 -- optional; hidden on touch without it
+			action = "dance",               -- or: the keys of an action, kept up to date
 			variant = "color",              -- color | mono
 			Parent = row,
 		})
@@ -17,7 +18,10 @@
 	buttons take their controller's colours (Xbox A green, PlayStation cross
 	blue...); "mono" draws every button in the text colour.
 
-	State keys: keyboard, gamepad, touch, variant, visible.
+	With `action`, the action's keys (app.actions:keys) stand in for keyboard
+	and gamepad, and follow a rebind. Define the action first.
+
+	State keys: keyboard, gamepad, touch, action, variant, visible.
 	Parts: kbd.text (the label), kbd.glyph (the controller picture).
 	Kbd.label(key) and Kbd.glyph(keyCode) are the helpers it uses.
 ]]
@@ -210,12 +214,25 @@ end
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "kbd",
-	defaults = { keyboard = "", gamepad = "", touch = "", variant = "color", visible = true },
+	defaults = { keyboard = "", gamepad = "", touch = "", action = "", variant = "color", visible = true },
 	rules = Kbd.rules,
 	render = function(h)
 		checkVariant(h:get("variant"))
-		local keyboard, gamepad, touch, visible =
+		local rawKeyboard, rawGamepad, touch, visible =
 			h:ref("keyboard"), h:ref("gamepad"), h:ref("touch"), h:ref("visible")
+		local action = h:ref("action")
+		-- With an action, its first key for the current input stands in for the
+		-- keyboard and gamepad keys (keys() is tracked: input mode and rebinds).
+		local function fromAction(raw: () -> any): () -> any
+			return function(): any
+				local name = action()
+				if name ~= "" and name ~= nil then
+					return h.app.actions:keys(name)[1] or ""
+				end
+				return raw()
+			end
+		end
+		local keyboard, gamepad = fromAction(rawKeyboard), fromAction(rawGamepad)
 		local variant = h:ref("variant")
 		local mode = h.app.state:ref("input.mode")
 		local density = Composables.useDensity(h.app)

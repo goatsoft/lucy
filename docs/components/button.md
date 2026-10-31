@@ -40,7 +40,7 @@ Lucy.Stack.new({
 | `size` | string | `"md"` | yes | `sm`, `md`, `lg` or `icon` |
 | `disabled` | boolean | `false` | yes | Greys the button out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides the button |
-| `hint` | table | | | A key to show after the text: the props of a [Kbd](kbd.md). See below |
+| `hint` | table or string | | | A key to show after the text: the props of a [Kbd](kbd.md), or an action's name. See below |
 | `onClick` | function | | | Called with the handle when the button is clicked |
 
 It also takes the [props every component takes](index.md#using-a-component).
@@ -95,6 +95,24 @@ square with no room for the key cap, so give it `text` when it has a hint.
 It takes the same fields as [Kbd](kbd.md): `keyboard`, `gamepad` and `touch`,
 each a value, a ref or a getter. The hint only shows the key; binding the key
 to the button's action is up to your game.
+
+When the button does the same thing as one of your
+[actions](../guide/actions.md), give `hint` the action's name instead. The key
+cap then shows that action's keys, and follows them when a player changes them:
+
+```luau
+app.actions:on("dance", dance)
+
+Lucy.Button.new({
+    text = "Dance",
+    hint = "dance",
+    onClick = dance,
+    Parent = hud,
+})
+```
+
+Define the action before you make the button. For other Kbd fields as well,
+such as `variant`, pass a table: `hint = { action = "dance", variant = "mono" }`.
 
 With a hint, the text sits in `button.label` and the key cap is `button.hint`
 (a Kbd handle). Both follow the button's variant, size and disabled state.

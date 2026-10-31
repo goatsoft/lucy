@@ -10,6 +10,7 @@
 			disabled = false,
 			visible = true,
 			hint = { keyboard = Enum.KeyCode.E, gamepad = Enum.KeyCode.DPadUp }, -- optional key cap
+			-- or hint = "dance": the keys of that action, following a rebind
 			onClick = function(button) end,
 			id = "play",           -- state lives at ui.play
 			Parent = frame,
@@ -298,7 +299,8 @@ local spec: Component.Spec = {
 		local function enabled(): boolean
 			return not disabled()
 		end
-		local hint: { [string]: any }? = p.hint
+		-- A string hint is an action name: its keys, kept up to date.
+		local hint: { [string]: any }? = if type(p.hint) == "string" then { action = p.hint } else p.hint
 		local hasIcon = p.icon ~= nil
 		local label: TextLabel? = nil
 		local layout: UIListLayout? = nil

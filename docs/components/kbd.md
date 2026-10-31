@@ -54,6 +54,7 @@ Kbd only shows the key. Binding the key to an action is up to your game.
 | `keyboard` | KeyCode or string | | yes | Shown for keyboard and mouse |
 | `gamepad` | KeyCode or string | | yes | Shown for a controller, as its picture when it has one |
 | `touch` | string | | yes | Shown on touch, such as `"Tap"`. Without it, nothing shows on touch |
+| `action` | string | | yes | An [action](../guide/actions.md)'s name: its keys stand in for `keyboard` and `gamepad`, and follow a rebind. Define the action first |
 | `variant` | string | `"color"` | yes | `color` gives face buttons their controller colours; `mono` draws every button in the text colour |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
