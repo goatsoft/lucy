@@ -43,9 +43,9 @@ function movePanelLight(event: PointerEvent): void {
 // The four that matter most, as cards.
 const features = [
   { icon: Boxes, title: '35 components', text: 'Buttons, dialogs, selects, tables, sliders, tabs and more, ready for menus, HUDs and shops.' },
-  { icon: Atom, title: 'One source of truth', text: 'All UI and app state in one store. Change a value and only the properties that read it are set again.' },
+  { icon: Atom, title: 'One source of truth', text: 'All UI and app state in one store. Change a value and only the properties that read it are updated.' },
   { icon: Gamepad, title: 'Any input, any device', text: 'Mouse, keyboard, gamepad and touch, on desktop, console, tablet and phone. Controls grow for touch and TV.' },
-  { icon: SwatchBook, title: 'Themes', text: 'Light and dark themes for every base colour, switched while the game runs. Hover and theme changes run no Luau.' },
+  { icon: SwatchBook, title: 'Themes', text: 'Light and dark themes, switched while the game runs. Hover and theme changes run no Luau.' },
 ] as const
 
 // Everything else, as a short list under the cards.
@@ -53,11 +53,11 @@ const more = [
   { icon: Clapperboard, title: 'Scenes', text: 'Each screen on its own layer, so menus never take input from the screen below.' },
   { icon: Layers, title: 'Dialogs and sheets', text: 'Dialogs, sheets, selects and toasts float above the game, newest on top.' },
   { icon: Keyboard, title: 'Hotkeys', text: 'Name an action once for keyboard and gamepad, and switch it off while a menu is open.' },
-  { icon: Shapes, title: 'Any icon', text: 'Any Iconify icon by name, packed into a few images by the lucy-icons build.' },
+  { icon: Shapes, title: 'Any icon', text: 'Add any Iconify icon by name, its then packed into a sheet by the lucy-icons build.' },
   { icon: Orbit, title: 'Springs and tweens', text: 'Animate any property by binding it to a spring or a tween.' },
   { icon: Blocks, title: 'Code or Studio', text: 'Write UI in code, or add behaviour to UI you laid out in Studio.' },
   { icon: ScanEye, title: 'Preview in Studio', text: 'See any component or scene in Studio without pressing Play.' },
-  { icon: Bot, title: 'Ready for agents', text: 'Skills that teach Claude Code, Codex and Antigravity to build with Lucy.' },
+  { icon: Bot, title: 'Ready for agents', text: 'Skills that teach AI agents to build with Lucy.' },
   { icon: Feather, title: 'Small and tested', text: 'Strict types, no runtime dependencies and over 750 specs.' },
 ] as const
 
