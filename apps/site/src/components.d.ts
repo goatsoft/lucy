@@ -17,6 +17,8 @@ declare module 'vue' {
     ILcMenu: typeof import('~icons/lucide/menu')['default']
     ILcX: typeof import('~icons/lucide/x')['default']
     ILxBookOpenDuotone: typeof import('~icons/lucide-extended/book-open-duotone')['default']
+    ILxCodeDuotone: typeof import('~icons/lucide-extended/code-duotone')['default']
+    ILxEyeDuotone: typeof import('~icons/lucide-extended/eye-duotone')['default']
     ILxEyeFilled: typeof import('~icons/lucide-extended/eye-filled')['default']
     ILxFileCodeFilled: typeof import('~icons/lucide-extended/file-code-filled')['default']
     ILxHouseDuotone: typeof import('~icons/lucide-extended/house-duotone')['default']
