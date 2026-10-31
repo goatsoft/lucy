@@ -178,8 +178,11 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Overlay = "$Black",
 		OverlayTransparency = 0.5,
 		Success = "$Green600",
+		SuccessForeground = "$White",
 		Warning = "$Amber500",
+		WarningForeground = c(950),
 		Info = "$Blue600",
+		InfoForeground = "$White",
 	}
 
 	local dark = {
@@ -210,8 +213,11 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Overlay = "$Black",
 		OverlayTransparency = 0.3,
 		Success = "$Green500",
+		SuccessForeground = c(950),
 		Warning = "$Amber400",
+		WarningForeground = c(950),
 		Info = "$Blue500",
+		InfoForeground = "$White",
 	}
 
 	return { light = light, dark = dark }

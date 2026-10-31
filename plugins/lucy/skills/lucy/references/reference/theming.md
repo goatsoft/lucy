@@ -66,6 +66,7 @@ Without a `primary`, the `p` values fall back to the base colour shades shown.
 | `Ring` | the focus ring | p-400 (or c-400) | p-300 (or c-500) |
 | `Overlay`, `OverlayTransparency` | the scrim behind modals | Black, 0.5 | Black, 0.3 |
 | `Success`, `Warning`, `Info` | status colours | Green-600, Amber-500, Blue-600 | Green-500, Amber-400, Blue-500 |
+| `SuccessForeground`, `WarningForeground`, `InfoForeground` | text on a status colour | White, base 950, White | base 950, base 950, White |
 
 "At 90%" means composited over the background, as a browser would: a `Color3`
 has no transparency, so Lucy works the blend out when the theme is built.

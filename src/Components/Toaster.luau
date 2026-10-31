@@ -103,20 +103,34 @@ local rules: { Component.Rule } = {
 			TextSize = "$TextSm",
 		},
 	},
-	{
-		selector = ".ui-toast-accent",
-		priority = 0,
-		properties = { BackgroundTransparency = 1, BorderSizePixel = 0 },
-	},
-	{ selector = ".ui-toast-accent::UICorner", priority = 0, properties = { CornerRadius = "$RadiusFull" } },
 }
 Toaster.rules = rules
-for kind, token in { success = "$Success", error = "$Destructive", warning = "$Warning", info = "$Info" } do
-	table.insert(Toaster.rules, {
-		selector = `.ui-toast-accent-{kind}`,
-		priority = 10,
-		properties = { BackgroundColor3 = token, BackgroundTransparency = 0 },
-	})
+-- A kind colours the whole toast: background, border, text and the close icon
+-- (above the Button icon rules, which go up to 100).
+local KIND_COLOURS: { [string]: { string } } = {
+	success = { "$Success", "$SuccessForeground" },
+	error = { "$Destructive", "$DestructiveForeground" },
+	warning = { "$Warning", "$WarningForeground" },
+	info = { "$Info", "$InfoForeground" },
+}
+for kind, colours in KIND_COLOURS do
+	local fill, text = colours[1], colours[2]
+	local base = `.ui-toast-kind-{kind}`
+	for _, rule in
+		{
+			{ selector = base, properties = { BackgroundColor3 = fill } },
+			{ selector = base .. "::UIStroke", properties = { Color = fill } },
+			{ selector = base .. " >> .ui-toast-title", properties = { TextColor3 = text } },
+			{
+				selector = base .. " >> .ui-toast-description",
+				properties = { TextColor3 = text, TextTransparency = 0.15 },
+			},
+			{ selector = base .. " >> .ui-button-icon", properties = { ImageColor3 = text } },
+		} :: { any }
+	do
+		rule.priority = 200
+		table.insert(Toaster.rules, rule)
+	end
 end
 
 -- Pure list operations -------------------------------------------------------
@@ -336,7 +350,12 @@ local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, in
 		LayoutOrder = function()
 			return if h.atTop() then -index() else index()
 		end,
-		Tags = { "ui-toast" },
+		Tags = {
+			"ui-toast" :: any,
+			function(): string
+				return "ui-toast-kind-" .. toast().kind
+			end,
+		},
 		Element.new("Frame", {
 			Name = "Row",
 			BackgroundTransparency = 1,
@@ -348,20 +367,6 @@ local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, in
 				VerticalAlignment = Enum.VerticalAlignment.Center,
 				Padding = Component.space(app, "Space3", 12),
 			}) :: any,
-			Element.new("Frame", {
-				Name = "Accent",
-				Size = UDim2.fromOffset(4, 32),
-				LayoutOrder = 1,
-				Visible = function()
-					return toast().kind ~= "default"
-				end,
-				Tags = {
-					"ui-toast-accent" :: any,
-					function()
-						return "ui-toast-accent-" .. toast().kind
-					end,
-				},
-			}),
 			Element.new("Frame", {
 				Name = "Body",
 				BackgroundTransparency = 1,

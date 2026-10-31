@@ -191,13 +191,35 @@ return function()
 			end).to.throw()
 		end)
 
-		it("colours the accent by kind", function()
-			local id = app.toast.error("Nope")
+		it("colours the whole toast by kind", function()
+			local function parts(id)
+				local frame = app:portal("toast"):FindFirstChild(id, true)
+				return frame,
+					frame.Row.Body.Title,
+					frame.Row.Body.Description,
+					frame:FindFirstChild("Icon", true)
+			end
+			local function is(instance, property, token)
+				return Harness.colorEq(Harness.styled(instance, property), app.theme:resolve(token))
+			end
+			local plain = app.toast("Saved", { description = "All good" })
+			local errored = app.toast.error("Nope", { description = "Try again" })
+			local warned = app.toast.warning("Low ammo")
 			Harness.flush()
-			local accent = app:portal("toast"):FindFirstChild(id, true).Row.Accent
-			expect(
-				Harness.colorEq(Harness.styled(accent, "BackgroundColor3"), app.theme:resolve("Destructive"))
-			).to.equal(true)
+
+			local frame, title, description, icon = parts(errored)
+			expect(is(frame, "BackgroundColor3", "Destructive")).to.equal(true)
+			expect(is(title, "TextColor3", "DestructiveForeground")).to.equal(true)
+			expect(is(description, "TextColor3", "DestructiveForeground")).to.equal(true)
+			expect(is(icon, "ImageColor3", "DestructiveForeground")).to.equal(true)
+
+			frame, title = parts(warned)
+			expect(is(frame, "BackgroundColor3", "Warning")).to.equal(true)
+			expect(is(title, "TextColor3", "WarningForeground")).to.equal(true)
+
+			frame, title = parts(plain)
+			expect(is(frame, "BackgroundColor3", "Popover")).to.equal(true)
+			expect(is(title, "TextColor3", "PopoverForeground")).to.equal(true)
 		end)
 	end)
 end

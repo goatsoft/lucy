@@ -23,10 +23,10 @@ or gamepad focus.
 | Call | What it does |
 |---|---|
 | `app.toast(title, options?)` | Shows a toast and returns its id |
-| `app.toast.success(title, options?)` | A toast with a success colour |
-| `app.toast.error(title, options?)` | A toast with an error colour |
-| `app.toast.warning(title, options?)` | A toast with a warning colour |
-| `app.toast.info(title, options?)` | A toast with an info colour |
+| `app.toast.success(title, options?)` | A green toast |
+| `app.toast.error(title, options?)` | A red toast |
+| `app.toast.warning(title, options?)` | An amber toast |
+| `app.toast.info(title, options?)` | A blue toast |
 | `app.toast.dismiss(id?)` | Closes one toast, or all of them without an id |
 
 ## Options
@@ -48,6 +48,11 @@ Change these before the first toast shows:
 | `Lucy.Toaster.defaults.duration` | `4` | Seconds a toast stays when no `duration` is given |
 | `Lucy.Toaster.defaults.visibleToasts` | `3` | How many show at once; the newest win |
 | `Lucy.Toaster.defaults.width` | `356` | Width in pixels on desktop |
+
+A kind colours the whole toast with the theme's `Success`, `Destructive`,
+`Warning` or `Info` colour, and its text and close icon with the matching
+foreground, such as `SuccessForeground` (see [Theming](../reference/theming.md)).
+A plain toast uses the popover colours.
 
 ## Position
 
