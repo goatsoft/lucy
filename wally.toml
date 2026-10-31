@@ -3,7 +3,7 @@ name = "goatsoft/lucy"
 description = "Lucy: a UI and app framework for Roblox, built on Universal Styling"
 version = "0.1.0"
 license = "MIT"
-authors = ["JB (GOATsoft)"]
+authors = ["GOATsoft"]
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 # Only the Luau package ships (ADR 0012). Wally 0.3 ignores `include`, so this is an
