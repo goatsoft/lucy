@@ -50,6 +50,13 @@ function Tokens.over(fg: string, bg: string, alpha: number)
 	return { kind = "over", a = fg, b = bg, t = alpha }
 end
 
+-- Text that reads on `background`: whichever of `a` and `b` has more contrast,
+-- moved in lightness if needed to reach `min` (WCAG AA 4.5 by default). See
+-- Oklab.readable.
+function Tokens.readable(background: string, a: string, b: string, min: number?)
+	return { kind = "readable", background = background, a = a, b = b, min = min }
+end
+
 function Tokens.oklch(L: number, C: number, H: number): Color3
 	return Oklab.fromOklch(L, C, H)
 end
@@ -160,7 +167,8 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Popover = "$White",
 		PopoverForeground = c(950),
 		Primary = p(600, c(900)),
-		PrimaryForeground = p(50, c(50)),
+		-- Text on a fill is worked out for contrast (WCAG AA), whatever the colours.
+		PrimaryForeground = Tokens.readable("$Primary", p(50, c(50)), c(950)),
 		PrimaryHover = Tokens.over("$Primary", "$Background", 0.9),
 		Secondary = c(100),
 		SecondaryForeground = c(900),
@@ -170,7 +178,7 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Accent = c(100),
 		AccentForeground = c(900),
 		Destructive = "$Red600",
-		DestructiveForeground = "$White",
+		DestructiveForeground = Tokens.readable("$Destructive", "$White", c(950)),
 		DestructiveHover = Tokens.over("$Destructive", "$Background", 0.9),
 		Border = c(200),
 		Input = c(200),
@@ -178,11 +186,11 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Overlay = "$Black",
 		OverlayTransparency = 0.5,
 		Success = "$Green600",
-		SuccessForeground = "$White",
+		SuccessForeground = Tokens.readable("$Success", "$White", c(950)),
 		Warning = "$Amber500",
-		WarningForeground = c(950),
+		WarningForeground = Tokens.readable("$Warning", "$White", c(950)),
 		Info = "$Blue600",
-		InfoForeground = "$White",
+		InfoForeground = Tokens.readable("$Info", "$White", c(950)),
 	}
 
 	local dark = {
@@ -193,7 +201,7 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Popover = c(900),
 		PopoverForeground = c(50),
 		Primary = p(500, c(200)),
-		PrimaryForeground = p(50, c(900)),
+		PrimaryForeground = Tokens.readable("$Primary", p(50, c(50)), c(900)),
 		PrimaryHover = Tokens.over("$Primary", "$Background", 0.9),
 		Secondary = c(800),
 		SecondaryForeground = c(50),
@@ -203,7 +211,7 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Accent = c(800),
 		AccentForeground = c(50),
 		Destructive = "$Red400",
-		DestructiveForeground = "$White",
+		DestructiveForeground = Tokens.readable("$Destructive", "$White", c(950)),
 		DestructiveHover = Tokens.over("$Destructive", "$Background", 0.9),
 		-- border white/10%, input white/15% over the background
 		Border = Tokens.over("$White", "$Background", 0.1),
@@ -213,11 +221,11 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Overlay = "$Black",
 		OverlayTransparency = 0.3,
 		Success = "$Green500",
-		SuccessForeground = c(950),
+		SuccessForeground = Tokens.readable("$Success", "$White", c(950)),
 		Warning = "$Amber400",
-		WarningForeground = c(950),
+		WarningForeground = Tokens.readable("$Warning", "$White", c(950)),
 		Info = "$Blue500",
-		InfoForeground = "$White",
+		InfoForeground = Tokens.readable("$Info", "$White", c(950)),
 	}
 
 	return { light = light, dark = dark }
@@ -245,6 +253,16 @@ function Tokens.compute(derived: { [string]: any }, resolve: (string) -> any): a
 		end
 		-- Alpha compositing in gamma sRGB, as CSS does: bg * (1 - a) + fg * a
 		return b:Lerp(a, derived.t)
+	end
+	if kind == "readable" then
+		local function colour(value: any): any
+			return if isAlias(value) then resolve(value) else value
+		end
+		local background, a, b = colour(derived.background), colour(derived.a), colour(derived.b)
+		if typeof(background) ~= "Color3" or typeof(a) ~= "Color3" or typeof(b) ~= "Color3" then
+			error("[Lucy] readable needs three colours", 0)
+		end
+		return Oklab.readable(background, a, b, derived.min)
 	end
 	error(`[Lucy] unknown derived token kind "{tostring(derived.kind)}"`, 0)
 end

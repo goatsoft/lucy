@@ -52,6 +52,50 @@ return function()
 			end
 		end)
 
+		it("keeps text on every fill readable (WCAG AA) for every base, primary and theme", function()
+			local Palette = require(script.Parent.Palette)
+			local pairs = {
+				{ "Primary", "PrimaryForeground" },
+				{ "Destructive", "DestructiveForeground" },
+				{ "Success", "SuccessForeground" },
+				{ "Warning", "WarningForeground" },
+				{ "Info", "InfoForeground" },
+			}
+			local failures = {}
+			for _, base in Tokens.bases do
+				for hue, shades in Palette do
+					if not (shades[50] and shades[300] and shades[600]) then
+						continue -- not a hue, such as the white and black shades
+					end
+					for themeName, values in Tokens.themesFor(base, { primary = hue }) do
+						local resolved = Tokens.resolveTheme(values, Tokens.primitives)
+						local function colour(value)
+							for _ = 1, 16 do
+								if typeof(value) == "Color3" then
+									return value
+								end
+								local name = string.sub(value, 2)
+								value = if resolved[name] ~= nil
+									then resolved[name]
+									else Tokens.primitives[name]
+							end
+							return value
+						end
+						for _, pair in pairs do
+							local ratio = Oklab.contrast(colour(resolved[pair[2]]), colour(resolved[pair[1]]))
+							if ratio < 4.5 then
+								table.insert(
+									failures,
+									`{base}/{hue}/{themeName} {pair[2]} {string.format("%.2f", ratio)}`
+								)
+							end
+						end
+					end
+				end
+			end
+			expect(table.concat(failures, "; ")).to.equal("")
+		end)
+
 		it("tints primary with another hue", function()
 			local themes = Tokens.themesFor("slate", { primary = "violet" })
 			expect(themes.light.Primary).to.equal("$Violet600")
@@ -79,6 +123,13 @@ return function()
 				Tokens.resolveTheme({ M = Tokens.mix("$Black", "$White", 0.5) }, Tokens.primitives).M
 			local L = Oklab.toOklch(mixed)
 			expect(math.abs(L - 0.5) < 0.01).to.equal(true)
+		end)
+
+		it("works out readable text for a fill", function()
+			local values = { Fill = "$Amber400", Text = Tokens.readable("$Fill", "$White", "$Zinc950") }
+			local resolved = Tokens.resolveTheme(values, Tokens.primitives)
+			expect(typeof(resolved.Text)).to.equal("Color3")
+			expect(Oklab.contrast(resolved.Text, Oklab.palette("amber", 400)) >= 4.5).to.equal(true)
 		end)
 
 		it("reports unknown aliases and loops", function()

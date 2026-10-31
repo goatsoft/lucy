@@ -13,6 +13,9 @@
 		Oklab.mix(a, b, 0.1)                  --> perceptual mix, 10% of b
 		Oklab.adjust(color, { l = -0.05 })    --> shift lightness / chroma / hue
 		Oklab.toOklch(color)                  --> L, C, H
+		Oklab.contrast(text, background)      --> WCAG 2 contrast ratio, 1 to 21
+		Oklab.readable(background, a, b)      --> a or b, whichever reads; moved in
+		                                          lightness until it reaches 4.5:1
 
 	The pure functions (*Rgb) work on plain numbers so they run outside Roblox too.
 ]]
@@ -156,6 +159,64 @@ function Oklab.distance(a: Color3, b: Color3): number
 	local L1, a1, b1 = Oklab.toOklab(a)
 	local L2, a2, b2 = Oklab.toOklab(b)
 	return math.sqrt((L2 - L1) ^ 2 + (a2 - a1) ^ 2 + (b2 - b1) ^ 2)
+end
+
+-- WCAG 2 relative luminance (0 black to 1 white).
+function Oklab.luminance(color: Color3): number
+	return 0.2126 * toLinear(color.R) + 0.7152 * toLinear(color.G) + 0.0722 * toLinear(color.B)
+end
+
+-- WCAG 2 contrast ratio between two colours, 1 (none) to 21 (black on white).
+-- Body text needs 4.5 (level AA), large or bold text 3.
+function Oklab.contrast(a: Color3, b: Color3): number
+	local la, lb = Oklab.luminance(a), Oklab.luminance(b)
+	if la < lb then
+		la, lb = lb, la
+	end
+	return (la + 0.05) / (lb + 0.05)
+end
+
+local WHITE, BLACK = Color3.new(1, 1, 1), Color3.new(0, 0, 0)
+
+-- Moves `color` in OKLCH lightness, away from the background, until it reaches
+-- `min` against it. Nil if it gets to white or black first.
+local function pushApart(color: Color3, background: Color3, min: number): Color3?
+	local step = if Oklab.luminance(color) >= Oklab.luminance(background) then 0.01 else -0.01
+	local current = color
+	for _ = 1, 100 do
+		current = Oklab.adjust(current, { l = step })
+		if Oklab.contrast(current, background) >= min then
+			return current
+		end
+		local L = Oklab.toOklch(current)
+		if L <= 0 or L >= 1 then
+			return nil
+		end
+	end
+	return nil
+end
+
+--[[
+	Text for a background: of the two candidates, the one with more contrast. When
+	neither reaches `min` (4.5 by default, WCAG AA for body text), the better one
+	is moved in lightness, keeping its hue, until it does; then the other; and
+	last of all plain white or black, one of which always reaches 4.5.
+]]
+function Oklab.readable(background: Color3, a: Color3, b: Color3, min: number?): Color3
+	local target = min or 4.5
+	local ca, cb = Oklab.contrast(a, background), Oklab.contrast(b, background)
+	local best, other = a, b
+	if cb > ca then
+		best, other = b, a
+	end
+	if math.max(ca, cb) >= target then
+		return best
+	end
+	local moved = pushApart(best, background, target) or pushApart(other, background, target)
+	if moved then
+		return moved
+	end
+	return if Oklab.contrast(WHITE, background) >= Oklab.contrast(BLACK, background) then WHITE else BLACK
 end
 
 -- A palette colour: Oklab.palette("blue", 500)
