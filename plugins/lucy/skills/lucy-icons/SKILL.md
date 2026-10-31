@@ -32,10 +32,17 @@ the chevrons, `lucy:minus`, `lucy:plus`) that work with nothing set up.
    against a monthly limit, so build once after adding a batch of icons, not
    once per icon. If you cannot run it, write the names anyway and tell the
    user to run it: until then, an unknown name draws nothing and warns once.
+   If the game has no `lucy-icons.json` yet, setting it up is part of the
+   task: install the tool, add the config, and tell the user to build.
+   Until the build runs, an icon-only button is blank, so give it `text` too,
+   or fall back to text with `Lucy.Icon.has(name)`.
 4. Commit the generated module and `lucy-icons.lock.json`. Never edit either
    by hand (except adding a sheet id to the lock after a manual upload).
 5. Make sure the module is registered at client start, before any UI:
-   `Lucy.Icon.register(require(path.to.Icons))`.
+   `Lucy.Icon.register(require(path.to.Icons))`. The module is the file at
+   `output` in `lucy-icons.json`; find where the game's Rojo project puts
+   that folder. `Icon.register` needs no App, so it can run before
+   `App.new`.
 
 `npx lucy-icons build --check` fails when the module is out of date; use it
 before finishing.

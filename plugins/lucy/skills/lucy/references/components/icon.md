@@ -10,7 +10,7 @@ Lucy.Icon.new({ icon = "lucide:heart", variant = "destructive", Parent = row })
 
 ## Registering icons
 
-Apart from the few [icons Lucy draws](https://lucy.goatsoft.io/docs/guide/icons/#icons-lucy-draws) in its
+Apart from the few [icons Lucy draws](../../../lucy-icons/references/guide/icons.md#icons-lucy-draws) in its
 own components, icons come from your game. It registers a map of names to
 images once, before it builds any UI:
 
@@ -23,7 +23,7 @@ Lucy.Icon.register({
 
 Write the map yourself for your own images, or let the lucy-icons build make it
 from any [Iconify](https://icon-sets.iconify.design) icon you name in your
-code, such as `"lucide:heart"`. [Add icons](https://lucy.goatsoft.io/docs/guide/icons/) covers both,
+code, such as `"lucide:heart"`. [Add icons](../../../lucy-icons/references/guide/icons.md) covers both,
 with every field of the map.
 
 ## Props

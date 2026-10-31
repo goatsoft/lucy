@@ -7,6 +7,7 @@ description: Headings, body copy and labels.
 
 Text in the theme's fonts and colours: headings, body copy, muted notes and
 labels. It wraps to fill its parent's width unless you ask it to fit the text.
+`handle.Instance` is the TextLabel.
 
 ```luau
 Lucy.Text.new({ text = "My Game", variant = "h1", align = "center", Parent = frame })

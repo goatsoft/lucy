@@ -119,6 +119,9 @@ So a 16 pixel gap is 16 layout pixels: about 14 to 20 real pixels on a phone,
 and never less than 16 on a TV. Offsets, sizes and `UISizeConstraint` limits
 all scale this way. A phone uses a smaller base so text stays readable there.
 
+The scale is measured from each ScreenGui's own size, so a scene with safe area
+insets scales to fit the safe area.
+
 `Lucy.App.new({ adaptive = false })` turns scaling off. A table, such as
 `{ max = 1.5 }`, changes the numbers for every device. Text sizes and control
 heights also grow with the [density](reference/theming.md) (touch and TV).

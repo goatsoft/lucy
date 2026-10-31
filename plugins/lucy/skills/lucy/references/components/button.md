@@ -51,7 +51,7 @@ Lucy.Button.new({ icon = "lucide:settings", size = "icon", variant = "ghost", Pa
 
 `button.icon` is the [Icon](icon.md), and `button:set("icon", name)` changes it.
 A button made without `icon` has no icon to change. The name has to be
-registered first, like any icon; see [Icons](https://lucy.goatsoft.io/docs/guide/icons/).
+registered first, like any icon; see [Icons](../../../lucy-icons/references/guide/icons.md).
 
 ## Key hints
 

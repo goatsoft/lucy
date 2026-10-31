@@ -156,6 +156,15 @@ local Lucy = require(ReplicatedStorage.Packages.Lucy)
 Lucy.Icon.register(require(ReplicatedStorage.Shared.Icons))
 ```
 
+The module is the file at `output`. `ReplicatedStorage.Shared.Icons` is where
+a project that maps `src/shared` to `ReplicatedStorage.Shared` finds it; use
+your own project's path. `Icon.register` needs no App, so it can run before
+`App.new`.
+
+Until the build has run, a name draws nothing, so an icon-only button is
+blank. Give such a button `text` too, or check `Lucy.Icon.has(name)` and fall
+back to text.
+
 Run the build again whenever you use a new icon. The lock file remembers where
 each icon sits and which sheets are uploaded: new icons go at the end, so adding
 icons uploads only the last sheet, and removing icons uploads nothing. One sheet

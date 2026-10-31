@@ -112,7 +112,11 @@ Lucy.watch(player, callback)                                         -- deep, an
 - `Lucy.batch(fn)` groups writes; dependents run once, afterwards.
 - `Lucy.untrack(fn)` and `Lucy.peek(source)` read without subscribing.
 - `Lucy.isRef(x)` is true for refs and computeds; `Lucy.isWritable(x)` is true
-  for refs and computeds made with `{ get, set }`.
+  for refs and computeds made with `{ get, set }`; `Lucy.isReactive(x)` is true
+  for a table from `Lucy.reactive`.
+- `Lucy.trigger(ref)` tells everything that reads a ref that it changed. Use it
+  after changing a table inside a ref in place, since only setting the ref
+  tells them otherwise.
 - `Lucy.toValue(x)` reads a ref, computed or getter, and passes plain values through.
 
 An effect never triggers itself again by writing a ref it reads. Effects that keep
@@ -132,6 +136,10 @@ scope:run(function()
 end)
 scope:stop()   -- stops all of it
 ```
+
+Code with no owner, such as the top of a client script, can still use `watch`,
+`watchEffect`, elements and components. They last until you stop or destroy
+them. Only composables need an owner.
 
 ## Composables
 
@@ -208,6 +216,8 @@ Lucy.new "Frame" {
 }
 ```
 
+- The condition and the list can be a ref, a computed or a getter.
+- `render` returns an Instance, a component, or a list of them.
 - `show` builds a branch when the condition flips, and destroys the old one.
 - `each` keeps the instances for items that stay and only moves them; new items
   are rendered and removed ones destroyed. Items are matched by `key`, or by the
@@ -271,3 +281,20 @@ local fade = Lucy.tween(target, TweenInfo.new(0.25, Enum.EasingStyle.Quad))
 - When the player asks for reduced motion, springs and tweens of positions and
   sizes jump; colour and number tweens still fade. See
   [Accessibility](reference/accessibility.md#reduce-motion).
+
+To make something pop when a value changes, push the spring's target up and let
+it settle back:
+
+```luau
+local target = Lucy.ref(1)
+local scale = Lucy.spring(target, 12, 0.5)
+
+Lucy.watch(coins, function()
+    target(1.25)
+    task.delay(0.08, function()
+        target(1)
+    end)
+end)
+
+Lucy.new "UIScale" { Scale = scale, Parent = coinsLabel }
+```

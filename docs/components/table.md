@@ -29,7 +29,7 @@ Lucy.Table.new({
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
 | `columns` | table | | | The columns, see [Columns](#columns) |
-| `rows` | array, ref or getter | | | The rows, any tables you like |
+| `rows` | array, ref, computed or getter | | | The rows, any tables you like |
 | `rowId` | function | the position | | Gives each row an id, so updates change cells instead of rebuilding rows |
 | `rowHeight` | number | control height | | Each row's height in pixels |
 | `highlight` | function | | | Return `true` for rows to pick out, such as the player's own |

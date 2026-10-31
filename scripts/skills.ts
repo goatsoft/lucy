@@ -81,8 +81,12 @@ function siteUrl(doc: string, anchor: string): string {
 
 const problems: string[] = []
 
-/** Rewrites links to pages the skill leaves out, so every link still works. */
-function rewriteLinks(body: string, doc: string, included: Set<string>): string {
+/**
+ * Rewrites links to pages the skill leaves out, so every link still works: to
+ * another skill's copy when one has the page (skills ship side by side in the
+ * plugin), else to the website.
+ */
+function rewriteLinks(body: string, doc: string, included: Set<string>, skill: string): string {
   const from = posix.dirname(doc)
   // Skip fenced code: links there are examples, not links.
   return body
@@ -103,7 +107,13 @@ function rewriteLinks(body: string, doc: string, included: Set<string>): string 
               problems.push(`docs/${doc}: link to "${target}" has no page`)
               return whole
             }
-            return included.has(resolved) ? whole : `](${siteUrl(resolved, anchor)})`
+            if (included.has(resolved)) return whole
+            const other = Object.keys(skills).find(name => name !== skill && skills[name]?.includes(resolved))
+            if (other) {
+              const here = posix.dirname(posix.join(skill, 'references', doc))
+              return `](${posix.relative(here, posix.join(other, 'references', resolved))}${anchor})`
+            }
+            return `](${siteUrl(resolved, anchor)})`
           }),
     )
     .join('')
@@ -116,7 +126,7 @@ for (const [skill, pages] of Object.entries(skills)) {
   const included = new Set(pages)
   for (const doc of pages) {
     const page = readPage(doc)
-    wanted.set(join(SKILLS, skill, 'references', doc), HEADER(doc) + rewriteLinks(page.body, doc, included))
+    wanted.set(join(SKILLS, skill, 'references', doc), HEADER(doc) + rewriteLinks(page.body, doc, included, skill))
   }
 }
 

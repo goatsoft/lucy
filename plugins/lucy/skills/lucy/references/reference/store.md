@@ -171,7 +171,7 @@ Only the new item notifies; the items that were already there compare equal.
 
 A subscriber runs a function when the value at its path changes. Use one for
 work outside the UI: saving, sounds, analytics, telling the server. For the UI
-itself, bind instead.
+itself, bind instead, and in UI code follow a ref or computed with `Lucy.watch`.
 
 ```luau
 local stop = app.state:subscribe("player", function(new, old)

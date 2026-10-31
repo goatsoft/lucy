@@ -1,7 +1,8 @@
 <!-- Made by scripts/skills.ts from docs/components/progress.md. Edit the doc, not this file. -->
 # Progress
 
-A bar that fills from 0 to a maximum, for reloads, loading and health.
+A bar that fills from 0 to a maximum, for reloads, loading and health. It is
+as wide as its parent, so put it in a sized frame or Stack.
 
 ```luau
 Lucy.Progress.new({ id = "reload", value = 30, Parent = hud })

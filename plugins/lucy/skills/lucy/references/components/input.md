@@ -59,8 +59,16 @@ local search = Lucy.ref("")
 
 Lucy.Input.new({ placeholder = "Search items", value = search, Parent = shop })
 
-Lucy.watch(search, function(text)
-    filterItems(text)
+-- The items whose name has the search text, for a list's `data`
+local shown = Lucy.computed(function()
+    local text = string.lower(search())
+    local found = {}
+    for _, item in items do
+        if string.find(string.lower(item.name), text, 1, true) then
+            table.insert(found, item)
+        end
+    end
+    return found
 end)
 ```
 

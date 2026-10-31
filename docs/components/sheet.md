@@ -5,11 +5,14 @@ description: A panel from the side of the screen, a drawer from the bottom on to
 
 # Sheet
 
-A panel that slides in from the side of the screen, for settings, a shop or a
-friends list. On touch it comes up from the bottom instead, where a thumb can
+A panel that slides in from the side of the screen, for an inventory, a shop,
+a friends list or quick settings. A full settings or pause menu is better as a
+[modal scene](../guide/scenes.md#open-a-menu-on-top). On touch it comes up from the bottom instead, where a thumb can
 reach it. It has a title, a description, any content and a row of action
 buttons, like a [Dialog](dialog.md). Content longer than the screen scrolls
-inside it.
+inside it, so leave out a table's `maxHeight` inside a sheet, unless the table
+should scroll on its own with its header fixed. While a sheet is open it counts
+for `app:modalOpen()`; see [Hotkeys and modal input](../guide/actions.md#while-a-menu-is-open).
 
 ```luau
 local settings = Lucy.Sheet.new({

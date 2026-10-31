@@ -30,7 +30,7 @@ Lucy.DataGrid.new({
 
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
-| `data` | array, ref or getter | | | The rows, any tables you like |
+| `data` | array, ref, computed or getter | | | The rows, any tables you like |
 | `columns` | table | | | The columns, see [Columns](#columns) |
 | `rowId` | function | the position | | Gives each row an id, so updates change cells instead of rebuilding rows |
 | `sorting` | table or `false` | `false` | yes | The sort, `{ id = "price", desc = true }` |

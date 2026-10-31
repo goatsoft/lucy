@@ -66,7 +66,9 @@ app.scenes:register("Title", {
 | `ignoreGuiInset` | `true` (the default) draws under Roblox's top bar; see [Safe area](#safe-area) |
 
 `scene` is a table you can keep your own parts on, like `scene.play` above. It
-also has `scene.gui`, `scene.app`, `scene.params` and `scene.maid`.
+also has `scene.gui`, `scene.app`, `scene.params` and `scene.maid`, and Lucy uses
+`scene.name`, `scene.layer` and `scene.popScope`, so don't use those seven names
+for your own parts.
 `scene.maid:give(thing)` cleans up `thing` when the scene is destroyed: an
 Instance, a connection, a function to call, or anything with a `Destroy` or
 `destroy` method.
@@ -114,6 +116,14 @@ app.scenes:show("Hud")
 app.scenes:hide("Hud")
 ```
 
+Place each part of a HUD on the screen with `AnchorPoint` and `Position` on
+its `Instance`, such as coins top left and buttons in a Stack bottom centre;
+see [Using a component](../components/index.md#using-a-component).
+
+An overlay takes no focus of its own: keyboard and gamepad navigation stay on
+the screen or modal under it. Give an overlay's buttons a
+[hotkey](actions.md) too, so keyboard and gamepad players can reach them.
+
 ## Open a menu on top
 
 Modals stack. The newest is on top and takes keyboard and gamepad focus; the
@@ -129,9 +139,25 @@ Pushing a modal that's already open moves it to the top. `pop` returns the name
 of the scene it closed, or nil when none was open.
 
 A modal scene stops clicks reaching the scenes below it, but draws no dimmed
-backdrop and doesn't close when the player clicks outside it. Add your own
-backdrop if you want one, such as a full screen Frame with a `$Background` rule
-at half transparency.
+backdrop and doesn't close when the player clicks outside it. For a backdrop,
+add a full screen Frame with the theme's scrim tokens, the same ones dialogs
+use. They follow the player's background transparency setting:
+
+```luau
+app.theme:addRules("pause", {
+    {
+        selector = ".pause-backdrop",
+        properties = {
+            BackgroundColor3 = "$Overlay",
+            BackgroundTransparency = "$OverlayTransparency",
+            BorderSizePixel = 0,
+        },
+    },
+})
+
+-- in the scene's build
+Lucy.new "Frame" { Size = UDim2.fromScale(1, 1), Tags = { "pause-backdrop" }, Parent = scene.gui }
+```
 
 A pushed modal scene counts for `app:modalOpen()`, like an open dialog.
 
@@ -188,3 +214,7 @@ Writing them navigates too: `app.state:set("scenes.current", "Game")` is the sam
 as `goTo("Game")`. `app.scenes:current()`, `isVisible(name)` and `get(name)` (the
 scene table, once built) read them directly, and `app.scenes.Changed` fires with
 the new and old screen.
+
+`scenes.current` is nil until the first `goTo`. `isVisible(name)` is true for
+any scene showing: a screen, an overlay or a pushed modal. The modal on top is
+the last name in `scenes.stack`.

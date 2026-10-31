@@ -26,7 +26,7 @@ Lucy.DataGrid.new({
 
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
-| `data` | array, ref or getter | | | The rows, any tables you like |
+| `data` | array, ref, computed or getter | | | The rows, any tables you like |
 | `columns` | table | | | The columns, see [Columns](#columns) |
 | `rowId` | function | the position | | Gives each row an id, so updates change cells instead of rebuilding rows |
 | `sorting` | table or `false` | `false` | yes | The sort, `{ id = "price", desc = true }` |
@@ -68,7 +68,7 @@ app.state:set("ui.shop.sorting", { id = "owned", desc = true })
 ```
 
 A sorted header shows `lucy:chevron-up` or `lucy:chevron-down`. To use your own
-icons, see [Icons Lucy draws](https://lucy.goatsoft.io/docs/guide/icons/#icons-lucy-draws).
+icons, see [Icons Lucy draws](../../../lucy-icons/references/guide/icons.md#icons-lucy-draws).
 
 ## Methods and events
 

@@ -43,7 +43,8 @@ Without a `Parent`, it goes into the app's modal layer, above every scene. A
 dialog opened later shows above one opened earlier.
 
 When the content is taller than `maxHeight`, or than the screen, the body
-scrolls and the title and actions stay where they are.
+scrolls and the title and actions stay where they are. So leave out a table's
+`maxHeight` inside a dialog, unless the table should scroll on its own.
 
 While a modal dialog is open, keyboard and gamepad focus stay inside it. When
 it opens on a keyboard or gamepad, its last action (the main one) is selected,

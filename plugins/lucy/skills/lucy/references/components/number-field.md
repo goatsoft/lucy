@@ -40,10 +40,11 @@ It also takes the [props every component takes](index.md#using-a-component).
 A typed number counts when the player presses Enter or leaves the field. It is
 snapped to the step and kept between `min` and `max`; anything that is not a
 number puts the old value back. Steps count from `min` when there is one, from
-zero when not. A button turns grey at the end it moves towards.
+zero when not. Values are cleaned up after each step, so 0.1 steps give 0.3,
+not 0.30000000000000004. A button turns grey at the end it moves towards.
 
 The buttons draw the `lucy:minus` and `lucy:plus` icons. To use your own, see
-[Icons Lucy draws](https://lucy.goatsoft.io/docs/guide/icons/#icons-lucy-draws).
+[Icons Lucy draws](../../../lucy-icons/references/guide/icons.md#icons-lucy-draws).
 
 ## Methods
 

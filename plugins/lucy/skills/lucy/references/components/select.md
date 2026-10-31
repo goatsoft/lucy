@@ -80,7 +80,7 @@ A long list scrolls inside the space it has. B, Backspace or a press outside
 closes it without changing anything.
 
 The button draws `lucy:chevron-down`, and a `check` select draws `lucy:check`.
-To use your own, see [Icons Lucy draws](https://lucy.goatsoft.io/docs/guide/icons/#icons-lucy-draws).
+To use your own, see [Icons Lucy draws](../../../lucy-icons/references/guide/icons.md#icons-lucy-draws).
 
 ## Methods and events
 

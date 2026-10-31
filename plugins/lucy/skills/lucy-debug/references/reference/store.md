@@ -7,7 +7,7 @@ it. Bindings, computeds and effects that read the store run again when what they
 read changes, and nothing else does.
 
 This page explains how the store is built, lists every method, and sets out the
-rules. For a walkthrough, see [Work with app state](https://lucy.goatsoft.io/docs/guide/app-state/).
+rules. For a walkthrough, see [Work with app state](../../../lucy/references/guide/app-state.md).
 
 ## What it holds
 
@@ -171,7 +171,7 @@ Only the new item notifies; the items that were already there compare equal.
 
 A subscriber runs a function when the value at its path changes. Use one for
 work outside the UI: saving, sounds, analytics, telling the server. For the UI
-itself, bind instead.
+itself, bind instead, and in UI code follow a ref or computed with `Lucy.watch`.
 
 ```luau
 local stop = app.state:subscribe("player", function(new, old)

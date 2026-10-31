@@ -35,7 +35,7 @@ with every field of the map.
 | `variant` | string | `"default"` | yes | The colour: `default` (the text colour), `muted`, `primary`, `destructive`, `success`, `warning` or `info` |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
-It also takes the [props every component takes](https://lucy.goatsoft.io/docs/components/#using-a-component).
+It also takes the [props every component takes](../../../lucy/references/components/index.md#using-a-component).
 
 A name that was never registered draws nothing and warns once in the output,
 so the rest of the screen still builds. Register before you build: an icon
@@ -72,7 +72,7 @@ Lucy.Item.new({
 })
 ```
 
-For artwork that keeps its colours, such as a song cover, use [Image](https://lucy.goatsoft.io/docs/components/image/).
+For artwork that keeps its colours, such as a song cover, use [Image](../../../lucy/references/components/image.md).
 
 ## Preview
 
