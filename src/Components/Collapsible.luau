@@ -95,7 +95,9 @@ Collapsible.rules = {
 	{
 		selector = ".ui-collapsible-content-variant-default::UIPadding",
 		priority = VARIANT,
-		properties = { PaddingBottom = "$Space4" },
+		-- In from the sides, so a full-width control (a Slider, a Progress) clears the
+		-- edges; more on the chevron's side, so nothing sits under the chevron.
+		properties = { PaddingLeft = "$Space3", PaddingRight = "$Space6", PaddingBottom = "$Space4" },
 	},
 	{
 		selector = ".ui-collapsible-content-variant-details::UIPadding",

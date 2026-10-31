@@ -176,4 +176,26 @@ return function()
 		Preferences.setReducedMotion(nil)
 		assert(ok, err)
 	end)
+
+	it("pads the content in from the sides, more on the chevron side", function()
+		local c = Collapsible.new({
+			app = app,
+			Parent = gui,
+			text = "Music",
+			open = true,
+			content = box(20),
+		})
+		c.Instance.Size = UDim2.fromOffset(300, 0)
+		Harness.flush()
+		settle(0.5)
+		local inner = c.content:FindFirstChild("Box") :: Frame
+		local scale = Scroll.scaleOf(c.Instance)
+		local left = (inner.AbsolutePosition.X - c.Instance.AbsolutePosition.X) / scale
+		local right = (
+			(c.Instance.AbsolutePosition.X + c.Instance.AbsoluteSize.X)
+			- (inner.AbsolutePosition.X + inner.AbsoluteSize.X)
+		) / scale
+		expect(math.abs(left - 12) <= 1).to.equal(true)
+		expect(math.abs(right - 24) <= 1).to.equal(true)
+	end)
 end
