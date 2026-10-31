@@ -161,6 +161,8 @@ app.toast.success("Round won", { description = "+$250" })
   open, and a way to stop the character moving under a dialog.
 - Any Iconify icon by name, packed into a few uploaded images by the
   lucy-icons build.
+- UI in the world: SurfaceGuis on parts and BillboardGuis over heads that
+  follow the theme and take clicks.
 - `Lucy.hydrate` to add behaviour to UI built in Studio.
 - Stories that preview any component or scene in Studio without pressing Play.
 - Devtools that show a running UI, and press and focus things as a player

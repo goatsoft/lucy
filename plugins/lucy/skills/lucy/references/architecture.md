@@ -15,6 +15,7 @@ App ─────────────── one per client, owns everythin
 ├─ SceneManager     one ScreenGui per scene, layers, stack, overlays
 ├─ Adaptive         UIScale per gui with device profiles, constraints, StyleQuery
 ├─ portals          shared ScreenGuis: "modal" (900), "toast" (1000)
+├─ World           SurfaceGuis and BillboardGuis on parts (createSurface, createBillboard)
 └─ toast            toast API, installed when Components/Toaster exists
 ```
 
@@ -94,6 +95,10 @@ Every token, option and method is in the [theming reference](reference/theming.m
 | portal: toast | 1000 | toasts | app.toast |
 
 [Build screens with scenes](guide/scenes.md) shows how to register and move between them.
+
+UI in the world is not a layer: `app:createSurface` and `app:createBillboard` make
+SurfaceGuis and BillboardGuis on parts, on the theme but never scaled for the
+screen and never navigation targets. See [UI in the world](guide/world-ui.md).
 
 ## Scaling
 

@@ -12,6 +12,7 @@
 		app.scenes  SceneManager, title screen / game / menus (ADR 0005)
 		app.toast   toast notifications, if the Toaster component is present
 		app:modalOpen()  true while a modal dialog, sheet, popup or modal scene is open (tracked)
+		app:createSurface(name, opts) / app:createBillboard(name, opts)  UI in the world (Core/World)
 		App.current()    the app made with setCurrent (the default), for other scripts
 
 	config:
@@ -59,6 +60,7 @@ local SceneManager = require(script.Parent.SceneManager)
 local Signal = require(script.Parent.Signal)
 local Theme = require(script.Parent.Theme)
 local Tokens = require(script.Parent.Tokens)
+local World = require(script.Parent.World)
 
 local App = {}
 App.__index = App
@@ -358,6 +360,17 @@ function App.createGui(self: App, name: string, options: { [string]: any }?): Sc
 	end)
 	gui.Parent = opts.parent or self.parent
 	return gui
+end
+
+-- A SurfaceGui on a part, in the app's parent and theme, never scaled for the screen.
+-- Goes when the part goes and with the app. See Core/World for the options.
+function App.createSurface(self: App, name: string, options: { [string]: any }?): SurfaceGui
+	return World.surface(self, name, options)
+end
+
+-- A BillboardGui over a part or attachment, the same way. See Core/World.
+function App.createBillboard(self: App, name: string, options: { [string]: any }?): BillboardGui
+	return World.billboard(self, name, options)
 end
 
 -- Enabled app guis, topmost first (keyboard navigation searches these).

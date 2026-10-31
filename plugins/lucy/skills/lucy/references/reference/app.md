@@ -56,7 +56,9 @@ Every option is optional.
 | `app:setDensity(name)` | Same as `app.theme:setDensity(name)` |
 | `app:handle(id)` | The component with that id, or nil |
 | `app:createGui(name, options?)` | A ScreenGui on the App's theme and scaling. Options: `displayOrder`, `ignoreGuiInset` (`true`), `enabled` (`true`), `parent` |
-| `app:destroy()` | Removes the App and everything it made, except ScreenGuis from `createGui`: destroy those yourself |
+| `app:createSurface(name, options)` | A SurfaceGui on a part, on the App's theme, that takes clicks. See [UI in the world](../guide/world-ui.md) |
+| `app:createBillboard(name, options)` | A BillboardGui over a part or attachment, the same way. See [UI in the world](../guide/world-ui.md) |
+| `app:destroy()` | Removes the App and everything it made, world guis included, except ScreenGuis from `createGui`: destroy those yourself |
 
 Scenes already give you a ScreenGui each (`scene.gui`), so use `createGui` only
 for UI that lives outside scenes.
