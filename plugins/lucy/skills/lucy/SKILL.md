@@ -157,7 +157,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Architecture](references/architecture.md): How App, AppState, Theme, scenes and input fit together.
 - [Reactivity](references/reactivity.md): ref, computed, reactive and watch; Lucy.new for declarative UI; springs and tweens.
 - [Components](references/components/index.md): Every Lucy component, how to use one and how to write your own.
-- [Accessibility](references/guide/accessibility.md): What Lucy does out of the box so players can read, reach and use your UI, and the Roblox settings it will follow next.
+- [Make your UI accessible](references/guide/accessibility.md): Check your own UI so every player can read it, reach it with a keyboard or gamepad, and use it at any text size.
 - [Hotkeys and modal input](references/guide/actions.md): Name your game's actions once for keyboard and gamepad, switch them off while a menu is open, and stop the character moving under a dialog.
 - [Work with app state](references/guide/app-state.md): Keep game data in the app's store and bind UI to it with state:ref, state.root, lists and subscribers.
 - [Build a component](references/guide/components.md): Write a Stepper component step by step, with state keys, h:ref, bindings, methods and a value bound to app state.
@@ -165,6 +165,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Build screens with scenes](references/guide/scenes.md): Split your UI into scenes, move between screens, show a HUD over them, open a pause menu on top, and handle back with a gamepad.
 - [Add a theme](references/guide/themes.md): Pick your game's colours, let players switch light and dark, make a theme of your own, and style your own UI with the same tokens.
 - [Stories and preview](references/stories.md): Write stories for your UI and preview them in Studio, in edit mode or in Play.
+- [Accessibility](references/reference/accessibility.md): What Lucy does so players can read, reach and use your UI, the contrast it promises, and the Roblox accessibility settings it follows.
 - [Composables](references/reference/composables.md): Every composable Lucy comes with, what each one takes and returns, and when to use it.
 - [Devtools](references/reference/devtools.md): Look at a running UI in Studio, and press, set and focus things the way a player would, from the command bar or a coding agent.
 - [The store](references/reference/store.md): How app.state works, what it holds, every method, and the rules for reading, writing and following it.

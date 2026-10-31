@@ -1,7 +1,7 @@
 ---
 title: Composables
 description: Every composable Lucy comes with, what each one takes and returns, and when to use it.
-order: 2
+order: 4
 ---
 
 # Composables

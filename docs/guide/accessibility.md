@@ -1,31 +1,49 @@
 ---
-title: Accessibility
-description: What Lucy does out of the box so players can read, reach and use your UI, and the Roblox settings it will follow next.
-order: 10
+title: Make your UI accessible
+description: Check your own UI so every player can read it, reach it with a keyboard or gamepad, and use it at any text size.
+order: 7
 ---
 
-# Accessibility
+# Make your UI accessible
 
-Lucy aims to make the accessible choice the default one, so a game gets it
-without extra work. This page lists what it does today and what is still to
-come.
+Lucy's components are readable and reachable out of the box. This guide covers
+the parts that depend on your own UI: the colours you pick, where focus starts,
+and how you size and animate things. What Lucy does by itself is in
+[Accessibility](../reference/accessibility.md).
 
-## Colour and contrast
+## Use the text tokens
 
-Every colour pair a component puts text on is worked out, not hand picked:
+Text on a fill uses the fill's matching `*Foreground` token, never `$White` or
+`$Black`. The foreground is worked out to read on its fill in every theme, so
+your rule stays right when the theme changes.
 
-- **Text on a fill** (buttons, badges, toasts, checked boxes) uses the theme's
-  `*Foreground` tokens. Each is the fill's own colour taken to its darkest or
-  lightest, like red-950 or red-200 on red, so it reads as part of the fill
-  rather than black or white stuck on top.
-- **Alerts** use a pale wash of their colour with text in a deep shade of it
-  (`DestructiveSubtle` and `DestructiveSubtleForeground`, and so on).
-- **Every one reaches WCAG AA**, a contrast of 4.5:1 for body text. If the
-  chosen shade falls short, Lucy moves it lighter or darker in OKLCH, keeping
-  its hue, until it reaches 4.5:1. This holds for every base colour, every
-  primary hue and both themes, and Lucy's specs check all of them.
+```luau
+local rules = {
+    {
+        selector = ".shop-badge",
+        properties = {
+            BackgroundColor3 = "$Primary",
+            TextColor3 = "$PrimaryForeground",
+        },
+    },
+    {
+        selector = ".shop-sold-out",
+        properties = {
+            BackgroundColor3 = "$DestructiveSubtle",
+            TextColor3 = "$DestructiveSubtleForeground",
+        },
+    },
+}
+```
 
-A theme of your own gets the same with `Lucy.Tokens.onColor`:
+For a pale wash behind a message, like an alert, use the `*Subtle` pair:
+`DestructiveSubtle` with `DestructiveSubtleForeground`, and the same for
+`Success`, `Warning` and `Info`.
+
+## Check colours of your own
+
+If you add a colour token, give it a foreground with `Lucy.Tokens.onColor`
+rather than picking one by eye:
 
 ```luau
 local themes = Lucy.Tokens.themesFor("slate", { primary = "lime" })
@@ -33,47 +51,58 @@ themes.dark.Primary = "$Lime300"
 themes.dark.PrimaryForeground = Lucy.Tokens.onColor("$Primary")
 ```
 
-For your own UI, `Lucy.Oklab.contrast(a, b)` gives the WCAG ratio between two
-colours, and `Lucy.Oklab.onColor(fill)` gives readable text for a fill. See
-[Theming](../reference/theming.md).
+To check any two colours, `Lucy.Oklab.contrast(a, b)` gives their contrast ratio.
+Body text needs at least 4.5:1, large text and icons at least 3:1:
 
-Don't let colour carry meaning alone. A toast or alert has a title that says
-what happened; give status icons a label too.
+```luau
+print(Lucy.Oklab.contrast(Color3.fromRGB(255, 200, 0), Color3.new(1, 1, 1))) -- 1.6, too low
+```
 
-## Keyboard and gamepad
+Do this for both themes: a colour that reads on light can fail on dark.
 
-Everything that can be pressed can be reached without a mouse or touch:
+## Don't rely on colour alone
 
-- Tab and the arrow keys move focus on a keyboard, the thumbstick and D-pad on
-  a gamepad. The focused control shows a focus ring in the theme's `Ring`
-  colour.
-- A modal or menu keeps focus inside it until it closes, then gives it back.
-- Escape and the gamepad's B button go back: they close the top modal or call
-  the screen's `onBack`.
-- `defaultFocus` picks where focus starts on each screen. See
-  [Scenes](scenes.md).
+Some players can't tell red from green. Say what happened in words as well: a
+toast or alert has a title, and a status icon gets a label next to it.
 
-## Sizes
+## Start focus somewhere useful
 
-On touch devices the controls grow to the `touch` density: a medium control is
-44 px high, the size touch guidelines ask for. On a TV, text and controls grow
-again so they read from across the room. Both follow the device on their own.
-See [Theming](../reference/theming.md#densities).
+Keyboard and gamepad players start each screen on its `defaultFocus`. Point it at
+the thing they most likely want, such as Play on a title screen:
 
-## Still to come
+```luau
+app.scenes:register("Title", {
+    build = function(scene)
+        scene.play = Lucy.Button.new({ text = "Play", Parent = scene.gui })
+        -- ...
+    end,
+    defaultFocus = function(scene)
+        return scene.play
+    end,
+})
+```
 
-Roblox players can set a few accessibility options in the Roblox menu, and Lucy
-doesn't follow them yet:
+Then try every screen without a mouse: Tab and the arrow keys on a keyboard,
+the thumbstick and D-pad on a gamepad, Escape or B to go back. Every control
+you can click should be reachable, and back should always lead somewhere. See
+[Build screens with scenes](scenes.md).
 
-| Roblox setting | What Lucy would do |
-|---|---|
-| Reduced motion (`GuiService.ReducedMotionEnabled`) | Skip or shorten tweens, slides and spinners |
-| Text size (`GuiService.PreferredTextSize`) | Scale the `Text*` tokens, and the controls with them |
-| Background transparency (`GuiService.PreferredTransparency`) | Make see-through panels and the modal scrim more solid |
+## Let controls size themselves
 
-Other options under consideration:
+Players can make text larger in the Roblox menu, and Roblox then draws all text
+bigger. Text in a box with a fixed pixel height gets cut off. Size controls
+with the density tokens (`$ControlMd` and the rest) or `AutomaticSize`, and let
+labels wrap with `TextWrapped`, rather than fixing heights in pixels.
 
-- A **high contrast** theme option that raises the target from AA (4.5:1) to AAA
-  (7:1) for every pair.
-- A check for **colour vision deficiencies**, so status colours stay apart for
-  players who can't tell red from green.
+## Animate through Lucy
+
+Move things with `Lucy.tween` and `Lucy.spring` rather than `TweenService`, so
+your animations follow the same rules as Lucy's own when a player asks for less
+motion. Keep motion short, and never make it the only sign that something
+happened.
+
+## Next
+
+- [Accessibility](../reference/accessibility.md): the contrast Lucy promises, focus,
+  sizes and the Roblox settings it follows
+- [Theming](../reference/theming.md): every colour token and the `Tokens` helpers

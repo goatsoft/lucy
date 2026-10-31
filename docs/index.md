@@ -141,10 +141,11 @@ app.toast.success("Round won", { description = "+$250" })
 
 ## Next
 
+- [Build screens with scenes](guide/scenes.md): screens, a HUD, menus on top, and back
+- [Add a theme](guide/themes.md): your game's colours, light and dark, and a theme of your own
+- [Make your UI accessible](guide/accessibility.md): readable colours, focus, text size and motion
 - [Components](components/index.md): a page for each component with its props and examples
 - [Stories and preview](stories.md): see your UI in Studio without pressing Play
-- [Architecture](architecture.md): how the pieces fit together
 - [Use Lucy with agents](guide/agents.md): give your coding agent Lucy's skills
-- [Add a theme](guide/themes.md): your game's colours, light and dark, and a theme of your own
-- [Build screens with scenes](guide/scenes.md): screens, a HUD, menus on top, and back
+- [Architecture](architecture.md): how the pieces fit together
 - [Benchmarks](benchmarks.md): what mounting and updating UI costs

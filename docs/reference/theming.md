@@ -1,7 +1,7 @@
 ---
 title: Theming
 description: Every theme option, colour token, primitive and density value, the Tokens helpers, app.theme's methods and how style rules work.
-order: 3
+order: 5
 ---
 
 # Theming

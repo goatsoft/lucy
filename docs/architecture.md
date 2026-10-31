@@ -1,7 +1,7 @@
 ---
 title: Architecture
 description: How App, AppState, Theme, scenes and input fit together.
-order: 2
+order: 1
 ---
 
 # Lucy architecture

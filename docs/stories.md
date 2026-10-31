@@ -1,7 +1,7 @@
 ---
 title: Stories and preview
 description: Write stories for your UI and preview them in Studio, in edit mode or in Play.
-order: 2
+order: 7
 ---
 
 # Stories and preview

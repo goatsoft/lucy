@@ -395,6 +395,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/accessibility': RouteRecordInfo<
+      '/docs/reference/accessibility',
+      '/docs/reference/accessibility',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/composables': RouteRecordInfo<
       '/docs/reference/composables',
       '/docs/reference/composables',
@@ -854,6 +861,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reactivity.md': {
       routes:
         | '/docs/reactivity'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/accessibility.md': {
+      routes:
+        | '/docs/reference/accessibility'
       views:
         | never
       pathParamNames:

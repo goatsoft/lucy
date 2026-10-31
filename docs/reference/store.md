@@ -1,7 +1,7 @@
 ---
 title: The store
 description: How app.state works, what it holds, every method, and the rules for reading, writing and following it.
-order: 1
+order: 3
 ---
 
 # The store

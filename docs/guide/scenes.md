@@ -1,7 +1,7 @@
 ---
 title: Build screens with scenes
 description: Split your UI into scenes, move between screens, show a HUD over them, open a pause menu on top, and handle back with a gamepad.
-order: 4
+order: 2
 ---
 
 # Build screens with scenes
