@@ -105,13 +105,19 @@ grows by as much as the text in it does.
 This holds in every density. `useMetric` and `app.theme:resolve` give the grown
 heights.
 
+### Background transparency
+
+`GuiService.PreferredTransparency`, a number from 0 to 1, 1 by default. Lucy
+multiplies every theme token whose name ends in `Transparency` by it, so 0
+makes those backgrounds solid. In the built in themes that is
+`OverlayTransparency`, the dimmed backdrop behind dialogs and other modal
+overlays. A token of your own, like `PanelTransparency`, follows it the same
+way. Transparency used to show a disabled control is set in rules, not tokens,
+and stays.
+
 ### Still to come
 
-| Setting | What Lucy will do |
-|---|---|
-| Background transparency (`GuiService.PreferredTransparency`) | Make see-through panels and the modal scrim more solid |
-
-Other options under consideration:
+Options under consideration:
 
 - A **high contrast** option that raises the target from 4.5:1 to 7:1 (WCAG AAA)
   for every pair.
@@ -129,5 +135,7 @@ them update when they change.
 | `setReducedMotion(on)` | sets reduced motion from your game's own settings; `nil` follows Roblox again |
 | `textSize()` | the player's text size: `"Medium"` (the default), `"Large"`, `"Larger"` or `"Largest"` |
 | `added(size)` | how many pixels taller Roblox draws text of `size` at that text size |
+| `transparency()` | how see-through backgrounds should be, from `0` (solid) to `1` (as designed): the game's own setting if it set one, otherwise the Roblox one |
+| `setTransparency(value)` | sets it from your game's own settings, kept between 0 and 1; `nil` follows Roblox again |
 
 Text size can't be set: Roblox draws the text, so Lucy only follows it.

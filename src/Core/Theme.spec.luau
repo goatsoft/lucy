@@ -131,6 +131,38 @@ return function()
 		end)
 	end)
 
+	describe("transparency", function()
+		local seeThrough = {
+			name = "LucyTest_ThemeSeeThrough",
+			primitives = config.primitives,
+			themes = {
+				light = { Primary = "$Red", OverlayTransparency = 0.5 },
+				dark = { Primary = "$Blue", OverlayTransparency = 0.3 },
+			},
+			default = "light",
+			baseRules = false,
+		}
+		local function near(a: number, b: number): boolean
+			return math.abs(a - b) < 1e-6
+		end
+
+		it("multiplies every see-through token by the scale, in every theme", function()
+			theme = Theme.new(seeThrough)
+			theme:setTransparency(0.5)
+			expect(near(theme:resolve("OverlayTransparency"), 0.25)).to.equal(true)
+			theme:set("dark")
+			expect(near(theme:resolve("OverlayTransparency"), 0.15)).to.equal(true)
+		end)
+
+		it("makes them solid at 0, and nil puts the theme's own values back", function()
+			theme = Theme.new(seeThrough)
+			theme:setTransparency(0)
+			expect(theme:resolve("OverlayTransparency")).to.equal(0)
+			theme:setTransparency(nil)
+			expect(near(theme:resolve("OverlayTransparency"), 0.5)).to.equal(true)
+		end)
+	end)
+
 	describe("base rules", function()
 		it("are added by default", function()
 			theme = Theme.new({ name = "LucyTest_Base" })

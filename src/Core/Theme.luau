@@ -52,6 +52,8 @@ export type Theme = typeof(setmetatable(
 		_densities: { [string]: StyleSheet },
 		_densityValues: { [string]: { [string]: any } },
 		_grow: ((size: number) -> number)?,
+		_seeThrough: { [string]: { [string]: number } },
+		_transparency: number,
 		_tokens: StyleSheet,
 		_themeDerive: StyleDerive,
 		_densityDerive: StyleDerive,
@@ -178,6 +180,8 @@ function Theme.new(config: { [string]: any }?): Theme
 	self._rules = {}
 	self._themes = {}
 	self._densities = {}
+	self._seeThrough = {}
+	self._transparency = 1
 
 	local folder = Instance.new("Folder")
 	folder.Name = options.name or "LucyStyles"
@@ -196,9 +200,18 @@ function Theme.new(config: { [string]: any }?): Theme
 		derive.StyleSheet = tokens
 		derive.Parent = sheet
 		-- Derived tokens (mix/over) are computed against this theme's own values.
-		setAttributes(sheet, Tokens.resolveTheme(values, primitives))
+		local resolved = Tokens.resolveTheme(values, primitives)
+		setAttributes(sheet, resolved)
 		sheet.Parent = folder
 		self._themes[name] = sheet
+		-- See-through tokens and their designed values, for setTransparency.
+		local seeThrough = {}
+		for token, value in resolved do
+			if type(value) == "number" and string.sub(token, -12) == "Transparency" then
+				seeThrough[token] = value
+			end
+		end
+		self._seeThrough[name] = seeThrough
 	end
 
 	for name, values in densities do
@@ -309,6 +322,26 @@ function Theme.setTextGrowth(self: Theme, grow: ((size: number) -> number)?)
 		end
 	end
 	self.MetricsChanged:Fire()
+end
+
+--[[
+	Makes see-through backgrounds more solid: every number token whose name
+	ends in Transparency (the modal scrim's OverlayTransparency) is multiplied
+	by `scale`, in every theme. 0 is solid; nil puts the designed values back.
+	App sets this from the player's background transparency (Core/Preferences).
+]]
+function Theme.setTransparency(self: Theme, scale: number?)
+	local value = if scale == nil then 1 else math.clamp(scale, 0, 1)
+	if value == self._transparency then
+		return
+	end
+	self._transparency = value
+	for name, tokens in self._seeThrough do
+		local sheet = self._themes[name]
+		for token, base in tokens do
+			sheet:SetAttribute(token, base * value)
+		end
+	end
 end
 
 local function read(self, name: string): any

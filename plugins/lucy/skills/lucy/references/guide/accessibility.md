@@ -102,6 +102,30 @@ local rules = {
 If code needs a control's height in pixels, `Lucy.useMetric(app, "ControlMd")`
 follows both the density and the player's text size.
 
+## Keep see-through backgrounds in tokens
+
+Players can ask for solid backgrounds in the Roblox menu. Lucy makes every
+theme token whose name ends in `Transparency` more solid to match, so put the
+transparency of a see-through panel in a token rather than in the rule:
+
+```luau
+local themes = Lucy.Tokens.themesFor("slate")
+themes.light.PanelTransparency = 0.2
+themes.dark.PanelTransparency = 0.2
+
+local app = Lucy.App.new({ themes = themes })
+
+local rules = {
+    {
+        selector = ".hud-panel",
+        properties = { BackgroundColor3 = "$Card", BackgroundTransparency = "$PanelTransparency" },
+    },
+}
+```
+
+Text over a see-through panel has to stay readable over whatever the game shows
+behind it, so check it against the busiest scene, not the panel colour.
+
 ## Animate through Lucy
 
 Move things with `Lucy.spring` and `Lucy.tween` rather than `TweenService`.

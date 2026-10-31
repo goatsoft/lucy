@@ -141,6 +141,7 @@ function App.new(config: { [string]: any }?): App
 	self.maid:give(self.theme)
 
 	-- Roblox draws text larger at the player's text size; controls grow to fit.
+	-- See-through backgrounds follow the player's background transparency.
 	local function grow(size: number): number
 		return Preferences.added(size)
 	end
@@ -149,6 +150,9 @@ function App.new(config: { [string]: any }?): App
 		Reactive.watchEffect(function()
 			local larger = Preferences.textSize() ~= "Medium"
 			self.theme:setTextGrowth(if larger then grow else nil)
+		end)
+		Reactive.watchEffect(function()
+			self.theme:setTransparency(Preferences.transparency())
 		end)
 	end)
 	self.maid:give(function()

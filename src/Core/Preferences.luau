@@ -6,9 +6,11 @@
 		Lucy.Preferences.reducedMotion()  -- true when the player asked for less motion
 		Lucy.Preferences.textSize()       -- "Medium" | "Large" | "Larger" | "Largest"
 		Lucy.Preferences.added(14)        -- px Roblox adds to 14 px text at that size
+		Lucy.Preferences.transparency()   -- 1 by default; 0 asks for solid backgrounds
 
-	Both follow GuiService live. A game with its own "reduce motion" toggle sets
-	it with Preferences.setReducedMotion(true); nil follows Roblox again. Text
+	All follow GuiService live. A game with its own "reduce motion" toggle sets
+	it with Preferences.setReducedMotion(true), and its own "solid backgrounds"
+	toggle with Preferences.setTransparency(0); nil follows Roblox again. Text
 	size can't be set: Roblox draws the text, so Lucy only follows it.
 
 	What Lucy does with them:
@@ -17,6 +19,8 @@
 	                  The Switch thumb jumps, the Spinner pulses, a Collapsible
 	                  opens at once.
 	  text size       control heights grow by what their text grows (App, Theme).
+	  transparency    see-through backgrounds (the modal scrim) are multiplied by
+	                  it, so 0 makes them solid (App, Theme).
 ]]
 
 local GuiService = game:GetService("GuiService")
@@ -40,9 +44,18 @@ local function readTextSize(): string
 	return if ok and type(value) == "string" then value else "Medium"
 end
 
+local function readTransparency(): number
+	local ok, value = pcall(function()
+		return GuiService.PreferredTransparency
+	end)
+	return if ok and type(value) == "number" then math.clamp(value, 0, 1) else 1
+end
+
 local deviceMotion = Reactive.ref(readMotion())
 local deviceTextSize = Reactive.ref(readTextSize())
+local deviceTransparency = Reactive.ref(readTransparency())
 local motionOverride: Reactive.Ref<boolean?> = Reactive.ref(nil :: boolean?)
+local transparencyOverride: Reactive.Ref<number?> = Reactive.ref(nil :: number?)
 
 -- Reading GuiService fails outside a client in some contexts; then the defaults stand.
 pcall(function()
@@ -51,6 +64,9 @@ pcall(function()
 	end)
 	GuiService:GetPropertyChangedSignal("PreferredTextSize"):Connect(function()
 		deviceTextSize(readTextSize())
+	end)
+	GuiService:GetPropertyChangedSignal("PreferredTransparency"):Connect(function()
+		deviceTransparency(readTransparency())
 	end)
 end)
 
@@ -84,11 +100,29 @@ function Preferences.added(size: number): number
 	return math.max(0, math.ceil(bounds.Y - size))
 end
 
+--[[
+	How see-through backgrounds should be, from 0 (solid) to 1 (as designed):
+	the game's own setting if it set one, else Roblox's background transparency.
+]]
+function Preferences.transparency(): number
+	local override = transparencyOverride()
+	if override ~= nil then
+		return override
+	end
+	return deviceTransparency()
+end
+
+-- Set it from the game's own settings, kept between 0 and 1; nil follows Roblox.
+function Preferences.setTransparency(value: number?)
+	transparencyOverride(if value == nil then nil else math.clamp(value, 0, 1))
+end
+
 -- Tests: stand in for the Roblox settings. A key left out reads GuiService again.
-function Preferences._setDevice(values: { reducedMotion: boolean?, textSize: string? })
+function Preferences._setDevice(values: { reducedMotion: boolean?, textSize: string?, transparency: number? })
 	Reactive.batch(function()
 		deviceMotion(if values.reducedMotion ~= nil then values.reducedMotion else readMotion())
 		deviceTextSize(values.textSize or readTextSize())
+		deviceTransparency(values.transparency or readTransparency())
 	end)
 end
 
