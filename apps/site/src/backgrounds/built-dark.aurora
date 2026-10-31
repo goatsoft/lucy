@@ -1,0 +1,113 @@
+{
+  "$schema": "https://aurora.goatsoft.io/schema/v1.json",
+  "format": "aurora",
+  "version": 1,
+  "name": "Lucy CRT Radar",
+  "canvas": {
+    "fade": "y"
+  },
+  "motion": {
+    "speed": 1,
+    "reduced": "still"
+  },
+  "modifiers": {
+    "signal": {
+      "amount": 0.08,
+      "shake": 0.35,
+      "tearSize": 0.22,
+      "separation": 0.7,
+      "tracking": 0.25,
+      "frequency": 0.35,
+      "seed": 5
+    },
+    "vignette": {
+      "amount": 0.6,
+      "radius": 0.5,
+      "softness": 0.5
+    }
+  },
+  "palette": [
+    "oklch(0.07 0.012 288)",
+    "oklch(0.3 0.12 292)",
+    "oklch(0.55 0.18 300)",
+    "oklch(0.33 0.08 280)",
+    "oklch(0.85 0.11 224)",
+    "oklch(0.35 0.12 292)",
+    "oklch(0.75 0.15 300)",
+    "oklch(0.806 0.119 223.8)",
+    "oklch(0.683 0.265 332.6)"
+  ],
+  "layers": [
+    {
+      "type": "radar",
+      "colors": [
+        0,
+        1,
+        2
+      ],
+      "params": {
+        "speed": 0.05,
+        "scale": 1.5,
+        "rings": 5,
+        "contacts": 8,
+        "persistence": 0.5,
+        "grid": 0.3,
+        "seed": 3
+      }
+    },
+    {
+      "type": "static",
+      "blend": "screen",
+      "opacity": 0.3,
+      "colors": [
+        0,
+        3,
+        4
+      ],
+      "params": {
+        "size": 2,
+        "rate": 12,
+        "contrast": 0.5,
+        "interference": 0.6,
+        "dropout": 0.45,
+        "seed": 4
+      }
+    },
+    {
+      "type": "scanlines",
+      "blend": "screen",
+      "opacity": 0.55,
+      "colors": [
+        0,
+        5,
+        6
+      ],
+      "params": {
+        "spacing": 4,
+        "softness": 0.35,
+        "strength": 0.6,
+        "speed": 0.15,
+        "roll": 0.7,
+        "phase": 0.2
+      }
+    },
+    {
+      "type": "glitch",
+      "blend": "screen",
+      "opacity": 0.45,
+      "colors": [
+        0,
+        7,
+        8
+      ],
+      "params": {
+        "frequency": 0.25,
+        "strength": 1,
+        "bands": 48,
+        "density": 0.22,
+        "separation": 0.9,
+        "seed": 6
+      }
+    }
+  ]
+}

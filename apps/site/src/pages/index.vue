@@ -5,6 +5,8 @@ import { RouterLink } from 'vue-router'
 import heroDark from '@/backgrounds/hero-dark.aurora'
 import panelSignalDark from '@/backgrounds/panel-signal-dark.aurora'
 import panelSignalLight from '@/backgrounds/panel-signal-light.aurora'
+import builtDark from '@/backgrounds/built-dark.aurora'
+import builtLight from '@/backgrounds/built-light.aurora'
 import heroLight from '@/backgrounds/hero-light.aurora'
 import terminalDark from '@/backgrounds/terminal-dark.aurora'
 import terminalLight from '@/backgrounds/terminal-light.aurora'
@@ -205,26 +207,33 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
       </div>
     </section>
 
-    <section class="mx-auto max-w-3xl px-6 py-20 text-center">
-      <p class="eyebrow">
-        Architecture
-      </p>
-      <h2 class="mx-auto mt-4 max-w-2xl font-display text-heading font-semibold tracking-tight text-balance">
-        How it is built
-      </h2>
-      <p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-pretty text-muted-foreground">
-        Each client has one App. It holds the UI state in a single tree, the theme, input and focus, the scenes and the toasts.
-        Every component keeps its state in that tree, builds its instances once and binds their properties to the state.
-        Looks come from Universal Styling rules matched by tags.
-      </p>
-      <div class="mt-8 flex justify-center">
-        <Button
-          variant="glass"
-          :as="RouterLink"
-          to="/docs/architecture"
-        >
-          Architecture guide <ILcChevronRight />
-        </Button>
+    <!-- A faint radar on the same CRT screen as the feature panels. -->
+    <section class="relative isolate overflow-hidden">
+      <ThemedBackground
+        :dark="builtDark"
+        :light="builtLight"
+      />
+      <div class="mx-auto max-w-3xl px-6 py-28 text-center">
+        <p class="eyebrow">
+          Architecture
+        </p>
+        <h2 class="mx-auto mt-4 max-w-2xl font-display text-heading font-semibold tracking-tight text-balance">
+          How it is built
+        </h2>
+        <p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-pretty text-muted-foreground">
+          Each client has one App. It holds the UI state in a single tree, the theme, input and focus, the scenes and the toasts.
+          Every component keeps its state in that tree, builds its instances once and binds their properties to the state.
+          Looks come from Universal Styling rules matched by tags.
+        </p>
+        <div class="mt-8 flex justify-center">
+          <Button
+            variant="glass"
+            :as="RouterLink"
+            to="/docs/architecture"
+          >
+            Architecture guide <ILcChevronRight />
+          </Button>
+        </div>
       </div>
     </section>
   </main>
