@@ -1,6 +1,6 @@
 # 0030: Lucy follows the player's background transparency
 
-- Status: proposed
+- Status: accepted (JB, 2026-10-31)
 - Date: 2026-10-31
 
 ## Context
