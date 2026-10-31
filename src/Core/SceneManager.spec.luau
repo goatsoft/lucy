@@ -89,6 +89,29 @@ return function()
 			expect(app.state:get("scenes.current")).to.equal("Game")
 		end)
 
+		it("names the scene when its build fails, and builds it again next time", function()
+			local fail = true
+			scenes:register("Broken", {
+				build = function(scene)
+					if fail then
+						error("no coins", 0)
+					end
+					local frame = Instance.new("Frame")
+					frame.Name = "Root"
+					frame.Parent = scene.gui
+				end,
+			})
+			local ok, err = pcall(function()
+				scenes:_build("Broken")
+			end)
+			expect(ok).to.equal(false)
+			expect(string.find(tostring(err), 'scene "Broken"', 1, true) ~= nil).to.equal(true)
+			expect(string.find(tostring(err), "no coins", 1, true) ~= nil).to.equal(true)
+			fail = false
+			local scene = scenes:_build("Broken")
+			expect(scene.gui:FindFirstChild("Root") ~= nil).to.equal(true)
+		end)
+
 		it("errors on unknown scenes and wrong layers", function()
 			expect(function()
 				scenes:goTo("Nope")

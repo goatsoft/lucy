@@ -210,7 +210,17 @@ function SceneManager._build(self: SceneManager, name: string): Scene
 	end
 	self._scenes[name] = scene
 	if def.build then
-		def.build(scene)
+		-- A failed build is dropped, so the next visit builds it again, and its
+		-- error names the scene (it reaches the game through a state subscriber).
+		local ok, err = xpcall(def.build, function(message)
+			return `{tostring(message)}\n{debug.traceback(nil, 2)}`
+		end, scene)
+		if not ok then
+			self._scenes[name] = nil
+			scene.maid:clean()
+			gui:Destroy()
+			error(`[Lucy] scene "{name}" failed to build: {err}`, 0)
+		end
 	end
 	return scene
 end
