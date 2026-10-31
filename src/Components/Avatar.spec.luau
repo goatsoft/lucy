@@ -34,6 +34,22 @@ return function()
 		expect(avatar.monogram.Visible).to.equal(false)
 	end)
 
+	it("takes its name as a getter, for initials only", function()
+		local who = Reactive.ref("DJ God")
+		local avatar = Avatar.new({
+			app = app,
+			Parent = gui,
+			userId = 0,
+			name = function()
+				return who()
+			end,
+		})
+		expect(avatar.monogram.Text).to.equal("DG")
+		expect(avatar.Instance.Name).to.equal("avatar")
+		who("Nova")
+		expect(avatar.monogram.Text).to.equal("N")
+	end)
+
 	it("shows a monogram for a bot or no player", function()
 		local userId = Reactive.ref(-3)
 		local avatar = Avatar.new({ app = app, Parent = gui, userId = userId, name = "DJ God" })

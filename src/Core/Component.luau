@@ -490,7 +490,10 @@ function Component.mount(spec: Spec, props: Props?): Handle
 	end
 	local root = rendered
 	handle.Instance = root
-	root.Name = props.name or root.Name ~= root.ClassName and root.Name or kind
+	-- Only a plain string names the Instance: a component may take `name` as a getter
+	-- for its own use (an Avatar's initials).
+	local name = props.name
+	root.Name = type(name) == "string" and name or root.Name ~= root.ClassName and root.Name or kind
 	if props.layoutOrder then
 		root.LayoutOrder = props.layoutOrder
 	end
