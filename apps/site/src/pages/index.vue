@@ -130,6 +130,11 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
               :dark="panelSignalDark"
               :light="panelSignalLight"
             />
+            <!-- Calms the screen behind the text, strongest at the top where the words are. -->
+            <div
+              aria-hidden="true"
+              class="absolute inset-0 -z-10 bg-linear-to-b from-background/75 via-background/50 to-background/15"
+            />
             <!-- A violet glow from the corner on hover. -->
             <div
               aria-hidden="true"

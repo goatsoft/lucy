@@ -2,31 +2,35 @@
   "$schema": "https://aurora.goatsoft.io/schema/v1.json",
   "format": "aurora",
   "version": 1,
-  "name": "Lucy Panel Signal",
+  "name": "Lucy CRT",
   "motion": {
     "speed": 1,
     "reduced": "still"
   },
   "modifiers": {
     "signal": {
-      "amount": 0.06,
-      "shake": 0.3,
-      "tearSize": 0.1,
-      "separation": 0.55,
-      "tracking": 0.2,
-      "frequency": 0.3,
+      "amount": 0.1,
+      "shake": 0.35,
+      "tearSize": 0.22,
+      "separation": 0.7,
+      "tracking": 0.25,
+      "frequency": 0.35,
       "seed": 5
     },
     "vignette": {
-      "amount": 0.4,
-      "radius": 0.55,
+      "amount": 0.55,
+      "radius": 0.5,
       "softness": 0.5
     }
   },
   "palette": [
-    "oklch(0.17 0.014 288)",
-    "oklch(0.3 0.08 292)",
-    "oklch(0.55 0.21 293)",
+    "oklch(0.09 0.015 288)",
+    "oklch(0.55 0.22 293)",
+    "oklch(0.6 0.22 335)",
+    "oklch(0.33 0.08 280)",
+    "oklch(0.85 0.11 224)",
+    "oklch(0.35 0.12 292)",
+    "oklch(0.75 0.15 300)",
     "oklch(0.806 0.119 223.8)",
     "oklch(0.683 0.265 332.6)"
   ],
@@ -39,64 +43,65 @@
         2
       ],
       "params": {
-        "spacing": 6,
-        "strength": 0.45,
-        "glow": 0.45,
-        "speed": 0.05
+        "spacing": 14,
+        "glow": 0.7,
+        "strength": 0.6,
+        "speed": 0.06,
+        "phase": 0.3
       }
     },
     {
       "type": "static",
       "blend": "screen",
-      "opacity": 0.16,
-      "colors": [
-        0,
-        1,
-        2
-      ],
-      "params": {
-        "size": 1,
-        "rate": 8,
-        "contrast": 0.35,
-        "interference": 0.35,
-        "dropout": 0.35,
-        "seed": 4
-      }
-    },
-    {
-      "type": "glitch",
-      "blend": "screen",
-      "opacity": 0.35,
+      "opacity": 0.5,
       "colors": [
         0,
         3,
         4
       ],
       "params": {
-        "frequency": 0.2,
-        "strength": 0.5,
-        "bands": 30,
-        "density": 0.15,
-        "separation": 0.6,
-        "seed": 6
+        "size": 2,
+        "rate": 12,
+        "contrast": 0.55,
+        "interference": 0.6,
+        "dropout": 0.45,
+        "seed": 4
       }
     },
     {
       "type": "scanlines",
       "blend": "screen",
-      "opacity": 0.4,
+      "opacity": 0.8,
       "colors": [
         0,
-        1,
-        2
+        5,
+        6
       ],
       "params": {
-        "spacing": 3,
-        "softness": 0.6,
-        "strength": 0.4,
-        "speed": 0.03,
-        "roll": 0.45,
+        "spacing": 4,
+        "softness": 0.35,
+        "strength": 0.65,
+        "speed": 0.05,
+        "roll": 0.75,
         "phase": 0.2
+      }
+    },
+    {
+      "type": "glitch",
+      "blend": "screen",
+      "opacity": 0.6,
+      "colors": [
+        0,
+        7,
+        8
+      ],
+      "params": {
+        "frequency": 0.25,
+        "strength": 0.9,
+        "bands": 12,
+        "density": 0.3,
+        "separation": 0.85,
+        "seed": 6
       }
     }
   ]
