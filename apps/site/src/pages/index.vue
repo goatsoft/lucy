@@ -32,6 +32,14 @@ useHead({ description: SITE.description })
 // The hero's background follows the pointer over the whole section.
 const hero = ref<HTMLElement>()
 
+// The feature panels' glow is a light that follows the pointer across the panel.
+function movePanelLight(event: PointerEvent): void {
+  const panel = event.currentTarget as HTMLElement
+  const box = panel.getBoundingClientRect()
+  panel.style.setProperty('--light-x', `${event.clientX - box.left}px`)
+  panel.style.setProperty('--light-y', `${event.clientY - box.top}px`)
+}
+
 // The four that matter most, as cards.
 const features = [
   { icon: Boxes, title: '35 components', text: 'Buttons, dialogs, selects, tables, sliders, tabs and more, ready for menus, HUDs and shops.' },
@@ -126,7 +134,8 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
           <article
             v-for="feature in features"
             :key="feature.title"
-            class="group relative isolate overflow-hidden rounded-2xl border border-border bg-surface p-6 shadow-[inset_0_1px_0_0_color-mix(in_oklab,white_8%,transparent)] transition duration-300 hover:border-primary/50 motion-safe:hover:-translate-y-0.5"
+            @pointermove="movePanelLight"
+            class="group relative isolate overflow-hidden rounded-2xl border border-border bg-surface p-6 [--light-x:0px] [--light-y:0px] shadow-[inset_0_1px_0_0_color-mix(in_oklab,white_8%,transparent)] transition duration-300 hover:border-primary/50 motion-safe:hover:-translate-y-0.5"
           >
             <ThemedBackground
               :dark="panelSignalDark"
@@ -137,10 +146,10 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
               aria-hidden="true"
               class="absolute inset-0 -z-10 bg-linear-to-t from-background via-background/70 to-background/10"
             />
-            <!-- A violet glow from the corner on hover. -->
+            <!-- A violet light under the pointer while it is over the panel. -->
             <div
               aria-hidden="true"
-              class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_0%_0%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_65%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              class="absolute inset-0 -z-10 bg-[radial-gradient(circle_16rem_at_var(--light-x)_var(--light-y),color-mix(in_oklab,var(--primary)_22%,transparent),transparent_65%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
             />
             <div class="grid size-11 place-items-center rounded-xl bg-linear-to-br from-primary/25 to-primary/5 text-primary ring-1 ring-primary/25 ring-inset shadow-[0_8px_24px_-12px_var(--primary)] transition-transform duration-300 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6 [&_svg]:size-6">
               <component
