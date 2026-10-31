@@ -1,6 +1,6 @@
 # 0007: First-class mouse, keyboard, gamepad and touch; Lucy owns focus
 
-- Status: accepted
+- Status: accepted; amended by 0031 (back keys are ButtonB and Backspace, not Escape)
 - Date: 2026-10-30
 
 ## Context
