@@ -152,6 +152,7 @@ Lucy.useUiSound(app, { activate = playClick })           -- the game's own sound
 local board = Lucy.useTable({ data = dancers, columns = columns })  -- sorted rows
 Lucy.useWhile(isOpen, function() return signal:Connect(onBeat) end)  -- only while open
 local timer = Lucy.useCountdown(setEndsAt)                 -- timer.remaining(), timer.done()
+local drag = Lucy.useDrag(viewport, { onMove = spin })   -- drag.dragging(), drag.delta()
 ```
 
 Write your own the same way: take refs or getters, return refs or computeds, and

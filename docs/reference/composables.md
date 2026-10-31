@@ -35,6 +35,7 @@ To write your own, see [Share logic with composables](../guide/composables.md).
 | [`useTable`](#usetable) | Sorted rows from your data and a list of columns |
 | [`useWhile`](#usewhile) | Sets something up while a condition is true and cleans it up when it turns false |
 | [`useCountdown`](#usecountdown) | Whole seconds left until a time, for round and event timers |
+| [`useDrag`](#usedrag) | Follows the mouse or a finger dragging from a frame, such as a model the player spins |
 
 ## useDensity
 
@@ -250,3 +251,41 @@ the end time from your server once; there is no need to send every second.
 
 With no end time (`nil`), `remaining` is 0 and `done` is `false`. When the end
 time changes, the count follows it.
+
+## useDrag
+
+```luau
+local angle = Lucy.ref(0)
+local start = 0
+
+local drag = Lucy.useDrag(viewport, {
+    onStart = function()
+        start = angle()
+    end,
+    onMove = function(delta)
+        angle(start - delta.X * 0.015)
+    end,
+})
+```
+
+Follows a drag that starts with a press on `target`, a GuiObject or a ref or
+getter for one (such as `h:ref` in a component). Moving anywhere on the screen
+moves it, and letting go ends it. Positions are screen pixels.
+
+| Option | What it does |
+|---|---|
+| `onStart(point)` | Called on the press, with where it was |
+| `onMove(delta, point)` | Called as it moves, with how far from the press and where it is now |
+| `onEnd(delta)` | Called when it ends, with how far it moved |
+| `disabled` | A ref or getter. While true, presses do nothing, and turning it on ends a drag |
+
+| Name | What it is |
+|---|---|
+| `dragging` | `true` from the press until it ends |
+| `delta` | How far it has moved since the press, `Vector2.zero` when not dragging |
+| `cancel()` | Ends the drag now, calling `onEnd` |
+
+The left mouse button and one finger drag. When the owner stops mid drag, the
+drag ends and `onEnd` is called. A gamepad has no pointer, so give console
+players the same thing on a stick or buttons, such as an
+[action](../guide/actions.md) that turns the model.

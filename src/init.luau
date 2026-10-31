@@ -103,6 +103,7 @@ local Lucy = {
 	useTable = Composables.useTable,
 	useWhile = Composables.useWhile,
 	useCountdown = Composables.useCountdown,
+	useDrag = Composables.useDrag,
 
 	-- Animation (Core/Animate)
 	spring = Animate.spring,
