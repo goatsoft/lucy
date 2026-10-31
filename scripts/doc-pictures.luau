@@ -365,6 +365,27 @@ local function fixtures(lucy, slot)
 			size = "sm",
 		})
 	end
+	-- Sections of the Queue: a few tracks each, made fresh for every section that opens.
+	local function trackList(from, to)
+		return function()
+			local items = {}
+			for i = from, to do
+				local t = tracks[i]
+				items[#items + 1] = S.Lucy.Item.new({
+					title = t.title,
+					description = `{t.artist}, {t.bpm} BPM`,
+					size = "sm",
+				})
+			end
+			return S.Lucy.Stack.new({ gap = "Space2", children = items })
+		end
+	end
+	f.upNextList = trackList(1, 2)
+	f.requestList = trackList(3, 4)
+	f.partyList = trackList(1, 1)
+	f.partyLive = false
+	-- A set that ends in a minute and a half, for countdowns.
+	f.setEndsAt = workspace:GetServerTimeNow() + 95
 	f.boothButtons = {
 		S.Lucy.Button.new({ text = "Play", icon = "lucide-extended:play-filled" }),
 		S.Lucy.Button.new({
@@ -420,6 +441,7 @@ local function fixtures(lucy, slot)
 			"column",
 			"queueList",
 			"queue",
+			"queuePanel",
 			"leaderboard",
 			"booth",
 			"lobby",

@@ -72,7 +72,7 @@ See [Responsive values](index.md#responsive-values) for every key you can use.
 
 Centre the Lobby title screen:
 
-<!-- preview -->
+<!-- preview solo -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-stack-3-light.webp" alt="Stack example" loading="lazy"><img class="example-dark" src="/images/examples/components-stack-3-dark.webp" alt="Stack example" loading="lazy"></figure>
 
 ```luau
