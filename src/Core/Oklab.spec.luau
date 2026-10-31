@@ -95,6 +95,49 @@ return function()
 			expect(Oklab.contrast(text, grey) >= 4.5).to.equal(true)
 		end)
 
+		it("tints text with the fill's own hue, at its darkest or lightest", function()
+			local function hueGap(a: number, b: number): number
+				local d = math.abs(a - b) % 360
+				return math.min(d, 360 - d)
+			end
+			for _, swatch in
+				{
+					{ "red", 400 },
+					{ "red", 600 },
+					{ "amber", 400 },
+					{ "green", 600 },
+					{ "blue", 500 },
+					{ "blue", 600 },
+					{ "violet", 600 },
+				}
+			do
+				local fill = Oklab.palette(swatch[1], swatch[2])
+				local text = Oklab.onColor(fill)
+				local _, fillC, fillH = Oklab.toOklch(fill)
+				local L, C, H = Oklab.toOklch(text)
+				local where = `{swatch[1]}-{swatch[2]}`
+				expect(Oklab.contrast(text, fill) >= 4.5).to.equal(true)
+				-- Dark text always carries the hue; light text can end up near white
+				-- when only that reaches AA (white on red-600 is 4.6).
+				if L < 0.5 then
+					expect(C > 0.02).to.equal(true)
+				end
+				if C > 0.01 then
+					expect(hueGap(H, fillH) < 20).to.equal(true)
+				end
+				expect(L < 0.4 or L > 0.9).to.equal(true)
+				local _ = fillC
+				local __ = where
+			end
+		end)
+
+		it("stays neutral on a neutral fill", function()
+			local text = Oklab.onColor(Oklab.palette("zinc", 900))
+			local _, C = Oklab.toOklch(text)
+			expect(C < 0.02).to.equal(true)
+			expect(Oklab.contrast(text, Oklab.palette("zinc", 900)) >= 4.5).to.equal(true)
+		end)
+
 		it("takes another target ratio", function()
 			local grey = Color3.fromRGB(128, 128, 128)
 			local text = Oklab.readable(grey, Color3.fromRGB(150, 150, 150), Color3.fromRGB(110, 110, 110), 3)

@@ -60,6 +60,13 @@ return function()
 				{ "Success", "SuccessForeground" },
 				{ "Warning", "WarningForeground" },
 				{ "Info", "InfoForeground" },
+				{ "DestructiveSubtle", "DestructiveSubtleForeground" },
+				{ "SuccessSubtle", "SuccessSubtleForeground" },
+				{ "WarningSubtle", "WarningSubtleForeground" },
+				{ "InfoSubtle", "InfoSubtleForeground" },
+				-- coloured text straight on the page
+				{ "Background", "Destructive" },
+				{ "Card", "Destructive" },
 			}
 			local failures = {}
 			for _, base in Tokens.bases do
@@ -94,6 +101,52 @@ return function()
 				end
 			end
 			expect(table.concat(failures, "; ")).to.equal("")
+		end)
+
+		it("tints text on the status fills with their own hue", function()
+			local function hueGap(a: number, b: number): number
+				local d = math.abs(a - b) % 360
+				return math.min(d, 360 - d)
+			end
+			for themeName, values in Tokens.themesFor("zinc") do
+				local resolved = Tokens.resolveTheme(values, Tokens.primitives)
+				local function colour(value)
+					for _ = 1, 16 do
+						if typeof(value) == "Color3" then
+							return value
+						end
+						local name = string.sub(value, 2)
+						value = if resolved[name] ~= nil then resolved[name] else Tokens.primitives[name]
+					end
+					return value
+				end
+				for _, pair in
+					{
+						{ "Destructive", "Destructive" },
+						{ "Success", "Success" },
+						{ "Warning", "Warning" },
+						{ "Info", "Info" },
+						{ "Destructive", "DestructiveSubtle" },
+						{ "Success", "SuccessSubtle" },
+						{ "Warning", "WarningSubtle" },
+						{ "Info", "InfoSubtle" },
+					}
+				do
+					local name = pair[1]
+					local _, fillC, fillH = Oklab.toOklch(colour(resolved[name]))
+					local L, C, H = Oklab.toOklch(colour(resolved[pair[2] .. "Foreground"]))
+					local _ = fillC
+					-- Text on a wash always has room for colour; dark text always carries
+					-- the hue; light text on a full fill may need to be near white.
+					if L < 0.5 or pair[2] ~= name then
+						expect(C > 0.02).to.equal(true)
+					end
+					if C > 0.01 then
+						expect(hueGap(H, fillH) < 25).to.equal(true)
+					end
+					local __ = themeName
+				end
+			end
 		end)
 
 		it("tints primary with another hue", function()

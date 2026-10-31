@@ -59,7 +59,10 @@ they are exact; this page only says where things are and what agents get wrong.
    component variant, or tag the instance and add a rule with
    `app.theme:addRules(key, rules)` whose values are `$Token`s. Setting
    `BackgroundTransparency = 1` on a layout frame is fine; a colour is not.
-   To change the game's look, change the theme, not each instance.
+   To change the game's look, change the theme, not each instance. Text on a
+   fill takes the fill's `*Foreground` token (`$Primary` with
+   `$PrimaryForeground`), never `$White` or `$Black`; a new fill colour gets
+   its text from `Lucy.Tokens.onColor`, which keeps it to WCAG AA.
 3. **Bind, don't watch.** A property that follows state gets a ref or a getter.
    `Lucy.watch` and `Lucy.watchEffect` are only for side effects (tweens,
    sounds, calling game code), never to set a property a binding could own.
@@ -154,6 +157,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Architecture](references/architecture.md): How App, AppState, Theme, scenes and input fit together.
 - [Reactivity](references/reactivity.md): ref, computed, reactive and watch; Lucy.new for declarative UI; springs and tweens.
 - [Components](references/components/index.md): Every Lucy component, how to use one and how to write your own.
+- [Accessibility](references/guide/accessibility.md): What Lucy does out of the box so players can read, reach and use your UI, and the Roblox settings it will follow next.
 - [Hotkeys and modal input](references/guide/actions.md): Name your game's actions once for keyboard and gamepad, switch them off while a menu is open, and stop the character moving under a dialog.
 - [Work with app state](references/guide/app-state.md): Keep game data in the app's store and bind UI to it with state:ref, state.root, lists and subscribers.
 - [Build a component](references/guide/components.md): Write a Stepper component step by step, with state keys, h:ref, bindings, methods and a value bound to app state.

@@ -65,11 +65,24 @@ return function()
 		end).to.throw()
 	end)
 
-	it("colours the title for the destructive variant", function()
-		local alert = Alert.new({ app = app, Parent = gui, title = "Hi", variant = "destructive" })
+	it("fills a variant with a wash of its colour and sets the text in a deep shade of it", function()
+		local alert = Alert.new({
+			app = app,
+			Parent = gui,
+			title = "Hi",
+			description = "There",
+			variant = "destructive",
+		})
 		Harness.flush()
-		expect(Harness.colorEq(Harness.styled(alert.title, "TextColor3"), app.theme:resolve("Destructive"))).to.equal(
-			true
-		)
+		local theme = app.theme
+		expect(
+			Harness.colorEq(
+				Harness.styled(alert.Instance, "BackgroundColor3"),
+				theme:resolve("DestructiveSubtle")
+			)
+		).to.equal(true)
+		local text = theme:resolve("DestructiveSubtleForeground")
+		expect(Harness.colorEq(Harness.styled(alert.title, "TextColor3"), text)).to.equal(true)
+		expect(Harness.colorEq(Harness.styled(alert.description, "TextColor3"), text)).to.equal(true)
 	end)
 end

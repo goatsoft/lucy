@@ -47,7 +47,8 @@ Change these before the first toast shows:
 
 A kind colours the whole toast with the theme's `Success`, `Destructive`,
 `Warning` or `Info` colour, and its text and close icon with the matching
-foreground, such as `SuccessForeground` (see [Theming](../reference/theming.md)).
+foreground, such as `SuccessForeground`: a dark or light shade of the toast's own
+colour, worked out to WCAG AA contrast (see [Theming](../reference/theming.md)).
 A plain toast uses the popover colours.
 
 ## Position

@@ -55,25 +55,30 @@ Without a `primary`, the `p` values fall back to the base colour shades shown.
 | `Card`, `CardForeground` | panels and their text | White, c-950 | c-900, c-50 |
 | `Popover`, `PopoverForeground` | menus, selects, tooltips | White, c-950 | c-900, c-50 |
 | `Primary` | the main action colour | p-600 (or c-900) | p-500 (or c-200) |
-| `PrimaryForeground` | text on `Primary` | readable: p-50 (or c-50) or c-950 | readable: p-50 (or c-50) or c-900 |
+| `PrimaryForeground` | text on `Primary` | on colour | on colour |
 | `PrimaryHover` | `Primary` hovered | Primary at 90% | Primary at 90% |
 | `Secondary`, `SecondaryForeground`, `SecondaryHover` | quieter buttons | c-100, c-900, 80% | c-800, c-50, 80% |
 | `Muted`, `MutedForeground` | subdued surfaces and hint text | c-100, c-500 | c-800, c-400 |
 | `Accent`, `AccentForeground` | hovered rows and items | c-100, c-900 | c-800, c-50 |
-| `Destructive`, `DestructiveForeground`, `DestructiveHover` | delete and danger | Red-600, readable, 90% | Red-400, readable, 90% |
+| `Destructive`, `DestructiveForeground`, `DestructiveHover` | delete and danger | Red-600, on colour, 90% | Red-400, on colour, 90% |
 | `Border` | dividers and outlines | c-200 | White at 10% |
 | `Input` | field outlines | c-200 | White at 15% |
 | `Ring` | the focus ring | p-400 (or c-400) | p-300 (or c-500) |
 | `Overlay`, `OverlayTransparency` | the scrim behind modals | Black, 0.5 | Black, 0.3 |
 | `Success`, `Warning`, `Info` | status colours | Green-600, Amber-500, Blue-600 | Green-500, Amber-400, Blue-500 |
-| `SuccessForeground`, `WarningForeground`, `InfoForeground` | text on a status colour | readable | readable |
+| `SuccessForeground`, `WarningForeground`, `InfoForeground` | text on a status colour | on colour | on colour |
+| `DestructiveSubtle`, `SuccessSubtle`, `WarningSubtle`, `InfoSubtle` | a pale wash of the colour, for alerts | colour at 10% over Card | colour at 16% over Card |
+| `DestructiveSubtleForeground` and the rest | text on a wash | on colour, in the full colour's hue | on colour, in the full colour's hue |
 
-**Readable** means worked out for contrast: of white (or the light shade shown)
-and the dark shade, whichever has more contrast with its fill, as WCAG 2 measures
-it. If neither reaches 4.5:1 (level AA for body text), it is made lighter or
-darker in OKLCH, keeping its hue, until it does. So text on a fill stays
-readable with any base colour, primary hue or theme of your own built with
-`readable`.
+**On colour** means text in the fill's own colour: its hue taken to its darkest
+(like red-950 on red) or lightest (like red-200), whichever has more contrast
+with the fill, as WCAG 2 measures it. If that is under 4.5:1 (level AA for body
+text), it is made lighter or darker in OKLCH, keeping its hue, until it reaches
+it. Text on a fill reads as part of the fill rather than black or white stuck on
+top, and stays readable with any base colour, primary hue or theme of your own
+built with `onColor`. On a strong mid colour, such as red-600, only near white
+reaches 4.5:1, so the light shade can come out almost white. A grey fill gets
+grey text.
 
 "At 90%" means composited over the background, as a browser would: a `Color3`
 has no transparency, so Lucy works the blend out when the theme is built.
@@ -111,6 +116,7 @@ Control tokens are `UDim2` heights; text tokens are `TextSize` numbers.
 | `oklch(L, C, H)` | a colour from OKLCH lightness (0 to 1), chroma and hue (degrees) |
 | `over(fg, bg, alpha)` | `fg` at `alpha` over `bg`, as a theme value; worked out per theme |
 | `mix(a, b, t)` | an even mix of two tokens in Oklab; `t` 0 gives `a`, 1 gives `b` |
+| `onColor(fill, { min?, tint? })` | text for `fill` in its own colour, at its darkest or lightest, readable to `min` (4.5 by default); `tint` takes the hue from another token, for a pale wash; worked out per theme |
 | `readable(fill, a, b, min?)` | text for `fill`: `a` or `b`, whichever reads better, moved in lightness if needed to reach `min` (4.5 by default); worked out per theme |
 | `name(hue, shade)` | a palette token's name: `name("violet", 500)` is `"Violet500"` |
 | `primitives`, `densities`, `themes` | Lucy's own sets, to copy and change |
@@ -121,7 +127,8 @@ Control tokens are `UDim2` heights; text tokens are `TextSize` numbers.
 
 `Lucy.Oklab` does the colour maths: `Oklab.contrast(a, b)` gives the WCAG 2
 contrast ratio between two colours (1 to 21), `Oklab.luminance(color)` their
-relative luminance, and `Oklab.readable(fill, a, b, min?)` the same choice as
+relative luminance, and `Oklab.onColor(fill, min?, tint?)` and
+`Oklab.readable(fill, a, b, min?)` the same choices as `Tokens.onColor` and
 `Tokens.readable` for plain colours.
 
 A theme of your own can work out its text the same way:
@@ -129,7 +136,7 @@ A theme of your own can work out its text the same way:
 ```luau
 local themes = Lucy.Tokens.themesFor("slate", { primary = "lime" })
 themes.dark.Primary = "$Lime300"
-themes.dark.PrimaryForeground = Lucy.Tokens.readable("$Primary", "$White", "$Slate950")
+themes.dark.PrimaryForeground = Lucy.Tokens.onColor("$Primary")
 ```
 
 ## app.theme

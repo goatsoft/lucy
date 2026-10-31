@@ -180,15 +180,25 @@ local WHITE, BLACK = Color3.new(1, 1, 1), Color3.new(0, 0, 0)
 
 -- Moves `color` in OKLCH lightness, away from the background, until it reaches
 -- `min` against it. Nil if it gets to white or black first.
+-- An OKLCH colour with its chroma cut until it fits in sRGB, so the hue holds
+-- (clipping each channel instead can turn a pale red yellow).
+local function within(L: number, C: number, H: number): Color3
+	local c = C
+	while c > 0 and not Oklab.inGamut(L, c, H) do
+		c = math.max(c - 0.002, 0)
+	end
+	return Oklab.fromOklch(L, c, H)
+end
+
 local function pushApart(color: Color3, background: Color3, min: number): Color3?
 	local step = if Oklab.luminance(color) >= Oklab.luminance(background) then 0.01 else -0.01
-	local current = color
+	local L, C, H = Oklab.toOklch(color)
 	for _ = 1, 100 do
-		current = Oklab.adjust(current, { l = step })
+		L = math.clamp(L + step, 0, 1)
+		local current = within(L, C, H)
 		if Oklab.contrast(current, background) >= min then
 			return current
 		end
-		local L = Oklab.toOklch(current)
 		if L <= 0 or L >= 1 then
 			return nil
 		end
@@ -217,6 +227,22 @@ function Oklab.readable(background: Color3, a: Color3, b: Color3, min: number?):
 		return moved
 	end
 	return if Oklab.contrast(WHITE, background) >= Oklab.contrast(BLACK, background) then WHITE else BLACK
+end
+
+--[[
+	Text for a coloured fill, in the fill's own colour: its hue taken to its
+	darkest (like red-950) or lightest (like red-200), whichever reads
+	better, then moved in lightness until it reaches `min` (WCAG AA 4.5 by
+	default). A neutral fill gets near neutral text.
+
+	`tint` takes the colour from another swatch instead: for a pale wash of red,
+	tint = red gives a deep red, where the wash alone has too little colour.
+]]
+function Oklab.onColor(fill: Color3, min: number?, tint: Color3?): Color3
+	local _, C, H = Oklab.toOklch(tint or fill)
+	local dark = within(0.27, math.min(C * 0.45, 0.1), H)
+	local light = within(0.9, math.min(C * 0.3, 0.07), H)
+	return Oklab.readable(fill, dark, light, min)
 end
 
 -- A palette colour: Oklab.palette("blue", 500)

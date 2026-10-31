@@ -57,6 +57,15 @@ function Tokens.readable(background: string, a: string, b: string, min: number?)
 	return { kind = "readable", background = background, a = a, b = b, min = min }
 end
 
+-- Text for a coloured fill in the fill's own colour, at its darkest or
+-- lightest, readable to `min` (WCAG AA 4.5 by default). `tint` takes the
+-- colour from another token (a pale wash takes its hue from the full colour).
+-- See Oklab.onColor.
+function Tokens.onColor(fill: string, options: { min: number?, tint: string? }?)
+	local o = options or {}
+	return { kind = "onColor", background = fill, min = o.min, tint = o.tint }
+end
+
 function Tokens.oklch(L: number, C: number, H: number): Color3
 	return Oklab.fromOklch(L, C, H)
 end
@@ -167,8 +176,9 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Popover = "$White",
 		PopoverForeground = c(950),
 		Primary = p(600, c(900)),
-		-- Text on a fill is worked out for contrast (WCAG AA), whatever the colours.
-		PrimaryForeground = Tokens.readable("$Primary", p(50, c(50)), c(950)),
+		-- Text on a fill is the fill's own colour at its darkest or lightest,
+		-- worked out for contrast (WCAG AA), whatever the colours.
+		PrimaryForeground = Tokens.onColor("$Primary"),
 		PrimaryHover = Tokens.over("$Primary", "$Background", 0.9),
 		Secondary = c(100),
 		SecondaryForeground = c(900),
@@ -178,7 +188,7 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Accent = c(100),
 		AccentForeground = c(900),
 		Destructive = "$Red600",
-		DestructiveForeground = Tokens.readable("$Destructive", "$White", c(950)),
+		DestructiveForeground = Tokens.onColor("$Destructive"),
 		DestructiveHover = Tokens.over("$Destructive", "$Background", 0.9),
 		Border = c(200),
 		Input = c(200),
@@ -186,11 +196,20 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Overlay = "$Black",
 		OverlayTransparency = 0.5,
 		Success = "$Green600",
-		SuccessForeground = Tokens.readable("$Success", "$White", c(950)),
+		SuccessForeground = Tokens.onColor("$Success"),
 		Warning = "$Amber500",
-		WarningForeground = Tokens.readable("$Warning", "$White", c(950)),
+		WarningForeground = Tokens.onColor("$Warning"),
 		Info = "$Blue600",
-		InfoForeground = Tokens.readable("$Info", "$White", c(950)),
+		InfoForeground = Tokens.onColor("$Info"),
+		-- A pale wash of each status colour, for alerts, with text in a deep shade of it.
+		DestructiveSubtle = Tokens.over("$Destructive", "$Card", 0.1),
+		DestructiveSubtleForeground = Tokens.onColor("$DestructiveSubtle", { tint = "$Destructive" }),
+		SuccessSubtle = Tokens.over("$Success", "$Card", 0.1),
+		SuccessSubtleForeground = Tokens.onColor("$SuccessSubtle", { tint = "$Success" }),
+		WarningSubtle = Tokens.over("$Warning", "$Card", 0.1),
+		WarningSubtleForeground = Tokens.onColor("$WarningSubtle", { tint = "$Warning" }),
+		InfoSubtle = Tokens.over("$Info", "$Card", 0.1),
+		InfoSubtleForeground = Tokens.onColor("$InfoSubtle", { tint = "$Info" }),
 	}
 
 	local dark = {
@@ -201,7 +220,7 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Popover = c(900),
 		PopoverForeground = c(50),
 		Primary = p(500, c(200)),
-		PrimaryForeground = Tokens.readable("$Primary", p(50, c(50)), c(900)),
+		PrimaryForeground = Tokens.onColor("$Primary"),
 		PrimaryHover = Tokens.over("$Primary", "$Background", 0.9),
 		Secondary = c(800),
 		SecondaryForeground = c(50),
@@ -211,7 +230,7 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Accent = c(800),
 		AccentForeground = c(50),
 		Destructive = "$Red400",
-		DestructiveForeground = Tokens.readable("$Destructive", "$White", c(950)),
+		DestructiveForeground = Tokens.onColor("$Destructive"),
 		DestructiveHover = Tokens.over("$Destructive", "$Background", 0.9),
 		-- border white/10%, input white/15% over the background
 		Border = Tokens.over("$White", "$Background", 0.1),
@@ -221,11 +240,20 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Overlay = "$Black",
 		OverlayTransparency = 0.3,
 		Success = "$Green500",
-		SuccessForeground = Tokens.readable("$Success", "$White", c(950)),
+		SuccessForeground = Tokens.onColor("$Success"),
 		Warning = "$Amber400",
-		WarningForeground = Tokens.readable("$Warning", "$White", c(950)),
+		WarningForeground = Tokens.onColor("$Warning"),
 		Info = "$Blue500",
-		InfoForeground = Tokens.readable("$Info", "$White", c(950)),
+		InfoForeground = Tokens.onColor("$Info"),
+		-- A pale wash of each status colour, for alerts, with text in a deep shade of it.
+		DestructiveSubtle = Tokens.over("$Destructive", "$Card", 0.16),
+		DestructiveSubtleForeground = Tokens.onColor("$DestructiveSubtle", { tint = "$Destructive" }),
+		SuccessSubtle = Tokens.over("$Success", "$Card", 0.16),
+		SuccessSubtleForeground = Tokens.onColor("$SuccessSubtle", { tint = "$Success" }),
+		WarningSubtle = Tokens.over("$Warning", "$Card", 0.16),
+		WarningSubtleForeground = Tokens.onColor("$WarningSubtle", { tint = "$Warning" }),
+		InfoSubtle = Tokens.over("$Info", "$Card", 0.16),
+		InfoSubtleForeground = Tokens.onColor("$InfoSubtle", { tint = "$Info" }),
 	}
 
 	return { light = light, dark = dark }
@@ -263,6 +291,14 @@ function Tokens.compute(derived: { [string]: any }, resolve: (string) -> any): a
 			error("[Lucy] readable needs three colours", 0)
 		end
 		return Oklab.readable(background, a, b, derived.min)
+	end
+	if kind == "onColor" then
+		local fill = if isAlias(derived.background) then resolve(derived.background) else derived.background
+		local tint = if isAlias(derived.tint) then resolve(derived.tint) else derived.tint
+		if typeof(fill) ~= "Color3" or (tint ~= nil and typeof(tint) ~= "Color3") then
+			error(`[Lucy] onColor needs a colour, got {typeof(fill)}`, 0)
+		end
+		return Oklab.onColor(fill, derived.min, tint)
 	end
 	error(`[Lucy] unknown derived token kind "{tostring(derived.kind)}"`, 0)
 end

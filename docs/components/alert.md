@@ -36,9 +36,12 @@ the handle: `alert.icon`, `alert.content`, `alert.title` and `alert.description`
 
 ## Looks
 
-A card coloured box with a border. Every variant except `default` colours the
-border and the title with the theme's matching colour (`Destructive`,
-`Success`, `Warning` or `Info`); the description stays muted.
+A card coloured box with a border. Every variant except `default` fills the box
+with a pale wash of the theme's matching colour (`DestructiveSubtle`,
+`SuccessSubtle`, `WarningSubtle` or `InfoSubtle`), rings it in the full colour,
+and sets the title, description and icon in a deep shade of it
+(`DestructiveSubtleForeground` and the rest), worked out to WCAG AA contrast.
+See [Accessibility](../guide/accessibility.md).
 
 ## Examples
 

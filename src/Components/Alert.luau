@@ -24,12 +24,13 @@ local Alert = {}
 
 Alert.variants = { "default", "destructive", "success", "warning", "info" }
 
--- Variant colour for the title and the ring; the body text stays muted.
+-- A variant fills the alert with a pale wash of its colour, rings it in the
+-- full colour, and sets the text in a deep shade of it (readable, WCAG AA).
 local TONES = {
-	destructive = "$Destructive",
-	success = "$Success",
-	warning = "$Warning",
-	info = "$Info",
+	destructive = "Destructive",
+	success = "Success",
+	warning = "Warning",
+	info = "Info",
 }
 
 local BASE, VARIANT = 0, 10
@@ -81,16 +82,31 @@ local rules: { Component.Rule } = {
 		},
 	},
 }
-for variant, colour in TONES do
+for variant, token in TONES do
+	table.insert(rules, {
+		selector = `.ui-alert-variant-{variant}`,
+		priority = VARIANT,
+		properties = { BackgroundColor3 = `${token}Subtle` },
+	})
 	table.insert(rules, {
 		selector = `.ui-alert-variant-{variant}::UIStroke`,
 		priority = VARIANT,
-		properties = { Color = colour },
+		properties = { Color = `${token}` },
 	})
 	table.insert(rules, {
-		selector = `.ui-alert-title-{variant}`,
+		selector = `.ui-alert-variant-{variant} >> .ui-alert-title`,
 		priority = VARIANT,
-		properties = { TextColor3 = colour },
+		properties = { TextColor3 = `${token}SubtleForeground` },
+	})
+	table.insert(rules, {
+		selector = `.ui-alert-variant-{variant} >> .ui-alert-description`,
+		priority = VARIANT,
+		properties = { TextColor3 = `${token}SubtleForeground` },
+	})
+	table.insert(rules, {
+		selector = `.ui-alert-variant-{variant} >> .ui-icon`,
+		priority = VARIANT,
+		properties = { ImageColor3 = `${token}SubtleForeground` },
 	})
 end
 Alert.rules = rules
