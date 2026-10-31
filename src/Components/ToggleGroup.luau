@@ -145,8 +145,8 @@ local spec: Component.Spec = {
 
 		local frame = Element.new("Frame", {
 			BackgroundTransparency = 1,
-			Size = p.size or UDim2.fromOffset(0, 0),
-			AutomaticSize = if p.size then Enum.AutomaticSize.None else Enum.AutomaticSize.XY,
+			Size = UDim2.fromOffset(0, 0),
+			AutomaticSize = Enum.AutomaticSize.XY,
 			Visible = h:ref("visible"),
 			Tags = { "ui-toggle-group" },
 			Component.list({

@@ -41,6 +41,13 @@ return function()
 		expect(tabs.list.items[1]:HasTag("ui-selected")).to.equal(true)
 	end)
 
+	it("fits its tab bar to the tabs", function()
+		local _, _, items = panels()
+		local tabs = Tabs.new({ app = app, Parent = gui, items = items, size = "sm" })
+		expect(tabs.list.Instance.AutomaticSize).to.equal(Enum.AutomaticSize.XY)
+		expect(tabs.list.items[1]:HasTag("ui-toggle-size-sm")).to.equal(true)
+	end)
+
 	it("switches panels when a tab is picked, and never clears", function()
 		local _, _, items = panels()
 		local tabs = Tabs.new({ app = app, Parent = gui, items = items })

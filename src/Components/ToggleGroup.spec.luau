@@ -166,6 +166,13 @@ return function()
 		)
 	end)
 
+	it("sizes its items with size and still fits them", function()
+		local group = ToggleGroup.new({ app = app, Parent = gui, items = GENRES, size = "sm" })
+		expect(group.items[1]:HasTag("ui-toggle-size-sm")).to.equal(true)
+		expect(group.Instance.AutomaticSize).to.equal(Enum.AutomaticSize.XY)
+		expect(group.Instance.Size).to.equal(UDim2.fromOffset(0, 0))
+	end)
+
 	it("puts an item's children in place of text", function()
 		local star = Instance.new("ImageLabel")
 		local group =
