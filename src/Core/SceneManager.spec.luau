@@ -112,6 +112,45 @@ return function()
 			expect(scene.gui:FindFirstChild("Root") ~= nil).to.equal(true)
 		end)
 
+		it("keeps going when one scene fails, and names it in the warning", function()
+			scenes:register("Broken", {
+				layer = "overlay",
+				build = function()
+					error("no coins", 0)
+				end,
+			})
+			local warnings = {}
+			local hooks: any = scenes
+			hooks._warn = function(message: string)
+				table.insert(warnings, message)
+			end
+			app.state:set("scenes", { current = "Title", visible = { Broken = true } })
+			expect(scenes:current()).to.equal("Title")
+			expect(scenes:get("Title").gui.Enabled).to.equal(true)
+			expect(#warnings).to.equal(1)
+			expect(string.find(warnings[1], 'scene "Broken"', 1, true) ~= nil).to.equal(true)
+			expect(string.find(warnings[1], "no coins", 1, true) ~= nil).to.equal(true)
+		end)
+
+		it("builds a scene in its own scope, cleaned when the scene goes", function()
+			local Reactive = require(script.Parent.Reactive)
+			local cleaned = false
+			scenes:register("Shop", {
+				layer = "modal",
+				keepAlive = false,
+				build = function()
+					expect(Reactive._hasOwner()).to.equal(true)
+					Reactive.onCleanup(function()
+						cleaned = true
+					end)
+				end,
+			})
+			scenes:push("Shop")
+			expect(cleaned).to.equal(false)
+			scenes:pop()
+			expect(cleaned).to.equal(true)
+		end)
+
 		it("errors on unknown scenes and wrong layers", function()
 			expect(function()
 				scenes:goTo("Nope")

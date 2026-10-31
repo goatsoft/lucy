@@ -1,4 +1,29 @@
 return function()
+	describe("default focus inside a component", function()
+		local Harness = require(script.Parent.Parent.Testing.Harness)
+		it("falls back to the first selectable under a target that can't take focus", function()
+			local app, cleanup = Harness.app()
+			local gui = Harness.mount(app)
+			local frame = Instance.new("Frame")
+			frame.Size = UDim2.fromOffset(100, 100)
+			local button = Instance.new("TextButton")
+			button.Size = UDim2.fromOffset(50, 20)
+			button.Parent = frame
+			frame.Parent = gui
+			local pop = app.input:pushScope({
+				root = gui,
+				defaultFocus = function()
+					return frame
+				end,
+			})
+			app.input:focusDefault()
+			local focused = app.input:focused()
+			pop()
+			cleanup()
+			expect(focused).to.equal(button)
+		end)
+	end)
+
 	local InputManager = require(script.Parent.InputManager)
 	local Harness = require(script.Parent.Parent.Testing.Harness)
 

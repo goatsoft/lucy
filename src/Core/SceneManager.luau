@@ -36,6 +36,7 @@
 ]]
 
 local Maid = require(script.Parent.Maid)
+local Reactive = require(script.Parent.Reactive)
 local Signal = require(script.Parent.Signal)
 
 local SceneManager = {}
@@ -46,6 +47,9 @@ SceneManager.layerOrder = {
 	overlay = 100,
 	modal = 200,
 }
+
+-- How a scene that fails to build, enter or exit is reported. Specs swap it.
+SceneManager._warn = warn
 
 -- What a scene's build/enter/exit get. Games may keep their own parts on it too.
 export type Scene = {
@@ -210,11 +214,16 @@ function SceneManager._build(self: SceneManager, name: string): Scene
 	end
 	self._scenes[name] = scene
 	if def.build then
-		-- A failed build is dropped, so the next visit builds it again, and its
-		-- error names the scene (it reaches the game through a state subscriber).
-		local ok, err = xpcall(def.build, function(message)
+		-- Build runs in the scene's own scope, so composables work in it and what
+		-- it makes lives until the scene is destroyed, whoever showed the scene.
+		local scope = Reactive.effectScope(true)
+		scene.maid:give(function()
+			scope:stop()
+		end)
+		-- A failed build is dropped, so the next visit builds it again.
+		local ok, err = xpcall(scope.run, function(message)
 			return `{tostring(message)}\n{debug.traceback(nil, 2)}`
-		end, scene)
+		end, scope, def.build, scene)
 		if not ok then
 			self._scenes[name] = nil
 			scene.maid:clean()
@@ -301,14 +310,25 @@ function SceneManager._reconcile(self: SceneManager)
 		end
 	end
 
+	-- One scene failing must not stop the others, or leave _current behind.
+	local function safely(phase: string, name: string, fn: any, ...: any)
+		local ok, err = pcall(fn, self, name, ...)
+		if not ok then
+			local message = tostring(err)
+			if not string.find(message, `scene "{name}"`, 1, true) then
+				message = `[Lucy] scene "{name}" failed to {phase}: {message}`
+			end
+			self._warn(message)
+		end
+	end
 	for name in table.clone(self._active) do
 		if not wanted[name] then
-			self:_exit(name)
+			safely("exit", name, SceneManager._exit)
 		end
 	end
 	for name in wanted do
 		if not self._active[name] then
-			self:_enter(name, orders[name])
+			safely("enter", name, SceneManager._enter, orders[name])
 		elseif orders[name] then
 			self._scenes[name].gui.DisplayOrder = orders[name]
 		end
@@ -319,6 +339,19 @@ function SceneManager._reconcile(self: SceneManager)
 		self._current = current
 		self.Changed:Fire(current, previous)
 	end
+end
+
+-- How many modal scenes are pushed. Tracked, for App.modalOpen.
+function SceneManager.modalCount(self: SceneManager): number
+	local stack = self.app.state:_tracked({ "scenes", "stack" }) or {}
+	local count = 0
+	for _, name in stack do
+		local def = self._defs[name]
+		if def and def.layer == "modal" then
+			count += 1
+		end
+	end
+	return count
 end
 
 -- Escape / ButtonB: pop the top stacked scene, else ask the current screen.

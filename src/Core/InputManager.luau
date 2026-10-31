@@ -384,6 +384,12 @@ function InputManager.focusDefault(self: InputManager)
 	if type(target) == "table" and target.Instance then
 		target = target.Instance
 	end
+	-- A component whose root is never selectable (a NumberField's frame): its
+	-- first part that is. A target that is only not shown yet (a dialog opening)
+	-- is kept.
+	if typeof(target) == "Instance" and target:IsA("GuiObject") and not (target :: GuiObject).Selectable then
+		target = self:selectables(target)[1] or target
+	end
 	if typeof(target) ~= "Instance" then
 		for _, root in self:_scopeRoots() do
 			target = self:selectables(root)[1]
