@@ -9,6 +9,7 @@
   "homepage": "https://lucy.goatsoft.io/docs/guide/agents/",
   "repository": "https://github.com/goatsoft/lucy",
   "license": "MIT",
+  "icon": "./assets/icon.png",
   "keywords": [
     "roblox",
     "luau",

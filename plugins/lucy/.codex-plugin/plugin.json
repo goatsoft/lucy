@@ -1,0 +1,37 @@
+{
+  "name": "lucy",
+  "version": "0.1.0",
+  "description": "Build Roblox game UI with Lucy: components, app state, styling, input, hotkeys and icons.",
+  "author": {
+    "name": "GOATsoft",
+    "url": "https://goatsoft.io"
+  },
+  "homepage": "https://lucy.goatsoft.io/docs/guide/agents/",
+  "repository": "https://github.com/goatsoft/lucy",
+  "license": "MIT",
+  "keywords": [
+    "roblox",
+    "luau",
+    "ui",
+    "lucy"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Lucy",
+    "shortDescription": "The UI and app framework for Roblox",
+    "longDescription": "Build Roblox game UI with Lucy: themed components that work with mouse, keyboard, gamepad and touch, app state, scenes, hotkeys and icons. Includes skills for building with Lucy, adding icons, and checking UI in Studio.",
+    "developerName": "GOATsoft",
+    "category": "Productivity",
+    "websiteURL": "https://lucy.goatsoft.io",
+    "defaultPrompt": [
+      "Add a settings menu with Lucy",
+      "Add a shop dialog that opens with a hotkey",
+      "Check my Lucy UI in Studio"
+    ],
+    "brandColor": "#8757E2",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png",
+    "logoDark": "./assets/icon.png",
+    "screenshots": []
+  }
+}
