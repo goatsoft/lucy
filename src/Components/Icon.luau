@@ -14,7 +14,7 @@
 		{ image = 123 | "rbxassetid://...", rect = { x, y, width, height }?, tint = false? }
 	`rect` picks a cell of a sprite sheet; `tint = false` keeps an icon's own
 	colours (logos, emoji). Icon.register returns a function that removes those
-	names again. An unknown name fails the mount.
+	names again. An unknown name draws nothing and warns once.
 
 	Lucy's own components draw a few slots, which Lucy fills from its own sheet
 	(Core/IconSheet): lucy:close, lucy:check, lucy:chevron-down / up / left /
@@ -138,13 +138,28 @@ end
 
 local EMPTY: Resolved = { image = "", offset = Vector2.zero, size = Vector2.zero, tint = true }
 
+-- How an unknown name is reported. Specs swap it to see the message.
+Icon._warn = warn
+
+-- Names already reported, so a list of the same icon warns once.
+local warned: { [string]: boolean } = {}
+
+-- An unknown name draws nothing and warns once, so one missing icon never
+-- stops the rest of the screen from building.
 local function lookup(value: any): Resolved
 	local resolved = Icon.resolve(value)
 	if resolved == nil then
 		if value == nil or value == "" then
 			return EMPTY
 		end
-		error(`[Lucy] unknown icon "{tostring(value)}" (register it with Lucy.Icon.register)`, 0)
+		local name = tostring(value)
+		if not warned[name] then
+			warned[name] = true
+			Icon._warn(
+				`[Lucy] unknown icon "{name}": run npx lucy-icons build, or register it with Lucy.Icon.register`
+			)
+		end
+		return EMPTY
 	end
 	return resolved
 end
@@ -172,7 +187,7 @@ local spec: Component.Spec = {
 	defaults = { icon = "", size = "md", variant = "default", visible = true },
 	rules = Icon.rules,
 	render = function(h)
-		-- Bad values fail the mount; later writes report like any effect.
+		-- A bad size or variant fails the mount; later writes report like any effect.
 		lookup(h:get("icon"))
 		pixels(h:get("size"))
 		checkVariant(h:get("variant"))

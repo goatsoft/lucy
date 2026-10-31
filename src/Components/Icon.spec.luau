@@ -99,10 +99,28 @@ return function()
 		expect(root.ImageRectSize).to.equal(Vector2.zero)
 	end)
 
-	it("fails the mount for an unknown name", function()
-		expect(function()
+	it("draws nothing for an unknown name and warns once per name", function()
+		local warnings = {}
+		local hooks: any = Icon
+		local previous = hooks._warn
+		hooks._warn = function(message: string)
+			table.insert(warnings, message)
+		end
+		local ok, err = pcall(function()
+			local first = Icon.new({ app = app, Parent = gui, icon = "test:nope" })
+			expect(first.Instance.Image).to.equal("")
 			Icon.new({ app = app, Parent = gui, icon = "test:nope" })
-		end).to.throw()
+			local name = Reactive.ref("test:heart")
+			local later = Icon.new({ app = app, Parent = gui, icon = name })
+			name("test:gone")
+			expect(later.Instance.Image).to.equal("")
+		end)
+		hooks._warn = previous
+		assert(ok, err)
+		expect(#warnings).to.equal(2)
+		expect(string.find(warnings[1], "test:nope", 1, true) ~= nil).to.equal(true)
+		expect(string.find(warnings[1], "lucy-icons build", 1, true) ~= nil).to.equal(true)
+		expect(string.find(warnings[2], "test:gone", 1, true) ~= nil).to.equal(true)
 	end)
 
 	it("comes in three sizes or a number of pixels", function()

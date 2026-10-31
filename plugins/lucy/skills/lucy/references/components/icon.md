@@ -37,8 +37,9 @@ with every field of the map.
 
 It also takes the [props every component takes](index.md#using-a-component).
 
-A name that was never registered fails `Lucy.Icon.new`. Register before you
-build: an icon does not change when a name is registered later.
+A name that was never registered draws nothing and warns once in the output,
+so the rest of the screen still builds. Register before you build: an icon
+does not change when a name is registered later.
 
 `Lucy.Icon.has(name)` tells you whether a name is registered, and
 `Lucy.Icon.resolve(value)` what it would draw.
