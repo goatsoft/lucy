@@ -150,7 +150,8 @@ Tokens.bases = { "zinc", "slate", "gray", "neutral", "stone", "mauve", "olive", 
 
 --[[
 	Light and dark semantic themes for a base colour (see ADR 0010).
-	options.primary: a palette hue for Primary/Ring (default: the base colour).
+	options.primary: a palette hue for Primary/Ring (default: the base colour for
+	Primary, blue for Ring, so focus never shows in the base grey).
 ]]
 function Tokens.themesFor(base: string?, options: { primary: string? }?)
 	local b = base or "zinc"
@@ -192,7 +193,8 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		DestructiveHover = Tokens.over("$Destructive", "$Background", 0.9),
 		Border = c(200),
 		Input = c(200),
-		Ring = p(400, c(400)),
+		-- Blue with no primary: the colour players read as focus, 3:1 on white.
+		Ring = p(400, "$Blue500"),
 		Overlay = "$Black",
 		OverlayTransparency = 0.5,
 		Success = "$Green600",
@@ -236,7 +238,7 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Border = Tokens.over("$White", "$Background", 0.1),
 		Input = Tokens.over("$White", "$Background", 0.15),
 		-- Lighter than Primary so the ring stays visible around a focused primary button.
-		Ring = p(300, c(500)),
+		Ring = p(300, "$Blue400"),
 		Overlay = "$Black",
 		OverlayTransparency = 0.3,
 		Success = "$Green500",

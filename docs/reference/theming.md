@@ -28,7 +28,7 @@ Folder <namePrefix>Styles (ReplicatedStorage)
 |---|---|---|
 | `theme` | `"dark"` | The theme to start in |
 | `baseColor` | `"zinc"` | Base colour for the built in light and dark themes |
-| `primary` | the base colour | Palette hue that tints `Primary` and `Ring` |
+| `primary` | the base colour | Palette hue that tints `Primary` and `Ring` (with none, `Ring` is blue) |
 | `themes` | built from `baseColor` and `primary` | Your own set of themes, replacing the built in ones |
 | `primitives` | `Lucy.Tokens.primitives` | Your own primitives, replacing the whole set |
 | `densities` | `Lucy.Tokens.densities` | Your own densities, replacing the whole set |
@@ -68,7 +68,7 @@ Without a `primary`, the `p` values fall back to the base colour shades shown.
 | `Destructive`, `DestructiveForeground`, `DestructiveHover` | delete and danger | Red-600, on colour, 90% | Red-400, on colour, 90% |
 | `Border` | dividers and outlines | c-200 | White at 10% |
 | `Input` | field outlines | c-200 | White at 15% |
-| `Ring` | the focus ring | p-400 (or c-400) | p-300 (or c-500) |
+| `Ring` | the focus ring | p-400 (or blue-500) | p-300 (or blue-400) |
 | `Overlay`, `OverlayTransparency` | the scrim behind modals | Black, 0.5 | Black, 0.3 |
 | `Success`, `Warning`, `Info` | status colours | Green-600, Amber-500, Blue-600 | Green-500, Amber-400, Blue-500 |
 | `SuccessForeground`, `WarningForeground`, `InfoForeground` | text on a status colour | on colour | on colour |

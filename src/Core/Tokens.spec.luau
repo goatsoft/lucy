@@ -149,6 +149,37 @@ return function()
 			end
 		end)
 
+		it("rings focus in blue unless the game picks a primary, never in the base grey", function()
+			local failures = {}
+			for _, base in Tokens.bases do
+				local themes = Tokens.themesFor(base)
+				expect(themes.light.Ring).to.equal("$Blue500")
+				expect(themes.dark.Ring).to.equal("$Blue400")
+				for themeName, values in themes do
+					local resolved = Tokens.resolveTheme(values, Tokens.primitives)
+					local function colour(value)
+						for _ = 1, 16 do
+							if typeof(value) == "Color3" then
+								return value
+							end
+							local name = string.sub(value, 2)
+							value = if resolved[name] ~= nil then resolved[name] else Tokens.primitives[name]
+						end
+						return value
+					end
+					-- WCAG non-text contrast: a focus ring needs 3:1 against the page.
+					local ratio = Oklab.contrast(colour(resolved.Ring), colour(resolved.Background))
+					if ratio < 3 then
+						table.insert(failures, `{base}/{themeName} {string.format("%.2f", ratio)}`)
+					end
+				end
+			end
+			expect(table.concat(failures, "; ")).to.equal("")
+			local violet = Tokens.themesFor("slate", { primary = "violet" })
+			expect(violet.light.Ring).to.equal("$Violet400")
+			expect(violet.dark.Ring).to.equal("$Violet300")
+		end)
+
 		it("tints primary with another hue", function()
 			local themes = Tokens.themesFor("slate", { primary = "violet" })
 			expect(themes.light.Primary).to.equal("$Violet600")
