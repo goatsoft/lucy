@@ -37,5 +37,42 @@ return function()
 			clip(6)
 			expect(bar.indicator.Size).to.equal(UDim2.fromScale(0.5, 1))
 		end)
+
+		it("colours the bar by variant, following a getter", function()
+			local Reactive = require(script.Parent.Parent.Core.Reactive)
+			local health = Reactive.ref(80)
+			local bar = Progress.new({
+				app = app,
+				Parent = gui,
+				value = health,
+				variant = function()
+					return if health() < 25 then "destructive" else "success"
+				end,
+			})
+			expect(bar.Instance:HasTag("ui-progress-variant-success")).to.equal(true)
+			Harness.flush()
+			expect(
+				Harness.colorEq(
+					Harness.styled(bar.indicator, "BackgroundColor3"),
+					app.theme:resolve("Success")
+				)
+			).to.equal(true)
+			health(10)
+			expect(bar.Instance:HasTag("ui-progress-variant-success")).to.equal(false)
+			expect(bar.Instance:HasTag("ui-progress-variant-destructive")).to.equal(true)
+			Harness.flush()
+			expect(
+				Harness.colorEq(
+					Harness.styled(bar.indicator, "BackgroundColor3"),
+					app.theme:resolve("Destructive")
+				)
+			).to.equal(true)
+		end)
+
+		it("rejects an unknown variant", function()
+			expect(function()
+				Progress.new({ app = app, Parent = gui, variant = "neon" })
+			end).to.throw()
+		end)
 	end)
 end

@@ -5,7 +5,9 @@
 		local bar = Progress.new({ id = "reload", value = 30, max = 100 })
 		app.state:set("ui.reload.value", 75)
 
-	State keys: value, max, visible. The value is clamped to 0..max.
+		variant = "default"   -- default | success | warning | destructive (the bar's colour)
+
+	State keys: value, max, variant, visible. The value is clamped to 0..max.
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
@@ -31,7 +33,31 @@ local rules: { Component.Rule } = {
 		properties = { CornerRadius = "$RadiusFull" },
 	},
 }
+Progress.variants = { "default", "success", "warning", "destructive" }
+local COLOURS = { success = "$Success", warning = "$Warning", destructive = "$Destructive" }
+for variant, colour in COLOURS do
+	table.insert(rules, {
+		selector = `.ui-progress-variant-{variant} > .ui-progress-indicator`,
+		priority = 10,
+		properties = { BackgroundColor3 = colour },
+	})
+end
 Progress.rules = rules
+
+local function checkVariant(variant: string)
+	if not table.find(Progress.variants, variant) then
+		error(
+			`[Lucy] unknown Progress variant "{variant}" (expected {table.concat(Progress.variants, ", ")})`,
+			0
+		)
+	end
+end
+
+-- One tag per variant, built once.
+local variantTag: { [string]: string } = {}
+for _, variant in Progress.variants do
+	variantTag[variant] = "ui-progress-variant-" .. variant
+end
 
 function Progress.fraction(value: number, max: number): number
 	if max <= 0 then
@@ -43,11 +69,13 @@ end
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "progress",
-	defaults = { value = 0, max = 100, visible = true },
+	defaults = { value = 0, max = 100, variant = "default", visible = true },
 	rules = Progress.rules,
 	render = function(h)
 		local p: Component.Props = h.props
-		local value, max = h:ref("value"), h:ref("max")
+		-- An unknown variant fails the mount; later writes report like any effect.
+		checkVariant(h:get("variant"))
+		local value, max, variant = h:ref("value"), h:ref("max"), h:ref("variant")
 		h.indicator = Element.new("Frame", {
 			Name = "Indicator",
 			Size = function()
@@ -59,7 +87,14 @@ local spec: Component.Spec = {
 			Size = UDim2.new(1, 0, 0, p.height or 8),
 			ClipsDescendants = true,
 			Visible = h:ref("visible"),
-			Tags = { "ui-progress" },
+			Tags = {
+				"ui-progress" :: any,
+				function(): string
+					local v = variant()
+					checkVariant(v)
+					return variantTag[v]
+				end,
+			},
 			h.indicator,
 		})
 	end,

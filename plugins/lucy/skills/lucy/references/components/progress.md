@@ -15,6 +15,7 @@ app.state:set("ui.reload.value", 75)
 |---|---|---|---|---|
 | `value` | number | `0` | yes | How full the bar is. Kept between 0 and `max` |
 | `max` | number | `100` | yes | The value of a full bar |
+| `variant` | string | `"default"` | yes | The bar's colour: `default`, `success`, `warning` or `destructive` |
 | `visible` | boolean | `true` | yes | Shows or hides the bar |
 | `height` | number | `8` | | The bar's height in pixels |
 
@@ -22,12 +23,20 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 ## Examples
 
-A health bar that follows app state:
+A health bar that follows app state and turns red when low:
 
 ```lua
 local health = app.state:ref("player.health")
 
-Lucy.Progress.new({ value = health, max = 100, height = 12, Parent = hud })
+Lucy.Progress.new({
+    value = health,
+    max = 100,
+    height = 12,
+    variant = function()
+        return if health() < 25 then "destructive" else "success"
+    end,
+    Parent = hud,
+})
 ```
 
 A loading bar driven by a count:
