@@ -62,6 +62,11 @@ drawer from the bottom when the player last used touch, a panel from the side
 otherwise. It keeps that shape until it closes, even if the player switches
 input while it is open.
 
+A drawer slides up when it opens and back down when it closes; with reduced
+motion it just appears. Its background runs to the bottom of the screen, and on
+a phone with a home bar it leaves room above that bar, so the last row and the
+actions stay clear of it.
+
 While a modal sheet is open, keyboard and gamepad focus stay inside it, and the
 first thing in the body is selected. When it closes, focus goes back to
 whatever had it before.

@@ -357,7 +357,7 @@ local spec: Component.Spec = {
 					return math.huge
 				end
 				local pad = if isDrawer() then padLarge else padSmall
-				return math.max(0, overlay.maxHeight() - pad * 2)
+				return math.max(0, overlay.maxHeight() - pad * 2 - overlay.safeBottom())
 			end,
 			children = { listFrame },
 		})
@@ -369,7 +369,22 @@ local spec: Component.Spec = {
 			AutomaticSize = Enum.AutomaticSize.Y,
 			Active = true,
 			Tags = { "ui-select-content" :: any, ["ui-select-drawer"] = isDrawer },
+			Element.new("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder }),
 			list.Instance,
+			-- Room for a phone's home bar under a drawer; the background still runs to the edge.
+			Element.new("Frame", {
+				Name = "SafeArea",
+				LayoutOrder = 2147483647, -- last, whatever order the list was given
+				BackgroundTransparency = 1,
+				Size = function(): UDim2
+					local overlay = overlayRef()
+					return UDim2.new(1, 0, 0, if overlay then overlay.safeBottom() else 0)
+				end,
+				Visible = function(): boolean
+					local overlay = overlayRef()
+					return isDrawer() and overlay ~= nil and overlay.safeBottom() > 0
+				end,
+			}),
 		}) :: Frame
 		h.content = content
 

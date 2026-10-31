@@ -242,6 +242,10 @@ local spec: Component.Spec = {
 			end
 			if isDrawer() then
 				used += 4 + gap
+				local safe = overlay.safeBottom()
+				if safe > 0 then
+					used += safe + gap
+				end
 			end
 			return math.max(0, math.floor(overlay.maxHeight() - used))
 		end
@@ -267,6 +271,21 @@ local spec: Component.Spec = {
 			Element.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill }),
 		})
 
+		-- Room for a phone's home bar under a drawer; the background still runs to the edge.
+		local safeArea = Element.new("Frame", {
+			Name = "SafeArea",
+			LayoutOrder = 6,
+			BackgroundTransparency = 1,
+			Size = function(): UDim2
+				local overlay = overlayRef()
+				return UDim2.new(1, 0, 0, if overlay then overlay.safeBottom() else 0)
+			end,
+			Visible = function(): boolean
+				local overlay = overlayRef()
+				return isDrawer() and overlay ~= nil and overlay.safeBottom() > 0
+			end,
+		})
+
 		-- Padding and layout live on an inner frame, so the close button can sit in
 		-- the content's own corner. In a panel it is full height, so the footer
 		-- reaches the bottom; in a drawer it fits its children.
@@ -286,6 +305,7 @@ local spec: Component.Spec = {
 			body.Instance,
 			spacer,
 			footer,
+			safeArea,
 		})
 
 		content = Element.new("Frame", {

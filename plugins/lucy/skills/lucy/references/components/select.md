@@ -82,6 +82,8 @@ The list opens on the app's overlay layer, above everything opened before it:
 - **Gamepad:** the same, with the option already picked selected. When it
   closes, the button is selected again.
 - **Touch:** a drawer from the bottom of the screen, where a thumb can reach it.
+  It slides up (it just appears with reduced motion) and leaves room above a
+  phone's home bar.
 
 A long list scrolls inside the space it has. B, Backspace or a press outside
 closes it without changing anything.

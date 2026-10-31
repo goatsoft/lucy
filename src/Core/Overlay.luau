@@ -27,6 +27,7 @@
 		overlay.root  overlay.scrim  overlay.content
 		overlay.presentation()          -- decided each time it opens
 		overlay.maxHeight()             -- the height the content may use; bind a ScrollArea to it
+		overlay.safeBottom()            -- a drawer's bottom safe area (home bar); leave room for it
 		overlay.close(reason?)
 
 	Every overlay stacks by the order it opened, newest on top, whatever its
@@ -35,14 +36,21 @@
 	close. The app publishes overlay.count, overlay.modal and overlay.top.
 	Placement follows the viewport, the anchor and the content's size while
 	open; the presentation does not change until it opens again.
+
+	A drawer slides up from the bottom when it opens and back down before it
+	hides (Overlay.slideTime; no slide with reduced motion). Its background runs
+	to the screen edge; the component leaves safeBottom() of room at its foot
+	so nothing sits under a phone's home bar.
 ]]
 
 local GuiService = game:GetService("GuiService")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Element)
 local Maid = require(script.Parent.Maid)
+local Preferences = require(script.Parent.Preferences)
 local Reactive = require(script.Parent.Reactive)
 local Scroll = require(script.Parent.Scroll)
 
@@ -52,6 +60,7 @@ Overlay.margin = 8 -- popup distance from the viewport edges
 Overlay.gap = 4 -- popup distance from its anchor
 Overlay.centerMargin = 32
 Overlay.drawerShare = 0.85 -- of the viewport height
+Overlay.slideTime = 0.2 -- seconds a drawer takes to slide in or out
 Overlay.panelWidth = 360
 Overlay.panelShare = 0.9 -- of the viewport width
 
@@ -280,12 +289,48 @@ end
 -- The newest overlay goes on top (shared by every app: ZIndex is per gui).
 local layer = 0
 
+-- One hidden ScreenGui per overlay gui, inset to the device's safe area, to
+-- measure how much of the bottom edge a phone keeps (the home bar).
+local probes: { [ScreenGui]: ScreenGui } = setmetatable({} :: any, { __mode = "k" })
+
+-- The bottom safe area under `root`, in the overlay's own units (screen pixels
+-- divided by `scale`). Studio has none. Specs replace this function.
+function Overlay.measureSafeBottom(root: GuiObject, scale: number): number
+	local gui = root:FindFirstAncestorWhichIsA("ScreenGui")
+	if not gui or not gui.Parent then
+		return 0
+	end
+	local probe = probes[gui]
+	if not probe or probe.Parent ~= gui.Parent then
+		local made = Instance.new("ScreenGui")
+		made.Name = "LucySafeArea"
+		made.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
+		made.IgnoreGuiInset = gui.IgnoreGuiInset
+		made.ResetOnSpawn = false
+		made.Archivable = false
+		made.Parent = gui.Parent
+		gui.Destroying:Once(function()
+			made:Destroy()
+		end)
+		probes[gui] = made
+		probe = made
+	end
+	local edge = probe :: ScreenGui
+	if edge.AbsoluteSize.Y <= 0 or gui.AbsoluteSize.Y <= 0 then
+		return 0
+	end
+	local inset = (gui.AbsolutePosition.Y + gui.AbsoluteSize.Y)
+		- (edge.AbsolutePosition.Y + edge.AbsoluteSize.Y)
+	return math.floor(math.clamp(inset, 0, gui.AbsoluteSize.Y / 4) / math.max(scale, 0.01))
+end
+
 export type Overlay = {
 	root: Frame,
 	scrim: GuiObject,
 	content: GuiObject,
 	presentation: () -> string,
 	maxHeight: () -> number,
+	safeBottom: () -> number,
 	close: (reason: string?) -> (),
 }
 
@@ -312,7 +357,10 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 	end
 	local presentation = Reactive.ref(Overlay.resolve(options.presentation, options.prefer, mode()))
 	local maxHeight = Reactive.ref(math.huge)
+	local safeBottom = Reactive.ref(0)
 	local zIndex = Reactive.ref(10)
+	-- A drawer stays shown while it slides out.
+	local closing = Reactive.ref(false)
 
 	local function scrimOn(): boolean
 		if options.scrim ~= nil then
@@ -351,7 +399,9 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		Name = options.name or "Overlay",
 		Size = UDim2.fromScale(1, 1),
 		ZIndex = zIndex,
-		Visible = open,
+		Visible = function(): boolean
+			return open() or closing()
+		end,
 		Tags = tags,
 		scrim,
 	}) :: Frame
@@ -388,6 +438,23 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		end)
 	end
 
+	-- How far below its place a drawer is while it slides (overlay units).
+	local slide = Instance.new("NumberValue")
+	local slideTween: Tween? = nil
+	local placedAt: UDim2? = nil
+	local slideConnection = slide.Changed:Connect(function()
+		if placedAt then
+			content.Position = placedAt + UDim2.fromOffset(0, slide.Value)
+		end
+	end)
+	Reactive.onCleanup(function()
+		slideConnection:Disconnect()
+		if slideTween then
+			slideTween:Cancel()
+		end
+		slide:Destroy()
+	end)
+
 	-- Placement, from engine measurements while open.
 	local placing = false
 	local anchorObject: GuiObject? = nil
@@ -418,7 +485,9 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 			panelSide = options.panelSide,
 		})
 		content.AnchorPoint = at.anchorPoint
-		content.Position = at.position
+		placedAt = at.position
+		content.Position = at.position + UDim2.fromOffset(0, slide.Value)
+		safeBottom(if presentation() == "drawer" then Overlay.measureSafeBottom(root, scale) else 0)
 		-- Whatever this presentation does not set comes from the content's own size,
 		-- so a drawer opened after a panel is not left full height.
 		local x = if at.width
@@ -445,7 +514,25 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		table.insert(entries(app), entry)
 		publish(app)
 
+		-- A drawer starts below the screen and slides up.
+		if slideTween then
+			slideTween:Cancel()
+			slideTween = nil
+		end
+		closing(false)
+		slide.Value = 0
 		place()
+		if presentation() == "drawer" and not Preferences.reducedMotion() then
+			local scale = Scroll.scaleOf(root)
+			local height = if scale > 0 then content.AbsoluteSize.Y / scale else 0
+			slide.Value = if height > 0 then height else (Reactive.peek(maxHeight) :: any) :: number
+			slideTween = TweenService:Create(
+				slide,
+				TweenInfo.new(Overlay.slideTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+				{ Value = 0 }
+			);
+			(slideTween :: Tween):Play()
+		end
 		live:give(root:GetPropertyChangedSignal("AbsoluteSize"):Connect(place))
 		live:give(root.AncestryChanged:Connect(place))
 		live:give(content:GetPropertyChangedSignal("AbsoluteSize"):Connect(place))
@@ -490,11 +577,38 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		end
 	end
 
+	-- A drawer slides back down, then hides.
+	local function slideOut()
+		if presentation() ~= "drawer" or Preferences.reducedMotion() then
+			return
+		end
+		local scale = Scroll.scaleOf(root)
+		local height = if scale > 0 then content.AbsoluteSize.Y / scale else 0
+		if height <= 0 then
+			return
+		end
+		closing(true)
+		local tween = TweenService:Create(
+			slide,
+			TweenInfo.new(Overlay.slideTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+			{ Value = height }
+		)
+		slideTween = tween
+		tween.Completed:Once(function()
+			if slideTween == tween and not Reactive.peek(open) then
+				slideTween = nil
+				closing(false)
+			end
+		end)
+		tween:Play()
+	end
+
 	Reactive.watch(open, function(isOpen, previous)
 		if isOpen and not previous then
 			opened()
 		elseif not isOpen and previous then
 			closed()
+			slideOut()
 		end
 	end, { immediate = true })
 
@@ -545,6 +659,9 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		end,
 		maxHeight = function(): number
 			return maxHeight()
+		end,
+		safeBottom = function(): number
+			return safeBottom()
 		end,
 		close = close,
 	}

@@ -187,4 +187,22 @@ return function()
 		expect(content.AbsoluteSize.Y <= root.AbsoluteSize.Y * 0.86).to.equal(true)
 		expect(sheet.body.Instance.AbsoluteCanvasSize.Y > sheet.body.Instance.AbsoluteSize.Y).to.equal(true)
 	end)
+
+	it("leaves room for the bottom safe area as a drawer", function()
+		local Overlay = require(script.Parent.Parent.Core.Overlay)
+		local measure = Overlay.measureSafeBottom
+		Overlay.measureSafeBottom = function()
+			return 34
+		end
+		app.input:setMode("touch")
+		local ok, err = pcall(function()
+			local sheet = Sheet.new({ app = app, title = "Bag", open = true })
+			local safe = sheet.content:FindFirstChild("SafeArea", true) :: Frame
+			expect(safe ~= nil).to.equal(true)
+			expect(safe.Visible).to.equal(true)
+			expect(safe.Size.Y.Offset).to.equal(34)
+		end)
+		Overlay.measureSafeBottom = measure
+		assert(ok, err)
+	end)
 end

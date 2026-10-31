@@ -244,4 +244,29 @@ return function()
 		app.input:activate()
 		expect(region:get("value")).to.equal("na")
 	end)
+
+	it("leaves room for the bottom safe area as a drawer", function()
+		local Overlay = require(script.Parent.Parent.Core.Overlay)
+		local measure = Overlay.measureSafeBottom
+		Overlay.measureSafeBottom = function()
+			return 34
+		end
+		app.input:setMode("touch")
+		local ok, err = pcall(function()
+			local region = Select.new({ app = app, Parent = gui, items = ITEMS })
+			region:open()
+			task.wait(0.1)
+			local safe = region.content:FindFirstChild("SafeArea", true) :: Frame
+			expect(safe ~= nil).to.equal(true)
+			expect(safe.Visible).to.equal(true)
+			expect(safe.Size.Y.Offset).to.equal(34)
+			-- Under the list, not above it.
+			local list = region.list.Instance
+			expect(safe.AbsolutePosition.Y >= list.AbsolutePosition.Y + list.AbsoluteSize.Y - 1).to.equal(
+				true
+			)
+		end)
+		Overlay.measureSafeBottom = measure
+		assert(ok, err)
+	end)
 end

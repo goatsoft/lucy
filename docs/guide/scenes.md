@@ -181,6 +181,10 @@ app.scenes:register("Hud", {
 corners only. Lucy also scales every scene for the device; see
 [Scaling](../architecture.md#scaling).
 
+Drawers (a [Sheet](../components/sheet.md) or [Select](../components/select.md)
+on touch) look after the bottom of the screen themselves: they run to the edge
+and leave room above a phone's home bar.
+
 ## Back
 
 `app.scenes:back()` closes the top modal, or, with none open, calls the current
