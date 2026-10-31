@@ -38,11 +38,13 @@ function allDocs(dir = DOCS, base = ''): string[] {
 // For people working on Lucy, not with it, and how to install the skills themselves.
 const CONTRIBUTOR = new Set(['development.md', 'benchmarks.md', 'guide/agents.md'])
 const ICONS = new Set(['guide/icons.md', 'components/icon.md'])
+const DEBUG = new Set(['reference/devtools.md', 'stories.md', 'reference/store.md'])
 
 const docs = allDocs()
 const skills: Record<string, string[]> = {
   lucy: docs.filter(d => !CONTRIBUTOR.has(d) && d !== 'guide/icons.md'),
   'lucy-icons': docs.filter(d => ICONS.has(d)),
+  'lucy-debug': docs.filter(d => DEBUG.has(d)),
 }
 
 interface Page {

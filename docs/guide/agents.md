@@ -8,12 +8,13 @@ order: 9
 
 Lucy comes with skills for coding agents. A skill is a folder of instructions
 an agent reads when a task needs it, so an agent working on your game builds
-with Lucy's components, state and themes instead of guessing. Lucy has two:
+with Lucy's components, state and themes instead of guessing. Lucy has three:
 
 | Skill | What it teaches |
 |---|---|
 | `lucy` | Building UI with Lucy: the App, scenes, app state, every component, styling, input and hotkeys |
 | `lucy-icons` | Adding icons, and setting up and running the lucy-icons build |
+| `lucy-debug` | Checking UI in Studio with [Devtools](../reference/devtools.md): reading what is on screen, pressing buttons, taking screenshots |
 
 The skills are made from these docs, so they match the version they come with.
 

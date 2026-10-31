@@ -86,8 +86,10 @@ they are exact; this page only says where things are and what agents get wrong.
 - Stories render a piece of UI in Studio without pressing Play:
   `Lucy.Preview.show("Button")` from the command bar, or the game's own stories.
   See [Stories and preview](references/stories.md).
-- With Studio's MCP server: run Luau with `execute_luau`, look with
-  `screen_capture`, and try other screens with the device simulator.
+- With Studio's MCP server: press Play, then use `Lucy.Devtools` on the
+  client to read the tree and state and to press buttons, and
+  `screen_capture` to look. The `lucy-debug` skill shows how; see also
+  [Devtools](references/reference/devtools.md).
 - Styles apply a few frames after a change; read styled values with
   `instance:GetStyled("BackgroundColor3")`, not the plain property.
 
@@ -146,6 +148,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Add a theme](references/guide/themes.md): Pick your game's colours, let players switch light and dark, make a theme of your own, and style your own UI with the same tokens.
 - [Stories and preview](references/stories.md): Write stories for your UI and preview them in Studio, in edit mode or in Play.
 - [Composables](references/reference/composables.md): Every composable Lucy comes with, what each one takes and returns, and when to use it.
+- [Devtools](references/reference/devtools.md): Look at a running UI in Studio, and press, set and focus things the way a player would, from the command bar or a coding agent.
 - [The store](references/reference/store.md): How app.state works, what it holds, every method, and the rules for reading, writing and following it.
 - [Theming](references/reference/theming.md): Every theme option, colour token, primitive and density value, the Tokens helpers, app.theme's methods and how style rules work.
 <!-- /generated:guides -->

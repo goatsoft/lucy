@@ -395,6 +395,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/devtools': RouteRecordInfo<
+      '/docs/reference/devtools',
+      '/docs/reference/devtools',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/store': RouteRecordInfo<
       '/docs/reference/store',
       '/docs/reference/store',
@@ -840,6 +847,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/composables.md': {
       routes:
         | '/docs/reference/composables'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/devtools.md': {
+      routes:
+        | '/docs/reference/devtools'
       views:
         | never
       pathParamNames:

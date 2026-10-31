@@ -163,6 +163,8 @@ app.toast.success("Round won", { description = "+$250" })
   lucy-icons build.
 - `Lucy.hydrate` to add behaviour to UI built in Studio.
 - Stories that preview any component or scene in Studio without pressing Play.
+- Devtools that show a running UI, and press and focus things as a player
+  would, to check your work in Studio by hand or with an agent.
 - Skills for Claude Code, Codex and Antigravity, so coding agents build with
   Lucy's components and rules.
 - Strict types, no runtime dependencies, and over 750 specs.
