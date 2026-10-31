@@ -177,9 +177,23 @@ local spec: Component.Spec = {
 		local maxHeight = p.maxHeight
 		local measured: Reactive.Ref<Vector2>? = if maxHeight ~= nil then Reactive.ref(Vector2.zero) else nil
 
-		local content = Element.new("Frame", {
+		-- A vertical area's content is as wide as the window, which narrows by the
+		-- bar's width once it scrolls, so nothing runs under the scrollbar.
+		local content: Frame
+		local contentSize: any = axis.content
+		if key == "vertical" then
+			contentSize = function(): UDim2
+				local width = window().X
+				if width <= 0 or not content then
+					return axis.content
+				end
+				return UDim2.fromOffset(width / Scroll.scaleOf(content), 0)
+			end
+		end
+
+		content = Element.new("Frame", {
 			Name = "Content",
-			Size = axis.content,
+			Size = contentSize,
 			AutomaticSize = axis.automatic,
 			Tags = { "ui-scroll-area-content" },
 			[OUT_SIZE] = measured :: any,
