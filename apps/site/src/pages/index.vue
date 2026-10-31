@@ -18,6 +18,7 @@ import Blocks from '~icons/lucide-extended/blocks-duotone'
 import Bot from '~icons/lucide-extended/bot-duotone'
 import Boxes from '~icons/lucide-extended/boxes-duotone'
 import Clapperboard from '~icons/lucide-extended/clapperboard-duotone'
+import Contrast from '~icons/lucide-extended/contrast-duotone'
 import Feather from '~icons/lucide-extended/feather-duotone'
 import Gamepad from '~icons/lucide-extended/gamepad-2-duotone'
 import Keyboard from '~icons/lucide-extended/keyboard-duotone'
@@ -53,12 +54,13 @@ const more = [
   { icon: Clapperboard, title: 'Scenes', text: 'Each screen on its own layer, so menus never take input from the screen below.' },
   { icon: Layers, title: 'Dialogs and sheets', text: 'Dialogs, sheets, selects and toasts float above the game, newest on top.' },
   { icon: Keyboard, title: 'Hotkeys', text: 'Name an action once for keyboard and gamepad, and switch it off while a menu is open.' },
+  { icon: Contrast, title: 'Accessibility', text: 'Readable text on every colour, and the player\'s reduce motion, text size and background settings followed.' },
   { icon: Shapes, title: 'Any icon', text: 'Add any Iconify icon by name, its then packed into a sheet by the lucy-icons build.' },
   { icon: Orbit, title: 'Springs and tweens', text: 'Animate any property by binding it to a spring or a tween.' },
   { icon: Blocks, title: 'Code or Studio', text: 'Write UI in code, or add behaviour to UI you laid out in Studio.' },
   { icon: ScanEye, title: 'Preview in Studio', text: 'See any component or scene in Studio without pressing Play.' },
   { icon: Bot, title: 'Ready for agents', text: 'Skills that teach AI agents to build with Lucy.' },
-  { icon: Feather, title: 'Small and tested', text: 'Strict types, no runtime dependencies and over 750 specs.' },
+  { icon: Feather, title: 'Small and tested', text: 'Strict types, no runtime dependencies and over 800 specs.' },
 ] as const
 
 const install = 'Lucy = "goatsoft/lucy@0.1.0"'
