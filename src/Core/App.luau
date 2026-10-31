@@ -29,9 +29,12 @@
 		state         initial AppState tree
 		namePrefix    prefix for created instances ("Lucy_")
 		setCurrent    make this the default app for components (true)
+		devtools      false to skip the Devtools bridge Studio gets (ADR 0028)
 ]]
 
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 
 local Adaptive = require(script.Parent.Adaptive)
@@ -176,6 +179,30 @@ function App.new(config: { [string]: any }?): App
 
 	if options.setCurrent ~= false then
 		Context.setCurrent(self)
+	end
+
+	-- In Studio, a bridge Devtools reach this app through: code an agent runs
+	-- gets its own copy of Lucy and cannot see this App (ADR 0028).
+	if options.devtools ~= false and RunService:IsStudio() then
+		local bridge = Instance.new("BindableFunction")
+		bridge.Name = self.namePrefix .. "Devtools"
+		bridge:SetAttribute("LucyApp", self.namePrefix)
+		bridge:SetAttribute("LucyCurrent", options.setCurrent ~= false)
+		local devtools: any = nil
+		bridge.OnInvoke = function(method: string, args: { [string]: any }?)
+			-- Loaded on first use, so the bridge costs nothing until then.
+			devtools = devtools or (require :: any)(script.Parent.Devtools)
+			return devtools._serve(self, method, args)
+		end
+		CollectionService:AddTag(bridge, "LucyDevtools")
+		-- Not copied into Play or saved: a copy would have no app behind it.
+		bridge.Archivable = false
+		-- PlayerGui drops everything but kept ScreenGuis when the character
+		-- respawns, so a player's bridge lives with its scripts, as actions do.
+		local player = Players.LocalPlayer
+		local scripts = player and player:FindFirstChildOfClass("PlayerScripts")
+		bridge.Parent = scripts or self.parent
+		self.maid:give(bridge)
 	end
 	return self
 end

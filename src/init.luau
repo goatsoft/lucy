@@ -23,6 +23,11 @@
 
 		Lucy.Preview.show("Button")
 
+	Look at a running UI from Studio, or press a button as a player would:
+
+		Lucy.Devtools.tree()
+		Lucy.Devtools.press("buy")
+
 	See README.md and docs/ for the full guide.
 ]]
 
@@ -54,7 +59,7 @@ export type Rule = Component.Rule
 export type Spec = Component.Spec
 export type Story = Preview.Story
 
-return {
+local Lucy = {
 	-- Reactivity (Core/Reactive)
 	ref = Reactive.ref,
 	computed = Reactive.computed,
@@ -158,3 +163,17 @@ return {
 	Toggle = require(Components.Toggle),
 	ToggleGroup = require(Components.ToggleGroup),
 }
+
+-- Lucy.Devtools is required the first time it is read (ADR 0027).
+type Devtools = typeof(require(Core.Devtools))
+local lazy: any = setmetatable(Lucy, {
+	__index = function(self: any, key: string): any
+		if key == "Devtools" then
+			local devtools = require(Core.Devtools)
+			rawset(self, key, devtools)
+			return devtools
+		end
+		return nil
+	end,
+})
+return lazy :: typeof(Lucy) & { Devtools: Devtools }
