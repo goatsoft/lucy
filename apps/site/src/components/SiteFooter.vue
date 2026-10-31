@@ -76,13 +76,15 @@ const columns = [
           rel="noopener"
           class="underline decoration-border underline-offset-4 hover:text-foreground"
         >MIT licence</a>
+        <span aria-hidden="true"> · </span>
+        <a
+          :href="`${SITE.repo}/blob/main/LICENSE-ART.md`"
+          target="_blank"
+          rel="noopener"
+          class="underline decoration-border underline-offset-4 hover:text-foreground"
+        >Artwork licence</a>
       </p>
       <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-        <!-- The backgrounds are Aurora, GOATsoft's too. -->
-        <AuroraBadge
-          label="powered-by"
-          animated
-        />
         <a
           :href="SITE.goatsoft"
           target="_blank"
@@ -93,6 +95,10 @@ const columns = [
           <span>Made by</span>
           <GoatsoftLogo :height="16" />
         </a>
+        <!-- The backgrounds are Aurora, GOATsoft's too. -->
+        <AuroraBadge
+          label="powered-by"
+        />
       </div>
     </div>
   </footer>

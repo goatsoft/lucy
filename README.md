@@ -186,6 +186,15 @@ come from style rules matched by tags.
 The [architecture guide](https://lucy.goatsoft.io/docs/architecture/) covers
 the rest.
 
+## Licence
+
+The code, docs, examples, stories and agent skills are
+[MIT](https://github.com/goatsoft/lucy/blob/main/LICENSE). The Lucy name, Lucy
+the mascot, the wordmark, the icons and the brand artwork in `assets/brand/` are
+covered by the
+[artwork and brand licence](https://github.com/goatsoft/lucy/blob/main/LICENSE-ART.md).
+The games and UI you build with Lucy are yours.
+
 ---
 
 <p align="center">
@@ -196,5 +205,5 @@ the rest.
     </picture>
   </a>
   <br>
-  Made by <a href="https://goatsoft.io">GOATsoft</a> · <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE">MIT License</a>
+  Made by <a href="https://goatsoft.io">GOATsoft</a> · <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE">MIT License</a> · <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE-ART.md">Artwork licence</a>
 </p>
