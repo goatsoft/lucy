@@ -36,14 +36,13 @@ Create one App on the client. It owns the state, theme, input, scenes and toasts
 
 ```luau [StarterPlayerScripts/UI.client.luau]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local SoundService = game:GetService("SoundService")
 local Lucy = require(ReplicatedStorage.Shared.Lucy) -- or ReplicatedStorage.Packages.Lucy
 
 local app = Lucy.App.new({
     theme = "dark",
     baseColor = "zinc",
     primary = "violet",
-    state = { settings = { volume = 50 } },
+    state = { player = { coins = 0 } },
 })
 ```
 
@@ -67,48 +66,57 @@ fields, such as `scene.play`.
 ## Build a scene
 
 Each scene owns one ScreenGui. Only one screen shows at a time; modals and
-overlays sit above it. This one is a settings menu: a volume slider the game
-reads, and a theme picker that switches the whole UI.
+overlays sit above it. This title screen has a Play button that switches to
+the game screen:
 
 ```luau
-app.scenes:register("Settings", {
+app.scenes:register("Title", {
     build = function(scene)
+        scene.play = Lucy.Button.new({
+            text = "Play",
+            size = "lg",
+            onClick = function()
+                app.scenes:goTo("Game")
+            end,
+        })
         Lucy.Stack.new({
             size = UDim2.fromScale(1, 1),
             align = "center",
             justify = "center",
+            gap = "Space4",
             children = {
-                Lucy.Panel.new({
-                    title = "Settings",
-                    maxWidth = 400,
-                    children = {
-                        -- Each control is bound to a value in state, both ways.
-                        Lucy.Text.new({ text = "Volume", variant = "label" }),
-                        Lucy.Slider.new({ value = app.state:ref("settings.volume"), showValue = true }),
-                        Lucy.Text.new({ text = "Theme", variant = "label" }),
-                        Lucy.Select.new({
-                            items = { { value = "dark", label = "Dark" }, { value = "light", label = "Light" } },
-                            value = app.state:ref("theme"), -- pick Light and the whole UI switches
-                        }),
-                    },
-                }),
+                Lucy.Text.new({ text = "My Game", variant = "h1", align = "center" }),
+                scene.play,
             },
+            Parent = scene.gui,
+        })
+    end,
+    -- What keyboard and gamepad players start on.
+    defaultFocus = function(scene)
+        return scene.play
+    end,
+})
+
+local coins = app.state:ref("player.coins")
+
+app.scenes:register("Game", {
+    build = function(scene)
+        Lucy.Text.new({
+            text = function()
+                return `Coins: {coins()}`
+            end,
             Parent = scene.gui,
         })
     end,
 })
 
-app.scenes:goTo("Settings")
-
--- The game reads the same state. No glue code in between.
-app.state:subscribe("settings.volume", function(volume)
-    SoundService.Music.Volume = volume / 100
-end)
+app.scenes:goTo("Title")
 ```
 
-On a screen the player moves around with keys or a gamepad, give the scene a
-`defaultFocus` that returns what to select first. See
-[Architecture](architecture.md#input-and-focus).
+The coins text reads app state, so it changes by itself when the game sets
+`player.coins`. For more, see [Build screens with scenes](guide/scenes.md), and
+the [Recipes](recipes/index.md) for whole screens to copy: a settings menu that
+saves, a pause menu, a HUD and a shop.
 
 ## Drive anything from app state
 
@@ -142,6 +150,7 @@ app.toast.success("Round won", { description = "+$250" })
 - [Add a theme](guide/themes.md): your game's colours, light and dark, and a theme of your own
 - [Make your UI accessible](guide/accessibility.md): readable colours, focus, text size and motion
 - [Components](components/index.md): a page for each component with its props and examples
+- [Recipes](recipes/index.md): whole screens to copy: a settings menu that saves, a pause menu, a HUD and a shop
 - [Stories and preview](stories.md): see your UI in Studio without pressing Play
 - [Use Lucy with agents](https://lucy.goatsoft.io/docs/guide/agents/): give your coding agent Lucy's skills
 - [Architecture](architecture.md): how the pieces fit together

@@ -388,9 +388,51 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/known-issues': RouteRecordInfo<
+      '/docs/known-issues',
+      '/docs/known-issues',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reactivity': RouteRecordInfo<
       '/docs/reactivity',
       '/docs/reactivity',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/recipes/': RouteRecordInfo<
+      '/docs/recipes/',
+      '/docs/recipes',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/recipes/hud': RouteRecordInfo<
+      '/docs/recipes/hud',
+      '/docs/recipes/hud',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/recipes/pause-menu': RouteRecordInfo<
+      '/docs/recipes/pause-menu',
+      '/docs/recipes/pause-menu',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/recipes/settings': RouteRecordInfo<
+      '/docs/recipes/settings',
+      '/docs/recipes/settings',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/recipes/shop': RouteRecordInfo<
+      '/docs/recipes/shop',
+      '/docs/recipes/shop',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -872,9 +914,57 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/known-issues.md': {
+      routes:
+        | '/docs/known-issues'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/reactivity.md': {
       routes:
         | '/docs/reactivity'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/recipes/index.md': {
+      routes:
+        | '/docs/recipes/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/recipes/hud.md': {
+      routes:
+        | '/docs/recipes/hud'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/recipes/pause-menu.md': {
+      routes:
+        | '/docs/recipes/pause-menu'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/recipes/settings.md': {
+      routes:
+        | '/docs/recipes/settings'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/recipes/shop.md': {
+      routes:
+        | '/docs/recipes/shop'
       views:
         | never
       pathParamNames:

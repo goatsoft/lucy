@@ -10,7 +10,8 @@ export interface NavGroup {
 const GROUPS: { title: string, match: (route: string) => boolean }[] = [
   { title: 'Get started', match: (r) => r === '/docs' || r.startsWith('/docs/guide/') },
   { title: 'Components', match: (r) => r === '/docs/components' || r.startsWith('/docs/components/') },
-  { title: 'Reference', match: (r) => r === '/docs/reactivity' || r === '/docs/architecture' || r === '/docs/stories' || r === '/docs/benchmarks' || r.startsWith('/docs/reference/') },
+  { title: 'Recipes', match: (r) => r.startsWith('/docs/recipes') },
+  { title: 'Reference', match: (r) => r === '/docs/reactivity' || r === '/docs/architecture' || r === '/docs/stories' || r === '/docs/benchmarks' || r === '/docs/known-issues' || r.startsWith('/docs/reference/') },
   { title: 'Contributing', match: (r) => r === '/docs/development' },
 ]
 

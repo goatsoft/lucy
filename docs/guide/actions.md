@@ -86,29 +86,10 @@ Escape and a gamepad's Start (menu) button always open Roblox's own menu, and a
 game cannot stop that, so don't give them actions: a pause menu can't open on
 Start. A gamepad's Select (View) button may be Roblox's on some platforms too,
 so avoid it. Lucy goes back on B and Backspace instead; see
-[Back keys](../architecture.md#back-keys).
+[Back keys](../architecture.md#back-keys) and [Known issues](../known-issues.md).
 
-For a pause menu, open it from the game screen's `onBack`, so B and Backspace
-pause, and give players a pause button they can see:
-
-```luau
-app.scenes:register("Game", {
-    build = function(scene)
-        Lucy.Button.new({
-            icon = "lucide:pause",
-            text = "Pause",
-            hint = { keyboard = Enum.KeyCode.Backspace, gamepad = Enum.KeyCode.ButtonB },
-            onClick = function()
-                app.scenes:push("Pause")
-            end,
-            Parent = scene.gui,
-        })
-    end,
-    onBack = function()
-        app.scenes:push("Pause")
-    end,
-})
-```
+For a pause menu that opens on B and Backspace, with a button players can see,
+see the [pause menu recipe](../recipes/pause-menu.md).
 
 ## Change keys
 

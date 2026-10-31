@@ -172,4 +172,10 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Devtools](references/reference/devtools.md): Look at a running UI in Studio, and press, set and focus things the way a player would, from the command bar or a coding agent.
 - [The store](references/reference/store.md): How app.state works, what it holds, every method, and the rules for reading, writing and following it.
 - [Theming](references/reference/theming.md): Every theme option, colour token, primitive and density value, the Tokens helpers, app.theme's methods and how style rules work.
+- [Known issues](references/known-issues.md): Problems Lucy cannot fix on its own, what you will see, why, and what to do instead.
+- [HUD](references/recipes/hud.md): A heads-up display with a level badge, coins that pop when they change, a health bar that turns red when low, and a level-up toast.
+- [Recipes](references/recipes/index.md): Whole screens you can copy into a game and change: a settings menu that saves, a pause menu, a HUD and a shop.
+- [Pause menu](references/recipes/pause-menu.md): A pause menu that opens on B or Backspace and from a button, with a dimmed backdrop, options on top, a confirm before leaving, and gameplay keys off while it is open.
+- [Settings menu that saves](references/recipes/settings.md): A volume slider and a theme picker bound to app state, loaded when the player joins and saved when they leave.
+- [Shop](references/recipes/shop.md): A shop dialog with a grid of items, Buy buttons that grey out when the player can't afford them, a confirm before buying, a hotkey and a HUD button.
 <!-- /generated:guides -->

@@ -277,19 +277,4 @@ local fade = Lucy.tween(target, TweenInfo.new(0.25, Enum.EasingStyle.Quad))
   sizes jump; colour and number tweens still fade. See
   [Accessibility](reference/accessibility.md#reduce-motion).
 
-To make something pop when a value changes, push the spring's target up and let
-it settle back:
-
-```luau
-local target = Lucy.ref(1)
-local scale = Lucy.spring(target, 12, 0.5)
-
-Lucy.watch(coins, function()
-    target(1.25)
-    task.delay(0.08, function()
-        target(1)
-    end)
-end)
-
-Lucy.new "UIScale" { Scale = scale, Parent = coinsLabel }
-```
+To make something pop when a value changes, see the [HUD recipe](recipes/hud.md).
