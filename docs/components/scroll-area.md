@@ -94,6 +94,9 @@ player can still scroll it with a gamepad.
 
 A dialog body that grows with its text and scrolls past 320 pixels:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-scroll-area-2-light.webp" alt="Scroll Area example" loading="lazy"><img class="example-dark" src="/images/examples/components-scroll-area-2-dark.webp" alt="Scroll Area example" loading="lazy"></figure>
+
 ```luau
 Lucy.ScrollArea.new({
     maxHeight = 320,
@@ -107,7 +110,7 @@ Lucy.ScrollArea.new({
 A row of emote cards that scrolls sideways:
 
 <!-- preview -->
-<figure class="example-preview"><img class="example-light" src="/images/examples/components-scroll-area-2-light.webp" alt="Scroll Area example" loading="lazy"><img class="example-dark" src="/images/examples/components-scroll-area-2-dark.webp" alt="Scroll Area example" loading="lazy"></figure>
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-scroll-area-3-light.webp" alt="Scroll Area example" loading="lazy"><img class="example-dark" src="/images/examples/components-scroll-area-3-dark.webp" alt="Scroll Area example" loading="lazy"></figure>
 
 ```luau
 Lucy.ScrollArea.new({
