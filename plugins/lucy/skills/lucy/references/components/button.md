@@ -18,7 +18,8 @@ Lucy.Button.new({
 
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
-| `text` | string | `"Button"` | yes | The label |
+| `text` | string | `"Button"`, or `""` with an icon | yes | The label |
+| `icon` | string | | yes | An [icon](icon.md) name drawn before the text, in the text's colour. See below |
 | `variant` | string | `"default"` | yes | `default`, `destructive`, `outline`, `secondary`, `ghost` or `link` |
 | `size` | string | `"md"` | yes | `sm`, `md`, `lg` or `icon` |
 | `disabled` | boolean | `false` | yes | Greys the button out and ignores clicks |
@@ -35,8 +36,22 @@ It also takes the [props every component takes](index.md#using-a-component).
 | `button.Activated` | A signal that fires on every click |
 | `button:click()` | Runs a click from code, as if the player clicked |
 
-A disabled button ignores clicks. Clicks within 50 ms of the last one are ignored
-too, so one press of Enter never counts twice.
+A disabled button ignores clicks, and a gamepad skips over it. Clicks within
+50 ms of the last one are ignored too, so one press of Enter never counts twice.
+
+## Icons
+
+`icon` draws an icon before the text, coloured like the text in every variant.
+With no text, the icon shows alone; use `size = "icon"` for a square button.
+
+```lua
+Lucy.Button.new({ text = "Settings", icon = "lucide:settings", variant = "outline", Parent = bar })
+Lucy.Button.new({ icon = "lucide:settings", size = "icon", variant = "ghost", Parent = bar })
+```
+
+`button.icon` is the [Icon](icon.md), and `button:set("icon", name)` changes it.
+A button made without `icon` has no icon to change. The name has to be
+registered first, like any icon; see [Icons](https://lucy.goatsoft.io/docs/guide/icons/).
 
 ## Key hints
 

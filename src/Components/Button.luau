@@ -4,6 +4,7 @@
 
 		Button.new({
 			text = "Play",
+			icon = "lucide:play",  -- optional: drawn before the text; alone with size = "icon"
 			variant = "default",   -- default | destructive | outline | secondary | ghost | link
 			size = "md",           -- sm | md | lg | icon
 			disabled = false,
@@ -14,7 +15,9 @@
 			Parent = frame,
 		})
 
-	State keys: text, variant, size, disabled, visible.
+	State keys: text, icon, variant, size, disabled, visible.
+	With `icon`, button.icon is an Icon in the button's text colour and the text
+	moves into button.label; with an icon and no text, the text is empty.
 	With `hint` (Kbd props), the text moves into button.label and button.hint (a
 	Kbd) follows it: the key for the player's input, hidden on touch. The label's
 	rules are made from the button's own text rules, so it looks the same.
@@ -212,6 +215,44 @@ for _, rule in labelRules do
 	table.insert(Button.rules, rule)
 end
 
+-- An icon takes the button's text colour and fades with it. One above the Icon
+-- variant rules (priority 10) at every level, and a colour icon stays coloured.
+local ICON_PROPERTIES: { [string]: string } =
+	{ TextColor3 = "ImageColor3", TextTransparency = "ImageTransparency" }
+local iconRules: { Component.Rule } = {}
+for _, rule in Button.rules do
+	local selector = rule.selector
+	if not string.find(selector, "::", 1, true) and not string.find(selector, ">", 1, true) then
+		local properties: { [string]: any } = {}
+		local any = false
+		for from, to in ICON_PROPERTIES do
+			local value = (rule.properties :: any)[from]
+			if value ~= nil then
+				properties[to] = value
+				any = true
+			end
+		end
+		if any then
+			table.insert(iconRules, {
+				selector = selector .. " > .ui-button-icon",
+				priority = (rule.priority or 0) + 11,
+				properties = properties,
+			})
+		end
+	end
+end
+table.insert(iconRules, {
+	selector = ".ui-button-icon.ui-icon-untinted",
+	priority = 100,
+	properties = { ImageColor3 = "$White" },
+})
+for _, rule in iconRules do
+	table.insert(Button.rules, rule)
+end
+
+-- The icon's size for each button size.
+Button.iconSizes = { sm = "sm", md = "sm", lg = "md", icon = "md" }
+
 local function check(list: { string }, value: string, what: string)
 	if not table.find(list, value) then
 		error(`[Lucy] unknown Button {what} "{value}" (expected {table.concat(list, ", ")})`, 0)
@@ -238,7 +279,14 @@ end
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "button",
-	defaults = { text = "Button", variant = "default", size = "md", disabled = false, visible = true },
+	defaults = {
+		text = "Button",
+		icon = "",
+		variant = "default",
+		size = "md",
+		disabled = false,
+		visible = true,
+	},
 	rules = Button.rules,
 	render = function(h)
 		-- An unknown variant or size fails the mount; later writes report like any effect.
@@ -250,15 +298,20 @@ local spec: Component.Spec = {
 			return not disabled()
 		end
 		local hint: { [string]: any }? = p.hint
+		local hasIcon = p.icon ~= nil
 		local label: TextLabel? = nil
 		local layout: UIListLayout? = nil
-		if hint then
+		if hint or hasIcon then
+			local text = h:ref("text")
 			label = Element.new("TextLabel", {
 				Name = "Label",
 				LayoutOrder = 1,
 				Size = UDim2.fromScale(0, 1),
 				AutomaticSize = Enum.AutomaticSize.X,
-				Text = h:ref("text"),
+				Text = text,
+				Visible = function(): boolean
+					return text() ~= ""
+				end,
 				Tags = { "ui-button-label" },
 			})
 			layout = Element.new("UIListLayout", {
@@ -272,7 +325,7 @@ local spec: Component.Spec = {
 		end
 		local root = Element.new("TextButton", {
 			AutoButtonColor = false,
-			Text = if hint then "" else h:ref("text"),
+			Text = if label then "" else h:ref("text"),
 			Visible = h:ref("visible"),
 			Interactable = enabled,
 			Selectable = enabled,
@@ -296,6 +349,21 @@ local spec: Component.Spec = {
 			layout :: any,
 			label :: any,
 		})
+		if hasIcon then
+			-- Made in render, so it is the button's and goes with it.
+			local icon = Icon.new({
+				app = h.app,
+				icon = h:ref("icon"),
+				size = function(): string
+					return Button.iconSizes[size()] or "sm"
+				end,
+				name = "Icon",
+				layoutOrder = 0,
+			})
+			icon.Instance:AddTag("ui-button-icon")
+			icon.Instance.Parent = root
+			h.icon = icon
+		end
 		if hint then
 			-- Made in render, so it is the button's and goes with it.
 			local kbdProps = table.clone(hint)
@@ -309,6 +377,11 @@ local spec: Component.Spec = {
 }
 
 function Button.new(props: { [string]: any }?)
+	-- An icon button with no text shows the icon alone, not the default text.
+	if props and props.icon ~= nil and props.text == nil then
+		props = table.clone(props)
+		props.text = ""
+	end
 	local handle = Component.mount(spec, props)
 	Component.clickable(handle)
 	return handle

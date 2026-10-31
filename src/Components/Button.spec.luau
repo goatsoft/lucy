@@ -216,6 +216,39 @@ return function()
 			expect(button.hint.destroyed).to.equal(true)
 		end)
 
+		it("draws an icon before its text", function()
+			local button = Button.new({ app = app, Parent = gui, text = "Settings", icon = "lucy:check" })
+			local root = button.Instance
+			expect(root.Text).to.equal("")
+			expect(button.label.Text).to.equal("Settings")
+			expect(button.icon.Instance.Parent).to.equal(root)
+			expect(button.icon.Instance.LayoutOrder < button.label.LayoutOrder).to.equal(true)
+			expect(button.icon:get("icon")).to.equal("lucy:check")
+			button:set("icon", "lucy:close")
+			expect(button.icon:get("icon")).to.equal("lucy:close")
+			button:destroy()
+			expect(button.icon.destroyed).to.equal(true)
+		end)
+
+		it("shows only the icon with no text", function()
+			local button = Button.new({ app = app, Parent = gui, size = "icon", icon = "lucy:check" })
+			expect(button:get("text")).to.equal("")
+			expect(button.label.Visible).to.equal(false)
+			expect(button.icon.Instance.Visible).to.equal(true)
+		end)
+
+		it("colours its icon like the button's text", function()
+			local button =
+				Button.new({ app = app, Parent = gui, icon = "lucy:check", variant = "destructive" })
+			Harness.flush()
+			expect(
+				Harness.colorEq(
+					Harness.styled(button.icon.Instance, "ImageColor3"),
+					app.theme:resolve("DestructiveForeground")
+				)
+			).to.equal(true)
+		end)
+
 		it("keeps its text on the button without one", function()
 			local button = Button.new({ app = app, Parent = gui, text = "Play" })
 			expect(button.Instance.Text).to.equal("Play")
