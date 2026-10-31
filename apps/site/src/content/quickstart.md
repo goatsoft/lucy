@@ -1,5 +1,5 @@
-<!-- preview screen -->
-<figure class="example-preview example-screen"><img class="example-light" src="/images/examples/home-quickstart-light.webp" alt="Club settings example" loading="lazy"><img class="example-dark" src="/images/examples/home-quickstart-dark.webp" alt="Club settings example" loading="lazy"></figure>
+<!-- preview screen trim -->
+<figure class="example-preview example-trim"><img class="example-light" src="/images/examples/home-quickstart-light.webp" alt="Club settings example" loading="lazy"><img class="example-dark" src="/images/examples/home-quickstart-dark.webp" alt="Club settings example" loading="lazy"></figure>
 
 ```luau [UI.client.luau]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

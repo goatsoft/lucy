@@ -206,6 +206,10 @@ above its `luau` block. The marker can take options:
 - `<!-- preview screen -->`: a whole client script (a recipe, the homepage
   example), shown full screen. It runs in edit mode too: the renderer stands in
   for `Players.LocalPlayer` and for remotes, which answer nothing.
+- `<!-- preview screen trim -->`: the same, but the picture is cut to what the
+  script drew, as for other examples, and the frame fits the picture. Use it
+  when the script draws one panel in the middle of the screen, as the homepage
+  example does.
 
 Any marker can add `then="..."`: Luau run after the example, with the same
 names in scope, such as going to the scene or opening the menu the picture

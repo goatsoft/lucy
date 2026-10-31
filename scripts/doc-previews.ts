@@ -13,6 +13,8 @@
  *                                    or anything else that covers the screen
  *   <!-- preview screen -->          a whole client script (a recipe, the homepage),
  *                                    shown full screen
+ *   <!-- preview screen trim -->     a whole client script, its picture cut to what
+ *                                    it drew (a centred panel), as other examples are
  *   <!-- preview then="..." -->      Luau run after the example (any kind), to go to
  *                                    a scene or open a menu first
  *
@@ -90,15 +92,17 @@ function pages(): Page[] {
 interface Options {
   solo: boolean
   screen: boolean
+  trim: boolean
   then?: string
 }
 
 function parseOptions(raw: string | undefined): Options {
-  const options: Options = { solo: false, screen: false }
+  const options: Options = { solo: false, screen: false, trim: false }
   for (const match of (raw ?? '').matchAll(/(\w+)(?:="([^"]*)")?/g)) {
     const [, key, value] = match
     if (key === 'solo') options.solo = true
     else if (key === 'screen') options.screen = true
+    else if (key === 'trim') options.trim = true
     else if (key === 'then') options.then = value
     else throw new Error(`unknown preview option "${key}"`)
   }
@@ -147,7 +151,7 @@ function figure(example: Example): string {
   const src = (theme: string) => `/images/examples/${example.name}-${theme}.webp`
   const alt = `${example.title} example`
   return (
-    `<figure class="example-preview${example.screen ? ' example-screen' : ''}">` +
+    `<figure class="example-preview${example.trim ? ' example-trim' : example.screen ? ' example-screen' : ''}">` +
     `<img class="example-light" src="${src('light')}" alt="${alt}" loading="lazy">` +
     `<img class="example-dark" src="${src('dark')}" alt="${alt}" loading="lazy">` +
     `</figure>\n\n`
@@ -323,7 +327,9 @@ function receive(query: URLSearchParams, body: Buffer): string {
   waiting.delete(name)
   const w = Math.min(dark.width, light.width)
   const h = Math.min(dark.height, light.height)
-  const line = writePair(name, dark, light, [0, 0, w, h], query.get('whole') === '1')
+  // A trimmed screen is cut to what it drew, like any other example.
+  const trimmed = examples().some((example) => example.name === name && example.trim)
+  const line = writePair(name, dark, light, [0, 0, w, h], query.get('whole') === '1' && !trimmed)
   console.log(line)
   return line
 }
