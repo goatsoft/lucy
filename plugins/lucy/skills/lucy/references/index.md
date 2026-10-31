@@ -47,6 +47,21 @@ local app = Lucy.App.new({
 })
 ```
 
+Make it once, in one client script. Components you create use this App without
+being told, and other scripts reach it with `Lucy.App.current()`:
+
+```luau
+local app = Lucy.App.current() -- the App, or nil if UI.client hasn't made it yet
+```
+
+`Lucy.App.current()` is nil until that script has run, so a script that may
+start first should wait for it, or get the App from a ModuleScript that makes
+it and returns it.
+
+For typed code, Lucy exports its types: `Lucy.App`, `Lucy.Scene`, `Lucy.Handle`
+(any component), `Lucy.Ref<T>` and more. A scene and a handle both take your own
+fields, such as `scene.play`.
+
 ## Build a scene
 
 Each scene owns one ScreenGui. Only one screen shows at a time; modals and

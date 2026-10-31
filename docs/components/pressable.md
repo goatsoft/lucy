@@ -9,6 +9,10 @@ A surface the player can click, tap or select with a gamepad, holding whatever
 you put in it: an icon, a name, a price, a whole card. Use it where a Button's
 single line of text is not enough, such as shop items, song rows or vote cards.
 
+The whole card is the button, so don't put buttons inside it. For a card that
+holds its own buttons, such as a shop item with a Buy button, use a
+[Panel](panel.md).
+
 ```luau
 Lucy.Pressable.new({
     size = UDim2.fromOffset(160, 200),

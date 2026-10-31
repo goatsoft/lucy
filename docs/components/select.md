@@ -47,7 +47,7 @@ It also takes the [props every component takes](index.md#using-a-component).
 ### Items
 
 An item is a value, shown as its text, or a table with `value`, and optionally
-`label` and `disabled`. A disabled option shows faded and cannot be picked.
+`label` (or `text`; both work) and `disabled`. A disabled option shows faded and cannot be picked.
 
 ## Types
 

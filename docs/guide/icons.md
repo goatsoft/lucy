@@ -121,7 +121,7 @@ Add `lucy-icons.json` beside it:
 
 | Field | Default | What it is |
 |---|---|---|
-| `src` | `["src"]` | Folders to scan |
+| `src` | `["src"]` | Folders to scan. List every folder with UI code, client scripts included |
 | `extensions` | `[".luau", ".lua"]` | Files to scan |
 | `include` | `[]` | Names your code builds while it runs, which a scan cannot find. See below |
 | `output` | `src/shared/Icons.luau` | The module to write |

@@ -46,7 +46,9 @@ When the content is taller than `maxHeight`, or than the screen, the body
 scrolls and the title and actions stay where they are.
 
 While a modal dialog is open, keyboard and gamepad focus stay inside it. When
-it closes, focus goes back to whatever had it before. A dialog with
+it opens on a keyboard or gamepad, its last action (the main one) is selected,
+or the close button when it has no actions. When it closes, focus goes back to
+whatever had it before. A dialog with
 `modal = false` is still on top, but the rest of the screen keeps working,
 and Escape or ButtonB still closes it.
 
@@ -70,7 +72,9 @@ An action closes the dialog after its `onClick` runs, unless `onClick` returns
 ## Alert dialogs
 
 `Lucy.Dialog.alert` asks a question with two buttons and opens straight away.
-It cannot be dismissed, so the player has to choose.
+Clicking outside it does nothing and it has no close button, so the player has
+to choose. Back (Escape or B) picks Cancel; pass `backCancels = false` to make
+it do nothing instead.
 
 ```luau
 Lucy.Dialog.alert({
@@ -83,6 +87,9 @@ Lucy.Dialog.alert({
     onCancel = function() end,
 })
 ```
+
+Either button closes it after its function runs. An alert is used once: it is
+destroyed when it closes, so call `Lucy.Dialog.alert` again each time you ask.
 
 ## Examples
 

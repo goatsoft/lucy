@@ -43,7 +43,7 @@ An item is a value (a string or a number, shown as its text) or a table:
 | Field | What it does |
 |---|---|
 | `value` | What the item stands for. Required |
-| `text` | Its text. Defaults to the value |
+| `text` | Its text. Defaults to the value. `label` works too |
 | `children` | Shown in place of the text, such as an icon |
 | `disabled` | Greys this item out |
 

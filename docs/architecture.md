@@ -100,6 +100,29 @@ Every token, option and method is in the [theming reference](reference/theming.m
 
 [Build screens with scenes](guide/scenes.md) shows how to register and move between them.
 
+## Scaling
+
+You lay out UI in pixels as if the screen were 1280 by 720. Every ScreenGui an
+App makes has a UIScale that fits that layout to the real screen, so a layout
+keeps its proportions from a phone to a TV and you never do the maths yourself.
+
+Each kind of device scales against its own base size, and only so far:
+
+| Device | Base size | Smallest scale | Largest scale |
+|---|---|---|---|
+| Phone | 640 x 360 | 0.85 | 1.25 |
+| Tablet | 1024 x 640 | 0.85 | 1.5 |
+| Desktop | 1280 x 720 | 0.75 | 2 |
+| Console | 1280 x 720 | 1 | 2 |
+
+So a 16 pixel gap is 16 layout pixels: about 14 to 20 real pixels on a phone,
+and never less than 16 on a TV. Offsets, sizes and `UISizeConstraint` limits
+all scale this way. A phone uses a smaller base so text stays readable there.
+
+`Lucy.App.new({ adaptive = false })` turns scaling off. A table, such as
+`{ max = 1.5 }`, changes the numbers for every device. Text sizes and control
+heights also grow with the [density](reference/theming.md) (touch and TV).
+
 ## Input and focus
 
 `input.mode` follows the last input. `input.device` is derived from capabilities

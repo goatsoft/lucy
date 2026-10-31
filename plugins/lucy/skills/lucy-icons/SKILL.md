@@ -30,7 +30,8 @@ the chevrons, `lucy:minus`, `lucy:plus`) that work with nothing set up.
    `LUCY_ICONS_API_KEY` set it uploads new sheets; without it, it writes them
    to `.lucy-icons/sheets` and says how to finish by hand. Uploads count
    against a monthly limit, so build once after adding a batch of icons, not
-   once per icon.
+   once per icon. If you cannot run it, write the names anyway and tell the
+   user to run it: until then, an unknown name draws nothing and warns once.
 4. Commit the generated module and `lucy-icons.lock.json`. Never edit either
    by hand (except adding a sheet id to the lock after a manual upload).
 5. Make sure the module is registered at client start, before any UI:

@@ -23,7 +23,7 @@ Each component has its own page with its props, usage and examples:
 | [Grid](grid.md) | Rows of equal cells, such as shop items or emotes |
 | [Icon](icon.md) | A small picture in the theme's colours, by name or asset id |
 | [Image](image.md) | A picture from an asset id or a thumbnail |
-| [Input](input.md) | A text field on one line |
+| [Input](input.md) | A text field, on one line or several |
 | [Item](item.md) | A row in a list, with media, a title, a description and actions |
 | [Kbd](kbd.md) | The key to press, for the player's keyboard or controller |
 | [Number Field](number-field.md) | A number with minus and plus buttons, typed or stepped |
@@ -67,6 +67,26 @@ Every component also takes these props:
 | `persist` | Keep its state in the app after it is destroyed |
 
 Any state key can be changed from the app: `app.state:set("ui.<id>.<key>", value)`.
+
+A prop a component doesn't know is ignored, without an error, so check the
+component's page for its name. To place a component, put it in a
+[Stack](stack.md) or [Grid](grid.md), or set layout properties on its root
+after making it:
+
+```luau
+local gear = Lucy.Button.new({ icon = "lucide:settings", size = "icon", Parent = scene.gui })
+gear.Instance.AnchorPoint = Vector2.new(1, 0)
+gear.Instance.Position = UDim2.new(1, -16, 0, 16)
+```
+
+`Position`, `AnchorPoint`, `ZIndex` and `LayoutOrder` are safe to set this way.
+Leave `Size` and colours alone on components whose size comes from the theme,
+such as Button and Input: a rule sets them and would win.
+
+Where a component takes `children`, each one is an Instance, a component, or a
+function called with the frame to fill. A function's return value is not used,
+so for a list from state, put `Lucy.each` in a `Lucy.new` frame and pass that
+(see [Work with app state](../guide/app-state.md)).
 
 ## Reactive props
 

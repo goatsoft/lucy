@@ -21,7 +21,10 @@ they are exact; this page only says where things are and what agents get wrong.
   there; add more with the copy-in command in
   [Getting started](references/index.md).
 - Look for the existing `Lucy.App.new` call (usually a client script) and use
-  that app. Never make a second one.
+  that app. Never make a second one. Other scripts get it with
+  `Lucy.App.current()` (nil until the app's script has run).
+- If there is none, make one in a single client script, as in
+  [Getting started](references/index.md).
 
 ## How it fits together
 
@@ -38,7 +41,7 @@ they are exact; this page only says where things are and what agents get wrong.
   same values, and `Lucy.show` / `Lucy.each` handle conditions and lists.
 - **Scenes** own one ScreenGui each: one screen at a time, overlays (HUD) and
   stacked modal scenes above it. Dialogs, sheets and selects float on the
-  overlay layer above everything. See
+  modal layer, a portal above every scene. See
   [Build screens with scenes](references/guide/scenes.md).
 - **Looks come from the theme.** Colours, fonts, sizes and radius are style
   rules with `$Token` values (`$Primary`, `$Card`, `$Border`, `$FontSansSemibold`,
@@ -66,20 +69,31 @@ they are exact; this page only says where things are and what agents get wrong.
    screens where back should do something. Test with keys and a gamepad: a
    console player cannot click. Menus go on the scene stack with
    `app.scenes:push`, not as screens.
-6. **Icons, not text glyphs.** Use `Lucy.Icon` with a registered name
-   (`"lucide:heart"` with lucy-icons, or the game's own images). See the
-   `lucy-icons` skill.
+6. **Icons, not text glyphs.** Use `Lucy.Icon`, or a Button's `icon` prop, with
+   a registered name (`"lucide:heart"` with lucy-icons, or the game's own
+   images). See the `lucy-icons` skill.
 7. **Hotkeys go through `app.actions`**, never raw `UserInputService` checks.
-   To block gameplay and movement while a menu or dialog is open, use
-   `Lucy.useWhile` with `app:modalOpen()`, as
+   Keep menu keys in their own set (not `gameplay`), and give touch players a
+   button for each. To block gameplay and movement while a menu, dialog or
+   sheet is open, use `Lucy.useWhile` with `app:modalOpen()`, as
    [Hotkeys and modal input](references/guide/actions.md) shows. Conditions
    must be tracked: `app.state:ref(path)`, not `app.state:get(path)`.
-8. **Lists in state:** use `Lucy.insert` / `Lucy.remove` or set a new table;
+8. **Composables need an owner.** A component's render and a scene's `build`
+   are owners; the top of a client script is not, so wrap `Lucy.use*` calls
+   there in `Lucy.effectScope():run(function() ... end)`.
+9. **Lists in state:** use `Lucy.insert` / `Lucy.remove` or set a new table;
    `table.insert` on a reactive list is not seen.
-9. **Writing a component of your own:** follow
+10. **Writing a component of your own:** follow
    [Build a component](references/guide/components.md). The spec is built once
    at module level, `render` runs once and must return an Instance, and looks
    go in its `rules`.
+
+11. **Position components** by putting them in a Stack or Grid, or set
+   `Position` and `AnchorPoint` on `handle.Instance`. Unknown props are
+   ignored without an error, so check each prop on the component's page.
+12. **Keep HUDs in the safe area**: `ignoreGuiInset = false` on the scene and
+   `Enum.ScreenInsets.CoreUISafeInsets` on `scene.gui`; see
+   [Build screens with scenes](references/guide/scenes.md).
 
 ## Check your work
 

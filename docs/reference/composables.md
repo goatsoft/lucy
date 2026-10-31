@@ -7,9 +7,20 @@ order: 2
 # Composables
 
 A composable is a function named `useX` that creates refs, computeds and effects
-for whatever is running now: a component's render, an effect, or `scope:run` of a
-`Lucy.effectScope()`. What it creates stops with that owner. Every composable
-here raises an error when there is no owner, since nothing would ever stop it.
+for whatever is running now: a component's render, a scene's `build`, an
+effect, or `scope:run` of a `Lucy.effectScope()`. What it creates stops with
+that owner. Every composable here raises an error when there is no owner, since
+nothing would ever stop it.
+
+The top of a client script has no owner, so wrap composables there in a scope.
+It lasts as long as the script; keep it to stop it early with `scope:stop()`:
+
+```luau
+local scope = Lucy.effectScope()
+scope:run(function()
+    Lucy.useWhile(isOpen, blockInput)
+end)
+```
 
 To write your own, see [Share logic with composables](../guide/composables.md).
 
@@ -40,8 +51,9 @@ one, so it costs nothing to ask for.
 local height = Lucy.useMetric(app, "ControlMd")
 ```
 
-Returns a computed with the pixel height of a control token (`ControlSm`,
-`ControlMd`, `ControlLg` or `ControlIcon`) in the current density.
+Returns a computed number: the height in pixels of a control token
+(`ControlSm`, `ControlMd`, `ControlLg` or `ControlIcon`) in the current
+density. The tokens themselves are UDim2 sizes; this is their height.
 
 ## useResponsive
 
@@ -203,10 +215,12 @@ A common use is switching gameplay keys and movement off while a menu is open
 (see [Hotkeys and modal input](../guide/actions.md)):
 
 ```luau
-Lucy.useWhile(function()
-    return app:modalOpen()
-end, function()
-    return app.actions:disable("gameplay", "movement")
+Lucy.effectScope():run(function()
+    Lucy.useWhile(function()
+        return app:modalOpen()
+    end, function()
+        return app.actions:disable("gameplay", "movement")
+    end)
 end)
 ```
 

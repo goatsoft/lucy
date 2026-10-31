@@ -43,7 +43,7 @@ An option is a value (shown as its text) or a table:
 | Field | What it does |
 |---|---|
 | `value` | What the option stands for. Required |
-| `label` | Its text. Defaults to the value |
+| `label` | Its text. Defaults to the value. `text` works too |
 | `disabled` | Greys this option out |
 
 Once something is picked, the player can pick another option but cannot clear

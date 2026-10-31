@@ -40,7 +40,7 @@ Each tab is a table:
 | Field | What it does |
 |---|---|
 | `value` | What the tab stands for. Required |
-| `text` | The tab's text. Defaults to the value |
+| `text` | The tab's text. Defaults to the value. `label` works too |
 | `content` | The panel: an Instance, a handle, or a function that returns one |
 | `children` | Shown in the tab in place of the text, such as an icon |
 | `disabled` | Greys this tab out |
