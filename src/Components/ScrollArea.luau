@@ -9,6 +9,7 @@
 			padding = "Space4",       -- optional: a spacing token, pixels or a UDim
 			scrollbar = "hover",      -- hover | auto | always | scroll | glimpse
 			hideDelay = 0.6,          -- seconds the bar stays after scrolling (scroll, hover, glimpse)
+			fade = true,              -- fade the edges there is more to scroll past
 			children = { ... },       -- instances, handles or functions
 			visible = true,
 			Parent = frame,
@@ -36,6 +37,11 @@
 	The bar is hidden by fading it (tag ui-scroll-bar-visible), so the space it
 	takes stays put and the content does not move when it shows.
 
+	Each edge with more to scroll past fades into the surface behind it (the
+	background, a Panel's card, a Select's popover), so a control cut by the
+	edge reads as continuing. handle.fades holds them by side (top, bottom,
+	left, right); fade = false leaves them out.
+
 	State keys: visible.
 ]]
 
@@ -46,9 +52,13 @@ local Scroll = require(script.Parent.Parent.Core.Scroll)
 
 local ScrollArea = {}
 
+-- How far an edge fade reaches into the area, in px.
+ScrollArea.fadeSize = 16
+
 local OUT_SIZE = Element.out("AbsoluteSize")
 local OUT_CANVAS = Element.out("AbsoluteCanvasSize")
 local OUT_WINDOW = Element.out("AbsoluteWindowSize")
+local OUT_POSITION = Element.out("CanvasPosition")
 local ON_SCROLL = Element.changed("CanvasPosition")
 local ON_ENTER = Element.on("MouseEnter")
 local ON_LEAVE = Element.on("MouseLeave")
@@ -94,6 +104,18 @@ ScrollArea.rules = {
 		selector = ".ui-scroll-area-content",
 		priority = 0,
 		properties = { BackgroundTransparency = 1, BorderSizePixel = 0 },
+	},
+	-- Edge fades take the colour of the surface the area sits on.
+	{
+		selector = ".ui-scroll-fade",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Background", BackgroundTransparency = 0, BorderSizePixel = 0 },
+	},
+	{ selector = ".ui-panel >> .ui-scroll-fade", priority = 1, properties = { BackgroundColor3 = "$Card" } },
+	{
+		selector = ".ui-select-content >> .ui-scroll-fade",
+		priority = 1,
+		properties = { BackgroundColor3 = "$Popover" },
 	},
 } :: { Component.Rule }
 
@@ -242,7 +264,76 @@ local spec: Component.Spec = {
 			end
 		end
 
-		return Element.new("ScrollingFrame", {
+		-- Edge fades: children of the ScrollingFrame moved with the canvas, so they
+		-- stay on the window's edges, each shown while there is more past it.
+		local position = Reactive.ref(Vector2.zero)
+		local fades: { [string]: Frame } = {}
+		h.fades = fades
+		if p.fade ~= false then
+			local reach = ScrollArea.fadeSize
+			local function scale(): number
+				return Scroll.scaleOf(content)
+			end
+			local function edge(
+				side: string,
+				rotation: number,
+				frame: () -> UDim2,
+				at: () -> UDim2,
+				shown: () -> boolean
+			)
+				fades[side] = Element.new("Frame", {
+					Name = `Fade{side}`,
+					ZIndex = 2,
+					Active = false,
+					Interactable = false,
+					Selectable = false,
+					Size = frame,
+					Position = at,
+					Visible = shown,
+					Tags = { "ui-scroll-fade" },
+					Element.new("UIGradient", {
+						Rotation = rotation,
+						Transparency = NumberSequence.new(0, 1),
+					}),
+				})
+			end
+			if key ~= "horizontal" then
+				local function across(): UDim2
+					return UDim2.fromOffset(window().X / scale(), reach)
+				end
+				edge("top", 90, across, function()
+					local s = scale()
+					return UDim2.fromOffset(position().X / s, position().Y / s)
+				end, function()
+					return position().Y > 0.5
+				end)
+				edge("bottom", 270, across, function()
+					local s = scale()
+					return UDim2.fromOffset(position().X / s, (position().Y + window().Y) / s - reach)
+				end, function()
+					return position().Y + window().Y < canvas().Y - 0.5
+				end)
+			end
+			if key ~= "vertical" then
+				local function down(): UDim2
+					return UDim2.fromOffset(reach, window().Y / scale())
+				end
+				edge("left", 0, down, function()
+					local s = scale()
+					return UDim2.fromOffset(position().X / s, position().Y / s)
+				end, function()
+					return position().X > 0.5
+				end)
+				edge("right", 180, down, function()
+					local s = scale()
+					return UDim2.fromOffset((position().X + window().X) / s - reach, position().Y / s)
+				end, function()
+					return position().X + window().X < canvas().X - 0.5
+				end)
+			end
+		end
+
+		local frame = Element.new("ScrollingFrame", {
 			Size = size,
 			CanvasSize = UDim2.fromScale(0, 0),
 			AutomaticCanvasSize = axis.automatic,
@@ -256,6 +347,7 @@ local spec: Component.Spec = {
 			Tags = { "ui-scroll-area" :: any, ["ui-scroll-bar-visible"] = barVisible },
 			[OUT_CANVAS] = canvas :: any,
 			[OUT_WINDOW] = window :: any,
+			[OUT_POSITION] = position :: any,
 			[ON_SCROLL] = function()
 				if mode ~= "auto" and mode ~= "always" then
 					pulse()
@@ -269,6 +361,10 @@ local spec: Component.Spec = {
 			end,
 			content,
 		})
+		for _, fade in fades do
+			fade.Parent = frame
+		end
+		return frame
 	end,
 }
 

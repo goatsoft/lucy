@@ -30,6 +30,7 @@ Lucy.ScrollArea.new({
 | `padding` | spacing | none | | Space around the inside edge of the content |
 | `scrollbar` | string | `"hover"` | | When the scroll bar shows, see [Scroll bar](#scroll-bar) |
 | `hideDelay` | number | `0.6` | | Seconds the bar stays after scrolling stops |
+| `fade` | boolean | `true` | | Fade the edges there is more to scroll past, see [Edge fades](#edge-fades) |
 | `children` | table | | | Instances, handles or functions to put in it |
 | `visible` | boolean | `true` | yes | Shows or hides the area |
 
@@ -62,6 +63,14 @@ Touch and gamepad have no hover, so on those `hover` acts like `scroll`. Apart
 from `always`, the bar only shows when there is something to scroll to. It
 fades in and out without changing the space it takes, so the content never
 moves when it shows.
+
+## Edge fades
+
+While there is more to scroll past an edge, that edge fades into the surface
+behind the area: the page background, a Panel's card or a Select's list. A
+control the edge cuts through then reads as going on, not as broken. The fades
+come and go as the player scrolls, and never take clicks. Turn them off with
+`fade = false`, for an area over a picture, say, where a solid fade would show.
 
 ## Gamepad and keyboard
 

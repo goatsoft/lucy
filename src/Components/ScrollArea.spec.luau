@@ -131,6 +131,77 @@ return function()
 		expect(math.abs(area.content.AbsoluteSize.X - frame.AbsoluteSize.X) < 1).to.equal(true)
 	end)
 
+	describe("edge fades", function()
+		it("fades an edge while there is more to scroll that way, and stays put", function()
+			local area = ScrollArea.new({
+				app = app,
+				Parent = gui,
+				size = UDim2.fromOffset(200, 100),
+				children = { block(400) },
+			})
+			Harness.flush()
+			local frame, top, bottom = area.Instance, area.fades.top, area.fades.bottom
+			expect(top.Visible).to.equal(false)
+			expect(bottom.Visible).to.equal(true)
+			frame.CanvasPosition = Vector2.new(0, 50)
+			Harness.flush()
+			expect(top.Visible).to.equal(true)
+			expect(bottom.Visible).to.equal(true)
+			expect(math.abs(top.AbsolutePosition.Y - frame.AbsolutePosition.Y) < 1).to.equal(true)
+			local windowBottom = frame.AbsolutePosition.Y + frame.AbsoluteWindowSize.Y
+			expect(math.abs(bottom.AbsolutePosition.Y + bottom.AbsoluteSize.Y - windowBottom) < 1).to.equal(
+				true
+			)
+			frame.CanvasPosition = Vector2.new(0, 10000)
+			Harness.flush()
+			expect(top.Visible).to.equal(true)
+			expect(bottom.Visible).to.equal(false)
+		end)
+
+		it("shows none when nothing scrolls, and none with fade = false", function()
+			local short = ScrollArea.new({
+				app = app,
+				Parent = gui,
+				size = UDim2.fromOffset(200, 100),
+				children = { block(40) },
+			})
+			Harness.flush()
+			expect(short.fades.top.Visible).to.equal(false)
+			expect(short.fades.bottom.Visible).to.equal(false)
+			local plain = ScrollArea.new({
+				app = app,
+				Parent = gui,
+				size = UDim2.fromOffset(200, 100),
+				fade = false,
+				children = { block(400) },
+			})
+			expect((next(plain.fades))).to.equal(nil)
+		end)
+
+		it("fades the sides of a horizontal area", function()
+			local wide = Instance.new("Frame")
+			wide.Size = UDim2.new(0, 600, 1, 0)
+			local row = ScrollArea.new({
+				app = app,
+				Parent = gui,
+				size = UDim2.fromOffset(200, 60),
+				direction = "horizontal",
+				children = { wide },
+			})
+			Harness.flush()
+			expect(row.fades.left.Visible).to.equal(false)
+			expect(row.fades.right.Visible).to.equal(true)
+			expect(row.fades.top).to.equal(nil)
+		end)
+
+		it("blends into the background", function()
+			local area = ScrollArea.new({ app = app, Parent = gui, children = { block(40) } })
+			Harness.flush()
+			local color = Harness.styled(area.fades.top, "BackgroundColor3")
+			expect(Harness.colorEq(color, app.theme:resolve("Background"))).to.equal(true)
+		end)
+	end)
+
 	it("follows a reactive maxHeight", function()
 		local cap = Reactive.ref(150)
 		local area = ScrollArea.new({
