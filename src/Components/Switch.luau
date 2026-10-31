@@ -106,6 +106,7 @@ local spec: Component.Spec = {
 			end,
 			Tags = { "ui-switch", ["ui-checked"] = checked, ["ui-disabled"] = disabled },
 			thumb,
+			Component.partRing(h.app),
 		})
 		local text = Element.new("TextLabel", {
 			Name = "Label",
@@ -160,7 +161,7 @@ local spec: Component.Spec = {
 			Visible = visible,
 			Interactable = enabled,
 			Selectable = enabled,
-			Tags = { "ui-switch-root" },
+			Tags = { "ui-switch-root", "ui-ring-host" },
 			[Element.on("Activated")] = function()
 				h:toggle()
 			end,

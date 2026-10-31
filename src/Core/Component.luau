@@ -345,6 +345,32 @@ end
 Handle.Destroy = Handle.destroy
 
 --[[
+	A focus ring round one part of a control (a radio's circle, a checkbox's box,
+	a switch's track), for rows where ringing the whole row would wrap the label
+	too. Parent it to the part and tag the row "ui-ring-host": the row's own ring
+	is then hidden and this one shows while the row has the focus ring. Styled
+	with the same tokens as the base ring (Theme).
+]]
+function Component.partRing(app: any): Frame
+	local gap = 2 * (tonumber(app.theme:resolve("StrokeThin")) or 1)
+	local ring = Instance.new("Frame")
+	ring.Name = "Ring"
+	ring.AnchorPoint = Vector2.new(0.5, 0.5)
+	ring.Position = UDim2.fromScale(0.5, 0.5)
+	ring.Size = UDim2.new(1, gap, 1, gap)
+	ring.BackgroundTransparency = 1
+	ring.Selectable = false
+	ring:AddTag("ui-part-ring")
+	local corner = Instance.new("UICorner")
+	corner:AddTag("ui-part-ring-corner")
+	corner.Parent = ring
+	local stroke = Instance.new("UIStroke")
+	stroke:AddTag("ui-part-ring-stroke")
+	stroke.Parent = ring
+	return ring
+end
+
+--[[
 	Gives a handle the click path every pressable component shares:
 	handle.Activated (a Signal) and handle:click(). A click is ignored while the
 	component is disabled or within 50 ms of the last one (keyboard Enter can

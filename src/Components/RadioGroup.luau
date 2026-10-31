@@ -145,6 +145,7 @@ local spec: Component.Spec = {
 				Size = circleSize,
 				Tags = { "ui-radio", ["ui-selected"] = picked, ["ui-disabled"] = off },
 				dot,
+				Component.partRing(h.app),
 			})
 			local label = Element.new("TextLabel", {
 				Name = "Label",
@@ -164,7 +165,7 @@ local spec: Component.Spec = {
 				Size = rowSize,
 				Interactable = enabled,
 				Selectable = enabled,
-				Tags = { "ui-radio-option" },
+				Tags = { "ui-radio-option", "ui-ring-host" },
 				[ACTIVATED] = function()
 					h:select(itemValue)
 				end,

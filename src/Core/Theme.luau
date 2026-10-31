@@ -120,6 +120,34 @@ table.insert(Theme.baseRules, {
 	},
 })
 
+-- Rows that ring one part instead (Component.partRing): the row's own ring is
+-- hidden and the part's ring shows.
+table.insert(Theme.baseRules, {
+	selector = ".ui-ring-host.ui-focus-visible::UIStroke",
+	priority = FOCUS + 1,
+	properties = { Transparency = 1 },
+})
+table.insert(Theme.baseRules, {
+	selector = ".ui-part-ring-corner",
+	priority = 0,
+	properties = { CornerRadius = "$RadiusFull" },
+})
+table.insert(Theme.baseRules, {
+	selector = ".ui-part-ring-stroke",
+	priority = 0,
+	properties = {
+		Color = "$Ring",
+		Thickness = "$FocusRing",
+		Transparency = 1,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+	},
+})
+table.insert(Theme.baseRules, {
+	selector = ".ui-ring-host.ui-focus-visible >> .ui-part-ring-stroke",
+	priority = FOCUS,
+	properties = { Transparency = 0 },
+})
+
 local function keySet(t: { [string]: any }): string
 	local out = {}
 	for key in t do

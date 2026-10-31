@@ -32,6 +32,11 @@ local rules: { Component.Rule } = {
 	},
 	{ selector = ".ui-checkbox::UICorner", priority = 0, properties = { CornerRadius = "$RadiusSm" } },
 	{
+		selector = ".ui-checkbox >> .ui-part-ring-corner",
+		priority = 1,
+		properties = { CornerRadius = "$RadiusSm" },
+	},
+	{
 		selector = ".ui-checkbox::UIStroke",
 		priority = 0,
 		properties = { Color = "$Input", Thickness = "$StrokeThin" },
@@ -95,6 +100,7 @@ local spec: Component.Spec = {
 			end,
 			Tags = { "ui-checkbox", ["ui-checked"] = checked, ["ui-disabled"] = disabled },
 			check,
+			Component.partRing(h.app),
 		})
 		local text = Element.new("TextLabel", {
 			Name = "Label",
@@ -127,7 +133,7 @@ local spec: Component.Spec = {
 			Visible = visible,
 			Interactable = enabled,
 			Selectable = enabled,
-			Tags = { "ui-checkbox-root" },
+			Tags = { "ui-checkbox-root", "ui-ring-host" },
 			[Element.on("Activated")] = function()
 				h:toggle()
 			end,

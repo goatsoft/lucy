@@ -98,4 +98,27 @@ return function()
 		Preferences.setReducedMotion(nil)
 		assert(ok, err)
 	end)
+
+	it("rings the track, not the whole row, when focused with a pad or keys", function()
+		local switch = Switch.new({ app = app, Parent = gui, label = "Music" })
+		local row = switch.Instance
+		local part = switch.track
+		local ring = part:FindFirstChild("Ring")
+		expect(ring ~= nil).to.equal(true)
+		local stroke = ring:FindFirstChildWhichIsA("UIStroke")
+		expect(ring.Size.X.Offset > 0).to.equal(true)
+		Harness.flush()
+		expect(Harness.styled(stroke, "Transparency")).to.be.near(1, 0.001)
+		app.input:setMode("gamepad")
+		app.input:focus(row)
+		expect(row:HasTag("ui-focus-visible")).to.equal(true)
+		Harness.flush()
+		expect(Harness.styled(stroke, "Transparency")).to.be.near(0, 0.001)
+		expect(Harness.colorEq(Harness.styled(stroke, "Color"), app.theme:resolve("Ring"))).to.equal(true)
+		expect(Harness.styled(stroke, "Thickness")).to.be.near(app.theme:resolve("FocusRing"), 0.001)
+		local rowStroke = row:FindFirstChildWhichIsA("UIStroke")
+		if rowStroke then
+			expect(Harness.styled(rowStroke, "Transparency")).to.be.near(1, 0.001)
+		end
+	end)
 end
