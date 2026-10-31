@@ -200,6 +200,63 @@ return function()
 		expect(app.input:focused()).to.equal(opener)
 	end)
 
+	it("gives focus back to the opener after an alert", function()
+		local gui = Harness.mount(app)
+		local opener = Instance.new("TextButton")
+		opener.Size = UDim2.fromOffset(100, 40)
+		opener.Position = UDim2.fromOffset(0, 300)
+		opener.Parent = gui
+		app.input:setMode("keyboard")
+		app.input:focus(opener)
+		local alert = Dialog.alert({ app = app, title = "Buy?" })
+		expect(app.input:focused()).to.equal(alert.actions[2].Instance)
+		alert.actions[2]:click()
+		expect(app.input:focused()).to.equal(opener)
+	end)
+
+	it("focuses the control nearest the opener when the opener can't take focus", function()
+		local gui = Harness.mount(app)
+		local function button(y: number): TextButton
+			local b = Instance.new("TextButton")
+			b.Size = UDim2.fromOffset(100, 40)
+			b.Position = UDim2.fromOffset(0, y)
+			b.Parent = gui
+			return b
+		end
+		local far = button(0) -- first in reading order: what a plain default would pick
+		local near = button(300)
+		local opener = button(360)
+		task.wait()
+		app.input:setMode("gamepad")
+		app.input:focus(opener)
+		local alert = Dialog.alert({
+			app = app,
+			title = "Buy?",
+			onConfirm = function()
+				opener.Interactable = false -- sold out
+			end,
+		})
+		alert.actions[2]:click()
+		expect(app.input:focused()).to.equal(near)
+		expect(app.input:focused() ~= far).to.equal(true)
+	end)
+
+	it("takes defaultFocus, called with the dialog", function()
+		app.input:setMode("gamepad")
+		local seen = nil
+		local dialog = Dialog.new({
+			app = app,
+			actions = { { text = "No" }, { text = "Yes" } },
+			defaultFocus = function(d)
+				seen = d
+				return d.actions[1]
+			end,
+		})
+		dialog:open()
+		expect(seen).to.equal(dialog)
+		expect(app.input:focused()).to.equal(dialog.actions[1].Instance)
+	end)
+
 	it("puts the close button in the top right corner", function()
 		local dialog = Dialog.new({ app = app, open = true, title = "Hi" })
 		task.wait(0.2)

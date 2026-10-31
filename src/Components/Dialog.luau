@@ -16,6 +16,7 @@
 			modal = true,             -- false: no focus trap, presses reach what is behind
 			scrim = true,             -- false: no dimmed backdrop
 			showClose = true,
+			defaultFocus = function(dialog) return dialog.actions[1] end, -- or an object or handle
 			size = "md",              -- sm | md | lg | xl | full: how wide it gets
 			maxWidth = nil,           -- pixels, instead of size
 			maxHeight = nil,          -- pixels (a number, ref or getter); the body scrolls past it
@@ -36,7 +37,8 @@
 	Input: while open a modal dialog is a focus scope (Tab/arrows/gamepad stay inside,
 	the primary action is selected when navigating), registers a back handler, and
 	its content is a SelectionGroup so the gamepad cannot wander out. Focus goes
-	back to whatever had it when the dialog closes.
+	back to whatever had it when the dialog closes, or the control nearest it
+	when that can't take focus any more.
 
 	State keys: open, title, description.
 ]]
@@ -298,6 +300,13 @@ function Dialog.new(props: { [string]: any }?)
 				name = "Dialog",
 				tags = { "ui-dialog" },
 				defaultFocus = function()
+					local chosen = p.defaultFocus
+					if type(chosen) == "function" then
+						chosen = chosen(h)
+					end
+					if chosen ~= nil then
+						return chosen
+					end
 					local last = actionHandles[#actionHandles]
 					return if last then last.Instance else (h.closeButton and h.closeButton.Instance)
 				end,

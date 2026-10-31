@@ -23,7 +23,8 @@
 		gamepad or presses Tab with nothing selected, the top scope's defaultFocus
 		is selected. When the scope pops with focus inside it, focus goes back to
 		returnFocus (an object or a function returning one), or else to what had
-		focus when the scope was pushed, if it is still shown.
+		focus when the scope was pushed, if it can still take focus, or else to
+		the control nearest where that was (a Buy button that disabled itself).
 
 	Shoulder buttons:
 		LB / RB call app.input:shoulder(-1 / 1): the nearest component around the
@@ -299,6 +300,10 @@ end
 
 function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
 	local previous = self._focused
+	-- Where the focus was, for when it can't go back to the same object.
+	local previousAt: Vector2? = if previous
+		then previous.AbsolutePosition + previous.AbsoluteSize / 2
+		else nil
 	table.insert(self._scopes, scope)
 	if self:isNavigating() then
 		self:focusDefault()
@@ -312,7 +317,9 @@ function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
 		if focused and scope.root and focused:IsDescendantOf(scope.root) then
 			self:focus(nil)
 			if self:isNavigating() then
-				local back = self:_usable(scope.returnFocus) or self:_usable(previous)
+				local back = self:_usable(scope.returnFocus)
+					or self:_usable(previous)
+					or (previousAt and self:_nearest(previousAt))
 				if back then
 					self:focus(back)
 				else
@@ -383,6 +390,21 @@ function InputManager.selectables(self: InputManager, root: Instance): { GuiObje
 		return pa.X < pb.X
 	end)
 	return out
+end
+
+-- The control in the top scope whose centre is nearest `point`.
+function InputManager._nearest(self: InputManager, point: Vector2): GuiObject?
+	local best: GuiObject? = nil
+	local bestDistance = math.huge
+	for _, root in self:_scopeRoots() do
+		for _, object in self:selectables(root) do
+			local distance = (object.AbsolutePosition + object.AbsoluteSize / 2 - point).Magnitude
+			if distance < bestDistance then
+				best, bestDistance = object, distance
+			end
+		end
+	end
+	return best
 end
 
 function InputManager._scopeRoots(self: InputManager): { Instance }
