@@ -213,6 +213,11 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
         :dark="builtDark"
         :light="builtLight"
       />
+      <!-- Darkest through the middle, behind the text, fading out to the top and bottom. -->
+      <div
+        aria-hidden="true"
+        class="absolute inset-0 -z-10 bg-linear-to-b from-transparent via-background/70 to-transparent"
+      />
       <div class="mx-auto max-w-3xl px-6 py-28 text-center">
         <p class="eyebrow">
           Architecture

@@ -28,8 +28,8 @@
   },
   "palette": [
     "oklch(0.07 0.012 288)",
-    "oklch(0.3 0.12 292)",
-    "oklch(0.55 0.18 300)",
+    "oklch(0.52 0.21 292)",
+    "oklch(0.82 0.17 300)",
     "oklch(0.33 0.08 280)",
     "oklch(0.85 0.11 224)",
     "oklch(0.35 0.12 292)",
@@ -50,8 +50,8 @@
         "scale": 1.5,
         "rings": 5,
         "contacts": 8,
-        "persistence": 0.5,
-        "grid": 0.3,
+        "persistence": 0.65,
+        "grid": 0.45,
         "seed": 3
       }
     },
@@ -76,7 +76,7 @@
     {
       "type": "scanlines",
       "blend": "screen",
-      "opacity": 0.55,
+      "opacity": 0.3,
       "colors": [
         0,
         5,
@@ -94,7 +94,7 @@
     {
       "type": "glitch",
       "blend": "screen",
-      "opacity": 0.45,
+      "opacity": 0.25,
       "colors": [
         0,
         7,
