@@ -54,7 +54,7 @@ const more = [
   { icon: Clapperboard, title: 'Scenes', text: 'Each screen on its own layer, so menus never take input from the screen below.' },
   { icon: Layers, title: 'Dialogs and sheets', text: 'Dialogs, sheets, selects and toasts float above the game, newest on top.' },
   { icon: Keyboard, title: 'Hotkeys', text: 'Name an action once for keyboard and gamepad, and switch it off while a menu is open.' },
-  { icon: Contrast, title: 'Accessibility', text: 'Readable text on every colour, and the player\'s reduce motion, text size and background settings followed.' },
+  { icon: Contrast, title: 'Accessibility', text: 'Readable text on every colour, and the player\'s reduce motion, text size and background settings respected.' },
   { icon: Shapes, title: 'Any icon', text: 'Add any Iconify icon by name, its then packed into a sheet by the lucy-icons build.' },
   { icon: Orbit, title: 'Springs and tweens', text: 'Animate any property by binding it to a spring or a tween.' },
   { icon: Blocks, title: 'Code or Studio', text: 'Write UI in code, or add behaviour to UI you laid out in Studio.' },
