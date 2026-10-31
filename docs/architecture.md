@@ -144,9 +144,11 @@ held, and hears `release()` when let go. Otherwise arrows move focus. Focus that
 Lucy moves (Tab, arrows) scrolls into view.
 
 Enter calls `app.input:activate()`. A focused component with `click` or `toggle`
-gets that call. When the focused object is a part of a component instead (a
-Collapsible's header), the first component from it up with a `press(object)`
-method that returns true takes it.
+gets that call. A focused part with an `[Lucy.on "Activated"]` handler (a
+Select row, a radio option, a sortable header, your own buttons built with
+`Lucy.new`) runs that handler, the same thing a click does. Otherwise the first
+component from the focused object up with a `press(object)` method that returns
+true takes it.
 
 Roblox's own selection image is replaced with a blank frame; Lucy draws its own
 ring with the `ui-focus-visible` tag only while navigating with keys or a pad.

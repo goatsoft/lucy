@@ -63,6 +63,15 @@ function Element.on(event: string): any
 	return key("on", event)
 end
 
+-- What each instance runs when activated, so Enter on keyboard can run the
+-- same thing a click does (InputManager.activate). Weak: it goes with the instance.
+local activators: { [Instance]: () -> () } = setmetatable({} :: any, { __mode = "k" })
+
+-- The function an instance's [Lucy.on "Activated"] runs, if it has one.
+function Element.activator(instance: Instance): (() -> ())?
+	return activators[instance]
+end
+
 -- [Lucy.changed "Text"] = function(newValue) end
 function Element.changed(property: string): any
 	return key("changed", property)
@@ -292,6 +301,9 @@ local function bindSpecial(instance: Instance, special: any, value: any)
 	local kind, name = special[KEY], special.name
 	if kind == "on" then
 		connect((instance :: any)[name], value)
+		if name == "Activated" then
+			activators[instance] = value
+		end
 	elseif kind == "changed" then
 		connect(instance:GetPropertyChangedSignal(name), function()
 			value((instance :: any)[name])

@@ -235,4 +235,13 @@ return function()
 		local root = app:portal("modal").AbsoluteSize
 		expect(picker.content.AbsolutePosition.Y + picker.content.AbsoluteSize.Y <= root.Y + 1).to.equal(true)
 	end)
+
+	it("picks the focused row on Enter", function()
+		local region = Select.new({ app = app, Parent = gui, items = ITEMS })
+		app.input:setMode("keyboard")
+		region:open()
+		app.input:focus(region.items[2].root)
+		app.input:activate()
+		expect(region:get("value")).to.equal("na")
+	end)
 end

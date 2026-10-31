@@ -124,4 +124,12 @@ return function()
 		grid:toggle("name")
 		expect(order(grid)).to.equal("1,2,3")
 	end)
+
+	it("sorts by the focused header on Enter", function()
+		local grid = make()
+		app.input:setMode("keyboard")
+		app.input:focus(grid.headers.score)
+		app.input:activate()
+		expect(order(grid)).to.equal("2,3,1")
+	end)
 end

@@ -54,6 +54,7 @@ local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
 local Adaptive = require(script.Parent.Adaptive)
+local Element = require(script.Parent.Element)
 local Maid = require(script.Parent.Maid)
 local Scroll = require(script.Parent.Scroll)
 
@@ -551,6 +552,13 @@ function InputManager.activate(self: InputManager)
 		return
 	elseif handle and handle.toggle then
 		handle:toggle()
+		return
+	end
+	-- A part built with [Lucy.on "Activated"] (a Select row, a radio option, a
+	-- sortable header): what a click on it runs.
+	local onActivated = Element.activator(focused)
+	if onActivated then
+		onActivated()
 		return
 	end
 	-- A part of a component (a header, a row): from the focused object up, the

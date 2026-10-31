@@ -141,4 +141,12 @@ return function()
 			expect(Harness.styled(rowStroke, "Transparency")).to.be.near(1, 0.001)
 		end
 	end)
+
+	it("chooses the focused option on Enter", function()
+		local group = RadioGroup.new({ app = app, Parent = gui, items = OPTIONS })
+		app.input:setMode("keyboard")
+		app.input:focus(group.items[2].root)
+		app.input:activate()
+		expect(group:get("value")).to.equal("hard")
+	end)
 end
