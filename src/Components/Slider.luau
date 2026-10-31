@@ -239,7 +239,12 @@ local spec: Component.Spec = {
 		check(Slider.orientations, h:get("orientation"), "orientation")
 		check(Slider.sizes, h:get("size"), "size")
 		local p: Component.Props = h.props
-		local value, min, max = h:ref("value"), h:ref("min"), h:ref("max")
+		local bound, min, max = h:ref("value"), h:ref("min"), h:ref("max")
+		-- A bound value that is not set yet (app state still loading) reads as min.
+		local function value(): number
+			local v = bound()
+			return if type(v) == "number" then v else min()
+		end
 		local orientation, size, disabled = h:ref("orientation"), h:ref("size"), h:ref("disabled")
 		local density = Composables.useDensity(h.app)
 		local showValue = p.showValue == true
@@ -590,6 +595,9 @@ function Slider.new(props: { [string]: any }?)
 			direction = dx
 		end
 		local value, min, max, step = h:get("value"), h:get("min"), h:get("max"), h:get("step")
+		if type(value) ~= "number" then
+			value = min
+		end
 		if holdFrom == nil then
 			holdFrom = value
 		end
