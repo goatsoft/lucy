@@ -44,6 +44,9 @@ gruff is private to the Aurora repo, so for now `libs/gruff` is a copy of it
 - The docs layout components copied into `apps/site` (DocPage, DocToc,
   SearchDialog, CodeGroup, CopyButton, Term) are the same kind of duplicate and
   should ship with that package (for example as `@goatsoft/gruff/vue`).
+- **Done (November 2026):** `@goatsoft/gruff` 0.1.0 is on npm with the docs
+  components in `@goatsoft/gruff/vue`. The site depends on it; `libs/gruff`
+  and the copied components are gone.
 
 ## Consequences
 

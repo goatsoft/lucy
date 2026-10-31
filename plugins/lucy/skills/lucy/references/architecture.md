@@ -192,7 +192,6 @@ scripts/               add.luau (copy-in CLI), gen-palette.luau, run-tests.serve
 registry.json          a description of each component for the copy-in CLI
 docs/                  the pages this site renders
 apps/site/             the website (Vue, prerendered), deployed by .github/workflows/pages.yml
-libs/gruff/            the docs engine the site uses (to become its own package)
 libs/icons/            lucy-icons, the icon build (published to npm)
 ```
 

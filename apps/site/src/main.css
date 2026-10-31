@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* gruff's docs components (DocPage, SearchDialog, ...) are styled with Tailwind classes. */
+@source "../node_modules/@goatsoft/gruff/dist";
 
 @custom-variant dark (&:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *));
 

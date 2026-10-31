@@ -6,7 +6,7 @@
     "noEmit": true,
     "declaration": false,
     "declarationMap": false,
-    "types": ["node", "vite/client", "unplugin-icons/types/vue"],
+    "types": ["node", "vite/client", "unplugin-icons/types/vue", "@goatsoft/gruff/client"],
     "allowImportingTsExtensions": true
   },
   "include": ["src", "src/**/*.vue", "vite.config.ts", "prerender.ts"]

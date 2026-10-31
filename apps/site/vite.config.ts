@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs'
-import { dirname, extname, join, relative, resolve } from 'node:path'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { extname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import aurora from '@goatsoft/aurora-unplugin/vite'
 import { gruff } from '@goatsoft/gruff'
@@ -39,38 +39,6 @@ function pages(dir = docs): { file: string, route: string }[] {
 }
 
 /**
- * Resolves Aurora's npm packages the way Node does. This site turns on the `@goatsoft/source`
- * condition so workspace packages (gruff) load from source, but Aurora's published packages keep
- * that condition too, pointing at `src/` files they don't ship. For them, take the `import` file.
- */
-function publishedAurora(): Plugin {
-  const pattern = /^(@goatsoft\/(?:aurora[\w-]*|color))(\/.*)?$/
-  return {
-    name: 'lucy:published-aurora',
-    enforce: 'pre',
-    resolveId(id, importer) {
-      const match = pattern.exec(id)
-      if (!match) return null
-      const pkg = match[1] as string
-      const subpath = `.${match[2] ?? ''}`
-      // From the real file: pnpm keeps a package's own dependencies beside it, not beside the link.
-      const importerFile = importer && !importer.startsWith('\0') ? importer.split('?')[0] as string : undefined
-      const from = importerFile && existsSync(importerFile) ? realpathSync(importerFile) : `${here}index.html`
-      for (let dir = dirname(from); ; dir = dirname(dir)) {
-        const manifest = join(dir, 'node_modules', pkg, 'package.json')
-        if (existsSync(manifest)) {
-          const exports = (JSON.parse(readFileSync(manifest, 'utf8')) as { exports?: Record<string, unknown> }).exports
-          const entry = exports?.[subpath] as string | { import?: string, default?: string } | undefined
-          const file = typeof entry === 'string' ? entry : entry?.import ?? entry?.default
-          return file ? join(dirname(manifest), file) : null
-        }
-        if (dirname(dir) === dir) return null
-      }
-    },
-  }
-}
-
-/**
  * Makes `vite preview` answer like GitHub Pages: a page path without its trailing slash
  * redirects to the folder, and an unknown path gets 404.html. Without this, preview
  * serves the home page for those paths and the page hydrates with mismatches.
@@ -101,7 +69,6 @@ function pagesPreview(): Plugin {
 export default defineConfig({
   plugins: [
     // Animated backgrounds: .aurora files, checked at build time, CSS fallback inlined.
-    publishedAurora(),
     aurora(),
     // Pages from src/pages, and every Markdown file under the repo's docs/ as /docs/….
     VueRouter({
@@ -140,12 +107,11 @@ export default defineConfig({
     pagesPreview(),
   ],
   resolve: {
-    conditions: ['@goatsoft/source'],
     alias: [
       { find: '~', replacement: root },
       { find: /^@\//, replacement: `${here}src/` },
     ],
   },
-  ssr: { resolve: { conditions: ['@goatsoft/source'] }, noExternal: [/^@goatsoft\//, 'reka-ui'] },
+  ssr: { noExternal: ['reka-ui'] },
   server: { fs: { allow: [root] } },
 })

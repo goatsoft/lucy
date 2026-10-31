@@ -39,14 +39,14 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       '@goatsoft/aurora':
-        specifier: ^0.3.0
-        version: 0.3.0(typescript@5.9.3)
+        specifier: ^0.3.1
+        version: 0.3.1(typescript@5.9.3)
       '@goatsoft/aurora-vue':
-        specifier: ^0.3.0
-        version: 0.3.0(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3))
+        specifier: ^0.3.1
+        version: 0.3.1(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3))
       '@goatsoft/gruff':
-        specifier: workspace:^
-        version: link:../../libs/gruff
+        specifier: ^0.1.0
+        version: 0.1.0(@types/markdown-it@14.2.0)(markdown-it@15.0.3)(reka-ui@2.11.0(vue@3.5.44(typescript@5.9.3)))(rolldown@1.2.16)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))(vue-router@5.4.0(@vue/compiler-sfc@3.5.44)(rolldown@1.2.16)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))(vue@3.5.44(typescript@5.9.3)))(vue@3.5.44(typescript@5.9.3))
       '@vueuse/core':
         specifier: ^15.0.0
         version: 15.0.0(vue@3.5.44(typescript@5.9.3))
@@ -73,8 +73,8 @@ importers:
         version: 5.4.0(@vue/compiler-sfc@3.5.44)(rolldown@1.2.16)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))(vue@3.5.44(typescript@5.9.3))
     devDependencies:
       '@goatsoft/aurora-unplugin':
-        specifier: ^0.3.0
-        version: 0.3.0(rolldown@1.2.16)(typescript@5.9.3)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
+        specifier: ^0.3.1
+        version: 0.3.1(rolldown@1.2.16)(typescript@5.9.3)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
       '@iconify-json/lucide':
         specifier: ^1.2.149
         version: 1.2.149
@@ -111,46 +111,6 @@ importers:
       vue-tsc:
         specifier: ^3.3.13
         version: 3.3.14(typescript@5.9.3)
-
-  libs/gruff:
-    dependencies:
-      '@shikijs/transformers':
-        specifier: ^4.5.0
-        version: 4.5.0
-      gray-matter:
-        specifier: ^4.0.3
-        version: 4.0.3
-      markdown-it-anchor:
-        specifier: ^10.0.0
-        version: 10.0.0(@types/markdown-it@14.2.0)(markdown-it@15.0.3)
-      markdown-it-container:
-        specifier: ^4.0.0
-        version: 4.0.0
-      minisearch:
-        specifier: ^7.2.0
-        version: 7.2.0
-      shiki:
-        specifier: ^4.5.0
-        version: 4.5.0
-      subset-font:
-        specifier: ^2.9.0
-        version: 2.9.0
-      unplugin-vue-markdown:
-        specifier: ^32.1.1
-        version: 32.1.1(rolldown@1.2.16)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
-    devDependencies:
-      '@fontsource-variable/inter':
-        specifier: ^5.3.0
-        version: 5.3.0
-      '@types/markdown-it-container':
-        specifier: ^4.0.1
-        version: 4.0.1
-      markdown-it:
-        specifier: ^15.0.2
-        version: 15.0.3
-      vite:
-        specifier: ^8.3.4
-        version: 8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)
 
   libs/icons:
     dependencies:
@@ -302,29 +262,39 @@ packages:
   '@fontsource-variable/fredoka@5.3.0':
     resolution: {integrity: sha512-13w98iw2RcmYfZQRZPLSu+0YJK3HHm5A2XrpU26moFIAePmfiKfvkmEJUgkc8r5GNR+pbDijOueS1KdGAMAWmQ==}
 
-  '@fontsource-variable/inter@5.3.0':
-    resolution: {integrity: sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==}
-
   '@fontsource-variable/nunito@5.3.0':
     resolution: {integrity: sha512-tw0ch7evIDSwoeUy+0XzocYHfbRWLeCRPJy22KgbrLjDLAbNw/fErBiil10Ssrs3Sjr55zaZrr36a975j8cBkQ==}
 
-  '@goatsoft/aurora-format@0.3.0':
-    resolution: {integrity: sha512-YFcJzkOgC/wcv+cgIVj4ajcYhy3+ZM+yu2K7+KlJw0iuXrDWTLbf8Aoq8rg6w/HODiPXn71/fbmUa3D6YC31fA==}
+  '@goatsoft/aurora-format@0.3.1':
+    resolution: {integrity: sha512-z08Q2ByJ6f5wsD2QJDRliloZu/graqmpberBq5Zifen95I+B0SBumkJ1jOcge/kc+WkUeKkDY23f2EnzFE4DXw==}
 
-  '@goatsoft/aurora-unplugin@0.3.0':
-    resolution: {integrity: sha512-VuboC142TCSSciH82Uz+esdL3swr8tN+PYvcoV9MJ4KIZ3dY4sqlFNtmsgE9a20TKrJlSWDxl1wEhWXaMMPPEg==}
+  '@goatsoft/aurora-unplugin@0.3.1':
+    resolution: {integrity: sha512-n9U1hysbqV0OmDumUPRz9dsbPVheXJrB8rqpMu9nexdLLNiihkKxTS5FHiSNeuqyfsR86t/t3G5MFjWvBj/CLw==}
     hasBin: true
 
-  '@goatsoft/aurora-vue@0.3.0':
-    resolution: {integrity: sha512-r1SQjV9MaWujZ2wzD4otTYlIruGxAjQhSxFYU5861vJrZAuF2krJlObwP1EpszlUPLHuNjxt4oFPHjnwFMRDsg==}
+  '@goatsoft/aurora-vue@0.3.1':
+    resolution: {integrity: sha512-B7/RF9yhQ2XtxcVXsSnNDXe+8kfjO1Xdd6kjFJSjy682yRQrqhyIdPlSyRhls/eL8k60WNd4jDcliPdE27fiqw==}
     peerDependencies:
       vue: ^3.5.0
 
-  '@goatsoft/aurora@0.3.0':
-    resolution: {integrity: sha512-eEqNYma0LqDSDDrXcoqpkstIqmV0EVnfQW0u0/YWF0DlprQZX9kuxhhkU6jQslDUSfApmZweLZqY3uJdb1pN6w==}
+  '@goatsoft/aurora@0.3.1':
+    resolution: {integrity: sha512-th7zarABaDWUpJK+W9QHuUgWCG3HuT2wN2XeRQZwL05av7ApozXmYoLMWrjk9fVlOr2eYBa7E2Xxu8z+Iq84XQ==}
 
-  '@goatsoft/color@0.3.0':
-    resolution: {integrity: sha512-LwYYzlFO5dXeGIx/cPH7P4CaTTmtESl8EO/Y5OndaKY0yl+E3yCFwIPmWK8mgFVBrUGgGJSfMs+jFevmO8TEgg==}
+  '@goatsoft/color@0.3.1':
+    resolution: {integrity: sha512-gU2ubDTsZaZkhJ0/BjMw85Fe7QWOnJe/4oMbrh5bBu7JwWHNEC//CwfyrIznWAp+FkzNoRzqo1JNBL+mt7A3Sw==}
+
+  '@goatsoft/gruff@0.1.0':
+    resolution: {integrity: sha512-OmLHs895ZpdYGciTRGKEcFptzo/IUHB2jVQMJwm7iV6vZkxE5jrhGjG3cf2B9P+m/aYVXsAjfKytYA6RVVia5A==}
+    peerDependencies:
+      reka-ui: ^2.11.0
+      vite: ^8.0.0
+      vue: ^3.5.0
+      vue-router: ^5.0.0
+    peerDependenciesMeta:
+      reka-ui:
+        optional: true
+      vue-router:
+        optional: true
 
   '@iconify-json/lucide-extended@1.2.2':
     resolution: {integrity: sha512-EOLQm2ISf9pYxjHEmw8EGoK7BdribRIk/7neMmFYPEMBruUGbHkTulyoXZaq2Sdkwxpfzj9Zw7vsUebg8o9Gdw==}
@@ -707,9 +677,6 @@ packages:
 
   '@types/linkify-it@5.0.0':
     resolution: {integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==}
-
-  '@types/markdown-it-container@4.0.1':
-    resolution: {integrity: sha512-lGoaXzFY51sfUiBZ+L9V7n/Ah2q/46G2MGERUXN/4Djq0aCFOEUxysC8xftAdf5EdnvKfb2QkQnGNMoaKwjI1Q==}
 
   '@types/markdown-it@14.2.0':
     resolution: {integrity: sha512-NoQ2yGlLWj4wpxMs+TYmRKk3thDrQ97agr7sFqfLsAlvoS8SNQuTrlObhFqG9iugdTtgOE9jpJ6FNM4ZGsa5xQ==}
@@ -1850,21 +1817,19 @@ snapshots:
 
   '@fontsource-variable/fredoka@5.3.0': {}
 
-  '@fontsource-variable/inter@5.3.0': {}
-
   '@fontsource-variable/nunito@5.3.0': {}
 
-  '@goatsoft/aurora-format@0.3.0(typescript@5.9.3)':
+  '@goatsoft/aurora-format@0.3.1(typescript@5.9.3)':
     dependencies:
-      '@goatsoft/color': 0.3.0
+      '@goatsoft/color': 0.3.1
       valibot: 1.5.0(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
 
-  '@goatsoft/aurora-unplugin@0.3.0(rolldown@1.2.16)(typescript@5.9.3)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))':
+  '@goatsoft/aurora-unplugin@0.3.1(rolldown@1.2.16)(typescript@5.9.3)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))':
     dependencies:
-      '@goatsoft/aurora': 0.3.0(typescript@5.9.3)
-      '@goatsoft/aurora-format': 0.3.0(typescript@5.9.3)
+      '@goatsoft/aurora': 0.3.1(typescript@5.9.3)
+      '@goatsoft/aurora-format': 0.3.1(typescript@5.9.3)
       unplugin: 3.7.0(rolldown@1.2.16)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
     transitivePeerDependencies:
       - '@farmfe/core'
@@ -1879,22 +1844,50 @@ snapshots:
       - vite
       - webpack
 
-  '@goatsoft/aurora-vue@0.3.0(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3))':
+  '@goatsoft/aurora-vue@0.3.1(typescript@5.9.3)(vue@3.5.44(typescript@5.9.3))':
     dependencies:
-      '@goatsoft/aurora': 0.3.0(typescript@5.9.3)
+      '@goatsoft/aurora': 0.3.1(typescript@5.9.3)
       vue: 3.5.44(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
 
-  '@goatsoft/aurora@0.3.0(typescript@5.9.3)':
+  '@goatsoft/aurora@0.3.1(typescript@5.9.3)':
     dependencies:
-      '@goatsoft/aurora-format': 0.3.0(typescript@5.9.3)
-      '@goatsoft/color': 0.3.0
+      '@goatsoft/aurora-format': 0.3.1(typescript@5.9.3)
+      '@goatsoft/color': 0.3.1
       '@webgpu/types': 0.1.74
     transitivePeerDependencies:
       - typescript
 
-  '@goatsoft/color@0.3.0': {}
+  '@goatsoft/color@0.3.1': {}
+
+  '@goatsoft/gruff@0.1.0(@types/markdown-it@14.2.0)(markdown-it@15.0.3)(reka-ui@2.11.0(vue@3.5.44(typescript@5.9.3)))(rolldown@1.2.16)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))(vue-router@5.4.0(@vue/compiler-sfc@3.5.44)(rolldown@1.2.16)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))(vue@3.5.44(typescript@5.9.3)))(vue@3.5.44(typescript@5.9.3))':
+    dependencies:
+      '@shikijs/transformers': 4.5.0
+      gray-matter: 4.0.3
+      markdown-it-anchor: 10.0.0(@types/markdown-it@14.2.0)(markdown-it@15.0.3)
+      markdown-it-container: 4.0.0
+      minisearch: 7.2.0
+      shiki: 4.5.0
+      subset-font: 2.9.0
+      unplugin-vue-markdown: 32.1.1(rolldown@1.2.16)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
+      vite: 8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)
+      vue: 3.5.44(typescript@5.9.3)
+    optionalDependencies:
+      reka-ui: 2.11.0(vue@3.5.44(typescript@5.9.3))
+      vue-router: 5.4.0(@vue/compiler-sfc@3.5.44)(rolldown@1.2.16)(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))(vue@3.5.44(typescript@5.9.3))
+    transitivePeerDependencies:
+      - '@farmfe/core'
+      - '@rsbuild/core'
+      - '@rspack/core'
+      - '@types/markdown-it'
+      - bun-types-no-globals
+      - esbuild
+      - markdown-it
+      - rolldown
+      - rollup
+      - unloader
+      - webpack
 
   '@iconify-json/lucide-extended@1.2.2':
     dependencies:
@@ -2205,10 +2198,6 @@ snapshots:
       '@types/unist': 3.0.3
 
   '@types/linkify-it@5.0.0': {}
-
-  '@types/markdown-it-container@4.0.1':
-    dependencies:
-      '@types/markdown-it': 14.2.0
 
   '@types/markdown-it@14.2.0':
     dependencies:

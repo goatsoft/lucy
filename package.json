@@ -7,8 +7,8 @@
     "node": ">=24"
   },
   "scripts": {
-    "site:dev": "pnpm --filter @goatsoft/gruff build && pnpm --filter lucy-site dev",
-    "site:build": "pnpm --filter @goatsoft/gruff build && pnpm --filter lucy-site build",
+    "site:dev": "pnpm --filter lucy-site dev",
+    "site:build": "pnpm --filter lucy-site build",
     "site:preview": "pnpm --filter lucy-site preview",
     "site:typecheck": "pnpm --filter lucy-site typecheck",
     "icons:typecheck": "pnpm --filter @goatsoft/lucy-icons typecheck",

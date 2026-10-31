@@ -26,7 +26,7 @@ Rules:
   sheets uploaded to Roblox, and the Studio plugin icon.
 - Only the Luau package ships. The website (`apps/site`, `libs/`) is never part of it;
   a new top-level path must be added to `wally.toml`'s `exclude` (CI checks).
-- `libs/gruff` is the docs engine the site uses, and this copy is the source. It will move out into its own package, `@goatsoft/gruff`, which Aurora will then use; until then, change it here only and never edit Aurora's older copy.
+- The site's docs engine is `@goatsoft/gruff` from npm, with its docs components from `@goatsoft/gruff/vue`. Its source lives in the Aurora repo (`packages/gruff`): change it there, never by copying it in here.
 - Tests run in the Lucy dev place Studio window only, never a game's:
   `require(game.ReplicatedStorage.LucyTests.Runner).run()`. JB serves Rojo himself (port 38574).
 - Shell commands on JB's Mac run through zsh: `zsh -lc "cd ~/Projects/Lucy && ..."`.
