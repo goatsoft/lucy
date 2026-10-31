@@ -1,4 +1,4 @@
-import { createSSRApp } from 'vue'
+import { createApp, createSSRApp } from 'vue'
 import { createMemoryHistory, createRouter, createWebHistory } from 'vue-router'
 import { routes } from 'vue-router/auto-routes'
 import App from './App.vue'
@@ -9,7 +9,8 @@ import './main.css'
 
 /** One app for both the prerender (memory history) and the browser (hydrating the same HTML). */
 export function createSite(path: string) {
-  const app = createSSRApp(App)
+  // The dev server serves index.html as is, with no prerendered HTML to hydrate, so it mounts fresh.
+  const app = import.meta.env.DEV && !import.meta.env.SSR ? createApp(App) : createSSRApp(App)
   const router = createRouter({
     history: import.meta.env.SSR ? createMemoryHistory() : createWebHistory(),
     routes,
