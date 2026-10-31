@@ -403,4 +403,46 @@ return function()
 			scope:stop()
 		end)
 	end)
+
+	describe("scrim fade", function()
+		local function gradientOf(scrim: Instance): number
+			local fade = scrim:FindFirstChild("Fade") :: UIGradient
+			return fade.Transparency.Keypoints[1].Value
+		end
+
+		it("fades the dimming in when it opens", function()
+			local overlay, open, scope = make({ presentation = "center" })
+			open(true)
+			expect(gradientOf(overlay.scrim) > 0.5).to.equal(true)
+			task.wait(Overlay.fadeTime + 0.1)
+			expect(gradientOf(overlay.scrim)).to.equal(0)
+			scope:stop()
+		end)
+
+		it("hides at once on close and fades a copy of the dimming out", function()
+			local overlay, open, scope = make({ presentation = "center" })
+			open(true)
+			task.wait(Overlay.fadeTime + 0.1)
+			Harness.flush()
+			open(false)
+			expect(overlay.root.Visible).to.equal(false)
+			local portal = app:portal("modal")
+			local ghost = portal:FindFirstChild("ScrimFade") :: Frame
+			expect(ghost ~= nil).to.equal(true)
+			expect(ghost.Active).to.equal(false)
+			expect(ghost.BackgroundTransparency).to.be.near(app.theme:resolve("OverlayTransparency"), 0.001)
+			task.wait(Overlay.fadeTime + 0.15)
+			expect(portal:FindFirstChild("ScrimFade")).to.equal(nil)
+			scope:stop()
+		end)
+
+		it("leaves no copy for an overlay without dimming", function()
+			local overlay, open, scope = make({ presentation = "popup" })
+			open(true)
+			open(false)
+			expect(app:portal("modal"):FindFirstChild("ScrimFade")).to.equal(nil)
+			expect(overlay.root.Visible).to.equal(false)
+			scope:stop()
+		end)
+	end)
 end

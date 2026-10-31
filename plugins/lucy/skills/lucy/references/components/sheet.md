@@ -42,7 +42,7 @@ settings:open()
 | `dismissible` | boolean | `true` | | Whether B, Backspace, a press outside and the close button can close it |
 | `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it (off by default when `modal` is `false`) |
 | `modal` | boolean | `true` | | `false` lets clicks reach what is behind it and lets focus move out of it |
-| `scrim` | boolean | `true` | | `false` drops the dimmed backdrop |
+| `scrim` | boolean | `true` | | `false` drops the dimmed backdrop. The backdrop fades in and out |
 | `showClose` | boolean | `true` | | Shows the close button in the corner |
 | `onOpenChange` | function | | | Called with `(open, handle)` when it opens or closes |
 

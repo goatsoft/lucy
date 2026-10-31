@@ -37,6 +37,11 @@
 	Placement follows the viewport, the anchor and the content's size while
 	open; the presentation does not change until it opens again.
 
+	The dimming fades in when it opens and out when it closes (Overlay.fadeTime,
+	through a UIGradient, so the theme rule keeps its colour and transparency).
+	The overlay itself hides at once; a short-lived copy of the dimming, named
+	ScrimFade, fades out in its place and never takes presses.
+
 	A drawer slides up from the bottom when it opens and back down before it
 	hides (Overlay.slideTime; no slide with reduced motion). Its background runs
 	to the screen edge; the component leaves safeBottom() of room at its foot
@@ -61,6 +66,7 @@ Overlay.gap = 4 -- popup distance from its anchor
 Overlay.centerMargin = 32
 Overlay.drawerShare = 0.85 -- of the viewport height
 Overlay.slideTime = 0.2 -- seconds a drawer takes to slide in or out
+Overlay.fadeTime = 0.15 -- seconds the dimming takes to fade in or out
 Overlay.panelWidth = 360
 Overlay.panelShare = 0.9 -- of the viewport width
 
@@ -391,11 +397,72 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		button.AutoButtonColor = false
 	end
 
+	local root: Frame -- made below, holding the scrim
+
+	-- The dimming fades through a gradient laid over the rule's own transparency.
+	local scrimFade = Instance.new("UIGradient")
+	scrimFade.Name = "Fade"
+	scrimFade.Transparency = NumberSequence.new(0)
+	scrimFade.Parent = scrim
+	local fadeLevel = Instance.new("NumberValue")
+	local fadeConnection = fadeLevel.Changed:Connect(function(value: number)
+		scrimFade.Transparency = NumberSequence.new(math.clamp(value, 0, 1))
+	end)
+	local fadeTween: Tween? = nil
+	local function fadeTo(target: number, time: number)
+		if fadeTween then
+			fadeTween:Cancel()
+		end
+		local tween =
+			TweenService:Create(fadeLevel, TweenInfo.new(time, Enum.EasingStyle.Quad), { Value = target })
+		fadeTween = tween
+		tween:Play()
+	end
+	Reactive.onCleanup(function()
+		fadeConnection:Disconnect()
+		if fadeTween then
+			fadeTween:Cancel()
+		end
+		fadeLevel:Destroy()
+	end)
+
+	-- Fades a copy of the dimming out where the overlay was, then removes it.
+	local function fadeAfterimage()
+		local parent = root.Parent
+		if not parent or not scrimOn() then
+			return
+		end
+		local ghost = Instance.new("Frame")
+		ghost.Name = "ScrimFade"
+		ghost.Size = UDim2.fromScale(1, 1)
+		ghost.ZIndex = root.ZIndex
+		ghost.Active = false
+		ghost.BorderSizePixel = 0
+		ghost.BackgroundColor3 = scrim:GetStyled("BackgroundColor3")
+		ghost.BackgroundTransparency = scrim:GetStyled("BackgroundTransparency")
+		local gradient = Instance.new("UIGradient")
+		gradient.Transparency = NumberSequence.new(math.clamp(fadeLevel.Value, 0, 1))
+		gradient.Parent = ghost
+		local level = Instance.new("NumberValue")
+		level.Value = fadeLevel.Value
+		level.Changed:Connect(function(value: number)
+			gradient.Transparency = NumberSequence.new(math.clamp(value, 0, 1))
+		end)
+		ghost.Parent = parent
+		local tween =
+			TweenService:Create(level, TweenInfo.new(Overlay.fadeTime, Enum.EasingStyle.Quad), { Value = 1 })
+		tween.Completed:Once(function()
+			level:Destroy()
+			ghost:Destroy()
+		end)
+		tween:Play()
+	end
+
 	local tags: { any } = { "ui-overlay" }
 	for _, tag in options.tags or {} do
 		table.insert(tags, tag)
 	end
-	local root = Element.new("Frame", {
+	root = Element.new("Frame", {
 		Name = options.name or "Overlay",
 		Size = UDim2.fromScale(1, 1),
 		ZIndex = zIndex,
@@ -522,6 +589,8 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		closing(false)
 		slide.Value = 0
 		place()
+		fadeLevel.Value = 1
+		fadeTo(0, Overlay.fadeTime)
 		if presentation() == "drawer" and not Preferences.reducedMotion() then
 			local scale = Scroll.scaleOf(root)
 			local height = if scale > 0 then content.AbsoluteSize.Y / scale else 0
@@ -609,6 +678,14 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		elseif not isOpen and previous then
 			closed()
 			slideOut()
+			-- A sliding drawer stays shown and fades with the slide; anything
+			-- else is hidden now, so a copy of its dimming fades out instead.
+			if Reactive.peek(closing) then
+				fadeTo(1, Overlay.slideTime)
+			else
+				fadeAfterimage()
+				fadeLevel.Value = 1
+			end
 		end
 	end, { immediate = true })
 

@@ -38,7 +38,7 @@ quit:open()
 | `dismissible` | boolean | `true` | | Whether B, Backspace, the overlay and the close button can close it |
 | `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it (off by default when `modal` is `false`) |
 | `modal` | boolean | `true` | | `false` lets clicks reach what is behind it and lets focus move out of it |
-| `scrim` | boolean | `true` | | `false` drops the dimmed backdrop |
+| `scrim` | boolean | `true` | | `false` drops the dimmed backdrop. The backdrop fades in and out |
 | `showClose` | boolean | `true` | | Shows the close button in the corner |
 | `defaultFocus` | object, handle or function | | | What is selected when it opens on a keyboard or gamepad. A function is called with the dialog |
 | `size` | string | `"md"` | | How wide it gets: `sm` (384), `md` (448), `lg` (512), `xl` (640) or `full` |
