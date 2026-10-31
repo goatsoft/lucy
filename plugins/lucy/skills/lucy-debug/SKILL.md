@@ -17,6 +17,16 @@ the App the game's scripts made: `require(...Lucy)` there is a fresh module,
 and `_G` is separate too. `Lucy.Devtools` reaches the game's App for you, in
 Studio only. Never make a second App to inspect the first.
 
+## With Lucy's MCP server
+
+If Lucy's MCP server is connected (tools named `tree`, `press`, `focus`,
+`state`, `set`, `apps`, `overlays`, `actions`, `preview`, `screenshot`), use
+it instead of writing Devtools Luau: it runs the same calls on the right data
+model and returns screenshots with `screenshot: true`. Pass `studio` (part of
+the place name) when several Studios are open. After `preview`, call `preview`
+without a story to take it away. You still use Studio's own server for
+`start_stop_play`, `user_keyboard_input` and `get_console_output`.
+
 ## The loop
 
 1. `start_stop_play` to start. Wait a second or two for the game's scripts.

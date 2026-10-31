@@ -198,6 +198,7 @@ registry.json          a description of each component for the copy-in CLI
 docs/                  the pages this site renders
 apps/site/             the website (Vue, prerendered), deployed by .github/workflows/pages.yml
 libs/icons/            lucy-icons, the icon build (published to npm)
+libs/mcp/              lucy-mcp, the MCP server agents use to check UI in Studio
 ```
 
 Only the Luau package ships: the Wally package is checked in CI to contain

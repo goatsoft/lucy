@@ -1,0 +1,48 @@
+{
+  "name": "@goatsoft/lucy-mcp",
+  "version": "0.0.0",
+  "description": "An MCP server for building Roblox UI with Lucy: look at and drive a running Lucy UI in Studio, through Studio's own MCP server.",
+  "keywords": [
+    "roblox",
+    "luau",
+    "mcp",
+    "lucy",
+    "studio"
+  ],
+  "license": "MIT",
+  "homepage": "https://lucy.goatsoft.io/docs/guide/agents",
+  "bugs": {
+    "url": "https://github.com/goatsoft/lucy/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/goatsoft/lucy.git",
+    "directory": "libs/mcp"
+  },
+  "type": "module",
+  "bin": {
+    "lucy-mcp": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "start": "node src/cli.ts",
+    "prepack": "node ../../scripts/prepack.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "~5.9.3"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/"
+  }
+}

@@ -13,6 +13,8 @@
     "site:typecheck": "pnpm --filter lucy-site typecheck",
     "icons:typecheck": "pnpm --filter @goatsoft/lucy-icons typecheck",
     "icons:test": "pnpm --filter @goatsoft/lucy-icons test",
+    "mcp:typecheck": "pnpm --filter @goatsoft/lucy-mcp typecheck",
+    "mcp:test": "pnpm --filter @goatsoft/lucy-mcp test",
     "skills": "node scripts/skills.ts",
     "skills:check": "node scripts/skills.ts --check",
     "changeset": "changeset",
