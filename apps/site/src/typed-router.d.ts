@@ -402,6 +402,20 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/api': RouteRecordInfo<
+      '/docs/reference/api',
+      '/docs/reference/api',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/app': RouteRecordInfo<
+      '/docs/reference/app',
+      '/docs/reference/app',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/composables': RouteRecordInfo<
       '/docs/reference/composables',
       '/docs/reference/composables',
@@ -869,6 +883,22 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/accessibility.md': {
       routes:
         | '/docs/reference/accessibility'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/api.md': {
+      routes:
+        | '/docs/reference/api'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/app.md': {
+      routes:
+        | '/docs/reference/app'
       views:
         | never
       pathParamNames:

@@ -166,6 +166,8 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Add a theme](references/guide/themes.md): Pick your game's colours, let players switch light and dark, make a theme of your own, and style your own UI with the same tokens.
 - [Stories and preview](references/stories.md): Write stories for your UI and preview them in Studio, in edit mode or in Play.
 - [Accessibility](references/reference/accessibility.md): What Lucy does so players can read, reach and use your UI, the contrast it promises, the Roblox accessibility settings it follows, and Lucy.Preferences.
+- [Everything on Lucy](references/reference/api.md): Every name the Lucy module exports, what it is for, and the page that explains it.
+- [The App](references/reference/app.md): Lucy.App.new and every option it takes, the parts an App holds, and its methods.
 - [Composables](references/reference/composables.md): Every composable Lucy comes with, what each one takes and returns, and when to use it.
 - [Devtools](references/reference/devtools.md): Look at a running UI in Studio, and press, set and focus things the way a player would, from the command bar or a coding agent.
 - [The store](references/reference/store.md): How app.state works, what it holds, every method, and the rules for reading, writing and following it.
