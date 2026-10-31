@@ -20,6 +20,10 @@ Rules:
 - Code and docs do not name third-party design systems or CSS frameworks; ADRs may.
 - ADRs are repo only: never mention or link them in `docs/` pages, the README or the website.
 - Scratch files go outside the repo (e.g. `/tmp`).
+- Images in the repo are SVG or WebP only: no PNG, JPEG or GIF. Docs example pictures
+  are WebP (`scripts/doc-previews.ts`, docs/development.md "Example pictures"). The only
+  PNGs are those a platform requires: the site's favicons, app icons and `og.png`, icon
+  sheets uploaded to Roblox, and the Studio plugin icon.
 - Only the Luau package ships. The website (`apps/site`, `libs/`) is never part of it;
   a new top-level path must be added to `wally.toml`'s `exclude` (CI checks).
 - `libs/gruff` is the docs engine the site uses, and this copy is the source. It will move out into its own package, `@goatsoft/gruff`, which Aurora will then use; until then, change it here only and never edit Aurora's older copy.

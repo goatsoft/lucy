@@ -66,7 +66,10 @@ function readPage(doc: string): Page {
   return {
     title: meta['title'] ?? doc,
     description: meta['description'] ?? '',
-    body: match ? text.slice(match[0].length).replace(/^\n+/, '') : text,
+    // Example pictures and their markers are for the website only.
+    body: (match ? text.slice(match[0].length).replace(/^\n+/, '') : text)
+      .replace(/^<!-- preview\b[^>]*-->\n/gm, '')
+      .replace(/^<figure class="example-preview[^"]*">.*<\/figure>\n\n?/gm, ''),
   }
 }
 

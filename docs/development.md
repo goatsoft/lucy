@@ -171,6 +171,75 @@ pnpm site:typecheck
 - If a build logs a hydration mismatch, `LUCY_DEBUG_HYDRATION=1 pnpm site:build`
   explains it in the browser console.
 
+## Docs examples
+
+Every example in the docs is part of one game, **Club Lucy**: a dance club
+where players dance, play DJ sets in the Booth, earn coins, buy emotes, queue
+tracks and hang out with their crew. Lucy is the resident DJ. Each example shows
+a common game pattern (a HUD, a menu, a shop, settings, a leaderboard, a
+confirm, a hotkey) in that setting, so the docs read as one game.
+
+- Names are invented: never real songs, artists, brands or games. The cast:
+  tracks "Neon Nights" (DJ Lucy, 124 BPM), "Bassline Bounce" (Pixel Pulse, 128),
+  "Sunset Groove" (The Glowsticks, 118), "Midnight Drop" (DJ Lucy, 140);
+  dances Moonwalk, Robot, Shuffle, Twirl, Wave, Groove; places the Lobby, the
+  Dance Floor, the Booth, the Wardrobe, the Emote Shop; crew Nova, Beatrix,
+  Kai, Juno, Remy.
+- App state used by examples: `player` (`name`, `coins`, `level`, `hype`,
+  `combo`), `settings` (`music`, `sfx`, `crowd`, `lights`, `danceSpeed`), `booth` (`bpm`,
+  `crossfade`, `deck`).
+- Icons come from the docs icon sheet, `assets/docs-icons/lucy-icons.json`. To
+  use a new one, add it to `include` there and rebuild (see below).
+- Back keys are B and Backspace, never Escape.
+
+## Example pictures
+
+Every example that draws something shows a picture of it, in the site's light
+or dark theme. A page marks each one with a `<!-- preview -->` line right
+above its `luau` block. The marker can take options:
+
+- `<!-- preview -->`: the code runs with only `Lucy`, `app` and `parent` in
+  scope, so it parents what it makes to `parent` and starts from the app state
+  above.
+- `<!-- preview solo -->`: the same, drawn on its own because it opens a
+  dialog, a sheet, a toast or anything else that covers the screen.
+- `<!-- preview screen -->`: a whole client script (a recipe, the homepage
+  example), shown full screen. It runs in edit mode too: the renderer stands in
+  for `Players.LocalPlayer` and for remotes, which answer nothing.
+
+Any marker can add `then="..."`: Luau run after the example, with the same
+names in scope, such as going to the scene or opening the menu the picture
+should show (`<!-- preview solo then="app.scenes:goTo('Title')" -->`). Names an
+example only borrows from earlier on its page (a `settings` panel to parent to,
+a list of `tracks`) come from the Club Lucy cast when it is rendered.
+
+The first marked example on `docs/components/button.md` is named
+`components-button`, the second `components-button-2`, and so on. The homepage
+example, `apps/site/src/content/quickstart.md`, is `home-quickstart`.
+
+Pictures come from Studio, so a person or an agent with Studio makes them:
+
+1. `node scripts/doc-previews.ts list` prints every marked example.
+2. In the LucyTests place, in edit mode, render each one with
+   `Lucy.Preview.mount` in the light and dark themes (with the docs icon module
+   registered). Capture the screen and crop it to what the example drew.
+3. Save them as WebP in `apps/site/public/images/examples` as
+   `<name>-light.webp` and `<name>-dark.webp`.
+4. `node scripts/doc-previews.ts write` puts each picture pair under its
+   marker. `--check` fails when a marked example has no pictures.
+
+Re-render a page's pictures when its example or the component's look changes.
+
+The docs icon sheet is built like a game's:
+
+```sh
+cd assets/docs-icons
+set -a; source ../../.env; set +a    # LUCY_ICONS_API_KEY, kept out of git
+node ../../libs/icons/dist/cli.js build
+```
+
+It writes `examples/DocIcons.luau`, which Rojo syncs into LucyTests.
+
 ## Pull requests
 
 Changes come in as pull requests to `main`:
