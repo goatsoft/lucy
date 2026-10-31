@@ -3,8 +3,8 @@ import { ref } from 'vue'
 import { AuroraScene } from '@goatsoft/aurora-vue'
 import { RouterLink } from 'vue-router'
 import heroDark from '@/backgrounds/hero-dark.aurora'
-import cardScanlinesDark from '@/backgrounds/card-scanlines-dark.aurora'
-import cardScanlinesLight from '@/backgrounds/card-scanlines-light.aurora'
+import panelSignalDark from '@/backgrounds/panel-signal-dark.aurora'
+import panelSignalLight from '@/backgrounds/panel-signal-light.aurora'
 import heroLight from '@/backgrounds/hero-light.aurora'
 import terminalDark from '@/backgrounds/terminal-dark.aurora'
 import terminalLight from '@/backgrounds/terminal-light.aurora'
@@ -107,8 +107,8 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
       </p>
     </section>
 
-    <!-- One scene across the cards: one raster, its exposure band rolling through every
-         card on one clock. -->
+    <!-- One scene across the cards: one screen of phosphor, static, glitch and scanlines,
+         seen through every card on one clock, so glitches and the rolling band cross them. -->
     <AuroraScene name="features">
       <section
         id="features"
@@ -127,8 +127,8 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
             class="group relative isolate overflow-hidden rounded-2xl border border-border bg-surface p-6 shadow-[inset_0_1px_0_0_color-mix(in_oklab,white_8%,transparent)] transition duration-300 hover:border-primary/50 motion-safe:hover:-translate-y-0.5"
           >
             <ThemedBackground
-              :dark="cardScanlinesDark"
-              :light="cardScanlinesLight"
+              :dark="panelSignalDark"
+              :light="panelSignalLight"
             />
             <!-- A violet glow from the corner on hover. -->
             <div
