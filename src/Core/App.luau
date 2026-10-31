@@ -30,6 +30,7 @@
 		state         initial AppState tree
 		namePrefix    prefix for created instances ("Lucy_")
 		setCurrent    make this the default app for components (true)
+		toastPosition where toasts show ("bottom-right"; see Components/Toaster)
 		devtools      false to skip the Devtools bridge Studio gets (ADR 0028)
 ]]
 

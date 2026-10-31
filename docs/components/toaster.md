@@ -6,15 +6,17 @@ description: Toast notifications through app.toast.
 # Toaster
 
 Short notifications that slide in above every scene and dialog, then go away on
-their own. Every App has one, so you never create it yourself: call
-`app.toast`.
+their own. Every App gets one when the Toaster component is in the package
+(always with Wally; when copying components in, add `toaster`), so you never
+create it yourself: call `app.toast`.
 
 ```lua
 app.toast.success("Round won", { description = "+$250" })
 ```
 
 Toasts sit in the bottom right corner on desktop and across the bottom on
-touch devices. They never take keyboard or gamepad focus.
+touch devices, unless you move them (see Position). They never take keyboard
+or gamepad focus.
 
 ## Showing a toast
 
@@ -46,6 +48,21 @@ Change these before the first toast shows:
 | `Lucy.Toaster.defaults.duration` | `4` | Seconds a toast stays when no `duration` is given |
 | `Lucy.Toaster.defaults.visibleToasts` | `3` | How many show at once; the newest win |
 | `Lucy.Toaster.defaults.width` | `356` | Width in pixels on desktop |
+
+## Position
+
+Put toasts where they won't cover your HUD:
+
+```lua
+local app = Lucy.App.new({ toastPosition = "top-center" })
+
+app.state:set("ui.toaster.position", "bottom-left") -- move them later
+```
+
+The positions are `top-left`, `top-center`, `top-right`, `bottom-left`,
+`bottom-center` and `bottom-right` (the default). The newest toast is the one
+nearest the edge. At the top, toasts also clear Roblox's own buttons. On touch
+devices they run full width, at the top or the bottom.
 
 ## Examples
 

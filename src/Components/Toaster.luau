@@ -18,11 +18,15 @@
 
 	Toasts live in AppState at "toasts" (newest last) so the app can read, clear
 	or drive them. Toaster.add / dismiss / expire are pure list functions.
-	The list renders into the app's "toast" portal, above every scene and dialog,
-	bottom-right on desktop and full width at the bottom on touch devices.
+	The list renders into the app's "toast" portal, above every scene and dialog.
+	Where: App.new({ toastPosition = "top-center" }), or later
+	app.state:set("ui.toaster.position", ...): top-left, top-center, top-right,
+	bottom-left, bottom-center or bottom-right (the default). On touch devices
+	toasts run full width at the top or bottom. The newest is nearest the edge.
 	Toasts are announced to gamepad/keyboard users but never steal focus.
 ]]
 
+local GuiService = game:GetService("GuiService")
 local RunService = game:GetService("RunService")
 
 local Button = require(script.Parent.Button)
@@ -35,6 +39,23 @@ local Toaster = {}
 
 Toaster.kinds = { "default", "success", "error", "warning", "info" }
 Toaster.defaults = { duration = 4, visibleToasts = 3, width = 356 }
+Toaster.positions = { "top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right" }
+
+local function checkPosition(position: string)
+	if not table.find(Toaster.positions, position) then
+		error(
+			`[Lucy] unknown toast position "{position}" (expected {table.concat(Toaster.positions, ", ")})`,
+			0
+		)
+	end
+end
+
+-- How each side of a position anchors: x and y fractions, and the layout.
+local HORIZONTAL: { [string]: { any } } = {
+	left = { 0, Enum.HorizontalAlignment.Left },
+	center = { 0.5, Enum.HorizontalAlignment.Center },
+	right = { 1, Enum.HorizontalAlignment.Right },
+}
 
 local rules: { Component.Rule } = {
 	{
@@ -150,7 +171,12 @@ function Toaster.install(app)
 
 	local function ensureMounted()
 		if mounted == nil or mounted.destroyed then
-			mounted = Toaster.new({ app = app, Parent = app:portal("toast") })
+			mounted = Toaster.new({
+				app = app,
+				id = "toaster",
+				position = app.config.toastPosition,
+				Parent = app:portal("toast"),
+			})
 			app.maid:give(mounted)
 		end
 	end
@@ -261,7 +287,7 @@ local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, in
 	entry.close = Button.new({
 		app = app,
 		name = "Close",
-		text = "\u{00D7}",
+		icon = "lucy:close",
 		variant = "ghost",
 		size = "icon",
 		layoutOrder = 4,
@@ -303,9 +329,12 @@ local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, in
 		Name = id,
 		Size = UDim2.fromScale(1, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
-		-- Only the newest visibleToasts show.
+		-- Only the newest visibleToasts show, and the newest is nearest the edge.
 		Visible = function()
 			return index() > #toasts() - visibleCount
+		end,
+		LayoutOrder = function()
+			return if h.atTop() then -index() else index()
 		end,
 		Tags = { "ui-toast" },
 		Element.new("Frame", {
@@ -367,7 +396,7 @@ function Toaster.new(props: { [string]: any }?)
 	return Component.mount({
 		kind = "toaster",
 		props = p,
-		defaults = { visible = true },
+		defaults = { visible = true, position = "bottom-right" },
 		rules = Toaster.rules,
 		render = function(h)
 			local app = h.app
@@ -397,24 +426,50 @@ function Toaster.new(props: { [string]: any }?)
 				end
 			end)
 
-			-- Desktop: a 356px column bottom-right. Touch: full width at the bottom.
+			-- Desktop: a 356px column at its position. Touch: full width at the top
+			-- or bottom.
+			checkPosition(h:get("position"))
+			local position = h:ref("position")
 			local touch = Composables.useResponsive(app, { mobile = true, default = false })
 			local width = p.width or Toaster.defaults.width
 			local function inset(): UDim
 				return UDim.new(0, if touch() then 12 else 24)
 			end
+			local function parts(): (boolean, { any })
+				local value = position()
+				checkPosition(value)
+				local vertical, horizontal = string.match(value, "^(%a+)-(%a+)$")
+				return vertical == "top", HORIZONTAL[if touch() then "center" else horizontal :: string]
+			end
+			local function atTop(): boolean
+				return (parts())
+			end
+			h.atTop = atTop
+			local function anchor(): Vector2
+				local top, side = parts()
+				return Vector2.new(side[1], if top then 0 else 1)
+			end
 
-			h.layout = Component.list({
-				VerticalAlignment = Enum.VerticalAlignment.Bottom,
-				HorizontalAlignment = Enum.HorizontalAlignment.Right,
+			h.layout = Element.new("UIListLayout", {
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				VerticalAlignment = function()
+					return if atTop() then Enum.VerticalAlignment.Top else Enum.VerticalAlignment.Bottom
+				end,
+				HorizontalAlignment = function()
+					local _, side = parts()
+					return side[2]
+				end,
 				Padding = Component.space(app, "Space2", 8),
 			})
 			local container = Element.new("Frame", {
 				Name = "Toaster",
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
-				AnchorPoint = Vector2.new(1, 1),
-				Position = UDim2.fromScale(1, 1),
+				AnchorPoint = anchor,
+				Position = function()
+					local a = anchor()
+					return UDim2.fromScale(a.X, a.Y)
+				end,
 				Size = function()
 					return if touch()
 						then UDim2.fromScale(1, 1)
@@ -423,7 +478,15 @@ function Toaster.new(props: { [string]: any }?)
 				Visible = h:ref("visible"),
 				h.layout,
 				Element.new("UIPadding", {
-					PaddingBottom = inset,
+					-- At the top, clear Roblox's own buttons as well.
+					PaddingTop = function()
+						return if atTop()
+							then UDim.new(0, inset().Offset + GuiService:GetGuiInset().Y)
+							else UDim.new()
+					end,
+					PaddingBottom = function()
+						return if atTop() then UDim.new() else inset()
+					end,
 					PaddingRight = inset,
 					PaddingLeft = inset,
 				}),
