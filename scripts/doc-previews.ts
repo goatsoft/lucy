@@ -22,13 +22,21 @@
  *
  *   node scripts/doc-previews.ts list     print the marked examples as JSON
  *   node scripts/doc-previews.ts blocks   print every luau block, marked or not
+ *   node scripts/doc-previews.ts serve    serve the marked examples to Studio's renderer
+ *                                         (scripts/doc-pictures.luau) on 127.0.0.1:38991
+ *   node scripts/doc-previews.ts crop <dark capture> <light capture>
+ *                                         cut the pictures out of a pair of captures; the
+ *                                         renderer's box lines come on stdin
  *   node scripts/doc-previews.ts write    put each picture pair under its marker
  *   node scripts/doc-previews.ts --check  change nothing; fail when a page is out of date
  *
  * Pictures live in apps/site/public/images/examples as <name>-light.webp and
  * <name>-dark.webp. The site shows the one for its theme.
  */
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { createServer } from 'node:http'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const ROOT = join(import.meta.dirname, '..')
@@ -163,8 +171,122 @@ function rewrite(page: Page, text: string, missing: string[]): string {
   return out + text.slice(at)
 }
 
+const PORT = 38991
+// Around what an example drew, in capture pixels.
+const PAD = 40
+// How far a pixel may be from the background before it counts as drawn.
+const THRESHOLD = 6
+
+interface Image {
+  width: number
+  height: number
+  data: Buffer // RGB, row by row
+}
+
+// Reads any image cwebp takes (PNG, JPEG, WebP) through libwebp's own tools.
+function decode(file: string): Image {
+  const dir = mkdtempSync(join(tmpdir(), 'lucy-pictures-'))
+  execFileSync('cwebp', ['-quiet', '-lossless', '-z', '0', file, '-o', join(dir, 'a.webp')])
+  execFileSync('dwebp', ['-quiet', join(dir, 'a.webp'), '-ppm', '-o', join(dir, 'a.ppm')])
+  const raw = readFileSync(join(dir, 'a.ppm'))
+  const header = raw.toString('latin1', 0, 64).match(/^P6\s+(\d+)\s+(\d+)\s+255\s/)
+  if (!header) throw new Error(`${file}: could not decode`)
+  return { width: Number(header[1]), height: Number(header[2]), data: raw.subarray(header[0].length) }
+}
+
+type Rect = [number, number, number, number] // x0, y0, x1, y1
+
+// The part of `area` that differs from the colour at its top left corner.
+function drawn(image: Image, [x0, y0, x1, y1]: Rect): Rect | undefined {
+  const at = (x: number, y: number) => (y * image.width + x) * 3
+  const bg = at(x0, y0)
+  const [r, g, b] = [image.data[bg]!, image.data[bg + 1]!, image.data[bg + 2]!]
+  let box: Rect | undefined
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      const i = at(x, y)
+      const far = Math.max(Math.abs(image.data[i]! - r), Math.abs(image.data[i + 1]! - g), Math.abs(image.data[i + 2]! - b))
+      if (far > THRESHOLD) {
+        if (!box) box = [x, y, x + 1, y + 1]
+        else box = [Math.min(box[0], x), Math.min(box[1], y), Math.max(box[2], x + 1), Math.max(box[3], y + 1)]
+      }
+    }
+  }
+  return box
+}
+
+// One picture pair per box line: the box (viewport pixels) is scaled to the capture,
+// then tightened to what differs from the background in either theme, so light and
+// dark get the same frame. A box that is the whole viewport (a screen) is kept whole.
+function crop(darkFile: string, lightFile: string, lines: string[]): string[] {
+  const dark = decode(darkFile)
+  const light = decode(lightFile)
+  if (dark.width !== light.width || dark.height !== light.height) throw new Error('the two captures differ in size')
+  const report: string[] = []
+  for (const line of lines) {
+    const m = line.trim().match(/^(\S+) ([\d.]+),([\d.]+),([\d.]+),([\d.]+) vp=(\d+),(\d+)/)
+    if (!m) {
+      if (line.trim()) report.push(`skipped: ${line.trim()}`)
+      continue
+    }
+    const name = m[1] as string
+    const [bx0, by0, bx1, by1, vw, vh] = m.slice(2).map(Number) as [number, number, number, number, number, number]
+    const scale = dark.width / vw
+    let rect: Rect
+    if (bx0 <= 0 && by0 <= 0 && bx1 >= vw && by1 >= vh) {
+      rect = [0, 0, dark.width, Math.min(dark.height, Math.round(vh * scale))]
+    } else {
+      const outer: Rect = [
+        Math.max(0, Math.floor(bx0 * scale) - PAD),
+        Math.max(0, Math.floor(by0 * scale) - PAD),
+        Math.min(dark.width, Math.ceil(bx1 * scale) + PAD),
+        Math.min(dark.height, Math.ceil(by1 * scale) + PAD),
+      ]
+      const a = drawn(dark, outer)
+      const b = drawn(light, outer)
+      const ink = a && b ? ([Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])] as Rect) : (a ?? b)
+      if (!ink) {
+        report.push(`${name}: nothing drawn`)
+        continue
+      }
+      rect = [
+        Math.max(outer[0], ink[0] - PAD),
+        Math.max(outer[1], ink[1] - PAD),
+        Math.min(outer[2], ink[2] + PAD),
+        Math.min(outer[3], ink[3] + PAD),
+      ]
+    }
+    const [x0, y0, x1, y1] = rect
+    for (const [theme, file] of [['dark', darkFile], ['light', lightFile]]) {
+      execFileSync('cwebp', ['-quiet', '-q', '90', '-m', '6', '-crop', `${x0}`, `${y0}`, `${x1 - x0}`, `${y1 - y0}`, file as string, '-o', join(IMAGES, `${name}-${theme}.webp`)])
+    }
+    report.push(`${name} ${x1 - x0}x${y1 - y0}`)
+  }
+  return report
+}
+
 const mode = process.argv[2]
-if (mode === 'list') {
+if (mode === 'serve') {
+  createServer((request, response) => {
+    if (request.url?.split('?')[0] !== '/examples.json') {
+      response.writeHead(404).end()
+      return
+    }
+    try {
+      const body = JSON.stringify(examples().map(({ markerEnd: _, ...rest }) => rest))
+      response.writeHead(200, { 'content-type': 'application/json' }).end(body)
+    } catch (err) {
+      response.writeHead(500).end((err as Error).message)
+    }
+  }).listen(PORT, '127.0.0.1', () => console.log(`serving the marked examples on http://127.0.0.1:${PORT}/examples.json`))
+} else if (mode === 'crop') {
+  const [darkFile, lightFile] = process.argv.slice(3)
+  if (!darkFile || !lightFile) {
+    console.error('usage: node scripts/doc-previews.ts crop <dark capture> <light capture> < box lines')
+    process.exit(2)
+  }
+  for (const line of crop(darkFile, lightFile, readFileSync(0, 'utf8').split('\n'))) console.log(line)
+} else if (mode === 'list') {
   console.log(JSON.stringify(examples().map(({ markerEnd: _, ...rest }) => rest), null, 2))
 } else if (mode === 'blocks') {
   const out: { file: string; index: number; marked: boolean; code: string }[] = []
@@ -194,6 +316,6 @@ if (mode === 'list') {
   for (const line of report) console.log(line)
   if (mode === '--check' && report.length) process.exit(1)
 } else {
-  console.error('usage: node scripts/doc-previews.ts list | blocks | write | --check')
+  console.error('usage: node scripts/doc-previews.ts list | blocks | serve | crop | write | --check')
   process.exit(2)
 }

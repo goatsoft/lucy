@@ -15,6 +15,9 @@
       },
       "LucyExamples": {
         "$path": "examples"
+      },
+      "LucyDocPictures": {
+        "$path": "scripts/doc-pictures.luau"
       }
     },
     "StarterPlayer": {

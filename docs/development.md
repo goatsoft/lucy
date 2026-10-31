@@ -217,16 +217,36 @@ The first marked example on `docs/components/button.md` is named
 `components-button`, the second `components-button-2`, and so on. The homepage
 example, `apps/site/src/content/quickstart.md`, is `home-quickstart`.
 
-Pictures come from Studio, so a person or an agent with Studio makes them:
+Pictures come from Studio, so a person or an agent with Studio makes them. The
+renderer is `scripts/doc-pictures.luau`, which the LucyTests place syncs as
+`ReplicatedStorage.LucyDocPictures`. Cropping needs `cwebp` and `dwebp`
+(libwebp, `brew install webp`).
 
-1. `node scripts/doc-previews.ts list` prints every marked example.
-2. In the LucyTests place, in edit mode, render each one with
-   `Lucy.Preview.mount` in the light and dark themes (with the docs icon module
-   registered). Capture the screen and crop it to what the example drew.
-3. Save them as WebP in `apps/site/public/images/examples` as
-   `<name>-light.webp` and `<name>-dark.webp`.
-4. `node scripts/doc-previews.ts write` puts each picture pair under its
+1. `node scripts/doc-previews.ts serve` serves the marked examples to Studio
+   on `127.0.0.1:38991`. Leave it running.
+2. In Studio's edit mode, start the renderer and draw the first screenful:
+
+   ```luau
+   local R = require(game.ReplicatedStorage.LucyDocPictures)
+   R.start()      -- loads the examples, copies Lucy, registers the docs icons
+   R.next("dark")  -- draws the next screenful, one box line per example
+   ```
+
+   It turns HTTP on only while it loads the examples. To redraw a few pictures,
+   call `R.only({ "components-button", "components-avatar" })` after `start()`.
+3. Capture the viewport, then call `R.again("light")` and capture it again.
+4. `node scripts/doc-previews.ts crop <dark capture> <light capture>`, with the
+   box lines from step 2 on its input, writes `<name>-dark.webp` and
+   `<name>-light.webp` to `apps/site/public/images/examples`. Light and dark
+   get the same frame, cut to what either theme drew.
+5. Repeat steps 2 to 4 with `R.next("dark")` until it returns `done`, then
+   `R.stop()`: it takes away everything the renderer made.
+6. `node scripts/doc-previews.ts write` puts each picture pair under its
    marker. `--check` fails when a marked example has no pictures.
+
+Examples run with stand-ins for names they only borrow from earlier on their
+page, and for a client (`Players.LocalPlayer`, remotes that answer nothing), so
+no server script runs while pictures are made.
 
 Re-render a page's pictures when its example or the component's look changes.
 
