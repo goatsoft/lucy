@@ -20,6 +20,7 @@ exclude = [
 	"vite.library.ts",
 	".nvmrc",
 	"docs",
+	"LICENSE-ART.md",
 	"scripts",
 	"tests",
 	"examples",
