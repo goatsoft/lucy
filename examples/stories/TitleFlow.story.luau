@@ -1,6 +1,6 @@
 --[[
 	Scenes in a story: a title screen, a lobby and a pause modal on the story's own
-	App. The controls drive the scene manager and follow it back (Escape or ButtonB
+	App. The controls drive the scene manager and follow it back (Backspace or ButtonB
 	pops the pause modal, which clears `paused`).
 ]]
 return {
@@ -134,7 +134,7 @@ return {
 				app.scenes:pop()
 			end
 		end, { immediate = true })
-		-- ...and follow it back when the player navigates (back, Escape, ButtonB).
+		-- ...and follow it back when the player navigates (back, Backspace, ButtonB).
 		local stack = app.state:ref("scenes.stack")
 		-- Only the stack is tracked, so this never races the push above.
 		Lucy.watchEffect(function()

@@ -11,7 +11,7 @@
 				{ text = "Stay", variant = "outline" },
 				{ text = "Leave", variant = "destructive", onClick = function(dialog) leave() end },
 			},
-			dismissible = true,       -- Escape / ButtonB / overlay / close button
+			dismissible = true,       -- back keys / overlay / close button
 			closeOnOverlay = true,
 			modal = true,             -- false: no focus trap, presses reach what is behind
 			scrim = true,             -- false: no dimmed backdrop

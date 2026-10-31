@@ -3,7 +3,7 @@
 
 A modal window above every scene, with a title, a description, any content and
 a row of action buttons. While it is open, keyboard and gamepad focus stay
-inside it and the back button (Escape or ButtonB) closes it.
+inside it and the back button (B or Backspace) closes it.
 
 ```luau
 local quit = Lucy.Dialog.new({
@@ -28,7 +28,7 @@ quit:open()
 | `description` | string | `""` | yes | Text under the heading |
 | `actions` | table | | | Buttons along the bottom, see [Actions](#actions) |
 | `children` | table | | | Instances or handles to put in the content area |
-| `dismissible` | boolean | `true` | | Whether Escape, ButtonB, the overlay and the close button can close it |
+| `dismissible` | boolean | `true` | | Whether B, Backspace, the overlay and the close button can close it |
 | `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it (off by default when `modal` is `false`) |
 | `modal` | boolean | `true` | | `false` lets clicks reach what is behind it and lets focus move out of it |
 | `scrim` | boolean | `true` | | `false` drops the dimmed backdrop |
@@ -50,7 +50,7 @@ it opens on a keyboard or gamepad, its last action (the main one) is selected,
 or the close button when it has no actions. When it closes, focus goes back to
 whatever had it before. A dialog with
 `modal = false` is still on top, but the rest of the screen keeps working,
-and Escape or ButtonB still closes it.
+and B or Backspace still closes it.
 
 ### Actions
 
@@ -73,7 +73,7 @@ An action closes the dialog after its `onClick` runs, unless `onClick` returns
 
 `Lucy.Dialog.alert` asks a question with two buttons and opens straight away.
 Clicking outside it does nothing and it has no close button, so the player has
-to choose. Back (Escape or B) picks Cancel; pass `backCancels = false` to make
+to choose. Back (B or Backspace) picks Cancel; pass `backCancels = false` to make
 it do nothing instead.
 
 ```luau

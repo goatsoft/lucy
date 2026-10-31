@@ -29,7 +29,7 @@ To write your own, see [Share logic with composables](../guide/composables.md).
 | [`useDensity`](#usedensity) | The device's density: `"default"`, `"touch"` or `"tv"` |
 | [`useMetric`](#usemetric) | A control size in pixels, following density |
 | [`useResponsive`](#useresponsive) | A value that changes with the device, such as a gap |
-| [`useBackHandler`](#usebackhandler) | Escape or ButtonB calls your function while active |
+| [`useBackHandler`](#usebackhandler) | B or Backspace calls your function while active |
 | [`useFocusScope`](#usefocusscope) | Keeps keyboard and gamepad focus inside a frame while active |
 | [`useUiSound`](#useuisound) | Calls your functions when components are clicked, toggled, opened or closed |
 | [`useTable`](#usetable) | Sorted rows from your data and a list of columns |
@@ -74,8 +74,8 @@ Lucy.useBackHandler(app, isOpen, function()
 end)
 ```
 
-While `active` (a ref, getter or plain value) is true, Escape and ButtonB call
-the function. Return `true` when you handled the press, so nothing under it
+While `active` (a ref, getter or plain value) is true, the
+[back keys](../architecture.md#back-keys) call the function. Return `true` when you handled the press, so nothing under it
 gets it too. The newest handler goes first.
 
 ## useFocusScope

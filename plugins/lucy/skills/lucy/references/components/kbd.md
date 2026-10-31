@@ -56,7 +56,7 @@ Lucy.Stack.new({
     gap = "Space2",
     align = "center",
     children = {
-        Lucy.Kbd.new({ keyboard = Enum.KeyCode.Escape, gamepad = Enum.KeyCode.ButtonB }),
+        Lucy.Kbd.new({ keyboard = Enum.KeyCode.Backspace, gamepad = Enum.KeyCode.ButtonB }),
         Lucy.Text.new({ text = "Close", variant = "muted", autoWidth = true }),
     },
     Parent = footer,

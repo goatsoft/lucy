@@ -81,9 +81,31 @@ Lucy.Button.new({
 
 ## Keys Roblox keeps
 
-Escape and a gamepad's Start (menu) button open Roblox's own menu as well, and a
-game cannot stop that, so don't give them actions. For going back, Lucy already
-handles Escape and B; see [Build screens with scenes](scenes.md).
+Escape and a gamepad's Start (menu) button always open Roblox's own menu, and a
+game cannot stop that, so don't give them actions. Lucy goes back on B and
+Backspace instead; see [Back keys](../architecture.md#back-keys).
+
+For a pause menu, open it from the game screen's `onBack`, so B and Backspace
+pause, and give players a pause button they can see:
+
+```luau
+app.scenes:register("Game", {
+    build = function(scene)
+        Lucy.Button.new({
+            icon = "lucide:pause",
+            size = "icon",
+            hint = { keyboard = Enum.KeyCode.Backspace, gamepad = Enum.KeyCode.ButtonB },
+            onClick = function()
+                app.scenes:push("Pause")
+            end,
+            Parent = scene.gui,
+        })
+    end,
+    onBack = function()
+        app.scenes:push("Pause")
+    end,
+})
+```
 
 ## Change keys
 

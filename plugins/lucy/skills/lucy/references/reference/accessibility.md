@@ -41,7 +41,7 @@ Everything that can be pressed can be reached without a mouse or touch:
 | Tab, arrow keys | move focus on a keyboard |
 | Thumbstick, D-pad | move focus on a gamepad |
 | Enter, gamepad A | press the focused control |
-| Escape, gamepad B | go back: close the top modal, or call the screen's `onBack` |
+| Backspace, gamepad B | go back: close the top modal, or call the screen's `onBack` |
 
 - The focused control shows a focus ring in the theme's `Ring` colour, only
   while the player navigates with keys or a gamepad. The ring is drawn inside

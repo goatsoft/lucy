@@ -26,6 +26,7 @@
 		styleParent   where the StyleSheet folder goes (ReplicatedStorage)
 		adaptive      false to disable scaling, or Adaptive options merged over the device profile
 		input         InputManager options ({ caps, mode, watch } for tests)
+		backKeys      keys that go back ({ ButtonB, Backspace }; Escape always opens Roblox's menu too)
 		actions       Actions options ({ parent, controls, contextActions })
 		state         initial AppState tree
 		namePrefix    prefix for created instances ("Lucy_")
@@ -168,7 +169,11 @@ function App.new(config: { [string]: any }?): App
 	self:_bindSetting("theme", "set", "get", self.theme.Changed)
 	self:_bindSetting("density", "setDensity", "getDensity", self.theme.DensityChanged)
 
-	self.input = InputManager.new(self, options.input)
+	local inputOptions = table.clone(options.input or {})
+	if options.backKeys then
+		inputOptions.backKeys = options.backKeys
+	end
+	self.input = InputManager.new(self, inputOptions)
 	self.maid:give(self.input)
 
 	self.actions = Actions.new(self, options.actions)

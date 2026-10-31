@@ -27,7 +27,7 @@ return {
 				gap = "Space3",
 				children = {
 					row("Join the competition", { keyboard = Enum.KeyCode.E, gamepad = Enum.KeyCode.DPadUp }),
-					row("Close", { keyboard = Enum.KeyCode.Escape, gamepad = Enum.KeyCode.ButtonB }),
+					row("Close", { keyboard = Enum.KeyCode.Backspace, gamepad = Enum.KeyCode.ButtonB }),
 					row("Next tab", { keyboard = Enum.KeyCode.Tab, gamepad = Enum.KeyCode.ButtonR1 }),
 					row(
 						"Dance",

@@ -40,7 +40,7 @@ settings:open()
 | `side` | string | `"right"` | | `left` or `right`: the edge the panel comes from |
 | `width` | number | `360` | | The panel's width in pixels, at most 90% of the screen |
 | `presentation` | string | `"auto"` | | `auto`, `panel` or `drawer` |
-| `dismissible` | boolean | `true` | | Whether Escape, ButtonB, a press outside and the close button can close it |
+| `dismissible` | boolean | `true` | | Whether B, Backspace, a press outside and the close button can close it |
 | `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it (off by default when `modal` is `false`) |
 | `modal` | boolean | `true` | | `false` lets clicks reach what is behind it and lets focus move out of it |
 | `scrim` | boolean | `true` | | `false` drops the dimmed backdrop |

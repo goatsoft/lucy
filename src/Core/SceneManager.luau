@@ -20,7 +20,7 @@
 			enter = function(scene, params) end,
 			exit = function(scene) end,
 			defaultFocus = function(scene) return scene.playButton end, -- gamepad/keyboard start
-			onBack = function(scene) end, -- Escape / ButtonB with nothing else to close
+			onBack = function(scene) end, -- a back key (B, Backspace) with nothing else to close
 		})
 		app.scenes:goTo("Title")
 		app.scenes:push("Pause")   app.scenes:pop()
@@ -354,7 +354,7 @@ function SceneManager.modalCount(self: SceneManager): number
 	return count
 end
 
--- Escape / ButtonB: pop the top stacked scene, else ask the current screen.
+-- A back key: pop the top stacked scene, else ask the current screen.
 function SceneManager.back(self: SceneManager): boolean
 	local stack = self.app.state:get("scenes.stack") or {}
 	if #stack > 0 then

@@ -110,7 +110,7 @@ function Composables.useResponsive(app: any, value: any): () -> any
 	end)
 end
 
--- Puts `handler` on the back stack (Escape / ButtonB) while `active` is true.
+-- Puts `handler` on the back stack (the back keys) while `active` is true.
 -- The handler returns true when it consumed the back press.
 function Composables.useBackHandler(app: any, active: Reactive.MaybeRef<boolean>, handler: () -> boolean?)
 	requireOwner("useBackHandler")

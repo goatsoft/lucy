@@ -37,8 +37,15 @@
 		release method. Otherwise arrows move focus as before.
 
 	Back:
-		Escape / ButtonB call app.input:back(): the newest pushBack handler runs
-		(an open dialog closes), otherwise the SceneManager pops or calls onBack.
+		The back keys (ButtonB and Backspace; App option backKeys) call
+		app.input:back(): the newest pushBack handler runs (an open dialog
+		closes), otherwise the SceneManager pops or calls onBack. Backspace is
+		left alone while a TextBox has focus. Escape is not a default: Roblox
+		always opens its own menu on Escape and games cannot stop it (ADR 0031).
+
+	Roblox menu:
+		Opening the Roblox menu clears the selection and closing it does not put
+		it back, so restoreFocus() runs when it closes.
 ]]
 
 local GuiService = game:GetService("GuiService")
@@ -66,6 +73,8 @@ export type InputManager = typeof(setmetatable(
 		_nudged: any,
 		_held: { key: Enum.KeyCode, token: {} }?,
 		_stick: Vector2,
+		_backKeys: { Enum.KeyCode },
+		_lastFocused: GuiObject?,
 	},
 	InputManager
 ))
@@ -82,6 +91,9 @@ local MODES: { [Enum.UserInputType]: string } = {
 for i = 1, 8 do
 	MODES[(Enum.UserInputType :: any)["Gamepad" .. i]] = "gamepad"
 end
+
+-- Keys that go back when an App does not set backKeys. Not Escape (ADR 0031).
+InputManager.backKeys = { Enum.KeyCode.ButtonB, Enum.KeyCode.Backspace }
 
 -- How long an arrow is held before it repeats, and how often it then does.
 InputManager.repeatDelay = 0.35
@@ -175,6 +187,7 @@ end
 	options:
 		caps    fixed capabilities (tests); otherwise read from UserInputService
 		watch   listen to engine events (default true)
+		backKeys  keys that go back (InputManager.backKeys)
 ]]
 function InputManager.new(app: any, options: { [string]: any }?): InputManager
 	local opts: { [string]: any } = options or {}
@@ -190,6 +203,8 @@ function InputManager.new(app: any, options: { [string]: any }?): InputManager
 		_nudged = false,
 		_held = nil :: { key: Enum.KeyCode, token: {} }?,
 		_stick = Vector2.zero,
+		_backKeys = (opts.backKeys or InputManager.backKeys) :: { Enum.KeyCode },
+		_lastFocused = nil :: GuiObject?,
 	}, InputManager)
 	self:_publish()
 
@@ -262,6 +277,9 @@ function InputManager.markFocus(self: InputManager, object: GuiObject?)
 		previous:RemoveTag("ui-focus-visible")
 	end
 	self._focused = object
+	if object then
+		self._lastFocused = object
+	end
 	if object and self:isNavigating() then
 		object:AddTag("ui-focus-visible")
 		-- The engine scrolls to the gamepad selection, but not to focus Lucy moves.
@@ -552,6 +570,37 @@ function InputManager.back(self: InputManager): boolean
 	return false
 end
 
+-- A key the player pressed: goes back if it is a back key. Backspace is left
+-- to a TextBox being typed in. Returns whether something went back.
+function InputManager.keyBack(self: InputManager, key: Enum.KeyCode): boolean
+	if not table.find(self._backKeys, key) then
+		return false
+	end
+	if key == Enum.KeyCode.Backspace and UserInputService:GetFocusedTextBox() ~= nil then
+		return false
+	end
+	return self:back()
+end
+
+-- Puts focus back after something outside Lucy (the Roblox menu) cleared it:
+-- the last focused object if it can still take focus inside the top scope,
+-- else the default focus. Only while navigating with keys or a gamepad.
+function InputManager.restoreFocus(self: InputManager)
+	if not self:isNavigating() or self._focused ~= nil then
+		return
+	end
+	local last = self:_usable(self._lastFocused)
+	local top = self:topScope()
+	if last and top and top.root and not last:IsDescendantOf(top.root) then
+		last = nil
+	end
+	if last then
+		self:focus(last)
+	else
+		self:focusDefault()
+	end
+end
+
 -- Engine wiring --------------------------------------------------------------
 
 function InputManager._watch(self: InputManager)
@@ -568,6 +617,13 @@ function InputManager._watch(self: InputManager)
 		self:markFocus(GuiService.SelectedObject)
 	end))
 
+	maid:give(GuiService.MenuClosed:Connect(function()
+		-- The menu is still closing on this frame; select once it has gone.
+		task.defer(function()
+			self:restoreFocus()
+		end)
+	end))
+
 	local function refreshCaps()
 		self:setCaps(readCaps())
 	end
@@ -580,10 +636,8 @@ function InputManager._watch(self: InputManager)
 
 	maid:give(UserInputService.InputBegan:Connect(function(input, processed)
 		local key = input.KeyCode
-		if key == Enum.KeyCode.ButtonB or key == Enum.KeyCode.Escape then
-			if self:back() then
-				return
-			end
+		if self:keyBack(key) then
+			return
 		end
 		if key == Enum.KeyCode.ButtonL1 or key == Enum.KeyCode.ButtonR1 then
 			if self:shoulder(if key == Enum.KeyCode.ButtonL1 then -1 else 1) then

@@ -76,7 +76,7 @@ The list opens on the app's overlay layer, above everything opened before it:
   closes, the button is selected again.
 - **Touch:** a drawer from the bottom of the screen, where a thumb can reach it.
 
-A long list scrolls inside the space it has. Escape, ButtonB or a press outside
+A long list scrolls inside the space it has. B, Backspace or a press outside
 closes it without changing anything.
 
 The button draws `lucy:chevron-down`, and a `check` select draws `lucy:check`.

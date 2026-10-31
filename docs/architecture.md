@@ -131,7 +131,7 @@ otherwise desktop) and drives density and the adaptive profile.
 
 Focus scopes stack: screens and modal scenes push one on enter, dialogs push one
 while open. Keyboard Tab/arrows, gamepad selection and `defaultFocus` all work
-inside the top scope. Escape / ButtonB call `app.input:back()`. LB / RB call
+inside the top scope. The [back keys](#back-keys) call `app.input:back()`. LB / RB call
 `app.input:shoulder(-1 / 1)`: from the focused object up, the first component with
 a `shoulder(step)` method that returns true handles them, so only the tabs around
 the focus switch. Arrow keys, the D-pad and the left stick first call
@@ -147,6 +147,26 @@ method that returns true takes it.
 
 Roblox's own selection image is replaced with a blank frame; Lucy draws its own
 ring with the `ui-focus-visible` tag only while navigating with keys or a pad.
+
+### Back keys
+
+B on a gamepad and Backspace on a keyboard go back. Backspace is left alone
+while the player is typing in a TextBox.
+
+Escape is not a back key. Roblox opens its own menu on every Escape, and a game
+cannot stop or undo that, so going back on Escape would also open the menu on
+top. Choose other keys with `backKeys`:
+
+```luau
+local app = Lucy.App.new({
+    backKeys = { Enum.KeyCode.ButtonB, Enum.KeyCode.Backspace, Enum.KeyCode.Q },
+})
+```
+
+Adding `Enum.KeyCode.Escape` works, but Roblox's menu still opens every time.
+
+Opening Roblox's menu clears the focus, and closing it does not bring it back,
+so Lucy puts focus back where it was when the menu closes.
 
 Hotkeys go through `app.actions`: named actions in sets, built as Roblox
 InputContexts, that a game switches off together (the built in `movement` set

@@ -14,7 +14,7 @@
 			side = "right",           -- left | right (the panel; touch always uses the bottom)
 			width = 360,              -- the panel's width, at most 90% of the screen
 			presentation = "auto",    -- auto | panel | drawer
-			dismissible = true,       -- Escape / ButtonB / outside press / close button
+			dismissible = true,       -- back keys / outside press / close button
 			closeOnOverlay = true,
 			modal = true,             -- false: no focus trap, presses reach what is behind
 			scrim = true,             -- false: no dimmed backdrop

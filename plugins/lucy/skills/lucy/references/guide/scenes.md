@@ -56,7 +56,7 @@ app.scenes:register("Title", {
 | `enter(scene, params)` | runs every time the scene shows, with what you passed to `goTo`, `push` or `show` |
 | `exit(scene)` | runs every time it hides |
 | `defaultFocus(scene)` | what keyboard and gamepad players start on: an Instance or a component. Optional: without it, the first thing that can take focus. Overlays ignore it |
-| `onBack(scene)` | Escape or B on a screen, when nothing is open on top |
+| `onBack(scene)` | B or Backspace on a screen, when nothing is open on top |
 | `keepAlive` | `true` (the default) keeps the UI when the scene hides; `false` destroys it and builds it again next time |
 | `ignoreGuiInset` | `true` (the default) draws under Roblox's top bar; see [Safe area](#safe-area) |
 
@@ -153,8 +153,9 @@ corners only. Lucy also scales every scene for the device; see
 ## Back
 
 `app.scenes:back()` closes the top modal, or, with none open, calls the current
-screen's `onBack`. Lucy calls it for Escape and the gamepad's B button when
-nothing else, such as an open select, takes them first:
+screen's `onBack`. Lucy calls it for the [back keys](../architecture.md#back-keys),
+B on a gamepad and Backspace on a keyboard, when nothing else, such as an open
+select, takes them first:
 
 ```luau
 app.scenes:register("Game", {

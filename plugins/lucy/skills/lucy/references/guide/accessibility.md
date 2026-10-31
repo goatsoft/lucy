@@ -78,7 +78,7 @@ app.scenes:register("Title", {
 ```
 
 Then try every screen without a mouse: Tab and the arrow keys on a keyboard,
-the thumbstick and D-pad on a gamepad, Escape or B to go back. Every control
+the thumbstick and D-pad on a gamepad, Backspace or B to go back. Every control
 you can click should be reachable, and back should always lead somewhere. See
 [Build screens with scenes](scenes.md).
 

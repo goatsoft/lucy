@@ -229,6 +229,98 @@ return function()
 		end)
 	end)
 
+	describe("back keys", function()
+		it("go back on ButtonB and Backspace, not Escape", function()
+			local app, cleanup = Harness.app()
+			local calls = 0
+			local remove = app.input:pushBack(function()
+				calls += 1
+				return true
+			end)
+			local b = app.input:keyBack(Enum.KeyCode.ButtonB)
+			local backspace = app.input:keyBack(Enum.KeyCode.Backspace)
+			local escape = app.input:keyBack(Enum.KeyCode.Escape)
+			local other = app.input:keyBack(Enum.KeyCode.E)
+			remove()
+			cleanup()
+			expect(b).to.equal(true)
+			expect(backspace).to.equal(true)
+			expect(escape).to.equal(false)
+			expect(other).to.equal(false)
+			expect(calls).to.equal(2)
+		end)
+
+		it("takes the keys from the App's backKeys", function()
+			local app, cleanup = Harness.app({ backKeys = { Enum.KeyCode.Escape, Enum.KeyCode.ButtonB } })
+			local remove = app.input:pushBack(function()
+				return true
+			end)
+			local escape = app.input:keyBack(Enum.KeyCode.Escape)
+			local backspace = app.input:keyBack(Enum.KeyCode.Backspace)
+			remove()
+			cleanup()
+			expect(escape).to.equal(true)
+			expect(backspace).to.equal(false)
+		end)
+	end)
+
+	describe("after the Roblox menu closes", function()
+		local app, cleanup
+		beforeEach(function()
+			app, cleanup = Harness.app()
+		end)
+		afterEach(function()
+			cleanup()
+		end)
+
+		it("puts focus back where it was", function()
+			local gui = Harness.mount(app)
+			local first = Instance.new("TextButton")
+			first.Parent = gui
+			local second = Instance.new("TextButton")
+			second.Position = UDim2.fromOffset(0, 100)
+			second.Parent = gui
+			app.input:setMode("keyboard")
+			app.input:focus(second)
+			-- The menu clears the selection when it opens.
+			app.input:markFocus(nil)
+			app.input:restoreFocus()
+			expect(app.input:focused()).to.equal(second)
+		end)
+
+		it("falls back to the default focus when that is gone", function()
+			local gui = Harness.mount(app)
+			local panel = Instance.new("Frame")
+			panel.Size = UDim2.fromOffset(200, 200)
+			panel.Parent = gui
+			local inside = Instance.new("TextButton")
+			inside.Parent = panel
+			local gone = Instance.new("TextButton")
+			gone.Parent = panel
+			app.input:setMode("gamepad")
+			local pop = app.input:pushScope({ root = panel, defaultFocus = inside })
+			app.input:focus(gone)
+			app.input:markFocus(nil)
+			gone:Destroy()
+			app.input:restoreFocus()
+			local focused = app.input:focused()
+			pop()
+			expect(focused).to.equal(inside)
+		end)
+
+		it("leaves focus alone with the mouse", function()
+			local gui = Harness.mount(app)
+			local button = Instance.new("TextButton")
+			button.Parent = gui
+			app.input:setMode("keyboard")
+			app.input:focus(button)
+			app.input:markFocus(nil)
+			app.input:setMode("mouse")
+			app.input:restoreFocus()
+			expect(app.input:focused()).to.equal(nil)
+		end)
+	end)
+
 	describe("nudge", function()
 		it("is not taken with nothing focused, and release is then harmless", function()
 			local app, cleanup = Harness.app()
