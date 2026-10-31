@@ -129,4 +129,31 @@ return function()
 		-- Re-create so afterEach has something to clean.
 		app, cleanup = Harness.app()
 	end)
+
+	it("grows control heights to fit the player's text size", function()
+		local Preferences = require(script.Parent.Preferences)
+		local Reactive = require(script.Parent.Reactive)
+		local Composables = require(script.Parent.Parent.Composables)
+		local base = app.theme:resolve("ControlMd").Y.Offset
+		local real = Preferences.added
+		Preferences.added = function(size: number): number
+			return size // 2
+		end
+		local scope = Reactive.effectScope(true)
+		local ok, err = pcall(function()
+			local metric = scope:run(function()
+				return Composables.useMetric(app, "ControlMd")
+			end)
+			Preferences._setDevice({ textSize = "Larger" })
+			expect(app.theme:resolve("ControlMd").Y.Offset > base).to.equal(true)
+			expect(metric()).to.equal(app.theme:resolve("ControlMd").Y.Offset)
+			Preferences._setDevice({ textSize = "Medium" })
+			expect(app.theme:resolve("ControlMd").Y.Offset).to.equal(base)
+			expect(metric()).to.equal(base)
+		end)
+		scope:stop()
+		Preferences.added = real
+		Preferences._setDevice({})
+		assert(ok, err)
+	end)
 end

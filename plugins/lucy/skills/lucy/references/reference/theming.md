@@ -106,7 +106,9 @@ The same in every theme.
 | `ControlIcon` | 36 square | 44 square | 52 square |
 | `TextXs` to `Text4xl` | 12, 14, 16, 18, 20, 24, 30, 36 | same as default | 14, 16, 18, 22, 24, 28, 34, 42 |
 
-Control tokens are `UDim2` heights; text tokens are `TextSize` numbers.
+Control tokens are `UDim2` heights; text tokens are `TextSize` numbers. When a
+player picks a larger text size in the Roblox menu, the control heights grow to
+fit; see [Accessibility](accessibility.md#text-size).
 
 ## Lucy.Tokens
 
@@ -146,11 +148,13 @@ themes.dark.PrimaryForeground = Lucy.Tokens.onColor("$Primary")
 | `get()`, `set(name)` | the current theme; `set` errors on an unknown name (setting `app.state` warns instead) |
 | `names()` | every theme's name, sorted |
 | `getDensity()`, `setDensity(name)` | the current density |
+| `setTextGrowth(grow)` | grows `ControlSm`, `ControlMd` and `ControlLg` by `grow(size)` of their text size, in every density; `nil` takes it off. The app sets it from the player's text size |
 | `resolve(token)` | the value a token has right now, through aliases: `resolve("Primary")` is a `Color3` |
 | `addRules(key, rules)` | adds style rules under a key; does nothing if the key is there |
 | `removeRules(key)`, `hasRules(key)` | takes a key's rules out; checks for them |
 | `link(gui)` | styles a ScreenGui you made yourself (scenes and portals are linked already) |
 | `Changed`, `DensityChanged` | signals, fired with the new name |
+| `MetricsChanged` | signal, fired when control heights change for text size |
 
 ## Rules
 

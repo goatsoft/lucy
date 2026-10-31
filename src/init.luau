@@ -112,6 +112,7 @@ local Lucy = {
 	Theme = Theme,
 	Tokens = require(Core.Tokens),
 	Oklab = require(Core.Oklab),
+	Preferences = require(Core.Preferences),
 	Palette = require(Core.Palette),
 	SceneManager = SceneManager,
 	InputManager = require(Core.InputManager),

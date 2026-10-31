@@ -85,19 +85,60 @@ you can click should be reachable, and back should always lead somewhere. See
 ## Let controls size themselves
 
 Players can make text larger in the Roblox menu, and Roblox then draws all text
-bigger. Text in a box with a fixed pixel height gets cut off. Size controls
-with the density tokens (`$ControlMd` and the rest) or `AutomaticSize`, and let
-labels wrap with `TextWrapped`, rather than fixing heights in pixels.
+bigger. Lucy's controls grow to fit it, but text in a box with a fixed pixel
+height gets cut off. Size your own controls with the density tokens
+(`$ControlMd` and the rest) or `AutomaticSize`, and let labels wrap with
+`TextWrapped`, rather than fixing heights in pixels:
+
+```luau
+local rules = {
+    {
+        selector = ".shop-buy",
+        properties = { Size = "$ControlMd", AutomaticSize = Enum.AutomaticSize.X },
+    },
+}
+```
+
+If code needs a control's height in pixels, `Lucy.useMetric(app, "ControlMd")`
+follows both the density and the player's text size.
 
 ## Animate through Lucy
 
-Move things with `Lucy.tween` and `Lucy.spring` rather than `TweenService`, so
-your animations follow the same rules as Lucy's own when a player asks for less
-motion. Keep motion short, and never make it the only sign that something
-happened.
+Move things with `Lucy.spring` and `Lucy.tween` rather than `TweenService`.
+When a player turns on Reduce motion in the Roblox menu, Lucy's springs, and
+tweens of positions and sizes, jump to where they end, so yours do too. Tweens
+of colours and numbers still fade.
+
+A number that moves something, like a rotation, needs one more step: give it a
+`TweenInfo` that takes no time when motion is reduced.
+
+```luau
+local Preferences = Lucy.Preferences
+local turn = Lucy.tween(function()
+    return if open() then 180 else 0
+end, function()
+    return if Preferences.reducedMotion() then TweenInfo.new(0) else TweenInfo.new(0.2)
+end)
+```
+
+If your game has its own settings menu, a Reduce motion switch can drive the
+same setting:
+
+```luau
+Lucy.Switch.new({
+    label = "Reduce motion",
+    checked = Lucy.Preferences.reducedMotion(),
+    onCheckedChange = function(on)
+        Lucy.Preferences.setReducedMotion(on)
+    end,
+    Parent = settingsPanel,
+})
+```
+
+Keep motion short, and never make it the only sign that something happened.
 
 ## Next
 
 - [Accessibility](../reference/accessibility.md): the contrast Lucy promises, focus,
-  sizes and the Roblox settings it follows
+  sizes, the Roblox settings it follows and `Lucy.Preferences`
 - [Theming](../reference/theming.md): every colour token and the `Tokens` helpers

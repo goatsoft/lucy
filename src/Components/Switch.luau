@@ -21,6 +21,7 @@ local TweenService = game:GetService("TweenService")
 local Component = require(script.Parent.Parent.Core.Component)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
+local Preferences = require(script.Parent.Parent.Core.Preferences)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Switch = {}
@@ -136,7 +137,8 @@ local spec: Component.Spec = {
 		end)
 		Reactive.watch(checked, function(value)
 			local on = value == true
-			if h.Instance and h.Instance.Parent then
+			-- With reduced motion the thumb jumps (Core/Preferences).
+			if h.Instance and h.Instance.Parent and not Preferences.reducedMotion() then
 				slides[on]:Play()
 			else
 				slides[not on]:Cancel()

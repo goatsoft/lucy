@@ -263,3 +263,6 @@ local fade = Lucy.tween(target, TweenInfo.new(0.25, Enum.EasingStyle.Quad))
   Oklab, so red to blue passes through a clean purple. Other types snap.
 - One Heartbeat connection drives every animation, and it disconnects when all of
   them are at rest.
+- When the player asks for reduced motion, springs and tweens of positions and
+  sizes jump; colour and number tweens still fade. See
+  [Accessibility](reference/accessibility.md#reduce-motion).

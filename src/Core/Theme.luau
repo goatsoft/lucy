@@ -44,11 +44,14 @@ export type Theme = typeof(setmetatable(
 	{} :: {
 		Changed: Signal.Signal,
 		DensityChanged: Signal.Signal,
+		MetricsChanged: Signal.Signal,
 		folder: Folder,
 		design: StyleSheet,
 		_rules: { [string]: { StyleRule } },
 		_themes: { [string]: StyleSheet },
 		_densities: { [string]: StyleSheet },
+		_densityValues: { [string]: { [string]: any } },
+		_grow: ((size: number) -> number)?,
 		_tokens: StyleSheet,
 		_themeDerive: StyleDerive,
 		_densityDerive: StyleDerive,
@@ -170,6 +173,8 @@ function Theme.new(config: { [string]: any }?): Theme
 	local self: Theme = setmetatable({} :: any, Theme)
 	self.Changed = Signal.new()
 	self.DensityChanged = Signal.new()
+	self.MetricsChanged = Signal.new()
+	self._densityValues = densities
 	self._rules = {}
 	self._themes = {}
 	self._densities = {}
@@ -279,6 +284,33 @@ function Theme.setDensity(self: Theme, name: string)
 	self.DensityChanged:Fire(name)
 end
 
+-- Each control height and the text it holds. ControlIcon holds an icon only.
+local GROWS: { [string]: string } = { ControlSm = "TextXs", ControlMd = "TextSm", ControlLg = "TextBase" }
+
+--[[
+	Grows control heights for larger text: each Control token gets what
+	grow(size) returns for its text size, in every density. nil takes it off.
+	App sets this from the player's text size (Core/Preferences).
+]]
+function Theme.setTextGrowth(self: Theme, grow: ((size: number) -> number)?)
+	if grow == self._grow then
+		return
+	end
+	self._grow = grow
+	for name, values in self._densityValues do
+		local sheet = self._densities[name]
+		for control, text in GROWS do
+			local base = values[control]
+			local size = values[text]
+			if typeof(base) == "UDim2" and type(size) == "number" then
+				local add = if grow then math.max(0, math.round(grow(size))) else 0
+				sheet:SetAttribute(control, base + UDim2.fromOffset(0, add))
+			end
+		end
+	end
+	self.MetricsChanged:Fire()
+end
+
 local function read(self, name: string): any
 	local value = self._themes[self._current]:GetAttribute(name)
 	if value == nil then
@@ -359,6 +391,7 @@ end
 function Theme.destroy(self: Theme)
 	self.Changed:DisconnectAll()
 	self.DensityChanged:DisconnectAll()
+	self.MetricsChanged:DisconnectAll()
 	self.folder:Destroy()
 	self._rules = {}
 end

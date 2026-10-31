@@ -1,6 +1,6 @@
 ---
 title: Accessibility
-description: What Lucy does so players can read, reach and use your UI, the contrast it promises, and the Roblox accessibility settings it follows.
+description: What Lucy does so players can read, reach and use your UI, the contrast it promises, the Roblox accessibility settings it follows, and Lucy.Preferences.
 order: 6
 ---
 
@@ -71,14 +71,50 @@ Every value is in [Theming](theming.md#densities).
 
 ## Roblox settings
 
-Players can set accessibility options in the Roblox menu. Lucy does not follow
-these yet; this is what it will do:
+Players set these in the Roblox menu, and Lucy follows them live, while the
+game runs.
 
-| Setting | Property | What Lucy will do |
-|---|---|---|
-| Reduce motion | `GuiService.ReducedMotionEnabled` | Moves and slides jump to where they end; colour and transparency fades stay; the spinner pulses instead of turning |
-| Text size | `GuiService.PreferredTextSize` | Roblox already draws text larger; Lucy grows control heights to fit it |
-| Background transparency | `GuiService.PreferredTransparency` | See-through panels and the modal scrim get more solid |
+### Reduce motion
+
+`GuiService.ReducedMotionEnabled`. When it is on, things that move jump to
+where they end, and fades stay:
+
+| What | With reduced motion |
+|---|---|
+| `Lucy.spring` | jumps to each new value |
+| `Lucy.tween` of a `Vector2`, `Vector3`, `UDim` or `UDim2` | jumps to each new value |
+| `Lucy.tween` of a `Color3` or a number | still fades |
+| Colour transitions in style rules | still fade |
+| Switch | the thumb jumps across |
+| Collapsible | opens and closes at once, chevron included |
+| Spinner | stays still and pulses instead of turning |
+| Skeleton | still pulses (a fade) |
+
+A tween of a number that moves something, like a rotation, is up to you: give
+it a `TweenInfo` that takes no time when `Lucy.Preferences.reducedMotion()` is
+true. See [Make your UI accessible](../guide/accessibility.md#animate-through-lucy).
+
+### Text size
+
+`GuiService.PreferredTextSize`. Roblox draws all text larger by itself, so Lucy
+leaves the `Text*` tokens alone and makes room for it: each control height
+grows by as much as the text in it does.
+
+| Token | Grows with |
+|---|---|
+| `ControlSm` | `TextXs` |
+| `ControlMd` | `TextSm` |
+| `ControlLg` | `TextBase` |
+| `ControlIcon` | nothing: it holds an icon, not text |
+
+This holds in every density. `useMetric` and `app.theme:resolve` give the grown
+heights.
+
+### Still to come
+
+| Setting | What Lucy will do |
+|---|---|
+| Background transparency (`GuiService.PreferredTransparency`) | Make see-through panels and the modal scrim more solid |
 
 Other options under consideration:
 
@@ -86,3 +122,17 @@ Other options under consideration:
   for every pair.
 - A check for **colour vision deficiencies**, so status colours stay apart for
   players who can't tell red from green.
+
+## Lucy.Preferences
+
+The player's settings as tracked getters: bindings and `computed` that read
+them update when they change.
+
+| Member | What it is |
+|---|---|
+| `reducedMotion()` | `true` when motion should be cut: the game's own setting if it set one, otherwise the Roblox one |
+| `setReducedMotion(on)` | sets reduced motion from your game's own settings; `nil` follows Roblox again |
+| `textSize()` | the player's text size: `"Medium"` (the default), `"Large"`, `"Larger"` or `"Largest"` |
+| `added(size)` | how many pixels taller Roblox draws text of `size` at that text size |
+
+Text size can't be set: Roblox draws the text, so Lucy only follows it.

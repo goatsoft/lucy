@@ -26,7 +26,8 @@ Lucy.Collapsible.new({
 ```
 
 It fills the width of its parent. Opening and closing slide the height over a
-short tween, and the chevron turns with it. Closed content is hidden, so
+short tween, and the chevron turns with it; with reduced motion both happen at
+once. Closed content is hidden, so
 keyboard and gamepad focus skip it; when it is open, up and down move from the
 header into the content and back.
 

@@ -15,6 +15,12 @@
 	reverses are ignored). A TweenInfo that takes no time (Time and DelayTime 0)
 	jumps straight to the new value, so `info` may be a ref that says when to skip.
 
+	Reduced motion (Core/Preferences): springs, and tweens of positions and sizes
+	(Vector2, Vector3, UDim, UDim2), jump to the new value. Tweens of a Color3 or
+	a number still fade, as a fade is not motion. A number that moves something,
+	like a rotation, passes a TweenInfo that takes no time when
+	Preferences.reducedMotion() is true.
+
 	Animates number, Vector2, Vector3, UDim, UDim2 and Color3. Colours move through
 	Oklab, so a spring from red to blue passes through a clean purple, not mud. Any
 	other type, or a change of type, snaps. One Heartbeat connection drives all
@@ -25,6 +31,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Oklab = require(script.Parent.Oklab)
+local Preferences = require(script.Parent.Preferences)
 local Reactive = require(script.Parent.Reactive)
 
 type Animator = { step: (dt: number) -> boolean }
@@ -102,6 +109,14 @@ local function unpack(kind: string, p: { number }): any
 	return Oklab.fromOklab(p[1], p[2], p[3])
 end
 
+-- Read where it can't subscribe: a watch callback.
+local function reducedMotion(): boolean
+	return Reactive.untrack(Preferences.reducedMotion)
+end
+
+-- Kinds a tween still fades under reduced motion.
+local FADES = { number = true, Color3 = true }
+
 local function zeros(n: number): { number }
 	return table.create(n, 0)
 end
@@ -167,6 +182,12 @@ function Animate.spring<T>(
 			output(target)
 			return
 		end
+		if reducedMotion() then
+			position, goal, velocity = table.clone(packed), packed, zeros(#packed)
+			stop(animator)
+			output(target)
+			return
+		end
 		goal = packed
 		start(animator)
 	end)
@@ -220,7 +241,8 @@ function Animate.tween<T>(
 			return
 		end
 		local tweenInfo = (Reactive.peek(info) or TweenInfo.new(0.2)) :: TweenInfo
-		if tweenInfo.Time <= 0 and tweenInfo.DelayTime <= 0 then
+		local instant = tweenInfo.Time <= 0 and tweenInfo.DelayTime <= 0
+		if instant or (reducedMotion() and not FADES[newKind]) then
 			current, from, to = packed, packed, packed
 			stop(animator)
 			output(target)

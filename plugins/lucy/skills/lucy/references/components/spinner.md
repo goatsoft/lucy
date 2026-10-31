@@ -8,7 +8,8 @@ waiting on a purchase.
 Lucy.Spinner.new({ size = "sm", Parent = row })
 ```
 
-It only turns while it is visible, so a hidden spinner costs nothing.
+It only turns while it is visible, so a hidden spinner costs nothing. When the
+player asks for reduced motion, it stays still and pulses instead.
 
 ## Props
 

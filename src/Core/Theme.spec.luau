@@ -89,6 +89,48 @@ return function()
 		end)
 	end)
 
+	describe("text growth", function()
+		local function half(size: number): number
+			return size // 2
+		end
+		local function height(token: string): number
+			return theme:resolve(token).Y.Offset
+		end
+
+		it("grows each control by what its text grows", function()
+			theme = Theme.new(config)
+			theme:setTextGrowth(half)
+			expect(height("ControlSm")).to.equal(32 + 6) -- TextXs 12
+			expect(height("ControlMd")).to.equal(36 + 7) -- TextSm 14
+			expect(height("ControlLg")).to.equal(40 + 8) -- TextBase 16
+		end)
+
+		it("leaves icon buttons alone: they have no text", function()
+			theme = Theme.new(config)
+			theme:setTextGrowth(half)
+			expect(theme:resolve("ControlIcon")).to.equal(UDim2.fromOffset(36, 36))
+		end)
+
+		it("applies to every density, and nil takes it off", function()
+			theme = Theme.new(config)
+			theme:setTextGrowth(half)
+			theme:setDensity("tv")
+			expect(height("ControlMd")).to.equal(52 + 8) -- tv TextSm is 16
+			theme:setTextGrowth(nil)
+			expect(height("ControlMd")).to.equal(52)
+		end)
+
+		it("fires MetricsChanged", function()
+			theme = Theme.new(config)
+			local fired = 0
+			theme.MetricsChanged:Connect(function()
+				fired += 1
+			end)
+			theme:setTextGrowth(half)
+			expect(fired).to.equal(1)
+		end)
+	end)
+
 	describe("base rules", function()
 		it("are added by default", function()
 			theme = Theme.new({ name = "LucyTest_Base" })

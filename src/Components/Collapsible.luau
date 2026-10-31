@@ -32,6 +32,7 @@
 local Component = require(script.Parent.Parent.Core.Component)
 local Animate = require(script.Parent.Parent.Core.Animate)
 local Element = require(script.Parent.Parent.Core.Element)
+local Preferences = require(script.Parent.Parent.Core.Preferences)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
 local Icon = require(script.Parent.Icon)
@@ -170,7 +171,10 @@ local spec: Component.Spec = {
 			return if open() then 1 else 0
 		end, function(): TweenInfo
 			local shown = root ~= nil and root:FindFirstAncestorWhichIsA("LayerCollector") ~= nil
-			return if shown then Collapsible.tween else INSTANT
+			-- The progress turns the chevron and slides the body: motion, so reduced
+			-- motion opens it at once (Core/Preferences).
+			local still = Reactive.untrack(Preferences.reducedMotion)
+			return if shown and not still then Collapsible.tween else INSTANT
 		end) :: any
 
 		local label = Element.new("TextLabel", {

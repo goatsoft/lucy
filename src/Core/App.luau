@@ -45,6 +45,8 @@ local AppState = require(script.Parent.AppState)
 local Context = require(script.Parent.Context)
 local InputManager = require(script.Parent.InputManager)
 local Maid = require(script.Parent.Maid)
+local Preferences = require(script.Parent.Preferences)
+local Reactive = require(script.Parent.Reactive)
 local SceneManager = require(script.Parent.SceneManager)
 local Signal = require(script.Parent.Signal)
 local Theme = require(script.Parent.Theme)
@@ -137,6 +139,21 @@ function App.new(config: { [string]: any }?): App
 		parent = options.styleParent,
 	})
 	self.maid:give(self.theme)
+
+	-- Roblox draws text larger at the player's text size; controls grow to fit.
+	local function grow(size: number): number
+		return Preferences.added(size)
+	end
+	local preferences = Reactive.effectScope(true)
+	preferences:run(function()
+		Reactive.watchEffect(function()
+			local larger = Preferences.textSize() ~= "Medium"
+			self.theme:setTextGrowth(if larger then grow else nil)
+		end)
+	end)
+	self.maid:give(function()
+		preferences:stop()
+	end)
 
 	local initial: { [string]: any } = table.clone(options.state or {})
 	initial.theme = self.theme:get()

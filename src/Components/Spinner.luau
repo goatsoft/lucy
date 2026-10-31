@@ -10,13 +10,16 @@
 		})
 
 	State keys: size, variant, visible. It turns only while visible and stops on
-	destroy. handle.stroke is the ring (a UIStroke with a fading UIGradient).
+	destroy. With reduced motion (Core/Preferences) the ring stays still and
+	pulses instead. handle.stroke is the ring (a UIStroke with a fading UIGradient);
+	handle.spinning and handle.pulsing say which it is doing.
 ]]
 
 local TweenService = game:GetService("TweenService")
 
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
+local Preferences = require(script.Parent.Parent.Core.Preferences)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Spinner = {}
@@ -25,6 +28,8 @@ Spinner.variants = { "default", "muted", "primary" }
 Spinner.sizes = { sm = 16, md = 24, lg = 32 }
 -- One turn per 0.8 s, at an even speed, forever.
 Spinner.turn = TweenInfo.new(0.8, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1)
+-- With reduced motion: the ring fades to 60% and back, forever.
+Spinner.pulse = TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
 
 -- The ring fades out along its length, so it reads as an arc that chases its tail.
 local FADE = NumberSequence.new({
@@ -109,21 +114,29 @@ local spec: Component.Spec = {
 			stroke,
 		})
 
-		-- Side effect: the turn plays while visible.
+		-- Side effect: the turn (or the pulse, with reduced motion) plays while visible.
 		local spin = TweenService:Create(frame, Spinner.turn, { Rotation = 360 })
+		local pulse = TweenService:Create(stroke, Spinner.pulse, { Transparency = 0.6 })
 		Reactive.watchEffect(function()
 			local on = visible() == true
-			if on then
-				frame.Rotation = 0
+			local still = Preferences.reducedMotion()
+			spin:Cancel()
+			pulse:Cancel()
+			frame.Rotation = 0
+			stroke.Transparency = 0
+			if on and still then
+				pulse:Play()
+			elseif on then
 				spin:Play()
-			else
-				spin:Cancel()
 			end
-			h.spinning = on
+			h.spinning = on and not still
+			h.pulsing = on and still
 		end)
 		Reactive.onCleanup(function()
 			spin:Cancel()
+			pulse:Cancel()
 			h.spinning = false
+			h.pulsing = false
 		end)
 		return frame
 	end,
