@@ -38,6 +38,13 @@
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+
+-- In Studio's edit mode (previews, specs, the docs renderer), what an app
+-- makes is not archivable: Play does not copy it into the player's gui, and
+-- saving the place does not keep it.
+local function editMode(): boolean
+	return RunService:IsStudio() and not RunService:IsRunning()
+end
 local StarterGui = game:GetService("StarterGui")
 
 local Adaptive = require(script.Parent.Adaptive)
@@ -178,6 +185,11 @@ function App.new(config: { [string]: any }?): App
 
 	self.actions = Actions.new(self, options.actions)
 	self.maid:give(self.actions)
+
+	if editMode() then
+		self.theme.folder.Archivable = false
+		self.actions.folder.Archivable = false
+	end
 
 	-- Density and scaling follow the device unless pinned in config.
 	local function onDevice(device: string?)
@@ -322,6 +334,9 @@ function App.createGui(self: App, name: string, options: { [string]: any }?): Sc
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.DisplayOrder = opts.displayOrder or 0
 	gui.Enabled = if opts.enabled == nil then true else opts.enabled
+	if editMode() then
+		gui.Archivable = false
+	end
 	self.theme:link(gui)
 	if self.config.adaptive ~= false then
 		local adaptive = Adaptive.attach(gui, self:_adaptiveOptions(opts.getViewport))

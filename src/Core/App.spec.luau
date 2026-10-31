@@ -130,6 +130,16 @@ return function()
 		app, cleanup = Harness.app()
 	end)
 
+	it("keeps what it makes in edit mode out of Play and out of the saved place", function()
+		-- Specs run in Studio's edit mode, like previews and the docs renderer.
+		local RunService = game:GetService("RunService")
+		expect(RunService:IsRunning()).to.equal(false)
+		expect(app:createGui("Archive").Archivable).to.equal(false)
+		expect(app:portal("archive").Archivable).to.equal(false)
+		expect(app.actions.folder.Archivable).to.equal(false)
+		expect(app.theme.folder.Archivable).to.equal(false)
+	end)
+
 	it("grows control heights to fit the player's text size", function()
 		local Preferences = require(script.Parent.Preferences)
 		local Reactive = require(script.Parent.Reactive)
