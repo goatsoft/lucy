@@ -46,6 +46,12 @@ test('in edit mode, devtoolsCall never requires the cached Lucy: it makes a copy
   assert.match(devtoolsCall({ method: 'apps' }, 'Edit'), /elseif edit then\n\t\tmodule = kept or copyOf\(module\)/)
 })
 
+test('devtoolsCall tells a Lucy too old for Devtools from no Lucy at all', () => {
+  const code = devtoolsCall({ method: 'apps' }, 'Client')
+  assert.match(code, /has no Devtools: update Lucy/)
+  assert.match(code, /Lucy is not in ReplicatedStorage/)
+})
+
 test('devtoolsCall waits before answering when a screenshot follows', () => {
   assert.match(devtoolsCall({ method: 'press', id: 'x' }, 'Client', { settle: 0.4 }), /task\.wait\(0\.4\)/)
   assert.doesNotMatch(devtoolsCall({ method: 'press', id: 'x' }, 'Client'), /task\.wait\(0\.4\)/)

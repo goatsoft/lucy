@@ -58,8 +58,9 @@ local edit = ${edit}
 local KEPT = "${KEPT}"
 
 -- Lucy in ReplicatedStorage: the shallowest ModuleScript named Lucy with Core.Devtools.
+-- Also returns a Lucy found without Devtools (one older than Devtools).
 local function findLucy()
-	local best, bestDepth = nil, math.huge
+	local best, bestDepth, old = nil, math.huge, nil
 	for _, d in ReplicatedStorage:GetDescendants() do
 		if d:IsA("ModuleScript") and string.lower(d.Name) == "lucy" then
 			local core = d:FindFirstChild("Core")
@@ -72,14 +73,19 @@ local function findLucy()
 				if depth < bestDepth then
 					best, bestDepth = d, depth
 				end
+			elseif core then
+				old = old or d
 			end
 		end
 	end
-	return best
+	return best, old
 end
 
 local ok, result = pcall(function()
-	local module = findLucy()
+	local module, old = findLucy()
+	if not module and old then
+		error(old:GetFullName() .. " has no Devtools: update Lucy to a version with Lucy.Devtools", 0)
+	end
 	if not module then
 		error("Lucy is not in ReplicatedStorage. Is Rojo serving the game?", 0)
 	end
