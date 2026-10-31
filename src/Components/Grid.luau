@@ -67,8 +67,11 @@ local spec: Component.Spec = {
 		local pad = if p.padding ~= nil then Component.space(app, p.padding, 0) else nil
 		local inset = if pad then pad.Offset * 2 else 0
 
+		-- Whole pixels: UDim offsets are whole numbers, so the gap is rounded once
+		-- and each cell's share of the gaps rounds up. Rounding either the other way
+		-- leaves the columns a pixel too wide and the last one wraps.
 		local function gap(): number
-			return Component.space(app, gapValue(), 0).Offset
+			return math.round(Component.space(app, gapValue(), 0).Offset)
 		end
 
 		-- The width cells are laid out in, in layout pixels (the ScreenGui scales).
@@ -95,7 +98,7 @@ local spec: Component.Spec = {
 		if shared then
 			cellSize = function(): UDim2
 				local n, g = count(), gap()
-				local x = UDim.new(1 / n, -g * (n - 1) / n)
+				local x = UDim.new(1 / n, -math.ceil(g * (n - 1) / n))
 				if cellHeight then
 					return UDim2.new(x, UDim.new(0, cellHeight))
 				end

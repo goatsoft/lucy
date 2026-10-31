@@ -49,6 +49,16 @@ return function()
 		expect(pixels.layout.CellPadding).to.equal(UDim2.fromOffset(5, 5))
 	end)
 
+	it("keeps every column on its row when the gap is not a whole pixel", function()
+		-- CellPadding rounds to whole pixels, so the cells must be sized with the
+		-- same rounded gap or the last column wraps.
+		local grid = Grid.new({ app = app, Parent = box(560), columns = 3, cellHeight = 40, gap = 7.5 })
+		local pad = grid.layout.CellPadding.X.Offset
+		local cell = grid.layout.CellSize.X
+		expect(cell.Scale).to.be.near(1 / 3, 1e-6)
+		expect(cell.Offset * 3 + pad * 2 <= 0).to.equal(true)
+	end)
+
 	it("shares the width between a number of columns", function()
 		local grid = Grid.new({ app = app, Parent = box(400), columns = 4, gap = 8, cellHeight = 50 })
 		Harness.flush()
