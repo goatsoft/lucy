@@ -11,7 +11,8 @@
 		app.actions Actions, named keys in sets switched on and off together (ADR 0026)
 		app.scenes  SceneManager, title screen / game / menus (ADR 0005)
 		app.toast   toast notifications, if the Toaster component is present
-		app:modalOpen()  true while a modal dialog, sheet or popup is open (tracked)
+		app:modalOpen()  true while a modal dialog, sheet, popup or modal scene is open (tracked)
+		App.current()    the app made with setCurrent (the default), for other scripts
 
 	config:
 		theme         initial theme name ("dark")
@@ -237,10 +238,22 @@ function App._adaptiveOptions(self: App, getViewport: (() -> Vector2)?): { [stri
 	return merged
 end
 
--- True while any modal overlay is open. Non modal ones never count. Tracked, so a
--- computed or effect that reads it runs again when it changes.
+-- True while any modal overlay (dialog, sheet, popup) or modal scene is open.
+-- Non modal ones never count. Tracked, so a computed or effect that reads it
+-- runs again when it changes.
 function App.modalOpen(self: App): boolean
-	return (self.state:_tracked(MODAL_PATH) or 0) > 0
+	if (self.state:_tracked(MODAL_PATH) or 0) > 0 then
+		return true
+	end
+	-- Modal scenes count too: a pushed pause menu is as modal as a dialog.
+	local scenes: any = self.scenes -- nil while App.new is still running
+	return scenes ~= nil and scenes:modalCount() > 0
+end
+
+-- The app made with setCurrent (the default), so another script can reach the
+-- game's app without passing it around. Nil when there is none.
+function App.current(): App?
+	return Context.getCurrent()
 end
 
 function App.nextId(self: App, kind: string): string

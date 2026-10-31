@@ -17,6 +17,37 @@ return function()
 		expect(app.state:get("theme")).to.equal("light")
 	end)
 
+	it("counts pushed modal scenes as modal, not overlays", function()
+		app.scenes:register("Pause", { layer = "modal" })
+		app.scenes:register("Hud", { layer = "overlay" })
+		expect(app:modalOpen()).to.equal(false)
+		app.scenes:push("Hud")
+		expect(app:modalOpen()).to.equal(false)
+		app.scenes:push("Pause")
+		expect(app:modalOpen()).to.equal(true)
+		app.scenes:pop()
+		expect(app:modalOpen()).to.equal(false)
+	end)
+
+	it("gives the current app to other scripts with App.current", function()
+		local App = require(script.Parent.App)
+		local Context = require(script.Parent.Context)
+		local previous = Context.getCurrent()
+		local made = App.new({
+			namePrefix = "CurrentTest_",
+			parent = Harness.guiParent(),
+			input = { watch = false, caps = Harness.caps.desktop },
+		})
+		-- Destroyed and put back before any expect, so a failure leaks nothing.
+		local ok, seen = pcall(App.current)
+		made:destroy()
+		local after = App.current and App.current()
+		Context.setCurrent(previous)
+		expect(ok).to.equal(true)
+		expect(seen).to.equal(made)
+		expect(after).to.equal(nil)
+	end)
+
 	it("switches theme from app state", function()
 		app.state:set("theme", "dark")
 		expect(app.theme:get()).to.equal("dark")
