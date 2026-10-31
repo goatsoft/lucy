@@ -70,19 +70,10 @@ const columns = [
     </div>
     <div class="mx-auto flex max-w-6xl flex-col gap-3 border-t border-border px-6 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
       <p>
-        <a
-          :href="`${SITE.repo}/blob/main/LICENSE`"
-          target="_blank"
-          rel="noopener"
-          class="underline decoration-border underline-offset-4 hover:text-foreground"
-        >MIT licence</a>
+        <!-- Each opens the licence itself in a dialog. -->
+        <LicenceDialog licence="mit" />
         <span aria-hidden="true"> · </span>
-        <a
-          :href="`${SITE.repo}/blob/main/LICENSE-ART.md`"
-          target="_blank"
-          rel="noopener"
-          class="underline decoration-border underline-offset-4 hover:text-foreground"
-        >Artwork licence</a>
+        <LicenceDialog licence="art" />
       </p>
       <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
         <a

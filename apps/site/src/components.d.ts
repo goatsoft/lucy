@@ -31,6 +31,7 @@ declare module 'vue' {
     ILxSearchDuotone: typeof import('~icons/lucide-extended/search-duotone')['default']
     ILxSunDuotone: typeof import('~icons/lucide-extended/sun-duotone')['default']
     ISiGithub: typeof import('~icons/simple-icons/github')['default']
+    LicenceDialog: typeof import('./components/LicenceDialog.vue')['default']
     Mark: typeof import('./components/Mark.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
