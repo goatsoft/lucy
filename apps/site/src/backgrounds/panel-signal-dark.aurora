@@ -18,13 +18,13 @@
       "seed": 5
     },
     "vignette": {
-      "amount": 0.55,
+      "amount": 0.65,
       "radius": 0.5,
       "softness": 0.5
     }
   },
   "palette": [
-    "oklch(0.09 0.015 288)",
+    "oklch(0.07 0.012 288)",
     "oklch(0.55 0.22 293)",
     "oklch(0.6 0.22 335)",
     "oklch(0.33 0.08 280)",
@@ -44,8 +44,8 @@
       ],
       "params": {
         "spacing": 14,
-        "glow": 0.7,
-        "strength": 0.6,
+        "glow": 0.55,
+        "strength": 0.45,
         "speed": 0.06,
         "phase": 0.3
       }
@@ -53,7 +53,7 @@
     {
       "type": "static",
       "blend": "screen",
-      "opacity": 0.5,
+      "opacity": 0.38,
       "colors": [
         0,
         3,
@@ -71,7 +71,7 @@
     {
       "type": "scanlines",
       "blend": "screen",
-      "opacity": 0.8,
+      "opacity": 0.65,
       "colors": [
         0,
         5,
@@ -81,7 +81,7 @@
         "spacing": 4,
         "softness": 0.35,
         "strength": 0.65,
-        "speed": 0.05,
+        "speed": 0.15,
         "roll": 0.75,
         "phase": 0.2
       }
@@ -89,7 +89,7 @@
     {
       "type": "glitch",
       "blend": "screen",
-      "opacity": 0.6,
+      "opacity": 0.5,
       "colors": [
         0,
         7,
