@@ -93,10 +93,10 @@
       ],
       "params": {
         "frequency": 0.25,
-        "strength": 0.9,
-        "bands": 12,
-        "density": 0.3,
-        "separation": 0.85,
+        "strength": 1,
+        "bands": 48,
+        "density": 0.22,
+        "separation": 0.9,
         "seed": 6
       }
     }
