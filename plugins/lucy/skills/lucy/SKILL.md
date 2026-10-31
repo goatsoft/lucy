@@ -163,6 +163,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Build a component](references/guide/components.md): Write a Stepper component step by step, with state keys, h:ref, bindings, methods and a value bound to app state.
 - [Share logic with composables](references/guide/composables.md): Use Lucy's built in composables and write your own, such as a cooldown for a hype button.
 - [Build screens with scenes](references/guide/scenes.md): Split your UI into scenes, move between screens, show a HUD over them, open a pause menu on top, and handle back with a gamepad.
+- [Share state with the server](references/guide/server.md): Keep server state in Lucy's store on the server, see it in every App at server.*, and send requests back with checks.
 - [Add a theme](references/guide/themes.md): Pick your game's colours, let players switch light and dark, make a theme of your own, and style your own UI with the same tokens.
 - [UI in the world](references/guide/world-ui.md): Put Lucy UI on parts and over players' heads with SurfaceGuis and BillboardGuis that follow the theme and take clicks.
 - [Stories and preview](references/stories.md): Write stories for your UI and preview them in Studio, in edit mode or in Play.

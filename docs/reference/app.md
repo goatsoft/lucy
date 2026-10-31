@@ -38,6 +38,7 @@ Every option is optional.
 | `namePrefix` | `"Lucy_"` | Starts the name of every ScreenGui and folder the App makes. A second App needs its own |
 | `setCurrent` | `true` | Makes this the App components use, and the one `Lucy.App.current()` returns |
 | `devtools` | `true` | `false` leaves the App out of [Devtools](devtools.md) (Studio only) |
+| `server` | | `true` mirrors a `Lucy.Server` at `server.*` and makes `app.server`. See [Share state with the server](../guide/server.md) |
 | `input`, `actions` | | For Lucy's own tests |
 
 ## What an App holds
@@ -50,6 +51,7 @@ Every option is optional.
 | `app.actions` | Hotkeys, in sets you switch on and off | [Hotkeys and modal input](../guide/actions.md) |
 | `app.input` | The input mode and device, focus and the back keys | [Input and focus](../architecture.md#input-and-focus) |
 | `app.toast` | Toasts: `app.toast("Saved")`, `app.toast.success(...)` | [Toaster](../components/toaster.md) |
+| `app.server` | With the `server` option: `send` and `call` requests to the server | [Share state with the server](../guide/server.md) |
 
 ## Methods
 

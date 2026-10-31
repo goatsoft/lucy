@@ -38,6 +38,7 @@ local Reactive = require(Core.Reactive)
 local Element = require(Core.Element)
 local Animate = require(Core.Animate)
 local App = require(Core.App)
+local Server = require(Core.Server)
 local AppState = require(Core.AppState)
 local Component = require(Core.Component)
 local SceneManager = require(Core.SceneManager)
@@ -50,6 +51,7 @@ export type Computed<T> = Reactive.Computed<T>
 export type MaybeRef<T> = Reactive.MaybeRef<T>
 export type Scope = Reactive.Scope
 export type App = App.App
+export type Server = Server.Server
 export type AppState = AppState.AppState
 export type Theme = Theme.Theme
 export type Scene = SceneManager.Scene
@@ -108,6 +110,7 @@ local Lucy = {
 
 	-- Framework
 	App = App,
+	Server = Server,
 	AppState = AppState,
 	Theme = Theme,
 	Tokens = require(Core.Tokens),

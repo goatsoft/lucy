@@ -163,6 +163,8 @@ app.toast.success("Round won", { description = "+$250" })
   lucy-icons build.
 - UI in the world: SurfaceGuis on parts and BillboardGuis over heads that
   follow the theme and take clicks.
+- A server half: the same store on the server, sending each player what they
+  may see, and requests from players with the server checking every one.
 - `Lucy.hydrate` to add behaviour to UI built in Studio.
 - Stories that preview any component or scene in Studio without pressing Play.
 - Devtools that show a running UI, and press and focus things as a player

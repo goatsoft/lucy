@@ -93,9 +93,8 @@ It takes `adornee` (a part or an attachment), `size` (200 by 50 pixels),
 ## Data from the server
 
 The server owns what world UI shows: the round, the scores, who is on stage.
-Lucy runs on the client, so send that data down and keep it in app state; the
-world gui then binds to app state like any other UI. The
-[HUD recipe](../recipes/hud.md) shows the pattern with attributes.
+Keep it in a `Lucy.Server` and each App sees it at `server.*`, so a world gui
+binds to it like any other UI. See [Share state with the server](server.md).
 
 A gui the server already made can still use the theme. Link it from the client
 and bind its labels:

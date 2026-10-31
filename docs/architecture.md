@@ -20,7 +20,8 @@ App ─────────────── one per client, owns everythin
 ├─ SceneManager     one ScreenGui per scene, layers, stack, overlays
 ├─ Adaptive         UIScale per gui with device profiles, constraints, StyleQuery
 ├─ portals          shared ScreenGuis: "modal" (900), "toast" (1000)
-├─ World           SurfaceGuis and BillboardGuis on parts (createSurface, createBillboard)
+├─ world guis       SurfaceGuis and BillboardGuis on parts (createSurface, createBillboard)
+├─ server           ServerLink: a Lucy.Server mirrored at server.*, with the server option
 └─ toast            toast API, installed when Components/Toaster exists
 ```
 

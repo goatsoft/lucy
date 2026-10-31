@@ -11,6 +11,7 @@
 		app.actions Actions, named keys in sets switched on and off together (ADR 0026)
 		app.scenes  SceneManager, title screen / game / menus (ADR 0005)
 		app.toast   toast notifications, if the Toaster component is present
+		app.server  the link to a Lucy.Server, with the server option (Core/ServerLink)
 		app:modalOpen()  true while a modal dialog, sheet, popup or modal scene is open (tracked)
 		app:createSurface(name, opts) / app:createBillboard(name, opts)  UI in the world (Core/World)
 		App.current()    the app made with setCurrent (the default), for other scripts
@@ -34,6 +35,7 @@
 		setCurrent    make this the default app for components (true)
 		toastPosition where toasts show ("bottom-right"; see Components/Toaster)
 		devtools      false to skip the Devtools bridge Studio gets (ADR 0028)
+		server        true (or ServerLink options) to mirror a Lucy.Server at server.* (ADR 0033)
 ]]
 
 local CollectionService = game:GetService("CollectionService")
@@ -57,6 +59,7 @@ local Maid = require(script.Parent.Maid)
 local Preferences = require(script.Parent.Preferences)
 local Reactive = require(script.Parent.Reactive)
 local SceneManager = require(script.Parent.SceneManager)
+local ServerLink = require(script.Parent.ServerLink)
 local Signal = require(script.Parent.Signal)
 local Theme = require(script.Parent.Theme)
 local Tokens = require(script.Parent.Tokens)
@@ -81,6 +84,7 @@ export type App = typeof(setmetatable(
 		input: InputManager.InputManager,
 		actions: Actions.Actions,
 		scenes: SceneManager.SceneManager,
+		server: ServerLink.ServerLink?,
 		destroyed: boolean?,
 		_ids: { [string]: number },
 		_handles: { [string]: any },
@@ -210,6 +214,12 @@ function App.new(config: { [string]: any }?): App
 
 	self.scenes = SceneManager.new(self)
 	self.maid:give(self.scenes)
+
+	-- The server's state at server.*, and requests to it (ADR 0033).
+	if options.server then
+		self.server = ServerLink.new(self, options.server)
+		self.maid:give(self.server)
+	end
 
 	-- Install optional services from components that are present (copy-in friendly).
 	local components = script.Parent.Parent:FindFirstChild("Components")
