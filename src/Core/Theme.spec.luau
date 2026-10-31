@@ -291,4 +291,33 @@ return function()
 		end
 		expect(found >= 2).to.equal(true)
 	end)
+
+	it("draws every border inside its element, so a scroll area never clips one", function()
+		-- Like CSS's border-box: an Outer stroke draws past the element's edge, where
+		-- a ScrollingFrame or a tight row cuts it off.
+		local checked = 0
+		local function check(rule, owner: string)
+			local selector: string = rule.selector
+			if selector:sub(-10) == "::UIStroke" and rule.properties.Thickness ~= nil then
+				checked += 1
+				if rule.properties.BorderStrokePosition ~= Enum.BorderStrokePosition.Inner then
+					error(`{owner} {selector} draws its border outside`, 0)
+				end
+			end
+		end
+		for _, rule in Theme.baseRules do
+			check(rule, "Theme")
+		end
+		for _, module in script.Parent.Parent.Components:GetChildren() do
+			if module:IsA("ModuleScript") and not module.Name:match("%.spec$") then
+				local ok, component = pcall(require, module)
+				if ok and type(component) == "table" and type(rawget(component, "rules")) == "table" then
+					for _, rule in component.rules do
+						check(rule, module.Name)
+					end
+				end
+			end
+		end
+		expect(checked > 10).to.equal(true)
+	end)
 end

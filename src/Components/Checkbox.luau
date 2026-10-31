@@ -39,7 +39,11 @@ local rules: { Component.Rule } = {
 	{
 		selector = ".ui-checkbox::UIStroke",
 		priority = 0,
-		properties = { Color = "$Input", Thickness = "$StrokeThin" },
+		properties = {
+			Color = "$Input",
+			Thickness = "$StrokeThin",
+			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
+		},
 	},
 	{ selector = ".ui-checkbox.ui-checked", priority = 10, properties = { BackgroundColor3 = "$Primary" } },
 	{ selector = ".ui-checkbox.ui-checked::UIStroke", priority = 10, properties = { Color = "$Primary" } },

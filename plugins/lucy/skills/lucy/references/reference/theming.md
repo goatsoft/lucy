@@ -98,6 +98,11 @@ The same in every theme.
 | `StrokeThin`, `StrokeThick` | 1 and 2 px |
 | `FocusRing` | 3 px |
 
+Every border and ring is drawn inside its element's edge, so a border never makes
+an element bigger than its size, and a scroll area or a tight row never cuts one
+off. A rule of your own that draws a border on a `::UIStroke` should do the same
+with `BorderStrokePosition = Enum.BorderStrokePosition.Inner`.
+
 ## Densities
 
 | Token | `default` | `touch` | `tv` |

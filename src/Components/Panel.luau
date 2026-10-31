@@ -36,6 +36,7 @@ local rules: { Component.Rule } = {
 			Color = "$Border",
 			Thickness = "$StrokeThin",
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
 		},
 	},
 	{

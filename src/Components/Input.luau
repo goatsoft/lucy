@@ -69,7 +69,11 @@ local rules: { Component.Rule } = {
 	{
 		selector = ".ui-input.ui-focused::UIStroke",
 		priority = 20,
-		properties = { Color = "$Ring", Thickness = "$FocusRing" },
+		properties = {
+			Color = "$Ring",
+			Thickness = "$FocusRing",
+			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
+		},
 	},
 	{
 		selector = ".ui-input.ui-disabled",

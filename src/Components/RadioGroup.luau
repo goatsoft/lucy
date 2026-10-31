@@ -50,7 +50,11 @@ RadioGroup.rules = {
 	{
 		selector = ".ui-radio::UIStroke",
 		priority = 0,
-		properties = { Color = "$Input", Thickness = "$StrokeThin" },
+		properties = {
+			Color = "$Input",
+			Thickness = "$StrokeThin",
+			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
+		},
 	},
 	{ selector = ".ui-radio.ui-selected::UIStroke", priority = 10, properties = { Color = "$Primary" } },
 	{

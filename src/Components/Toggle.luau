@@ -71,6 +71,7 @@ Toggle.rules = {
 			Color = "$Input",
 			Thickness = "$StrokeThin",
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
 		},
 	},
 	{

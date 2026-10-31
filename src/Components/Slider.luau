@@ -92,6 +92,7 @@ local rules: { Component.Rule } = {
 			Color = "$Primary",
 			Thickness = "$StrokeThin",
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
 		},
 	},
 	-- The thumb's focus ring: the base focus ring's tokens, on a stroke round the
