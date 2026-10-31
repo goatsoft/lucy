@@ -62,7 +62,7 @@ end
 -- colour from another token (a pale wash takes its hue from the full colour).
 -- See Oklab.onColor.
 function Tokens.onColor(fill: string, options: { min: number?, tint: string? }?)
-	local o = options or {}
+	local o: { min: number?, tint: string? } = options or {}
 	return { kind = "onColor", background = fill, min = o.min, tint = o.tint }
 end
 
