@@ -158,7 +158,8 @@ while the player is typing in a TextBox.
 
 Escape is not a back key. Roblox opens its own menu on every Escape, and a game
 cannot stop or undo that, so going back on Escape would also open the menu on
-top. Choose other keys with `backKeys`:
+top. [Known issues](known-issues.md#escape-always-opens-robloxs-menu) has the
+details. Choose other keys with `backKeys`:
 
 ```luau
 local app = Lucy.App.new({
