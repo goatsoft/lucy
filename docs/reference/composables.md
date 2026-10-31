@@ -27,7 +27,7 @@ To write your own, see [Share logic with composables](../guide/composables.md).
 
 ## useDensity
 
-```lua
+```luau
 local density = Lucy.useDensity(app) -- "default", "touch" or "tv"
 ```
 
@@ -36,7 +36,7 @@ one, so it costs nothing to ask for.
 
 ## useMetric
 
-```lua
+```luau
 local height = Lucy.useMetric(app, "ControlMd")
 ```
 
@@ -45,7 +45,7 @@ Returns a computed with the pixel height of a control token (`ControlSm`,
 
 ## useResponsive
 
-```lua
+```luau
 local gap = Lucy.useResponsive(app, { touch = 16, default = 8 })
 ```
 
@@ -55,7 +55,7 @@ A plain value comes back as a getter too, so you can bind either the same way. S
 
 ## useBackHandler
 
-```lua
+```luau
 Lucy.useBackHandler(app, isOpen, function()
     isOpen(false)
     return true -- handled; stop here
@@ -68,7 +68,7 @@ gets it too. The newest handler goes first.
 
 ## useFocusScope
 
-```lua
+```luau
 Lucy.useFocusScope(app, isOpen, { root = panel, defaultFocus = playButton })
 ```
 
@@ -77,7 +77,7 @@ on `defaultFocus` (an Instance, or a function returning one).
 
 ## useUiSound
 
-```lua
+```luau
 Lucy.useUiSound(app, {
     activate = function(handle) playClick() end,
     toggle = function(handle, checked) playSwitch(checked) end,
@@ -120,7 +120,7 @@ Turns your data and a list of columns into sorted rows, and keeps them sorted as
 the data changes. It draws nothing: [DataGrid](../components/data-grid.md) uses
 it for its headers, and you can use it for any list you sort yourself.
 
-```lua
+```luau
 local board = Lucy.useTable({
     data = players,             -- an array, a ref or a getter
     rowId = function(player) return player.userId end,
@@ -185,7 +185,7 @@ keep the order of your data. One column sorts at a time.
 
 ## useWhile
 
-```lua
+```luau
 Lucy.useWhile(isOpen, function()
     return UserInputService.InputBegan:Connect(onInput)
 end)
@@ -202,7 +202,7 @@ not.
 A common use is switching gameplay keys and movement off while a menu is open
 (see [Hotkeys and modal input](../guide/actions.md)):
 
-```lua
+```luau
 Lucy.useWhile(function()
     return app:modalOpen()
 end, function()
@@ -212,7 +212,7 @@ end)
 
 ## useCountdown
 
-```lua
+```luau
 local timer = Lucy.useCountdown(roundEndsAt)
 
 Lucy.Text.new({

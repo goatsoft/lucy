@@ -8,7 +8,7 @@ description: A picture from an asset id or a thumbnail.
 A picture: a dance icon, a song cover, a shop item. Give it an asset id or any
 content url.
 
-```lua
+```luau
 Lucy.Image.new({
     image = move.iconId,
     size = UDim2.fromOffset(64, 64),
@@ -48,7 +48,7 @@ are. An id of `0` gives an empty image.
 
 A song cover that fills its card, cut to fit:
 
-```lua
+```luau
 Lucy.Image.new({
     image = song.coverId,
     fit = "cover",
@@ -60,7 +60,7 @@ Lucy.Image.new({
 
 A product's own picture from Roblox:
 
-```lua
+```luau
 Lucy.Image.new({
     image = `rbxthumb://type=DeveloperProduct&id={productId}&w=150&h=150`,
     size = UDim2.fromOffset(72, 72),

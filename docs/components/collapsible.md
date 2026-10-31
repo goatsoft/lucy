@@ -9,7 +9,7 @@ A header the player presses to show or hide what is under it: advanced
 settings, the rules of a round, a long list they rarely need. For a set of
 sections where opening one can close the others, use an [Accordion](accordion.md).
 
-```lua
+```luau
 Lucy.Collapsible.new({
     text = "Advanced",
     content = function()
@@ -67,7 +67,7 @@ To open or close it without reporting a press, set the state:
 
 Keep it open across visits with app state:
 
-```lua
+```luau
 Lucy.Collapsible.new({
     text = "Show the rules",
     variant = "details",

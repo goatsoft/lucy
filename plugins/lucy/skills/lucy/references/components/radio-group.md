@@ -5,7 +5,7 @@ A list of options where the player picks exactly one, for forms and settings:
 difficulty, server region, a report reason. Each row is the hit area, and the
 circle grows on touch and console.
 
-```lua
+```luau
 Lucy.RadioGroup.new({
     items = {
         { value = "easy", label = "Easy" },
@@ -59,7 +59,7 @@ it. When the player picks one, it reports `select` with that value for
 
 Keep the choice in app state:
 
-```lua
+```luau
 Lucy.RadioGroup.new({
     items = { "Oceania", "Asia", "Europe", "Americas" },
     value = app.state:ref("settings.region"),

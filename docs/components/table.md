@@ -9,7 +9,7 @@ Rows and columns: a leaderboard, a friends list, an inventory, match history.
 Table draws the rows you give it in the order you give them. For headers the
 player can press to sort, use [DataGrid](data-grid.md).
 
-```lua
+```luau
 Lucy.Table.new({
     rows = players,
     rowId = function(player) return player.userId end,
@@ -63,7 +63,7 @@ function. It gets `ctx` and returns an instance, a component or text:
 - `ctx.value()`: the column's value for that row, also kept up to date
 - `ctx.column`: the column
 
-```lua
+```luau
 {
     key = "userId",
     header = "",
@@ -95,7 +95,7 @@ costs about what twenty cost.
 once for each row count. Load the next rows and add them to your data, and it
 is ready to fire again:
 
-```lua
+```luau
 local players = Lucy.ref({})
 
 Lucy.Table.new({

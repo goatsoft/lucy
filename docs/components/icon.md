@@ -8,7 +8,7 @@ description: A small picture in the theme's colours, by name or asset id.
 A small picture that takes its colour from the theme, so it changes with light
 and dark mode and with the text around it. Name it, or give it an asset id.
 
-```lua
+```luau
 Lucy.Icon.new({ icon = "lucide:heart", variant = "destructive", Parent = row })
 ```
 
@@ -18,7 +18,7 @@ Apart from the few [icons Lucy draws](../guide/icons.md#icons-lucy-draws) in its
 own components, icons come from your game. It registers a map of names to
 images once, before it builds any UI:
 
-```lua
+```luau
 Lucy.Icon.register({
     ["game:coin"] = { image = 1234567 },
     ["game:logo"] = { image = 7654321, tint = false },
@@ -52,7 +52,7 @@ does not change when a name is registered later.
 
 An icon before a label:
 
-```lua
+```luau
 Lucy.Stack.new({
     direction = "horizontal",
     gap = "Space2",
@@ -67,7 +67,7 @@ Lucy.Stack.new({
 
 As the media of a list row:
 
-```lua
+```luau
 Lucy.Item.new({
     title = "Streamer mode",
     media = Lucy.Icon.new({ icon = "lucide:radio", size = "lg" }),

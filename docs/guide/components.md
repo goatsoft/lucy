@@ -20,7 +20,7 @@ Volume   [ - ]  4  [ + ]
 A component keeps its state in the app's store, at `ui.<id>`. The keys it has
 are its `defaults`. Props with the same names set the starting values.
 
-```lua
+```luau
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lucy = require(ReplicatedStorage.Packages.Lucy)
 
@@ -28,15 +28,15 @@ local Stepper = {}
 
 -- Built once and shared by every Stepper.
 local spec: Lucy.Spec = {
-	kind = "stepper",
-	defaults = { label = "", value = 0, min = 0, max = 10, step = 1, visible = true },
-	render = function(h)
-		-- next section
-	end,
+    kind = "stepper",
+    defaults = { label = "", value = 0, min = 0, max = 10, step = 1, visible = true },
+    render = function(h)
+        -- next section
+    end,
 }
 
 function Stepper.new(props: Lucy.Props?): Lucy.Handle
-	return Lucy.Component.mount(spec, props)
+    return Lucy.Component.mount(spec, props)
 end
 
 return Stepper
@@ -61,27 +61,27 @@ instance and sets up bindings that keep it in step with state from then on.
 `h:ref(key)` is a ref onto one state key. Call it with no argument to read the
 key, with one argument to write it. Use it anywhere a property takes a value:
 
-```lua
+```luau
 render = function(h)
-	local value = h:ref("value")
+    local value = h:ref("value")
 
-	return Lucy.new "Frame" {
-		BackgroundTransparency = 1,
-		AutomaticSize = Enum.AutomaticSize.XY,
-		Visible = h:ref("visible"),
-		Lucy.Component.list({
-			FillDirection = Enum.FillDirection.Horizontal,
-			VerticalAlignment = Enum.VerticalAlignment.Center,
-			Padding = UDim.new(0, 8),
-		}),
-		Lucy.Text.new({ text = h:ref("label"), variant = "label", autoWidth = true }),
-		Lucy.Text.new({
-			text = function()
-				return tostring(value())
-			end,
-			autoWidth = true,
-		}),
-	}
+    return Lucy.new "Frame" {
+        BackgroundTransparency = 1,
+        AutomaticSize = Enum.AutomaticSize.XY,
+        Visible = h:ref("visible"),
+        Lucy.Component.list({
+            FillDirection = Enum.FillDirection.Horizontal,
+            VerticalAlignment = Enum.VerticalAlignment.Center,
+            Padding = UDim.new(0, 8),
+        }),
+        Lucy.Text.new({ text = h:ref("label"), variant = "label", autoWidth = true }),
+        Lucy.Text.new({
+            text = function()
+                return tostring(value())
+            end,
+            autoWidth = true,
+        }),
+    }
 end,
 ```
 
@@ -105,19 +105,19 @@ destroyed.
 Add the two buttons. Writing a ref writes the store, so every binding that reads
 `value` follows:
 
-```lua
+```luau
 local value, min, max, step = h:ref("value"), h:ref("min"), h:ref("max"), h:ref("step")
 
 local function decrease()
-	value(math.max(min(), value() - step()))
+    value(math.max(min(), value() - step()))
 end
 
 local function increase()
-	value(math.min(max(), value() + step()))
+    value(math.min(max(), value() + step()))
 end
 ```
 
-```lua
+```luau
 Lucy.Button.new({ text = "-", size = "icon", variant = "outline", onClick = decrease }),
 -- the number label
 Lucy.Button.new({ text = "+", size = "icon", variant = "outline", onClick = increase }),
@@ -132,19 +132,19 @@ maximum. A value worked out from other values is a `Lucy.computed`. It runs
 again only when something it read changes, and tells its readers only when its
 result changes:
 
-```lua
+```luau
 local atMin = Lucy.computed(function()
-	return value() <= min()
+    return value() <= min()
 end)
 local atMax = Lucy.computed(function()
-	return value() >= max()
+    return value() >= max()
 end)
 ```
 
 Pass them to the buttons' `disabled` prop. A component prop takes a value, a
 ref, a computed or a getter, the same as a property:
 
-```lua
+```luau
 Lucy.Button.new({ text = "-", size = "icon", variant = "outline", disabled = atMin, onClick = decrease }),
 ```
 
@@ -156,11 +156,11 @@ A computed is worth it when more than one binding reads the same result.
 Methods go on the handle after `mount` returns. `h:get(key)` reads a key
 without following it, and `h:set(key, value)` writes one:
 
-```lua
+```luau
 local handle = Lucy.Component.mount(spec, props)
 
 function handle.reset(h)
-	h:set("value", h:get("min"))
+    h:set("value", h:get("min"))
 end
 
 return handle
@@ -170,7 +170,7 @@ return handle
 
 ## The whole component
 
-```lua
+```luau
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lucy = require(ReplicatedStorage.Packages.Lucy)
 
@@ -178,63 +178,63 @@ local Stepper = {}
 
 -- Built once and shared by every Stepper.
 local spec: Lucy.Spec = {
-	kind = "stepper",
-	defaults = { label = "", value = 0, min = 0, max = 10, step = 1, visible = true },
-	render = function(h)
-		local value, min, max, step = h:ref("value"), h:ref("min"), h:ref("max"), h:ref("step")
-		local atMin = Lucy.computed(function()
-			return value() <= min()
-		end)
-		local atMax = Lucy.computed(function()
-			return value() >= max()
-		end)
+    kind = "stepper",
+    defaults = { label = "", value = 0, min = 0, max = 10, step = 1, visible = true },
+    render = function(h)
+        local value, min, max, step = h:ref("value"), h:ref("min"), h:ref("max"), h:ref("step")
+        local atMin = Lucy.computed(function()
+            return value() <= min()
+        end)
+        local atMax = Lucy.computed(function()
+            return value() >= max()
+        end)
 
-		return Lucy.new "Frame" {
-			BackgroundTransparency = 1,
-			AutomaticSize = Enum.AutomaticSize.XY,
-			Visible = h:ref("visible"),
-			Lucy.Component.list({
-				FillDirection = Enum.FillDirection.Horizontal,
-				VerticalAlignment = Enum.VerticalAlignment.Center,
-				Padding = UDim.new(0, 8),
-			}),
-			Lucy.Text.new({ text = h:ref("label"), variant = "label", autoWidth = true }),
-			Lucy.Button.new({
-				text = "-",
-				size = "icon",
-				variant = "outline",
-				disabled = atMin,
-				onClick = function()
-					value(math.max(min(), value() - step()))
-				end,
-			}),
-			Lucy.Text.new({
-				text = function()
-					return tostring(value())
-				end,
-				autoWidth = true,
-			}),
-			Lucy.Button.new({
-				text = "+",
-				size = "icon",
-				variant = "outline",
-				disabled = atMax,
-				onClick = function()
-					value(math.min(max(), value() + step()))
-				end,
-			}),
-		}
-	end,
+        return Lucy.new "Frame" {
+            BackgroundTransparency = 1,
+            AutomaticSize = Enum.AutomaticSize.XY,
+            Visible = h:ref("visible"),
+            Lucy.Component.list({
+                FillDirection = Enum.FillDirection.Horizontal,
+                VerticalAlignment = Enum.VerticalAlignment.Center,
+                Padding = UDim.new(0, 8),
+            }),
+            Lucy.Text.new({ text = h:ref("label"), variant = "label", autoWidth = true }),
+            Lucy.Button.new({
+                text = "-",
+                size = "icon",
+                variant = "outline",
+                disabled = atMin,
+                onClick = function()
+                    value(math.max(min(), value() - step()))
+                end,
+            }),
+            Lucy.Text.new({
+                text = function()
+                    return tostring(value())
+                end,
+                autoWidth = true,
+            }),
+            Lucy.Button.new({
+                text = "+",
+                size = "icon",
+                variant = "outline",
+                disabled = atMax,
+                onClick = function()
+                    value(math.min(max(), value() + step()))
+                end,
+            }),
+        }
+    end,
 }
 
 function Stepper.new(props: Lucy.Props?): Lucy.Handle
-	local handle = Lucy.Component.mount(spec, props)
+    local handle = Lucy.Component.mount(spec, props)
 
-	function handle.reset(h)
-		h:set("value", h:get("min"))
-	end
+    function handle.reset(h)
+        h:set("value", h:get("min"))
+    end
 
-	return handle
+    return handle
 end
 
 return Stepper
@@ -242,7 +242,7 @@ return Stepper
 
 ## Use it
 
-```lua
+```luau
 local volume = Stepper.new({ id = "volume", label = "Volume", max = 10, Parent = scene.gui })
 
 volume:set("value", 4)              -- from code that holds the handle
@@ -256,13 +256,13 @@ volume:destroy()                    -- stops its bindings and removes ui.volume
 Give a prop a ref and the key follows it both ways. Here the Stepper's `value`
 is the player's saved setting, so there is no copy to keep in sync:
 
-```lua
+```luau
 local app = Lucy.App.new({ state = { settings = { volume = 6 } } })
 
 Stepper.new({
-	label = "Volume",
-	value = app.state:ref("settings.volume"),
-	Parent = scene.gui,
+    label = "Volume",
+    value = app.state:ref("settings.volume"),
+    Parent = scene.gui,
 })
 ```
 

@@ -9,7 +9,7 @@ A surface the player can click, tap or select with a gamepad, holding whatever
 you put in it: an icon, a name, a price, a whole card. Use it where a Button's
 single line of text is not enough, such as shop items, song rows or vote cards.
 
-```lua
+```luau
 Lucy.Pressable.new({
     size = UDim2.fromOffset(160, 200),
     padding = "Space3",
@@ -65,7 +65,7 @@ and gets a ring around it. Gamepad and keyboard focus show the usual focus ring.
 
 A row of genre cards where one is picked at a time:
 
-```lua
+```luau
 local picked = Lucy.ref("House")
 
 for _, genre in { "House", "Techno", "Hip hop" } do
@@ -82,7 +82,7 @@ end
 
 A locked shop item that cannot be clicked:
 
-```lua
+```luau
 Lucy.Pressable.new({
     disabled = function() return not owned(item.id) end,
     children = { icon, name },

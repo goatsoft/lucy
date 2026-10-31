@@ -3,7 +3,7 @@
 
 A small label for a status or a count, such as "New" on a shop item.
 
-```lua
+```luau
 Lucy.Badge.new({ text = "New", Parent = card })
 ```
 
@@ -21,7 +21,7 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 A badge for each variant:
 
-```lua
+```luau
 for _, variant in { "default", "secondary", "destructive", "outline" } do
     Lucy.Badge.new({ text = variant, variant = variant, Parent = row })
 end
@@ -29,7 +29,7 @@ end
 
 A count that follows a value:
 
-```lua
+```luau
 local unread = Lucy.ref(3)
 
 Lucy.Badge.new({

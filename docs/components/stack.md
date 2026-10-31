@@ -8,7 +8,7 @@ description: A row or column that lays out its children.
 A row or a column that lays out its children with even spacing. Use it to
 build most layouts: a menu, a row of buttons, a form.
 
-```lua
+```luau
 Lucy.Stack.new({
     gap = "Space4",
     children = {
@@ -50,7 +50,7 @@ row grows both ways to fit. With a `size`, it stays that size.
 `direction`, `gap`, `align`, `justify`, `padding` and `size` can change with the
 device or input. Pass a table instead of a value:
 
-```lua
+```luau
 Lucy.Stack.new({
     direction = { mobile = "vertical", default = "horizontal" },
     gap = { console = "Space6", touch = "Space4", default = "Space2" },
@@ -65,7 +65,7 @@ See [Responsive values](index.md#responsive-values) for every key you can use.
 
 Centre a title screen:
 
-```lua
+```luau
 Lucy.Stack.new({
     size = UDim2.fromScale(1, 1),
     align = "center",
@@ -81,7 +81,7 @@ Lucy.Stack.new({
 
 A row with buttons at each end:
 
-```lua
+```luau
 Lucy.Stack.new({
     direction = "horizontal",
     justify = "between",

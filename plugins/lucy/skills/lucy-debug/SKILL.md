@@ -21,7 +21,7 @@ Studio only. Never make a second App to inspect the first.
 
 1. `start_stop_play` to start. Wait a second or two for the game's scripts.
 2. Run Devtools with `execute_luau` on the **Client** data model:
-   ```lua
+   ```luau
    local Devtools = require(game.ReplicatedStorage.Packages.Lucy).Devtools
    return Devtools.apps()
    ```

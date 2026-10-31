@@ -16,7 +16,7 @@ Actions live in sets. A set is switched on and off as a whole: turn off your
 
 ## Define actions
 
-```lua
+```luau
 app.actions:define("gameplay", {
     inventory = { Enum.KeyCode.I, Enum.KeyCode.ButtonL1 },
     shop = { Enum.KeyCode.B, Enum.KeyCode.DPadRight },
@@ -36,7 +36,7 @@ Behind the scenes each set is a Roblox `InputContext`, each action an
 
 ## Listen for an action
 
-```lua
+```luau
 local stop = app.actions:on("inventory", function()
     inventory:toggle()
 end)
@@ -48,7 +48,7 @@ with that owner. Actions never fire while the player is typing in a text box.
 
 ## Change keys
 
-```lua
+```luau
 app.actions:bind("inventory", { Enum.KeyCode.Tab, Enum.KeyCode.ButtonL1 })
 
 -- several at once, such as the keys a player saved
@@ -67,7 +67,7 @@ player picks up a controller or you change the keys.
 
 ## Switch sets off
 
-```lua
+```luau
 local release = app.actions:disable("gameplay")
 -- later
 release()
@@ -85,7 +85,7 @@ controls use: W, A, S, D, the arrow keys, Space and the left stick. While it is
 disabled the character does not walk or jump. Keyboard and gamepad navigation in
 your UI keep working.
 
-```lua
+```luau
 local release = app.actions:disable("movement")
 ```
 
@@ -104,7 +104,7 @@ updates anything that reads it. Panels opened with `modal = false` never count.
 Put it together with [`useWhile`](../reference/composables.md#usewhile) to switch
 gameplay keys and movement off while a menu is open:
 
-```lua
+```luau
 Lucy.useWhile(function()
     return app:modalOpen()
 end, function()
@@ -115,7 +115,7 @@ end)
 Each part is your choice. A dance menu that lets players keep moving switches
 off only `gameplay`:
 
-```lua
+```luau
 local top = app.state:ref("overlay.top") -- the id of the newest overlay
 
 Lucy.useWhile(function()

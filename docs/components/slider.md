@@ -12,7 +12,7 @@ keyboard and gamepad, one step at a time and faster while held; the other
 arrows move focus as usual. It can lie flat or stand up, and grows on touch and
 console.
 
-```lua
+```luau
 Lucy.Slider.new({
     value = 80,
     showValue = true,
@@ -61,7 +61,7 @@ runs once per drag. The `select` event (for UI sounds) is sent at the same time.
 
 Keep a setting in app state, preview it live and save it when the player lets go:
 
-```lua
+```luau
 local sensitivity = app.state:ref("settings.sensitivity")
 
 Lucy.Slider.new({
@@ -79,7 +79,7 @@ Lucy.Slider.new({
 
 A small slider standing up, beside a music track list:
 
-```lua
+```luau
 Lucy.Slider.new({
     value = 50,
     orientation = "vertical",

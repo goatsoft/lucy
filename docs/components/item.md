@@ -9,7 +9,7 @@ A row in a list: a picture or icon on the left, a title and a description in
 the middle, and buttons or a switch on the right. Use it for song lists,
 inventories, settings and friend lists.
 
-```lua
+```luau
 Lucy.Item.new({
     title = "Moonwalk",
     description = "Unlocked at level 5",
@@ -66,7 +66,7 @@ accent background and gets a ring around it.
 
 A song list where one song is picked at a time:
 
-```lua
+```luau
 local picked = Lucy.ref(songs[1].id)
 
 local rows = {}
@@ -86,7 +86,7 @@ Lucy.Stack.new({ gap = "Space2", children = rows, Parent = list })
 
 A setting with a switch:
 
-```lua
+```luau
 Lucy.Item.new({
     title = "Streamer mode",
     description = "Plays only music that is safe to stream.",

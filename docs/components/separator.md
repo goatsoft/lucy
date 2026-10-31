@@ -7,7 +7,7 @@ description: A thin line between items.
 
 A thin line between items, across a column or down a row.
 
-```lua
+```luau
 Lucy.Separator.new({ Parent = menu })
 ```
 
@@ -24,7 +24,7 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 Between sections of a column:
 
-```lua
+```luau
 Lucy.Stack.new({
     gap = "Space4",
     children = {
@@ -41,7 +41,7 @@ Lucy.Stack.new({
 Between items in a row. A vertical line takes the full height of what it is in,
 so give the row a height:
 
-```lua
+```luau
 Lucy.Stack.new({
     direction = "horizontal",
     gap = "Space3",

@@ -9,7 +9,7 @@ A row of toggles where the player picks one, or several: filter chips, a
 category bar, a vote from 1 to 5. Each item is a [Toggle](toggle.md) and looks
 like one.
 
-```lua
+```luau
 Lucy.ToggleGroup.new({
     items = { "House", "Techno", { value = "hiphop", text = "Hip hop" } },
     value = "House",
@@ -66,7 +66,7 @@ When the player picks an item, it reports `select` with that item's value for
 
 Genre filters the player can combine:
 
-```lua
+```luau
 local genres = Lucy.ref({})
 
 Lucy.ToggleGroup.new({
@@ -81,7 +81,7 @@ Lucy.ToggleGroup.new({
 
 A vote from 1 to 5 with a star in each item:
 
-```lua
+```luau
 local items = {}
 for stars = 1, 5 do
     table.insert(items, { value = stars, children = { starIcon(stars) } })

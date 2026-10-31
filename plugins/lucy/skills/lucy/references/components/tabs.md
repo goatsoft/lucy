@@ -5,7 +5,7 @@ A tab bar with one panel per tab, showing the picked one: a shop's sections, a
 booth's queue and effects. The bar is a [Toggle Group](toggle-group.md) where a
 tab stays picked.
 
-```lua
+```luau
 Lucy.Tabs.new({
     items = {
         { value = "emotes", text = "Emotes", content = emoteGrid },
@@ -70,7 +70,7 @@ panel frame.
 
 Open the shop on a tab kept in app state:
 
-```lua
+```luau
 local section = app.state:ref("shop.section")
 
 Lucy.Tabs.new({

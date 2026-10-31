@@ -6,7 +6,7 @@ friends. Pressing a header sorts by that column, pressing it again flips the
 order, and a third press goes back to the order of your data. It works the
 same with a mouse, touch or a gamepad.
 
-```lua
+```luau
 Lucy.DataGrid.new({
     id = "shop",
     data = items,
@@ -63,7 +63,7 @@ values keep the order of your data.
 The sort lives at `ui.<id>.sorting`, so you can save it with the player's
 settings and put it back, or change it from anywhere:
 
-```lua
+```luau
 app.state:set("ui.shop.sorting", { id = "owned", desc = true })
 ```
 
@@ -84,7 +84,7 @@ Pressing a header reports `activate`, for [game sounds](../reference/composables
 
 Sort by a custom order, such as item rarity:
 
-```lua
+```luau
 local order = { Common = 1, Rare = 2, Epic = 3, Legendary = 4 }
 
 {
@@ -97,7 +97,7 @@ local order = { Common = 1, Rare = 2, Epic = 3, Legendary = 4 }
 
 A server sorted leaderboard that loads more as the player scrolls:
 
-```lua
+```luau
 Lucy.DataGrid.new({
     data = players,                    -- a ref you add pages to
     columns = columns,

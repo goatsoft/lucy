@@ -5,7 +5,7 @@ A card with a title and description at the top, your content in the middle and
 an optional row of buttons at the bottom. Use it for menus, shop items and
 settings groups.
 
-```lua
+```luau
 Lucy.Panel.new({
     title = "Loadout",
     description = "Pick a weapon",
@@ -43,7 +43,7 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 A fixed width panel with a form:
 
-```lua
+```luau
 local panel = Lucy.Panel.new({
     title = "Settings",
     size = UDim2.fromOffset(360, 0),
@@ -58,7 +58,7 @@ local panel = Lucy.Panel.new({
 
 Add content later:
 
-```lua
+```luau
 Lucy.Text.new({ text = "Saved 2 minutes ago", variant = "muted", Parent = panel.content })
 ```
 

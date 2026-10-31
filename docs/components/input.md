@@ -10,7 +10,7 @@ height grows on touch and console, and a focus ring shows while the player
 types in it. It can also limit what the player types: a number only, or a
 maximum length.
 
-```lua
+```luau
 Lucy.Input.new({
     id = "playerName",
     placeholder = "Display name",
@@ -52,13 +52,13 @@ a string.
 
 Read the value by id:
 
-```lua
+```luau
 local name = app.state:get("ui.playerName.value")
 ```
 
 Keep a ref and the field in step:
 
-```lua
+```luau
 local search = Lucy.ref("")
 
 Lucy.Input.new({ placeholder = "Search items", value = search, Parent = shop })
@@ -70,7 +70,7 @@ end)
 
 A message box that holds 200 characters:
 
-```lua
+```luau
 Lucy.Input.new({
     placeholder = "Message",
     multiline = true,
@@ -82,13 +82,13 @@ Lucy.Input.new({
 
 A code of six digits:
 
-```lua
+```luau
 Lucy.Input.new({ placeholder = "Code", numeric = true, maxLength = 6, Parent = form })
 ```
 
 A fixed width:
 
-```lua
+```luau
 Lucy.Input.new({ placeholder = "Code", width = UDim.new(0, 160), Parent = row })
 ```
 

@@ -37,7 +37,7 @@ they work with nothing set up:
 
 To use your own, register the name, and every component that draws it changes:
 
-```lua
+```luau
 Lucy.Icon.register({
     ["lucy:close"] = { image = 1234567 },
 })
@@ -55,13 +55,13 @@ module. To leave them out, set `"lucy": false` in `lucy-icons.json`.
 
 Pass an asset id or url to use an image once:
 
-```lua
+```luau
 Lucy.Icon.new({ icon = 1234567, Parent = row })
 ```
 
 To use names, register a map:
 
-```lua
+```luau
 Lucy.Icon.register({
     ["game:coin"] = { image = 1234567 },
     ["game:trophy"] = { image = 2345678 },
@@ -151,7 +151,7 @@ npx lucy-icons build
 
 Then register the module where your client starts, before building UI:
 
-```lua
+```luau
 local Lucy = require(ReplicatedStorage.Packages.Lucy)
 Lucy.Icon.register(require(ReplicatedStorage.Shared.Icons))
 ```

@@ -34,9 +34,9 @@ app.state
 
 Pass your starting data to `App.new`:
 
-```lua
+```luau
 local app = Lucy.App.new({
-	state = { player = { coins = 0, bag = {} }, settings = { music = true } },
+    state = { player = { coins = 0, bag = {} }, settings = { music = true } },
 })
 ```
 
@@ -126,7 +126,7 @@ single keys for values you read often.
 
 There are three ways to read, for three jobs:
 
-```lua
+```luau
 -- Once, now: a value or a frozen copy.
 local coins = app.state:get("player.coins")
 
@@ -149,7 +149,7 @@ Text = function() return `Coins: {root.player.coins}` end
 
 ## Writing
 
-```lua
+```luau
 local state = app.state
 
 state:set("player.coins", 10)
@@ -164,7 +164,7 @@ state:ref("player.coins")(20)          -- the same as set
 Every form goes through `set`, so they all copy, compare and notify the same
 way. To change a list, copy it, change the copy and set it:
 
-```lua
+```luau
 local bag = table.clone(state:get("player.bag"))
 table.insert(bag, { id = "bow", name = "Bow" })
 state:set("player.bag", bag)
@@ -178,9 +178,9 @@ A subscriber runs a function when the value at its path changes. Use one for
 work outside the UI: saving, sounds, analytics, telling the server. For the UI
 itself, bind instead.
 
-```lua
+```luau
 local stop = app.state:subscribe("player", function(new, old)
-	saveQueue:push(new) -- `new` and `old` are frozen copies
+    saveQueue:push(new) -- `new` and `old` are frozen copies
 end)
 ```
 
@@ -195,11 +195,11 @@ end)
 
 ## Batching
 
-```lua
+```luau
 app.state:batch(function()
-	app.state:set("player.coins", 0)
-	app.state:set("player.bag", {})
-	app.state:set("ui.shop.visible", false)
+    app.state:set("player.coins", 0)
+    app.state:set("player.bag", {})
+    app.state:set("ui.shop.visible", false)
 end)
 ```
 
@@ -232,7 +232,7 @@ Each component keeps its state keys at `ui.<id>`. The keys are the component's
 `state:scope(prefix)` returns the same methods with every path under `prefix`.
 Hand one to code that should only see its own part of the tree:
 
-```lua
+```luau
 local inventory = app.state:scope("player.bag")
 inventory:set("1.count", 3)                  -- player.bag.1.count
 inventory:subscribe(nil, function(bag) end)  -- player.bag
@@ -245,15 +245,15 @@ local shop = inventory:scope("shop")         -- player.bag.shop
 
 Game code writes the store; the HUD follows it. Neither knows about the other.
 
-```lua
+```luau
 -- HUD
 local coins = app.state:ref("player.coins")
 local hp = app.state:ref("player.hp")
 
 Lucy.new "Frame" {
-	Parent = hud,
-	Lucy.new "TextLabel" { Text = function() return `{coins()} coins` end },
-	Lucy.Progress.new({ value = hp, max = 100 }),
+    Parent = hud,
+    Lucy.new "TextLabel" { Text = function() return `{coins()} coins` end },
+    Lucy.Progress.new({ value = hp, max = 100 }),
 }
 
 -- Game code
@@ -262,14 +262,14 @@ app.state:merge("player", { coins = 120, hp = 75 })
 
 ### Settings bound to saved data
 
-```lua
+```luau
 local app = Lucy.App.new({ state = { settings = saved or { music = true, volume = 6 } } })
 
 Lucy.Switch.new({ label = "Music", checked = app.state:ref("settings.music"), Parent = menu })
 Stepper.new({ label = "Volume", value = app.state:ref("settings.volume"), Parent = menu })
 
 app.state:subscribe("settings", function(settings)
-	remote:FireServer("SaveSettings", settings)
+    remote:FireServer("SaveSettings", settings)
 end)
 ```
 
@@ -278,20 +278,20 @@ once per change, as a frozen copy that is safe to send.
 
 ### A shop button that follows the price
 
-```lua
+```luau
 local coins = app.state:ref("player.coins")
 local price = 100
 
 Lucy.Button.new({
-	id = "buy",
-	text = `Buy ({price})`,
-	disabled = function()
-		return coins() < price
-	end,
-	onClick = function()
-		app.state:update("player.coins", function(n) return n - price end)
-	end,
-	Parent = shop,
+    id = "buy",
+    text = `Buy ({price})`,
+    disabled = function()
+        return coins() < price
+    end,
+    onClick = function()
+        app.state:update("player.coins", function(n) return n - price end)
+    end,
+    Parent = shop,
 })
 ```
 

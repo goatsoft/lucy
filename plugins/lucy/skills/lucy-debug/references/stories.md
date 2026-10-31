@@ -9,7 +9,7 @@ doubles as a smoke test.
 
 Name a ModuleScript `<Name>.story` anywhere in your game and return a table:
 
-```lua
+```luau
 -- Shop/ItemCard.story.luau
 return {
     group = "Shop",
@@ -77,7 +77,7 @@ rebuilt when it changes.
 From the command bar or the Studio MCP, with your stories anywhere under
 ReplicatedStorage:
 
-```lua
+```luau
 local Lucy = require(game.ReplicatedStorage.Packages.Lucy)
 Lucy.Preview.show("ItemCard", { theme = "light", device = "mobile" })
 Lucy.Preview.clear()
@@ -98,7 +98,7 @@ Copy it into StarterPlayerScripts and point `root` at your stories folder.
 
 ## In code and specs
 
-```lua
+```luau
 local mounted = Lucy.Preview.mount(story, { theme = "dark", device = "console" })
 mounted:set("rarity", "legendary")
 mounted:values()      --> { name = ..., price = ..., rarity = "legendary", owned = false }

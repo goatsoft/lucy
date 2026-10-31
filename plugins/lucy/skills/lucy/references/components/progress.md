@@ -3,7 +3,7 @@
 
 A bar that fills from 0 to a maximum, for reloads, loading and health.
 
-```lua
+```luau
 Lucy.Progress.new({ id = "reload", value = 30, Parent = hud })
 
 app.state:set("ui.reload.value", 75)
@@ -25,7 +25,7 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 A health bar that follows app state and turns red when low:
 
-```lua
+```luau
 local health = app.state:ref("player.health")
 
 Lucy.Progress.new({
@@ -41,7 +41,7 @@ Lucy.Progress.new({
 
 A loading bar driven by a count:
 
-```lua
+```luau
 local loaded = Lucy.ref(0)
 
 Lucy.Progress.new({ value = loaded, max = #assets, Parent = loadingScreen })

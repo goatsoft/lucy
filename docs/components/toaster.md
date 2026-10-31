@@ -10,7 +10,7 @@ their own. Every App gets one when the Toaster component is in the package
 (always with Wally; when copying components in, add `toaster`), so you never
 create it yourself: call `app.toast`.
 
-```lua
+```luau
 app.toast.success("Round won", { description = "+$250" })
 ```
 
@@ -53,7 +53,7 @@ Change these before the first toast shows:
 
 Put toasts where they won't cover your HUD:
 
-```lua
+```luau
 local app = Lucy.App.new({ toastPosition = "top-center" })
 
 app.state:set("ui.toaster.position", "bottom-left") -- move them later
@@ -68,7 +68,7 @@ devices they run full width, at the top or the bottom.
 
 A toast that updates as work finishes:
 
-```lua
+```luau
 local id = app.toast("Uploading...", { duration = math.huge })
 upload()
 app.toast.success("Uploaded", { id = id }) -- replaces it and starts its timer
@@ -76,7 +76,7 @@ app.toast.success("Uploaded", { id = id }) -- replaces it and starts its timer
 
 A toast with a button:
 
-```lua
+```luau
 app.toast("Party invite", {
     action = { label = "Join", onClick = joinParty },
 })
@@ -85,7 +85,7 @@ app.toast("Party invite", {
 Toasts are kept in app state at `toasts`, newest last, so you can read or
 clear them like any other state:
 
-```lua
+```luau
 local count = #app.state:get("toasts")
 app.state:set("toasts", {}) -- clear every toast
 ```

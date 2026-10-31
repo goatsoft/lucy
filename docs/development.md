@@ -29,20 +29,20 @@ for TestEZ (into `DevPackages/`, gitignored).
 2. In Studio, open any place (or `rojo build test.project.json -o ~/tmp/LucyTests.rbxl`
    and open that) and connect the Rojo plugin.
 3. Run the specs from the command bar:
-   ```lua
+   ```luau
    require(game.ReplicatedStorage.LucyTests.Runner).run()
    require(game.ReplicatedStorage.LucyTests.Runner).run({ pattern = "Button" })
    ```
    `run` returns `{ passed, failed, skipped, errors, ok }`.
 4. Look at a component without pressing Play:
-   ```lua
+   ```luau
    require(game.ReplicatedStorage.Lucy).Preview.show("Button", { root = game.ReplicatedStorage.LucyExamples })
    ```
    Press Play for the story browser (`examples/Showcase.client.luau`, mapped into
    StarterPlayerScripts), where every control is clickable.
 5. After a change that could affect speed, run the benchmarks and compare with
    [the published numbers](benchmarks.md):
-   ```lua
+   ```luau
    require(game.ReplicatedStorage.LucyTests.Bench.Run).run()
    ```
 
@@ -77,7 +77,7 @@ Gotchas:
 
 1. `src/Components/Thing.spec.luau` first.
 2. `src/Components/Thing.luau`:
-   ```lua
+   ```luau
    --!strict
    local Component = require(script.Parent.Parent.Core.Component)
    local Element = require(script.Parent.Parent.Core.Element)

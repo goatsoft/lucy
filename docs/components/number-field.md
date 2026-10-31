@@ -11,7 +11,7 @@ buttons, or hold them to keep going faster, or type a number. On keyboard and
 gamepad the field is one stop: left and right change the number, like a
 slider, and the confirm button starts typing.
 
-```lua
+```luau
 Lucy.NumberField.new({
     value = 4,
     min = 1,
@@ -59,7 +59,7 @@ The buttons draw the `lucy:minus` and `lucy:plus` icons. To use your own, see
 
 Keep a setting in app state and save it once the player has picked:
 
-```lua
+```luau
 local rounds = app.state:ref("settings.rounds")
 
 Lucy.NumberField.new({
@@ -75,7 +75,7 @@ Lucy.NumberField.new({
 
 A speed in quarter steps, shown with a suffix:
 
-```lua
+```luau
 Lucy.NumberField.new({
     value = 1,
     min = 0.25,

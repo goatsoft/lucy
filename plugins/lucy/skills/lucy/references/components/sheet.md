@@ -7,7 +7,7 @@ reach it. It has a title, a description, any content and a row of action
 buttons, like a [Dialog](dialog.md). Content longer than the screen scrolls
 inside it.
 
-```lua
+```luau
 local settings = Lucy.Sheet.new({
     id = "settings",
     title = "Settings",
@@ -71,13 +71,13 @@ whatever had it before.
 
 Open a sheet from anywhere by its id:
 
-```lua
+```luau
 app.state:set("ui.settings.open", true)
 ```
 
 A friends list on the left that leaves the game playable behind it:
 
-```lua
+```luau
 Lucy.Sheet.new({
     title = "Friends",
     side = "left",

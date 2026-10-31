@@ -8,7 +8,7 @@ description: An on and off switch, with an optional label.
 An on and off switch with an optional label, for settings. The whole row is
 the hit area, and the switch grows on touch and console.
 
-```lua
+```luau
 Lucy.Switch.new({
     label = "Music",
     checked = true,
@@ -41,7 +41,7 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 Keep a setting in app state and the switch in step:
 
-```lua
+```luau
 local music = app.state:ref("settings.music")
 
 Lucy.Switch.new({ label = "Music", checked = music, Parent = settings })
@@ -54,7 +54,7 @@ end)
 
 Grey a switch out while something loads:
 
-```lua
+```luau
 local loading = Lucy.ref(true)
 
 Lucy.Switch.new({ label = "Shadows", disabled = loading, Parent = settings })

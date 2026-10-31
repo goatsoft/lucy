@@ -8,7 +8,7 @@ description: Headings, body copy and labels.
 Text in the theme's fonts and colours: headings, body copy, muted notes and
 labels. It wraps to fill its parent's width unless you ask it to fit the text.
 
-```lua
+```luau
 Lucy.Text.new({ text = "My Game", variant = "h1", align = "center", Parent = frame })
 ```
 
@@ -39,7 +39,7 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 A label that follows game state:
 
-```lua
+```luau
 local coins = app.state:ref("player.coins")
 
 Lucy.Text.new({
@@ -51,13 +51,13 @@ Lucy.Text.new({
 
 Text that fits itself, for use in a row:
 
-```lua
+```luau
 Lucy.Text.new({ text = "Level 12", variant = "small", autoWidth = true, Parent = row })
 ```
 
 Rich text:
 
-```lua
+```luau
 Lucy.Text.new({ text = "Press <b>E</b> to open", richText = true, Parent = prompt })
 ```
 

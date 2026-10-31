@@ -12,7 +12,7 @@ which hotkeys are on. It can also act like a player: press a button, pick a
 tab, move focus. Use it from the command bar, or let a coding agent use it to
 check its own work.
 
-```lua
+```luau
 local Devtools = require(game.ReplicatedStorage.Packages.Lucy).Devtools
 
 Devtools.tree()                       -- every component on screen
@@ -33,7 +33,7 @@ Every function takes an options table last. Most games have one App and never
 need it. When several run, Devtools uses the one made with `setCurrent` (the
 default), or you name one by its `namePrefix`:
 
-```lua
+```luau
 Devtools.tree({ app = "Lucy_" })
 ```
 
@@ -83,7 +83,7 @@ These go through the same code as the player's input, so `onClick` runs,
 sounds play and a disabled button stays put: `press` returns `ok = false` with
 a reason instead.
 
-```lua
+```luau
 Devtools.press("shop-open")
 Devtools.press("theme", "light")      -- a toggle group
 Devtools.press("volume", 40)          -- a slider

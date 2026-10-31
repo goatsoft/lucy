@@ -12,9 +12,9 @@ Give the App a base colour and, if you like, a primary colour:
 
 ```luau
 local app = Lucy.App.new({
-	theme = "dark",
-	baseColor = "slate",
-	primary = "emerald",
+    theme = "dark",
+    baseColor = "slate",
+    primary = "emerald",
 })
 ```
 
@@ -42,8 +42,8 @@ as soon as a player picks:
 
 ```luau
 Lucy.Select.new({
-	items = { { value = "dark", label = "Dark" }, { value = "light", label = "Light" } },
-	value = app.state:ref("theme"),
+    items = { { value = "dark", label = "Dark" }, { value = "light", label = "Light" } },
+    value = app.state:ref("theme"),
 })
 ```
 
@@ -102,15 +102,15 @@ add rules that match the tags:
 
 ```luau
 app.theme:addRules("shop", {
-	{ selector = ".shop-price", properties = { TextColor3 = "$Warning", FontFace = "$FontSansBold" } },
-	{ selector = ".shop-card", properties = { BackgroundColor3 = "$Card" } },
-	{ selector = ".shop-card:Hover", priority = 20, properties = { BackgroundColor3 = "$Accent" } },
+    { selector = ".shop-price", properties = { TextColor3 = "$Warning", FontFace = "$FontSansBold" } },
+    { selector = ".shop-card", properties = { BackgroundColor3 = "$Card" } },
+    { selector = ".shop-card:Hover", priority = 20, properties = { BackgroundColor3 = "$Accent" } },
 })
 
 Lucy.new "TextLabel" {
-	Tags = { "shop-price" },
-	Text = "250",
-	Parent = card,
+    Tags = { "shop-price" },
+    Text = "250",
+    Parent = card,
 }
 ```
 

@@ -9,7 +9,7 @@ Shows which key to press, for the input the player is using right now: the
 key on a keyboard, the button on a controller, and nothing on a phone. It
 changes the moment the player picks up a controller or goes back to the mouse.
 
-```lua
+```luau
 Lucy.Kbd.new({
     keyboard = Enum.KeyCode.E,
     gamepad = Enum.KeyCode.DPadUp,
@@ -54,7 +54,7 @@ whether the player's controller is `"xbox"` or `"playstation"` style.
 
 A hint beside a line of text:
 
-```lua
+```luau
 Lucy.Stack.new({
     direction = "horizontal",
     gap = "Space2",
@@ -69,7 +69,7 @@ Lucy.Stack.new({
 
 A key that changes with game state:
 
-```lua
+```luau
 local key = Lucy.ref(Enum.KeyCode.One)
 
 Lucy.Kbd.new({ keyboard = key, Parent = slot })

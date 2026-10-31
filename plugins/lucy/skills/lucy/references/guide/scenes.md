@@ -21,19 +21,19 @@ you don't make scenes for them.
 
 ```luau
 app.scenes:register("Title", {
-	layer = "screen",
-	build = function(scene)
-		scene.play = Lucy.Button.new({
-			text = "Play",
-			onClick = function()
-				app.scenes:goTo("Game")
-			end,
-			Parent = scene.gui,
-		})
-	end,
-	defaultFocus = function(scene)
-		return scene.play
-	end,
+    layer = "screen",
+    build = function(scene)
+        scene.play = Lucy.Button.new({
+            text = "Play",
+            onClick = function()
+                app.scenes:goTo("Game")
+            end,
+            Parent = scene.gui,
+        })
+    end,
+    defaultFocus = function(scene)
+        return scene.play
+    end,
 })
 ```
 
@@ -69,15 +69,15 @@ Overlays show next to whatever screen is up:
 local coins = app.state:ref("coins")
 
 app.scenes:register("Hud", {
-	layer = "overlay",
-	build = function(scene)
-		Lucy.Text.new({
-			text = function()
-				return `Coins: {coins()}`
-			end,
-			Parent = scene.gui,
-		})
-	end,
+    layer = "overlay",
+    build = function(scene)
+        Lucy.Text.new({
+            text = function()
+                return `Coins: {coins()}`
+            end,
+            Parent = scene.gui,
+        })
+    end,
 })
 
 app.scenes:show("Hud")
@@ -105,10 +105,10 @@ nothing else, such as an open select, takes them first:
 
 ```luau
 app.scenes:register("Game", {
-	build = buildGame,
-	onBack = function()
-		app.scenes:push("Pause")
-	end,
+    build = buildGame,
+    onBack = function()
+        app.scenes:push("Pause")
+    end,
 })
 ```
 

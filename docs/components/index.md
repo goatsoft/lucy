@@ -73,7 +73,7 @@ Any state key can be changed from the app: `app.state:set("ui.<id>.<key>", value
 Every state key listed on a component's page also accepts a ref, a computed or a
 getter function. The component follows it and nothing else runs again.
 
-```lua
+```luau
 local coins = Lucy.ref(0)
 local isBusy = Lucy.ref(false)
 local music = Lucy.ref(true)
@@ -100,7 +100,7 @@ Lucy.Switch.new({ label = "Music", checked = music })
 
 ## Responsive values
 
-```lua
+```luau
 Lucy.Stack.new({
     direction = { mobile = "vertical", default = "horizontal" },
     gap = { console = "Space6", touch = "Space4", default = "Space2" },
@@ -122,7 +122,7 @@ A component is a spec, a table built once, passed to `Lucy.Component.mount` with
 each mount's props. Its `render` runs once per mount and describes the instances;
 bindings keep them in step with state from then on.
 
-```lua
+```luau
 local TweenService = game:GetService("TweenService")
 local Lucy = require(ReplicatedStorage.Packages.Lucy)
 
@@ -210,7 +210,7 @@ return Stat
 A watcher that sets a property is a binding written the long way: it runs more
 often, and the property now has two owners. Bind the property instead.
 
-```lua
+```luau
 -- No: a watcher setting what a binding could own.
 Lucy.watch(h:ref("disabled"), function(off) button.Interactable = not off end)
 

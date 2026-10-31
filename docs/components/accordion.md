@@ -9,7 +9,7 @@ A stack of sections with a header each: a settings menu, a list of quests, the
 help pages of a game. By default one section is open at a time, and pressing the
 open one closes it. Each section is a [Collapsible](collapsible.md).
 
-```lua
+```luau
 Lucy.Accordion.new({
     value = "audio",
     items = {
@@ -62,7 +62,7 @@ sections without reporting a press, set the state:
 
 Let the player keep several sections open, starting with two:
 
-```lua
+```luau
 Lucy.Accordion.new({
     type = "multiple",
     value = { "daily", "weekly" },

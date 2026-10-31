@@ -8,7 +8,7 @@ description: A button, in six variants and four sizes.
 A button the player can click, tap or select with a gamepad. It comes in six
 variants and four sizes.
 
-```lua
+```luau
 Lucy.Button.new({
     text = "Play",
     onClick = function()
@@ -48,7 +48,7 @@ A disabled button ignores clicks, and a gamepad skips over it. Clicks within
 `icon` draws an icon before the text, coloured like the text in every variant.
 With no text, the icon shows alone; use `size = "icon"` for a square button.
 
-```lua
+```luau
 Lucy.Button.new({ text = "Settings", icon = "lucide:settings", variant = "outline", Parent = bar })
 Lucy.Button.new({ icon = "lucide:settings", size = "icon", variant = "ghost", Parent = bar })
 ```
@@ -62,7 +62,7 @@ registered first, like any icon; see [Icons](../guide/icons.md).
 `hint` puts a key cap after the text, showing the right key for the player's
 input: the keyboard key, the controller's button, and nothing on touch.
 
-```lua
+```luau
 Lucy.Button.new({
     text = "Join",
     hint = { keyboard = Enum.KeyCode.E, gamepad = Enum.KeyCode.DPadUp },
@@ -85,7 +85,7 @@ Without one, the button is a single TextButton as usual.
 
 Every variant:
 
-```lua
+```luau
 for _, variant in { "default", "secondary", "outline", "ghost", "destructive", "link" } do
     Lucy.Button.new({ text = variant, variant = variant, size = "sm", Parent = row })
 end
@@ -93,7 +93,7 @@ end
 
 A buy button that follows the player's coins and turns off while a purchase runs:
 
-```lua
+```luau
 local coins = app.state:ref("player.coins")
 local buying = Lucy.ref(false)
 
@@ -111,7 +111,7 @@ Lucy.Button.new({
 
 Disable a button from anywhere by its id:
 
-```lua
+```luau
 Lucy.Button.new({ id = "play", text = "Play", Parent = frame })
 
 app.state:set("ui.play.disabled", true)
@@ -120,7 +120,7 @@ app.state:set("ui.play.disabled", true)
 A close button, the one dialogs and sheets put in their top right corner: a
 ghost icon button with a large ×. It takes the same props as `Button.new`.
 
-```lua
+```luau
 local close = Lucy.Button.close({ onClick = hidePanel })
 ```
 

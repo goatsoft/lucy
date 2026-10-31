@@ -5,7 +5,7 @@ A box the player can check and uncheck, with an optional label. The whole row
 is the hit area, and it grows on touch and console so it is easy to hit with a
 thumb or a gamepad.
 
-```lua
+```luau
 Lucy.Checkbox.new({
     label = "Mute music",
     onCheckedChange = function(checked)
@@ -38,7 +38,7 @@ It also takes the [props every component takes](index.md#using-a-component).
 Keep a ref and a checkbox in step. Writing the ref checks the box, and checking
 the box writes the ref:
 
-```lua
+```luau
 local muted = Lucy.ref(false)
 
 Lucy.Checkbox.new({ label = "Mute music", checked = muted, Parent = settings })
@@ -48,7 +48,7 @@ muted(true) -- the box is now checked
 
 Read it from app state by id:
 
-```lua
+```luau
 Lucy.Checkbox.new({ id = "terms", label = "I agree to the rules", Parent = form })
 
 if app.state:get("ui.terms.checked") then

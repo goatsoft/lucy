@@ -9,7 +9,7 @@ A modal window above every scene, with a title, a description, any content and
 a row of action buttons. While it is open, keyboard and gamepad focus stay
 inside it and the back button (Escape or ButtonB) closes it.
 
-```lua
+```luau
 local quit = Lucy.Dialog.new({
     id = "quit",
     title = "Leave match?",
@@ -76,7 +76,7 @@ An action closes the dialog after its `onClick` runs, unless `onClick` returns
 `Lucy.Dialog.alert` asks a question with two buttons and opens straight away.
 It cannot be dismissed, so the player has to choose.
 
-```lua
+```luau
 Lucy.Dialog.alert({
     title = "Delete this save?",
     description = "This cannot be undone.",
@@ -92,13 +92,13 @@ Lucy.Dialog.alert({
 
 Open a dialog from anywhere by its id:
 
-```lua
+```luau
 app.state:set("ui.quit.open", true)
 ```
 
 Keep the dialog open when a check fails:
 
-```lua
+```luau
 Lucy.Dialog.new({
     title = "Name your team",
     children = { Lucy.Input.new({ id = "teamName", placeholder = "Team name" }) },

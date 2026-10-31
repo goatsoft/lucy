@@ -9,7 +9,7 @@ A region that scrolls when its content does not fit: a song list, a shop, the
 rules in a dialog. It works with the mouse wheel, touch and gamepad, and keeps
 the focused item in view when the player moves with Tab or the arrow keys.
 
-```lua
+```luau
 Lucy.ScrollArea.new({
     size = UDim2.new(1, 0, 0, 300),
     padding = "Space2",
@@ -77,7 +77,7 @@ player can still scroll it with a gamepad.
 
 A dialog body that grows with its text and scrolls past 320 pixels:
 
-```lua
+```luau
 Lucy.ScrollArea.new({
     maxHeight = 320,
     children = {
@@ -89,7 +89,7 @@ Lucy.ScrollArea.new({
 
 A row of cards that scrolls sideways:
 
-```lua
+```luau
 Lucy.ScrollArea.new({
     direction = "horizontal",
     size = UDim2.new(1, 0, 0, 220),

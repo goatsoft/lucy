@@ -5,7 +5,7 @@ A box with a title and a line or two of text that stays on screen: a server
 notice, a failed purchase, a rule the player should know. For a message that
 comes and goes on its own, use a [toast](toaster.md) instead.
 
-```lua
+```luau
 Lucy.Alert.new({
     title = "Server restarting in 5 minutes",
     description = "Your progress is saved. You will join a new server.",
@@ -40,7 +40,7 @@ border and the title with the theme's matching colour (`Destructive`,
 
 A failed purchase with a way to try again:
 
-```lua
+```luau
 Lucy.Alert.new({
     variant = "destructive",
     title = "Purchase failed",
@@ -54,7 +54,7 @@ Lucy.Alert.new({
 
 A notice that follows game state:
 
-```lua
+```luau
 local restartIn = Lucy.ref(0)
 
 Lucy.Alert.new({

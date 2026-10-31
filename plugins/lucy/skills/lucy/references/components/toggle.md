@@ -4,7 +4,7 @@
 A button that stays pressed until it is clicked again: mute, a filter, show
 the map. For one choice out of several, use a [Toggle Group](toggle-group.md).
 
-```lua
+```luau
 Lucy.Toggle.new({
     text = "Voice chat",
     pressed = true,
@@ -43,7 +43,7 @@ When the player turns it on or off, it reports `toggle` with the new value for
 
 Keep it in step with a setting:
 
-```lua
+```luau
 local showMap = app.state:ref("settings.map")
 
 Lucy.Toggle.new({ text = "Map", pressed = showMap, variant = "outline", Parent = hud })

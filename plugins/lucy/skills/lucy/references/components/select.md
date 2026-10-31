@@ -5,7 +5,7 @@ A button that opens a list of options to pick one from: a server region, a sort
 order, a game mode. It shows the option picked, or a placeholder until there is
 one.
 
-```lua
+```luau
 local region = Lucy.Select.new({
     id = "region",
     placeholder = "Region",
@@ -55,7 +55,7 @@ pick several. Each press ticks or unticks an option and the list stays open.
 The value is an array in the order of `items`, and the button shows the first
 label and how many more, such as "Pop +2".
 
-```lua
+```luau
 Lucy.Select.new({
     multiple = true,
     placeholder = "Genres",
@@ -99,14 +99,14 @@ When the player picks an option, it reports `select` with the value, for
 
 Read or change the value from anywhere by its id:
 
-```lua
+```luau
 app.state:get("ui.region.value")
 app.state:set("ui.region.value", "na")
 ```
 
 Keep it in step with a ref:
 
-```lua
+```luau
 local sort = Lucy.ref("newest")
 Lucy.Select.new({
     value = sort,

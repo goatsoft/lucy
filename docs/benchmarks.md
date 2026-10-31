@@ -98,7 +98,7 @@ state.
 
 In the Lucy dev place, from the command bar or the Studio MCP:
 
-```lua
+```luau
 local Run = require(game.ReplicatedStorage.LucyTests.Bench.Run)
 Run.run()                                -- every suite; prints a markdown table
 Run.run({ only = "List" })               -- suites whose name matches a pattern

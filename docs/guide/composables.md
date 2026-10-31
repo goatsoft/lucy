@@ -19,22 +19,22 @@ Lucy comes with `useDensity`, `useMetric`, `useResponsive`, `useBackHandler`,
 `useFocusScope`, `useUiSound`, `useTable`, `useWhile` and `useCountdown`. The [composables reference](../reference/composables.md)
 says what each takes and returns.
 
-```lua
+```luau
 render = function(h)
-	local height = Lucy.useMetric(h.app, "ControlMd")
-	local gap = Lucy.useResponsive(h.app, { touch = 16, default = 8 })
+    local height = Lucy.useMetric(h.app, "ControlMd")
+    local gap = Lucy.useResponsive(h.app, { touch = 16, default = 8 })
 
-	return Lucy.new "Frame" {
-		Size = function()
-			return UDim2.new(1, 0, 0, height())
-		end,
-		Lucy.new "UIListLayout" {
-			SortOrder = Enum.SortOrder.LayoutOrder,
-			Padding = function()
-				return UDim.new(0, gap())
-			end,
-		},
-	}
+    return Lucy.new "Frame" {
+        Size = function()
+            return UDim2.new(1, 0, 0, height())
+        end,
+        Lucy.new "UIListLayout" {
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = function()
+                return UDim.new(0, gap())
+            end,
+        },
+    }
 end,
 ```
 
@@ -44,11 +44,11 @@ properties once. A layout with a bound property is made with `Lucy.new`.
 `active` can be a ref, a computed or a getter, so a dialog passes its `open` key
 and the back handler comes and goes with it:
 
-```lua
+```luau
 local open = h:ref("open")
 Lucy.useBackHandler(h.app, open, function()
-	open(false)
-	return true -- handled; stop here
+    open(false)
+    return true -- handled; stop here
 end)
 ```
 
@@ -58,60 +58,60 @@ An ability button shows its name when ready, counts down after it is used, and
 cannot be pressed until the count reaches zero. The timing is the part worth
 sharing, so it goes in a composable:
 
-```lua
+```luau
 local function useCooldown(seconds: number)
-	local remaining = Lucy.ref(0)
-	local thread: thread? = nil
+    local remaining = Lucy.ref(0)
+    local thread: thread? = nil
 
-	local function start()
-		if thread then
-			task.cancel(thread)
-		end
-		local endsAt = os.clock() + seconds
-		thread = task.spawn(function()
-			while os.clock() < endsAt do
-				remaining(endsAt - os.clock())
-				task.wait(0.1)
-			end
-			remaining(0)
-			thread = nil
-		end)
-	end
+    local function start()
+        if thread then
+            task.cancel(thread)
+        end
+        local endsAt = os.clock() + seconds
+        thread = task.spawn(function()
+            while os.clock() < endsAt do
+                remaining(endsAt - os.clock())
+                task.wait(0.1)
+            end
+            remaining(0)
+            thread = nil
+        end)
+    end
 
-	-- Runs when the owner (the component) is destroyed.
-	Lucy.onCleanup(function()
-		if thread then
-			task.cancel(thread)
-		end
-	end)
+    -- Runs when the owner (the component) is destroyed.
+    Lucy.onCleanup(function()
+        if thread then
+            task.cancel(thread)
+        end
+    end)
 
-	local ready = Lucy.computed(function()
-		return remaining() <= 0
-	end)
+    local ready = Lucy.computed(function()
+        return remaining() <= 0
+    end)
 
-	return { remaining = remaining, ready = ready, start = start }
+    return { remaining = remaining, ready = ready, start = start }
 end
 ```
 
 Use it in render like any other value:
 
-```lua
+```luau
 render = function(h)
-	local dash = useCooldown(3)
+    local dash = useCooldown(3)
 
-	return Lucy.new "Frame" {
-		BackgroundTransparency = 1,
-		AutomaticSize = Enum.AutomaticSize.XY,
-		Lucy.Button.new({
-			text = function()
-				return if dash.ready() then "Dash" else string.format("%.1f s", dash.remaining())
-			end,
-			disabled = function()
-				return not dash.ready()
-			end,
-			onClick = dash.start,
-		}),
-	}
+    return Lucy.new "Frame" {
+        BackgroundTransparency = 1,
+        AutomaticSize = Enum.AutomaticSize.XY,
+        Lucy.Button.new({
+            text = function()
+                return if dash.ready() then "Dash" else string.format("%.1f s", dash.remaining())
+            end,
+            disabled = function()
+                return not dash.ready()
+            end,
+            onClick = dash.start,
+        }),
+    }
 end,
 ```
 

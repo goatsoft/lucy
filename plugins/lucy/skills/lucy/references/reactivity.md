@@ -5,7 +5,7 @@ Lucy's state is plain Luau. A ref is a function:
 call it to read, call it with a value to write. There is no `.value` and no
 unwrapping magic.
 
-```lua
+```luau
 local count = Lucy.ref(0)
 count()        -- 0
 count(5)       -- write: everything that read count updates
@@ -18,7 +18,7 @@ Nothing is rebuilt and nothing is diffed.
 
 ### ref
 
-```lua
+```luau
 local name = Lucy.ref("Lucy")
 name("Goat")              -- write
 name(nil)                 -- writing nil is fine
@@ -32,22 +32,22 @@ Writing the value a ref already holds does nothing.
 A cached, lazy derivation. It runs when first read, and again only when something
 it read has changed.
 
-```lua
+```luau
 local double = Lucy.computed(function()
-	return count() * 2
+    return count() * 2
 end)
 ```
 
 Make it writable by passing `get` and `set`:
 
-```lua
+```luau
 local fullName = Lucy.computed({
-	get = function() return `{first()} {last()}` end,
-	set = function(value)
-		local a, b = string.match(value, "^(%S+) (%S+)$")
-		first(a)
-		last(b)
-	end,
+    get = function() return `{first()} {last()}` end,
+    set = function(value)
+        local a, b = string.match(value, "^(%S+) (%S+)$")
+        first(a)
+        last(b)
+    end,
 })
 fullName("Goat Soft")
 ```
@@ -59,7 +59,7 @@ A computed that ends up with the same value stops the update there, so
 
 A deep, reactive view of a table, for state you would rather write as fields.
 
-```lua
+```luau
 local player = Lucy.reactive({ coins = 0, bag = {} })
 player.coins += 10                 -- only readers of `coins` update
 Lucy.insert(player.bag, "sword")   -- lists: use Lucy.insert / Lucy.remove
@@ -75,7 +75,7 @@ bypass tracking. Use `Lucy.insert` and `Lucy.remove`, or assign `bag[#bag + 1] =
 Every key in the app's store works like a ref: anything that reads a key runs
 again when that key changes, and nothing else does.
 
-```lua
+```luau
 local coins = app.state:ref("player.coins")
 coins(coins() + 10)                  -- same as app.state:set("player.coins", ...)
 app.state.root.player.coins += 10    -- the store as plain tables
@@ -91,10 +91,10 @@ Reach for bindings and computeds first. Effects are for side effects: playing a
 tween, calling game code, pushing a focus scope, playing a sound. If an effect
 would only set a property, bind the property instead.
 
-```lua
+```luau
 local stop = Lucy.watchEffect(function(onCleanup)
-	print("coins", coins())
-	onCleanup(function() end)   -- before the next run, and on stop
+    print("coins", coins())
+    onCleanup(function() end)   -- before the next run, and on stop
 end)
 
 Lucy.watch(count, function(new, old, onCleanup) end)                 -- lazy
@@ -119,11 +119,11 @@ freezing the game.
 Everything created inside an effect, an element or a scope belongs to it, and is
 cleaned up when its owner runs again or stops. You rarely need to think about it.
 
-```lua
+```luau
 local scope = Lucy.effectScope()
 scope:run(function()
-	-- effects, computeds, elements...
-	Lucy.onCleanup(function() end)
+    -- effects, computeds, elements...
+    Lucy.onCleanup(function() end)
 end)
 scope:stop()   -- stops all of it
 ```
@@ -134,7 +134,7 @@ A composable is a plain function, named `useX`, that creates refs, computeds and
 effects and returns them. Call it inside a component's render, an effect or a
 scope: what it creates stops with that owner. Called anywhere else, it errors.
 
-```lua
+```luau
 local density = Lucy.useDensity(app)                     -- "default" | "touch" | "tv"
 local height = Lucy.useMetric(app, "ControlMd")          -- pixels, follows density
 local gap = Lucy.useResponsive(app, { touch = 16, default = 8 })
@@ -153,18 +153,18 @@ register cleanup with `Lucy.onCleanup`.
 
 `Lucy.new` creates an instance. Any property can be a ref, a computed or a getter.
 
-```lua
+```luau
 local count = Lucy.ref(0)
 
 Lucy.new "TextButton" {
-	Size = UDim2.fromOffset(200, 40),
-	Text = function() return `Clicked {count()}` end,
-	Tags = { "card", ["card-active"] = isActive },
-	Attributes = { Health = hp },
-	[Lucy.on "Activated"] = function() count(count() + 1) end,
-	Parent = gui,
+    Size = UDim2.fromOffset(200, 40),
+    Text = function() return `Clicked {count()}` end,
+    Tags = { "card", ["card-active"] = isActive },
+    Attributes = { Health = hp },
+    [Lucy.on "Activated"] = function() count(count() + 1) end,
+    Parent = gui,
 
-	Lucy.new "UICorner" {},
+    Lucy.new "UICorner" {},
 }
 ```
 
@@ -187,19 +187,19 @@ you set one.
 
 ### Conditionals and lists
 
-```lua
+```luau
 Lucy.new "Frame" {
-	Lucy.show(isOpen, function()
-		return Lucy.new "TextLabel" { Text = "Open" }
-	end, function()
-		return Lucy.new "TextLabel" { Text = "Closed" }   -- optional fallback
-	end),
+    Lucy.show(isOpen, function()
+        return Lucy.new "TextLabel" { Text = "Open" }
+    end, function()
+        return Lucy.new "TextLabel" { Text = "Closed" }   -- optional fallback
+    end),
 
-	Lucy.each(items, function(item, index)
-		return Lucy.new "TextLabel" {
-			Text = function() return `{index()}. {item.name}` end,
-		}
-	end, { key = function(item) return item.id end }),
+    Lucy.each(items, function(item, index)
+        return Lucy.new "TextLabel" {
+            Text = function() return `{index()}. {item.name}` end,
+        }
+    end, { key = function(item) return item.id end }),
 }
 ```
 
@@ -213,7 +213,7 @@ Lucy.new "Frame" {
 `Lucy.hydrate` binds an existing instance, so designers can build in Studio and
 you only add behaviour:
 
-```lua
+```luau
 local hud = playerGui.HUD
 Lucy.hydrate(hud.Coins) { Text = function() return tostring(coins()) end }
 Lucy.hydrate(hud.Shop) { [Lucy.on "Activated"] = openShop }
@@ -245,12 +245,12 @@ writable ones both ways: `Lucy.Switch.new({ checked = music })`. See
 
 Springs and tweens are reactive sources too, so you can bind them like anything else.
 
-```lua
+```luau
 local open = Lucy.ref(false)
 local x = Lucy.spring(function() return if open() then 0 else -320 end, 6, 0.8)
 
 Lucy.new "Frame" {
-	Position = function() return UDim2.fromOffset(x(), 0) end,
+    Position = function() return UDim2.fromOffset(x(), 0) end,
 }
 
 local fade = Lucy.tween(target, TweenInfo.new(0.25, Enum.EasingStyle.Quad))

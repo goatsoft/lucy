@@ -4,7 +4,7 @@
 A player's headshot in a circle. Bots and empty slots, which have no Roblox
 account, show the first letters of their name instead.
 
-```lua
+```luau
 Lucy.Avatar.new({
     userId = player.UserId,
     name = player.DisplayName,
@@ -35,7 +35,7 @@ headshot url on its own, and `Lucy.Avatar.initials(name)` the letters.
 
 A roster slot that changes as players and bots come and go:
 
-```lua
+```luau
 local slot = app.state:ref("roster.1") -- { userId = number, name = string }
 
 Lucy.Avatar.new({
@@ -48,7 +48,7 @@ Lucy.Avatar.new({
 
 In a list row:
 
-```lua
+```luau
 Lucy.Item.new({
     title = friend.DisplayName,
     description = `@{friend.Name}`,

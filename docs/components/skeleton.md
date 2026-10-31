@@ -8,7 +8,7 @@ description: A pulsing placeholder while content loads.
 A grey shape that pulses while content loads, in place of the text or picture
 that will be there. The pulse stops while it is hidden and when it is destroyed.
 
-```lua
+```luau
 Lucy.Skeleton.new({ size = UDim2.fromOffset(250, 16), Parent = card })
 ```
 
@@ -26,7 +26,7 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 A placeholder profile card:
 
-```lua
+```luau
 Lucy.Stack.new({
     gap = "Space2",
     children = {
@@ -40,7 +40,7 @@ Lucy.Stack.new({
 
 Show it until data arrives:
 
-```lua
+```luau
 local loading = Lucy.ref(true)
 
 Lucy.Skeleton.new({ visible = loading, Parent = card })

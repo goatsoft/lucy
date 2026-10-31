@@ -4,7 +4,7 @@
 A small ring that turns while something loads: finding a server, saving, or
 waiting on a purchase.
 
-```lua
+```luau
 Lucy.Spinner.new({ size = "sm", Parent = row })
 ```
 
@@ -27,7 +27,7 @@ rules.
 
 A spinner beside a line of text:
 
-```lua
+```luau
 Lucy.Stack.new({
     direction = "horizontal",
     gap = "Space2",
@@ -42,7 +42,7 @@ Lucy.Stack.new({
 
 Shown only while a request is out:
 
-```lua
+```luau
 local saving = Lucy.ref(false)
 
 Lucy.Spinner.new({ visible = saving, Parent = header })
