@@ -25,25 +25,22 @@ return function()
 		expect(area.Instance.ClassName).to.equal("ScrollingFrame")
 		expect(area.Instance:HasTag("ui-scroll-area")).to.equal(true)
 		expect(a.Parent).to.equal(area.content)
-		expect(area.content.Parent).to.equal(area.Instance)
+		expect(area.content:IsDescendantOf(area.Instance)).to.equal(true)
 	end)
 
 	it("fills its parent and scrolls vertically by default", function()
 		local area = ScrollArea.new({ app = app, Parent = gui })
 		expect(area.Instance.Size).to.equal(UDim2.fromScale(1, 1))
 		expect(area.Instance.ScrollingDirection).to.equal(Enum.ScrollingDirection.Y)
-		expect(area.Instance.AutomaticCanvasSize).to.equal(Enum.AutomaticSize.Y)
 		expect(area.content.AutomaticSize).to.equal(Enum.AutomaticSize.Y)
 	end)
 
 	it("scrolls horizontally or both ways", function()
 		local row = ScrollArea.new({ app = app, Parent = gui, direction = "horizontal" })
 		expect(row.Instance.ScrollingDirection).to.equal(Enum.ScrollingDirection.X)
-		expect(row.Instance.AutomaticCanvasSize).to.equal(Enum.AutomaticSize.X)
 		expect(row.content.AutomaticSize).to.equal(Enum.AutomaticSize.X)
 		local both = ScrollArea.new({ app = app, Parent = gui, direction = "both" })
 		expect(both.Instance.ScrollingDirection).to.equal(Enum.ScrollingDirection.XY)
-		expect(both.Instance.AutomaticCanvasSize).to.equal(Enum.AutomaticSize.XY)
 	end)
 
 	it("rejects an unknown direction", function()
@@ -107,6 +104,21 @@ return function()
 		child.Size = UDim2.new(1, 0, 0, 80)
 		Harness.flush()
 		expect(math.abs(frame.AbsoluteSize.Y - area.content.AbsoluteSize.Y) < 1).to.equal(true)
+	end)
+
+	it("lets wrapped text grow past the window, so it scrolls", function()
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.fromScale(1, 0)
+		label.AutomaticSize = Enum.AutomaticSize.Y
+		label.TextWrapped = true
+		label.TextSize = 14
+		label.Text = string.rep("Be kind on the Dance Floor. ", 300)
+		local area = ScrollArea.new({ app = app, Parent = gui, maxHeight = 100, children = { label } })
+		Harness.flush()
+		Harness.flush()
+		local window = area.Instance.AbsoluteWindowSize.Y
+		expect(label.AbsoluteSize.Y > window * 2).to.equal(true)
+		expect(area.Instance.AbsoluteCanvasSize.Y).to.be.near(label.AbsoluteSize.Y, 1)
 	end)
 
 	it("keeps its content clear of the scrollbar once it scrolls", function()

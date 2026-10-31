@@ -69,23 +69,42 @@ type Axis = {
 	scrolling: Enum.ScrollingDirection,
 	automatic: Enum.AutomaticSize,
 	content: UDim2,
+	holder: UDim2,
+	x: boolean,
+	y: boolean,
 }
+
+-- Roblox lets an auto-sized object grow only as far as its nearest fixed-size
+-- ancestor, and inside a ScrollingFrame with an automatic canvas that is the
+-- window: wrapped text could never be taller than what shows. So the content sits
+-- in a holder this long along each scrolling axis, and the canvas follows the
+-- content's measured size instead.
+local REACH = 100000
 
 local DIRECTIONS: { [string]: Axis } = {
 	vertical = {
 		scrolling = Enum.ScrollingDirection.Y,
 		automatic = Enum.AutomaticSize.Y,
 		content = UDim2.fromScale(1, 0),
+		holder = UDim2.new(1, 0, 0, REACH),
+		x = false,
+		y = true,
 	},
 	horizontal = {
 		scrolling = Enum.ScrollingDirection.X,
 		automatic = Enum.AutomaticSize.X,
 		content = UDim2.fromScale(0, 1),
+		holder = UDim2.new(0, REACH, 1, 0),
+		x = true,
+		y = false,
 	},
 	both = {
 		scrolling = Enum.ScrollingDirection.XY,
 		automatic = Enum.AutomaticSize.XY,
 		content = UDim2.fromScale(0, 0),
+		holder = UDim2.fromOffset(REACH, REACH),
+		x = true,
+		y = true,
 	},
 }
 
@@ -197,7 +216,7 @@ local spec: Component.Spec = {
 		end
 
 		local maxHeight = p.maxHeight
-		local measured: Reactive.Ref<Vector2>? = if maxHeight ~= nil then Reactive.ref(Vector2.zero) else nil
+		local measured: Reactive.Ref<Vector2> = Reactive.ref(Vector2.zero)
 
 		-- A vertical area's content is as wide as the window, which narrows by the
 		-- bar's width once it scrolls, so nothing runs under the scrollbar.
@@ -253,7 +272,7 @@ local spec: Component.Spec = {
 
 		local given: UDim2? = p.size
 		local size: any = given or UDim2.fromScale(1, 1)
-		if measured then
+		if maxHeight ~= nil then
 			-- A ScrollingFrame with AutomaticSize ignores a UISizeConstraint, and its
 			-- canvas is never smaller than itself, so measure the content frame.
 			local width = if given then given.X else UDim.new(1, 0)
@@ -333,10 +352,21 @@ local spec: Component.Spec = {
 			end
 		end
 
+		local holder = Element.new("Frame", {
+			Name = "Holder",
+			Size = axis.holder,
+			BackgroundTransparency = 1,
+			Active = false,
+			Selectable = false,
+			content,
+		})
 		local frame = Element.new("ScrollingFrame", {
 			Size = size,
-			CanvasSize = UDim2.fromScale(0, 0),
-			AutomaticCanvasSize = axis.automatic,
+			CanvasSize = function(): UDim2
+				local m, s = measured(), Scroll.scaleOf(content)
+				return UDim2.fromOffset(if axis.x then m.X / s else 0, if axis.y then m.Y / s else 0)
+			end,
+			AutomaticCanvasSize = Enum.AutomaticSize.None,
 			ScrollingDirection = axis.scrolling,
 			VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
 			HorizontalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
@@ -359,7 +389,7 @@ local spec: Component.Spec = {
 			[ON_LEAVE] = function()
 				h._pointer(false)
 			end,
-			content,
+			holder,
 		})
 		for _, fade in fades do
 			fade.Parent = frame
