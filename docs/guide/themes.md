@@ -1,7 +1,7 @@
 ---
 title: Add a theme
 description: Pick your game's colours, let players switch light and dark, make a theme of your own, and style your own UI with the same tokens.
-order: 3
+order: 2
 ---
 
 # Add a theme
