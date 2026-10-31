@@ -67,7 +67,7 @@ app.actions:on("shop", toggleShop)
 
 Lucy.Button.new({
     icon = "lucide:shopping-cart",
-    size = "icon",
+    text = "Shop",
     hint = { keyboard = Enum.KeyCode.B, gamepad = Enum.KeyCode.DPadRight },
     onClick = toggleShop,
     Parent = scene.gui,
@@ -88,7 +88,7 @@ app.scenes:register("Game", {
     build = function(scene)
         Lucy.Button.new({
             icon = "lucide:pause",
-            size = "icon",
+            text = "Pause",
             hint = { keyboard = Enum.KeyCode.Backspace, gamepad = Enum.KeyCode.ButtonB },
             onClick = function()
                 app.scenes:push("Pause")

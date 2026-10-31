@@ -71,6 +71,9 @@ Lucy.Button.new({
 })
 ```
 
+A hint needs text beside it: an icon-only button (`size = "icon"`) is a fixed
+square with no room for the key cap, so give it `text` when it has a hint.
+
 It takes the same fields as [Kbd](kbd.md): `keyboard`, `gamepad` and `touch`,
 each a value, a ref or a getter. The hint only shows the key; binding the key
 to the button's action is up to your game.
