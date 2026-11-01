@@ -180,6 +180,30 @@ return function()
 		expect(loose:get("open")).to.equal(false)
 	end)
 
+	it("takes focus without trapping it when non modal and given defaultFocus", function()
+		local gui = Harness.mount(app)
+		local opener = Instance.new("TextButton")
+		opener.Position = UDim2.fromOffset(0, 400)
+		opener.Parent = gui
+		app.input:setMode("gamepad")
+		app.input:focus(opener)
+		local vote = Dialog.new({
+			app = app,
+			modal = false,
+			scrim = false,
+			actions = { { text = "Skip" }, { text = "Vote" } },
+			defaultFocus = function(d)
+				return d.actions[2]
+			end,
+		})
+		vote:open()
+		expect(app.input:focused()).to.equal(vote.actions[2].Instance)
+		expect(app.state:get("overlay.modal")).to.equal(0)
+		expect(vote.content.SelectionGroup).to.equal(false)
+		vote:close()
+		expect(app.input:focused()).to.equal(opener)
+	end)
+
 	it("stacks a dialog opened later above an earlier one", function()
 		local first = Dialog.new({ app = app, open = true })
 		local second = Dialog.new({ app = app, open = true })

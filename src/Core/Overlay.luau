@@ -16,6 +16,7 @@
 			panelSide = "right",        -- panel: left | right
 			place = nil,                -- (presentation, input) -> Placement?: places the content itself
 			modal = true,               -- false: no focus trap, presses pass through
+			focus = nil,                -- true: a non modal one takes focus too (no trap)
 			scrim = nil,                -- the dim backdrop; defaults to modal and not a popup
 			dismissible = true,         -- back closes it (and outside presses, when modal)
 			onBack = nil,               -- runs on back in place of closing (an alert's cancel)
@@ -35,7 +36,8 @@
 	Every overlay stacks by the order it opened, newest on top, whatever its
 	kind. While open, modal ones are a focus scope whose selection group stops
 	at its edges, and focus returns to the anchor (or whatever had it) when they
-	close. The app publishes overlay.count, overlay.modal and overlay.top.
+	close. A non modal one with focus = true is a focus scope the same way, but
+	the gamepad can still leave it. The app publishes overlay.count, overlay.modal and overlay.top.
 	Placement follows the viewport, the anchor and the content's size while
 	open; the presentation does not change until it opens again.
 
@@ -761,7 +763,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		end
 		return true
 	end)
-	if modal then
+	if modal or options.focus == true then
 		Composables.useFocusScope(app, open, {
 			root = content,
 			defaultFocus = function(): any

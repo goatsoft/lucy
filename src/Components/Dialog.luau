@@ -16,7 +16,8 @@
 			modal = true,             -- false: no focus trap, presses reach what is behind
 			scrim = true,             -- false: no dimmed backdrop
 			showClose = true,
-			defaultFocus = function(dialog) return dialog.actions[1] end, -- or an object or handle
+			defaultFocus = function(dialog) return dialog.actions[1] end, -- or an object or handle;
+			                          -- a non modal dialog takes focus only when this is given
 			size = "md",              -- sm | md | lg | xl | full: how wide it gets
 			maxWidth = nil,           -- pixels, instead of size
 			maxHeight = nil,          -- pixels (a number, ref or getter); the body scrolls past it
@@ -38,7 +39,8 @@
 	the primary action is selected when navigating), registers a back handler, and
 	its content is a SelectionGroup so the gamepad cannot wander out. Focus goes
 	back to whatever had it when the dialog closes, or the control nearest it
-	when that can't take focus any more.
+	when that can't take focus any more. A non modal dialog given defaultFocus takes
+	focus and gives it back the same way, but traps nothing.
 
 	State keys: open, title, description.
 ]]
@@ -291,6 +293,8 @@ function Dialog.new(props: { [string]: any }?)
 				content = content,
 				presentation = "center",
 				modal = modal,
+				-- A non modal dialog takes focus only when told what to focus
+				focus = p.defaultFocus ~= nil,
 				scrim = if p.scrim == false then false else nil,
 				dismissible = dismissible,
 				onBack = p._onBack,

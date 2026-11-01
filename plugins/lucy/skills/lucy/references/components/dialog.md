@@ -33,7 +33,7 @@ quit:open()
 | `modal` | boolean | `true` | | `false` lets clicks reach what is behind it and lets focus move out of it |
 | `scrim` | boolean | `true` | | `false` drops the dimmed backdrop. The backdrop fades in and out |
 | `showClose` | boolean | `true` | | Shows the close button in the corner |
-| `defaultFocus` | object, handle or function | | | What is selected when it opens on a keyboard or gamepad. A function is called with the dialog |
+| `defaultFocus` | object, handle or function | | | What is selected when it opens on a keyboard or gamepad. A function is called with the dialog. A non modal dialog takes focus only when this is given |
 | `size` | string | `"md"` | | How wide it gets: `sm` (384), `md` (448), `lg` (512), `xl` (640) or `full` |
 | `maxWidth` | number | | | The widest it gets in pixels, instead of `size` |
 | `maxHeight` | number, ref or getter | | | The tallest it gets in pixels. The body scrolls past it |
@@ -55,7 +55,9 @@ back to whatever had it before. If that can't take focus any more, such as a
 Buy button that disabled itself, the control nearest it is selected instead.
 A dialog with
 `modal = false` is still on top, but the rest of the screen keeps working,
-and B or Backspace still closes it.
+and B or Backspace still closes it. It takes no focus unless you pass
+`defaultFocus`: then it selects that when it opens on a keyboard or gamepad
+and gives focus back when it closes, but the gamepad can still move out of it.
 
 ### Actions
 
