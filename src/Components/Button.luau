@@ -264,7 +264,7 @@ for _, rule in iconRules do
 end
 
 -- The icon's size for each button size.
-Button.iconSizes = { sm = "sm", md = "sm", lg = "md", icon = "md" }
+Button.iconSizes = { sm = "sm", md = "sm", lg = "md", xl = "xl", icon = "md" }
 
 local function check(list: { string }, value: string, what: string)
 	if not table.find(list, value) then

@@ -249,6 +249,16 @@ return function()
 			expect(button.icon.destroyed).to.equal(true)
 		end)
 
+		it("sizes its icon with the button", function()
+			local button =
+				Button.new({ app = app, Parent = gui, text = "Go", icon = "lucy:check", size = "sm" })
+			for size, expected in { sm = "sm", md = "sm", lg = "md", xl = "xl", icon = "md" } do
+				button:set("size", size)
+				expect(button.icon:get("size")).to.equal(expected)
+			end
+			button:destroy()
+		end)
+
 		it("shows only the icon with no text", function()
 			local button = Button.new({ app = app, Parent = gui, size = "icon", icon = "lucy:check" })
 			expect(button:get("text")).to.equal("")

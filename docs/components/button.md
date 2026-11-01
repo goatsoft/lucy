@@ -57,7 +57,9 @@ A disabled button ignores clicks, and a gamepad skips over it. Clicks within
 
 ## Icons
 
-`icon` draws an icon before the text, coloured like the text in every variant.
+`icon` draws an icon before the text, coloured like the text in every variant,
+and sized with the button: `sm` for `sm` and `md` buttons, `md` for `lg` and
+`icon`, `xl` for `xl`.
 With no text, the icon shows alone; use `size = "icon"` for a square button.
 
 <!-- preview -->

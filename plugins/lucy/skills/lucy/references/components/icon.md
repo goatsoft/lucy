@@ -53,7 +53,7 @@ with every field of the map.
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
 | `icon` | string or number | `""` | yes | A registered name, an asset id or a url |
-| `size` | string or number | `"md"` | yes | `sm` (16 pixels), `md` (20), `lg` (24), or a number of pixels. A quarter larger on TV |
+| `size` | string or number | `"md"` | yes | `sm` (16 pixels), `md` (20), `lg` (24), `xl` (28), or a number of pixels. A quarter larger on TV |
 | `variant` | string | `"default"` | yes | The colour: `default` (the text colour), `muted`, `primary`, `destructive`, `success`, `warning` or `info` |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 

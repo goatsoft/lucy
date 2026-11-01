@@ -5,7 +5,7 @@
 		Lucy.Icon.register(require(ReplicatedStorage.Shared.Icons)) -- once, at start
 		Icon.new({
 			icon = "lucide:heart",    -- a registered name, an asset id or a url
-			size = "md",              -- sm | md | lg, or pixels; larger on TV
+			size = "md",              -- sm | md | lg | xl, or pixels; larger on TV
 			variant = "default",      -- default | muted | primary | destructive | success | warning | info
 			Parent = button,
 		})
@@ -34,7 +34,7 @@ local Image = require(script.Parent.Image)
 local Icon = {}
 
 Icon.variants = { "default", "muted", "primary", "destructive", "success", "warning", "info" }
-Icon.sizes = { sm = 16, md = 20, lg = 24 }
+Icon.sizes = { sm = 16, md = 20, lg = 24, xl = 28 }
 -- Sizes grow with density, like the type scale.
 Icon.scale = { default = 1, touch = 1, tv = 1.25 }
 
