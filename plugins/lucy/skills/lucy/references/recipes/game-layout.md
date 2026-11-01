@@ -15,6 +15,7 @@ src/
     App/
       init.luau            makes the one App and returns it
       Theme.luau           the game's themes
+    Utils/                 plain functions: no state, no UI of their own
     Features/              the game on this client, as app state
     Composables/           useX functions shared by scenes, panels and boards
     Components/            the game's own components
@@ -34,6 +35,7 @@ On the client:
 | Folder | Holds |
 |---|---|
 | `App` | The App, its themes, and the action sets more than one scene uses |
+| `Utils` | Plain functions that keep no state and build no UI: formatting a time, a request whose answer becomes a toast. One function or a small table of them per file |
 | `Features` | Game logic on the client: keys in `app.state`, remotes, server requests, timers. A feature makes no instances |
 | `Composables` | `useX` functions that turn the store and features into what UI shows (see [Share logic with composables](../guide/composables.md)) |
 | `Components` | The game's own components (see [Build a component](../guide/components.md)) and small builders used in more than one place |
@@ -108,6 +110,20 @@ themes.club = table.clone(themes.dark)
 themes.club.Background = Tokens.oklch(0.16, 0.04, 270)
 
 return themes
+```
+
+## A util
+
+A util takes what it needs and gives back a value, or does one thing and
+forgets it. If it starts to keep state, it is a feature; if it builds UI, it is
+a component.
+
+```luau [src/client/Utils/formatTime.luau]
+-- 75 -> "1:15"
+return function(seconds: number): string
+    local whole = math.max(0, math.floor(seconds))
+    return string.format("%d:%02d", whole // 60, whole % 60)
+end
 ```
 
 ## A feature

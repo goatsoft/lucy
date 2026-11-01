@@ -177,7 +177,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [The store](references/reference/store.md): How app.state works, what it holds, every method, and the rules for reading, writing and following it.
 - [Theming](references/reference/theming.md): Every theme option, colour token, primitive and density value, the Tokens helpers, app.theme's methods and how style rules work.
 - [Known issues](references/known-issues.md): Problems Lucy cannot fix on its own, what you will see, why, and what to do instead.
-- [Lay out a game](references/recipes/game-layout.md): Where each part of a Lucy game goes: one App, features, composables, components, world UI, panels and scenes on the client; services and requests on the server.
+- [Lay out a game](references/recipes/game-layout.md): Where each part of a Lucy game goes: one App, utils, features, composables, components, world UI, panels and scenes on the client; services and requests on the server.
 - [HUD](references/recipes/hud.md): A dance floor heads-up display with a combo badge, coins that pop when they change, a hype meter that fills with the crowd, and a toast for combo milestones.
 - [Recipes](references/recipes/index.md): Where each part of a game goes, then whole screens from Club Lucy you can copy into a game and change: audio settings that save, a pause menu, a dance floor HUD and an emote shop.
 - [Pause menu](references/recipes/pause-menu.md): A pause menu that opens on B or Backspace and from a button, with a dimmed backdrop, options on top, a confirm before leaving, and gameplay keys off while it is open.
