@@ -16,6 +16,7 @@
 			align = "start",           -- list: start | center | end
 			width = 220,               -- list: at least this wide (and the anchor's width)
 			radius = nil,              -- radial and arc: the circle's radius, by item count if left out
+			shape = "round",           -- radial and arc buttons: round | squircle | square
 			onSelect = function(value, menu) end,
 		})
 		clubButton.Activated:Connect(function() menu:toggle() end)
@@ -34,7 +35,8 @@
 	  arc     a fan of round buttons from the anchor, opening toward the middle
 	          of the screen, so a corner button fans inward
 	Ring and arc buttons show the item's icon (or its initials) with its label
-	under it.
+	under it. shape (a value or a responsive value) picks their outline: round,
+	squircle (a rounded square) or square (slightly rounded corners).
 
 	It opens on the app's overlay layer as a modal: keyboard and gamepad focus
 	stays inside, back and a press outside close it, and focus returns to the
@@ -63,6 +65,7 @@ local ScrollArea = require(script.Parent.ScrollArea)
 local Menu = {}
 
 Menu.variants = { "list", "radial", "arc" }
+Menu.shapes = { "round", "squircle", "square" }
 
 -- A round button's size, the room under it for its label, and an arc's spacing in degrees.
 Menu.sliceSize = 56
@@ -141,9 +144,12 @@ function Menu.pick(direction: Vector2, angles: { number }): number?
 	return best
 end
 
-local function check(variant: any)
-	if not table.find(Menu.variants, variant) then
-		error(`[Lucy] unknown Menu variant "{tostring(variant)}" ({table.concat(Menu.variants, ", ")})`, 0)
+local function check(what: string, allowed: { string }, value: any)
+	local values = if Responsive.isResponsive(value) then value else { value }
+	for _, one in values do
+		if not table.find(allowed, one) then
+			error(`[Lucy] unknown Menu {what} "{tostring(one)}" ({table.concat(allowed, ", ")})`, 0)
+		end
 	end
 end
 
@@ -269,6 +275,16 @@ Menu.rules = {
 	},
 	{ selector = ".ui-menu-slice::UICorner", priority = 0, properties = { CornerRadius = UDim.new(0.5, 0) } },
 	{
+		selector = ".ui-menu-slice.ui-menu-squircle::UICorner",
+		priority = 5,
+		properties = { CornerRadius = UDim.new(0.3, 0) },
+	},
+	{
+		selector = ".ui-menu-slice.ui-menu-square::UICorner",
+		priority = 5,
+		properties = { CornerRadius = "$RadiusMd" },
+	},
+	{
 		selector = ".ui-menu-slice::UIStroke",
 		priority = 0,
 		properties = {
@@ -322,6 +338,8 @@ local spec: Component.Spec = {
 		local count = #entries
 		local variant = Composables.useResponsive(app, p.variant or "list") :: () -> string
 		h.variant = variant
+		local shape = Composables.useResponsive(app, p.shape or "round") :: () -> string
+		h.shape = shape
 		local function isList(): boolean
 			return variant() == "list"
 		end
@@ -471,7 +489,16 @@ local spec: Component.Spec = {
 				Visible = isRing,
 				Interactable = usable,
 				Selectable = usable,
-				Tags = { "ui-menu-slice" :: any, ["ui-disabled"] = off },
+				Tags = {
+					"ui-menu-slice" :: any,
+					["ui-disabled"] = off,
+					["ui-menu-squircle"] = function(): boolean
+						return shape() == "squircle"
+					end,
+					["ui-menu-square"] = function(): boolean
+						return shape() == "square"
+					end,
+				},
 				[ACTIVATED] = function()
 					h:select(item.value)
 				end,
@@ -603,14 +630,8 @@ local spec: Component.Spec = {
 
 function Menu.new(props: { [string]: any }?)
 	local given: { [string]: any } = table.clone(props or {})
-	local variant = given.variant or "list"
-	if Responsive.isResponsive(variant) then
-		for _, value in variant do
-			check(value)
-		end
-	else
-		check(variant)
-	end
+	check("variant", Menu.variants, given.variant or "list")
+	check("shape", Menu.shapes, given.shape or "round")
 	given._menuEntries = normalize(given.items)
 	local handle = Component.mount(spec, given)
 	function handle.open(h)

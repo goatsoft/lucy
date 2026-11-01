@@ -55,6 +55,7 @@ end)
 | `align` | string | `"start"` | | List: `start`, `center` or `end`: how the list lines up with the anchor |
 | `width` | number | `220` | | List: at least this wide (and at least the anchor's width when above or below it) |
 | `radius` | number | by item count | | Ring and fan: the distance from the centre to each button |
+| `shape` | string or responsive | `"round"` | | Ring and fan buttons: `round`, `squircle` or `square`, see [Button shapes](#button-shapes) |
 | `onSelect` | function | | | Called with `(value, handle)` when the player picks an action |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
@@ -102,10 +103,10 @@ Lucy.Menu.new({
 })
 ```
 
-### A shape for each input
+### A variant for each input
 
 `variant` takes a [responsive value](index.md#responsive-values), so one menu
-can be a different shape for each input, and changes shape when the player
+can be a different variant for each input, and changes shape when the player
 picks up a controller or puts it down:
 
 ```luau
@@ -113,6 +114,37 @@ Lucy.Menu.new({
     items = actions,
     variant = { gamepad = "radial", touch = "arc", default = "list" },
     anchor = clubButton,
+})
+```
+
+### Button shapes
+
+`shape` sets the outline of ring and fan buttons, to match the rest of a
+game's buttons:
+
+- **`round`:** circles (the default).
+- **`squircle`:** rounded squares, softer than a square and firmer than a
+  circle.
+- **`square`:** squares with the theme's medium corner radius.
+
+Like `variant`, it takes a responsive value.
+
+<!-- preview solo -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-menu-3-light.webp" alt="Menu example" loading="lazy"><img class="example-dark" src="/images/examples/components-menu-3-dark.webp" alt="Menu example" loading="lazy"></figure>
+
+```luau
+Lucy.Menu.new({
+    open = true,
+    variant = "radial",
+    shape = "squircle",
+    items = {
+        { value = "join", label = "Join show", icon = "lucy:plus" },
+        { value = "dj", label = "DJ request" },
+        { value = "lab", label = "The Lab" },
+        { value = "dances", label = "Dances" },
+        { value = "exit", label = "Exit", icon = "lucy:close" },
+    },
+    Parent = parent,
 })
 ```
 
@@ -149,6 +181,7 @@ When it closes, the anchor is selected again on a controller.
 | `menu:toggle()` | Opens it if closed, closes it if open |
 | `menu:select(value)` | Picks `value` as if the player had, and closes it |
 | `menu.variant()` | The variant in use: `list`, `radial` or `arc` |
+| `menu.shape()` | The button shape in use: `round`, `squircle` or `square` |
 | `menu.presentation()` | For a list, `"popup"` or `"drawer"`, for this opening |
 
 It reports `open` and `close`, and `select` with the value picked, for

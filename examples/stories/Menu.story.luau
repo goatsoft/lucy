@@ -6,6 +6,7 @@ return {
 	controls = {
 		input = { "mouse", "gamepad", "touch" },
 		variant = { "by input", "list", "radial", "arc" },
+		shape = { "round", "squircle", "square" },
 	},
 	render = function(ctx)
 		local Lucy = ctx.Lucy
@@ -31,13 +32,15 @@ return {
 			return picked
 		end
 
-		-- A Menu's variant is fixed when it is made, so the story makes one per choice.
+		-- A Menu's variant and shape are fixed when it is made, so the story makes one per choice.
 		local holder = Lucy.new("Frame")({
 			Size = UDim2.fromScale(1, 1),
 			BackgroundTransparency = 1,
 		})
 		local current = nil
-		Lucy.watch(ctx.controls.variant, function()
+		Lucy.watch(function()
+			return `{ctx.controls.variant()}/{ctx.controls.shape()}`
+		end, function()
 			if current then
 				current.menu:destroy()
 				current.button:destroy()
@@ -52,6 +55,7 @@ return {
 			local menu = Lucy.Menu.new({
 				items = ITEMS,
 				variant = variant(),
+				shape = ctx.controls.shape(),
 				anchor = button,
 				onSelect = function(value)
 					ctx.app.toast(`Picked {value}`)
