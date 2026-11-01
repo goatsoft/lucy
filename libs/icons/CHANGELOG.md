@@ -1,5 +1,11 @@
 # @goatsoft/lucy-icons
 
+## 0.3.0
+
+### Minor Changes
+
+- 9005938: A `name` in `lucy-icons.json` names each uploaded sheet: `{hash}` becomes the first 8 characters of the sheet's hash (`lucy-icons-{hash}` by default).
+
 ## 0.2.0
 
 ### Minor Changes
