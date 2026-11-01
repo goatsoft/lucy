@@ -47,8 +47,8 @@
 	Events: "open", "close" and "select" with the value, for Lucy.useUiSound.
 	menu.items holds one list row per item, menu.slices one round button per
 	item, in order; menu.variant() is the variant in use.
-	Menu.ring, Menu.arc, Menu.toward, Menu.fit, Menu.around, Menu.angles and Menu.pick are
-	the geometry it uses.
+	Menu.ring, Menu.arc, Menu.arcStep, Menu.toward, Menu.fit, Menu.around, Menu.nudge,
+	Menu.angles and Menu.pick are the geometry it uses.
 ]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -72,6 +72,8 @@ Menu.shapes = { "round", "squircle", "square" }
 Menu.sliceSize = 56
 Menu.captionRoom = 26
 Menu.arcSpacing = 34
+-- An arc never spreads wider than this, in degrees: more items get a wider radius instead.
+Menu.arcSpread = 120
 -- How far the stick must be pushed before it points at an item.
 Menu.deadzone = 0.5
 
@@ -97,6 +99,45 @@ function Menu.arc(count: number, radius: number, direction: number, spacing: num
 		points[i] = Vector2.new(math.cos(angle), math.sin(angle)) * radius
 	end
 	return points
+end
+
+-- The degrees between an arc's neighbours: arcSpacing, closer when that would spread the arc
+-- wider than arcSpread.
+function Menu.arcStep(count: number): number
+	if count < 2 then
+		return Menu.arcSpacing
+	end
+	return math.min(Menu.arcSpacing, Menu.arcSpread / (count - 1))
+end
+
+-- How far to move `center` so every point around it (each `size` around, its label under it)
+-- is `margin` inside the screen.
+function Menu.nudge(
+	center: Vector2,
+	points: { Vector2 },
+	size: number,
+	below: number,
+	view: Vector2,
+	margin: number
+): Vector2
+	if #points == 0 then
+		return Vector2.zero
+	end
+	local low, high = Vector2.new(math.huge, math.huge), Vector2.new(-math.huge, -math.huge)
+	for _, point in points do
+		local at = center + point
+		low = low:Min(at - Vector2.new(size / 2, size / 2))
+		high = high:Max(at + Vector2.new(size / 2, size / 2 + below))
+	end
+	local function axis(lowValue: number, highValue: number, limit: number): number
+		if lowValue < margin then
+			return margin - lowValue
+		elseif highValue > limit - margin then
+			return math.max(margin - lowValue, limit - margin - highValue)
+		end
+		return 0
+	end
+	return Vector2.new(axis(low.X, high.X, view.X), axis(low.Y, high.Y, view.Y))
 end
 
 -- The angle from `from` toward the middle of a `view`-sized screen (up when already there).
@@ -377,7 +418,7 @@ local spec: Component.Spec = {
 			end
 			local gap = Menu.sliceSize + Menu.captionRoom + 8
 			if variant() == "arc" then
-				return math.max(110, math.ceil(gap / 2 / math.sin(math.rad(Menu.arcSpacing / 2))))
+				return math.max(110, math.ceil(gap / 2 / math.sin(math.rad(Menu.arcStep(count) / 2))))
 			end
 			return math.max(80, math.ceil(gap / 2 / math.sin(math.pi / math.max(count, 2))))
 		end
@@ -598,7 +639,9 @@ local spec: Component.Spec = {
 						then Menu.around(center, anchor.size, extent(), view, Overlay.margin)
 						else Menu.fit(center, extent(), view, Overlay.margin)
 				else
-					points(Menu.arc(count, r, Menu.toward(center, view), Menu.arcSpacing))
+					local fan = Menu.arc(count, r, Menu.toward(center, view), Menu.arcStep(count))
+					points(fan)
+					center += Menu.nudge(center, fan, Menu.sliceSize, Menu.captionRoom, view, Overlay.margin)
 				end
 				return {
 					anchorPoint = Vector2.new(0.5, 0.5),

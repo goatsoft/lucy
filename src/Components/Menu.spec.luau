@@ -44,6 +44,23 @@ return function()
 			expect(Menu.fit(Vector2.new(400, 300), 100, view, 8)).to.equal(Vector2.new(400, 300))
 		end)
 
+		it("spreads a long arc no wider than arcSpread", function()
+			expect(Menu.arcStep(3)).to.equal(Menu.arcSpacing)
+			expect(Menu.arcStep(7)).to.be.near(Menu.arcSpread / 6, 0.001)
+			expect(Menu.arcStep(1)).to.equal(Menu.arcSpacing)
+		end)
+
+		it("nudges points that spill off the screen back on, and leaves the rest", function()
+			local view = Vector2.new(800, 600)
+			local points = { Vector2.new(-50, 0), Vector2.new(50, 40) }
+			expect(Menu.nudge(Vector2.new(400, 300), points, 20, 10, view, 8)).to.equal(Vector2.zero)
+			-- the lower point's label would end at 590 + 10 + 10 = 610
+			local moved = Menu.nudge(Vector2.new(400, 550), points, 20, 10, view, 8)
+			expect(moved).to.equal(Vector2.new(0, 592 - 610))
+			local left = Menu.nudge(Vector2.new(20, 300), points, 20, 10, view, 8)
+			expect(left).to.equal(Vector2.new(8 - (20 - 50 - 10), 0))
+		end)
+
 		it("opens a ring around an anchor that has room, and clear of one by the edge", function()
 			local view = Vector2.new(800, 600)
 			local size = Vector2.new(100, 40)

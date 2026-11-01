@@ -83,6 +83,8 @@ An item is a value, shown as its text, or a table with `value`, and optionally:
   points at a button, and A picks it.
 - **`arc`:** a fan of round buttons from the anchor, opening toward the middle
   of the screen. A button in a corner fans inward; one in a top bar fans down.
+  A fan spreads no wider than 120 degrees (more items make it wider instead),
+  and moves in when a button would be off the screen.
 
 Ring and fan buttons show their label under them.
 
