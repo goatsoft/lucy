@@ -5,7 +5,8 @@
 		Badge.new({
 			text = "New",
 			variant = "default",   -- default | secondary | destructive | outline
-			shape = "rounded",     -- rounded | square (only slightly rounded: a tag or a label)
+			shape = "rounded",     -- rounded | square (only slightly rounded, $RadiusXs, and a
+			                       -- tighter fit: a tag or a label)
 		})
 
 	State keys: text, variant, shape, visible.
@@ -32,11 +33,16 @@ local rules: { Component.Rule } = {
 		},
 	},
 	{ selector = ".ui-badge::UICorner", priority = 0, properties = { CornerRadius = "$RadiusMd" } },
-	-- square: the smallest radius, for tags and labels that should not read as pills
+	-- square: the smallest radius and a tighter fit, for tags and labels that should not read as pills
 	{
 		selector = ".ui-badge-shape-square::UICorner",
 		priority = 5,
-		properties = { CornerRadius = "$RadiusSm" },
+		properties = { CornerRadius = "$RadiusXs" },
+	},
+	{
+		selector = ".ui-badge-shape-square::UIPadding",
+		priority = 5,
+		properties = { PaddingLeft = "$Space1", PaddingRight = "$Space1" },
 	},
 	{
 		selector = ".ui-badge::UIPadding",

@@ -82,6 +82,7 @@ local function buildPrimitives()
 		Black = Color3.new(0, 0, 0),
 
 		-- Radius (UICorner.CornerRadius); base radius 10px
+		RadiusXs = UDim.new(0, 3),
 		RadiusSm = UDim.new(0, 6),
 		RadiusMd = UDim.new(0, 8),
 		RadiusLg = UDim.new(0, 10),

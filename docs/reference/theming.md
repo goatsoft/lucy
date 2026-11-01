@@ -96,7 +96,7 @@ The same in every theme.
 |---|---|
 | `<Hue><Shade>` | every palette colour, such as `Violet500` or `Zinc950`; shades 50, 100, 200 to 900, 950 |
 | `White`, `Black` | |
-| `RadiusSm`, `RadiusMd`, `RadiusLg`, `RadiusXl`, `RadiusFull` | 6, 8, 10, 14 px, and fully round |
+| `RadiusXs`, `RadiusSm`, `RadiusMd`, `RadiusLg`, `RadiusXl`, `RadiusFull` | 3, 6, 8, 10, 14 px, and fully round |
 | `Space0` to `Space6`, `Space8` | 0 to 24 px in steps of 4, and 32 px |
 | `FontSans`, `FontSansMedium`, `FontSansSemibold`, `FontSansBold` | Nunito, for text |
 | `FontDisplay` | Fredoka, for headings |

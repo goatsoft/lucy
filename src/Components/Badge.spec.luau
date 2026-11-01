@@ -67,7 +67,7 @@ return function()
 				radius = rule.properties.CornerRadius
 			end
 		end
-		expect(radius).to.equal("$RadiusSm")
+		expect(radius).to.equal("$RadiusXs")
 		square:set("shape", "rounded")
 		expect(square.Instance:HasTag("ui-badge-shape-square")).to.equal(false)
 	end)
