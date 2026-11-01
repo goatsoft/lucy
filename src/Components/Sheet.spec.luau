@@ -132,6 +132,40 @@ return function()
 		expect(app.input:focused()).to.equal(row)
 	end)
 
+	it("takes defaultFocus, called with the sheet", function()
+		app.input:setMode("gamepad")
+		local first, second = button("First"), button("Second")
+		local seen = nil
+		local sheet = Sheet.new({
+			app = app,
+			children = { first, second },
+			defaultFocus = function(s)
+				seen = s
+				return second
+			end,
+		})
+		sheet:open()
+		expect(seen).to.equal(sheet)
+		expect(app.input:focused()).to.equal(second)
+	end)
+
+	it("takes focus without trapping it when non modal and given defaultFocus", function()
+		app.input:setMode("gamepad")
+		local row = button("Row")
+		local sheet = Sheet.new({
+			app = app,
+			modal = false,
+			children = { row },
+			defaultFocus = function()
+				return row
+			end,
+		})
+		sheet:open()
+		expect(app.input:focused()).to.equal(row)
+		expect(app.state:get("overlay.modal")).to.equal(0)
+		expect(sheet.content.SelectionGroup).to.equal(false)
+	end)
+
 	it("reports open changes and emits open and close", function()
 		local changes = {}
 		local sheet = Sheet.new({

@@ -19,6 +19,9 @@
 			modal = true,             -- false: no focus trap, presses reach what is behind
 			scrim = true,             -- false: no dimmed backdrop
 			showClose = true,
+			defaultFocus = nil,       -- what keyboard and gamepad select first (an object, handle or
+			                          -- function called with the sheet); else the first thing in the
+			                          -- body. A non modal sheet takes focus only when this is given
 			onOpenChange = function(open, sheet) end,
 		})
 		settings:open()  settings:close()  settings:toggle()
@@ -333,6 +336,8 @@ local spec: Component.Spec = {
 			panelSide = p.side,
 			width = p.width,
 			modal = modal,
+			-- A non modal sheet takes focus only when told what to focus
+			focus = p.defaultFocus ~= nil,
 			scrim = if p.scrim == false then false else nil,
 			dismissible = dismissible,
 			closeOnOutside = closeOnOverlay,
@@ -341,6 +346,13 @@ local spec: Component.Spec = {
 			name = "Sheet",
 			tags = { "ui-sheet" },
 			defaultFocus = function()
+				local chosen = p.defaultFocus
+				if type(chosen) == "function" then
+					chosen = chosen(h)
+				end
+				if chosen ~= nil then
+					return chosen
+				end
 				local first = Overlay.firstSelectable(body.content)
 				if first then
 					return first
