@@ -64,6 +64,10 @@ local ScrollArea = {}
 
 -- How far an edge fade reaches into the area, in px.
 ScrollArea.fadeSize = 16
+-- How far an edge fade reaches past its edge, in px, held fully opaque. Positions
+-- under a UI scale land on fractions of a pixel; without this the fade can stop a
+-- pixel short of the edge and leave a line of unfaded content showing under it.
+ScrollArea.fadeOverlap = 2
 
 local OUT_SIZE = Element.out("AbsoluteSize")
 local OUT_CANVAS = Element.out("AbsoluteCanvasSize")
@@ -311,6 +315,14 @@ local spec: Component.Spec = {
 		h.fades = fades
 		if fadeMode == true then
 			local reach = ScrollArea.fadeSize
+			local overlap = ScrollArea.fadeOverlap
+			-- Opaque over the overlap (the outer end), then fading in over the reach
+			local opaque = overlap / (reach + overlap)
+			local ramp = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(opaque, 0),
+				NumberSequenceKeypoint.new(1, 1),
+			})
 			local function scale(): number
 				return Scroll.scaleOf(content)
 			end
@@ -333,17 +345,17 @@ local spec: Component.Spec = {
 					Tags = { "ui-scroll-fade" },
 					Element.new("UIGradient", {
 						Rotation = rotation,
-						Transparency = NumberSequence.new(0, 1),
+						Transparency = ramp,
 					}),
 				})
 			end
 			if key ~= "horizontal" then
 				local function across(): UDim2
-					return UDim2.fromOffset(window().X / scale(), reach)
+					return UDim2.fromOffset(window().X / scale(), reach + overlap)
 				end
 				edge("top", 90, across, function()
 					local s = scale()
-					return UDim2.fromOffset(position().X / s, position().Y / s)
+					return UDim2.fromOffset(position().X / s, position().Y / s - overlap)
 				end, function()
 					return position().Y > 0.5
 				end)
@@ -356,11 +368,11 @@ local spec: Component.Spec = {
 			end
 			if key ~= "vertical" then
 				local function down(): UDim2
-					return UDim2.fromOffset(reach, window().Y / scale())
+					return UDim2.fromOffset(reach + overlap, window().Y / scale())
 				end
 				edge("left", 0, down, function()
 					local s = scale()
-					return UDim2.fromOffset(position().X / s, position().Y / s)
+					return UDim2.fromOffset(position().X / s - overlap, position().Y / s)
 				end, function()
 					return position().X > 0.5
 				end)

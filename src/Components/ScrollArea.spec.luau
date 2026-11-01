@@ -159,15 +159,45 @@ return function()
 			Harness.flush()
 			expect(top.Visible).to.equal(true)
 			expect(bottom.Visible).to.equal(true)
-			expect(math.abs(top.AbsolutePosition.Y - frame.AbsolutePosition.Y) < 1).to.equal(true)
+			-- Each fade covers its edge (reaching a little past it) and stays near it
+			local topGap = frame.AbsolutePosition.Y - top.AbsolutePosition.Y
+			expect(topGap >= 0 and topGap < 4).to.equal(true)
 			local windowBottom = frame.AbsolutePosition.Y + frame.AbsoluteWindowSize.Y
-			expect(math.abs(bottom.AbsolutePosition.Y + bottom.AbsoluteSize.Y - windowBottom) < 1).to.equal(
-				true
-			)
+			local bottomGap = bottom.AbsolutePosition.Y + bottom.AbsoluteSize.Y - windowBottom
+			expect(bottomGap >= 0 and bottomGap < 4).to.equal(true)
 			frame.CanvasPosition = Vector2.new(0, 10000)
 			Harness.flush()
 			expect(top.Visible).to.equal(true)
 			expect(bottom.Visible).to.equal(false)
+		end)
+
+		it("covers its edge with no gap at a fractional UI scale, opaque at the edge", function()
+			local scaled = Instance.new("Frame")
+			scaled.Size = UDim2.fromOffset(400, 400)
+			scaled.BackgroundTransparency = 1
+			scaled.Parent = gui
+			local uiScale = Instance.new("UIScale")
+			uiScale.Scale = 0.8333
+			uiScale.Parent = scaled
+			local area = ScrollArea.new({
+				app = app,
+				Parent = scaled,
+				size = UDim2.fromOffset(237, 151),
+				children = { block(997) },
+			})
+			area.Instance.CanvasPosition = Vector2.new(0, 37)
+			Harness.flush()
+			local frame, top, bottom = area.Instance, area.fades.top, area.fades.bottom
+			expect(top.AbsolutePosition.Y <= frame.AbsolutePosition.Y).to.equal(true)
+			local windowBottom = frame.AbsolutePosition.Y + frame.AbsoluteWindowSize.Y
+			expect(bottom.AbsolutePosition.Y + bottom.AbsoluteSize.Y >= windowBottom).to.equal(true)
+			-- Fully opaque over the part past the edge and at the edge itself
+			for _, fade in { top, bottom } do
+				local keys = (fade:FindFirstChildOfClass("UIGradient") :: UIGradient).Transparency.Keypoints
+				expect(keys[1].Value).to.equal(0)
+				expect(keys[2].Value).to.equal(0)
+				expect(keys[2].Time > 0).to.equal(true)
+			end
 		end)
 
 		it("shows none when nothing scrolls, and none with fade = false", function()
