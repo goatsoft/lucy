@@ -150,8 +150,8 @@ return function()
 	it("keeps the header out of the scrolling body, capped by maxHeight", function()
 		local t = make({ rows = players(40), maxHeight = 200 })
 		task.wait(0.3)
-		expect(t.header:IsDescendantOf(t.body.Instance)).to.equal(false)
-		local body = t.body.Instance
+		expect(t.header:IsDescendantOf(t.body.frame)).to.equal(false)
+		local body = t.body.frame
 		expect(body.AbsoluteCanvasSize.Y > body.AbsoluteSize.Y).to.equal(true)
 		-- The last header cell ends where the last body cell ends, scroll bar or not.
 		local headCell = t.header:FindFirstChild("score", true) :: GuiObject
@@ -174,7 +174,7 @@ return function()
 			expect(t.rowCount() < 40).to.equal(true)
 			expect(t.rowFor(1)).to.be.ok()
 			expect(t.rowFor(500)).to.equal(nil)
-			local body = t.body.Instance
+			local body = t.body.frame
 			local scale = body.AbsoluteCanvasSize.Y / (1000 * 30)
 			expect(math.abs(scale - body.AbsoluteSize.Y / 300) < 0.05).to.equal(true)
 			-- CanvasPosition is in screen pixels, after the portal's UIScale.
@@ -199,7 +199,7 @@ return function()
 			})
 			task.wait(0.2)
 			expect(fired).to.equal(0)
-			local body = t.body.Instance
+			local body = t.body.frame
 			local scale = body.AbsoluteSize.Y / 300
 			body.CanvasPosition = Vector2.new(0, 50 * 30 * scale)
 			task.wait(0.2)

@@ -40,8 +40,11 @@ It also takes the [props every component takes](index.md#using-a-component).
 A spacing value is a token name (`"Space0"` to `"Space6"`, `"Space8"`), a
 number of pixels or a UDim.
 
-`handle.Instance` is the ScrollingFrame (with `fade = "content"`, a
-CanvasGroup around it). `handle.frame` is always the ScrollingFrame, and
+`handle.Instance` is a frame around the ScrollingFrame that also holds the
+edge fades (a CanvasGroup around it with `fade = "content"`, and the
+ScrollingFrame itself with `fade = false`). `handle.frame` is always the
+ScrollingFrame, so read and set scrolling there (`CanvasPosition`,
+`AbsoluteCanvasSize`), and
 `handle.content` is the frame inside it that holds the children. The area lays out nothing itself: put a
 [Stack](stack.md) inside to arrange a list.
 
@@ -71,6 +74,8 @@ moves when it shows.
 While there is more to scroll past an edge, that edge fades into the surface
 behind the area. A control the edge cuts through then reads as going on, not
 as broken. The fades come and go as the player scrolls, and never take clicks.
+They sit over the window rather than inside the scrolling content, so they hold
+still while it moves.
 
 A fade takes the colour of the nearest thing behind the area that has a
 background: a Panel's card, a Select's list, or a frame of your own, however

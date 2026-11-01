@@ -76,7 +76,7 @@ return function()
 				},
 			},
 		})
-		expect(sheet.body.Instance:IsA("ScrollingFrame")).to.equal(true)
+		expect(sheet.body.frame:IsA("ScrollingFrame")).to.equal(true)
 		expect(sheet.body.content:FindFirstChild("Row")).to.be.ok()
 		expect(sheet.footer.Visible).to.equal(true)
 		sheet.actions[2]:click()
@@ -106,13 +106,13 @@ return function()
 		})
 		expect(filters.Parent).to.equal(sheet.headerSlot)
 		expect(picked.Parent).to.equal(sheet.footerSlot)
-		expect(row:IsDescendantOf(sheet.body.Instance)).to.equal(true)
-		expect(filters:IsDescendantOf(sheet.body.Instance)).to.equal(false)
-		expect(picked:IsDescendantOf(sheet.body.Instance)).to.equal(false)
+		expect(row:IsDescendantOf(sheet.body.frame)).to.equal(true)
+		expect(filters:IsDescendantOf(sheet.body.frame)).to.equal(false)
+		expect(picked:IsDescendantOf(sheet.body.frame)).to.equal(false)
 		task.wait(0.2)
 		-- Header under the title, body next, footer slot above the actions.
 		expect(filters.AbsolutePosition.Y > sheet.titleLabel.AbsolutePosition.Y).to.equal(true)
-		expect(sheet.body.Instance.AbsolutePosition.Y >= filters.AbsolutePosition.Y + filters.AbsoluteSize.Y).to.equal(
+		expect(sheet.body.frame.AbsolutePosition.Y >= filters.AbsolutePosition.Y + filters.AbsoluteSize.Y).to.equal(
 			true
 		)
 		expect(picked.AbsolutePosition.Y < sheet.actions[1].Instance.AbsolutePosition.Y).to.equal(true)
@@ -251,7 +251,7 @@ return function()
 		local content = sheet.content
 		local root = sheet.Instance
 		expect(content.AbsoluteSize.Y <= root.AbsoluteSize.Y * 0.86).to.equal(true)
-		expect(sheet.body.Instance.AbsoluteCanvasSize.Y > sheet.body.Instance.AbsoluteSize.Y).to.equal(true)
+		expect(sheet.body.frame.AbsoluteCanvasSize.Y > sheet.body.frame.AbsoluteSize.Y).to.equal(true)
 	end)
 
 	it("leaves room for the bottom safe area as a drawer", function()

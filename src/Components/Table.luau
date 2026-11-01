@@ -455,7 +455,7 @@ local spec: Component.Spec = {
 			children = { inner },
 		})
 		h.body = body
-		local scroller = body.Instance :: ScrollingFrame
+		local scroller = body.frame :: ScrollingFrame
 
 		-- Follow the scroll position and the view's height (side effects of the engine's layout).
 		local function measure()

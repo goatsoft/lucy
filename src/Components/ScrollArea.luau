@@ -15,8 +15,10 @@
 			Parent = frame,
 		})
 
-	handle.Instance is the ScrollingFrame (a CanvasGroup around it with
-	fade = "content"); handle.frame is always the ScrollingFrame, and
+	handle.Instance is a Frame around the ScrollingFrame with fade = true (the
+	default; the fades sit in it, over the window), a CanvasGroup around it with
+	fade = "content", and the ScrollingFrame itself with fade = false.
+	handle.frame is always the ScrollingFrame, and
 	handle.content is the frame inside it that holds the children. It lays out nothing itself: put a Stack inside to
 	arrange a list. maxHeight takes a number, a ref or a getter; with it, the
 	area keeps the width from `size` (or fills the parent) and its height
@@ -39,7 +41,8 @@
 	takes stays put and the content does not move when it shows.
 
 	Each edge with more to scroll past fades into the surface behind it, so a
-	control cut by the edge reads as continuing. The fade takes the colour and
+	control cut by the edge reads as continuing. The fades sit beside the
+	ScrollingFrame, pinned over its window, so they hold still while it scrolls. The fade takes the colour and
 	transparency of the nearest ancestor with a visible background (a Panel's
 	card, a Select's popover, a game's own frame), else $Background, and follows
 	it through theme and transparency changes. handle.fades holds them by side
@@ -308,8 +311,10 @@ local spec: Component.Spec = {
 			end
 		end
 
-		-- Edge fades: children of the ScrollingFrame moved with the canvas, so they
-		-- stay on the window's edges, each shown while there is more past it.
+		-- Edge fades: siblings of the ScrollingFrame in a frame around it, pinned over
+		-- the window's edges, each shown while there is more past it. As children of the
+		-- ScrollingFrame they would have to be moved with the canvas, a frame late, and
+		-- open a gap at the edge while scrolling.
 		local position = Reactive.ref(Vector2.zero)
 		local fades: { [string]: Frame } = {}
 		h.fades = fades
@@ -354,14 +359,12 @@ local spec: Component.Spec = {
 					return UDim2.fromOffset(window().X / scale(), reach + overlap)
 				end
 				edge("top", 90, across, function()
-					local s = scale()
-					return UDim2.fromOffset(position().X / s, position().Y / s - overlap)
+					return UDim2.fromOffset(0, -overlap)
 				end, function()
 					return position().Y > 0.5
 				end)
 				edge("bottom", 270, across, function()
-					local s = scale()
-					return UDim2.fromOffset(position().X / s, (position().Y + window().Y) / s - reach)
+					return UDim2.fromOffset(0, window().Y / scale() - reach)
 				end, function()
 					return position().Y + window().Y < canvas().Y - 0.5
 				end)
@@ -371,14 +374,12 @@ local spec: Component.Spec = {
 					return UDim2.fromOffset(reach + overlap, window().Y / scale())
 				end
 				edge("left", 0, down, function()
-					local s = scale()
-					return UDim2.fromOffset(position().X / s - overlap, position().Y / s)
+					return UDim2.fromOffset(-overlap, 0)
 				end, function()
 					return position().X > 0.5
 				end)
 				edge("right", 180, down, function()
-					local s = scale()
-					return UDim2.fromOffset((position().X + window().X) / s - reach, position().Y / s)
+					return UDim2.fromOffset(window().X / scale() - reach, 0)
 				end, function()
 					return position().X + window().X < canvas().X - 0.5
 				end)
@@ -394,8 +395,9 @@ local spec: Component.Spec = {
 			content,
 		})
 		local grouped = fadeMode == "content"
+		local wrapped = grouped or next(fades) ~= nil
 		local frame = Element.new("ScrollingFrame", {
-			Size = if grouped then UDim2.fromScale(1, 1) else size,
+			Size = if wrapped then UDim2.fromScale(1, 1) else size,
 			CanvasSize = function(): UDim2
 				local m, s = measured(), Scroll.scaleOf(content)
 				return UDim2.fromOffset(if axis.x then m.X / s else 0, if axis.y then m.Y / s else 0)
@@ -407,7 +409,7 @@ local spec: Component.Spec = {
 			Selectable = function(): boolean
 				return not hasSelectable() and overflows()
 			end,
-			Visible = if grouped then true else h:ref("visible"),
+			Visible = if wrapped then true else h:ref("visible"),
 			Tags = { "ui-scroll-area" :: any, ["ui-scroll-bar-visible"] = barVisible },
 			[OUT_CANVAS] = canvas :: any,
 			[OUT_WINDOW] = window :: any,
@@ -425,9 +427,6 @@ local spec: Component.Spec = {
 			end,
 			holder,
 		})
-		for _, fade in fades do
-			fade.Parent = frame
-		end
 		h.frame = frame
 
 		-- Colour fades follow the surface they sit on: its styled colour and
@@ -480,7 +479,22 @@ local spec: Component.Spec = {
 		end
 
 		if not grouped then
-			return frame
+			if not next(fades) then
+				return frame
+			end
+			-- Clipped, so the fades' overlap past the edge never shows
+			local wrap = Element.new("Frame", {
+				Size = size,
+				BackgroundTransparency = 1,
+				ClipsDescendants = true,
+				Visible = h:ref("visible"),
+				Tags = { "ui-scroll-wrap" },
+				frame,
+			})
+			for _, fade in fades do
+				fade.Parent = wrap
+			end
+			return wrap
 		end
 
 		-- fade = "content": the window in a CanvasGroup whose gradient fades the

@@ -346,7 +346,7 @@ return function()
 		it("keeps children in dialog.body", function()
 			local dialog = Dialog.new({ app = app, children = rows(2) })
 			expect(dialog.body:FindFirstChild("Row1")).to.be.ok()
-			expect(dialog.scroll.Instance:IsA("ScrollingFrame")).to.equal(true)
+			expect(dialog.scroll.frame:IsA("ScrollingFrame")).to.equal(true)
 		end)
 
 		it("stops at maxHeight and scrolls the body", function()
@@ -362,7 +362,7 @@ return function()
 			local height = dialog.content.AbsoluteSize.Y / Scroll.scaleOf(dialog.content)
 			expect(height <= 301).to.equal(true)
 			expect(height > 200).to.equal(true)
-			local scroll = dialog.scroll.Instance
+			local scroll = dialog.scroll.frame
 			expect(scroll.AbsoluteCanvasSize.Y > scroll.AbsoluteSize.Y).to.equal(true)
 			expect(dialog.footer.AbsoluteSize.Y > 0).to.equal(true)
 		end)
@@ -389,7 +389,7 @@ return function()
 			expect(picked.Parent).to.equal(dialog.footerSlot)
 			local height = dialog.content.AbsoluteSize.Y / Scroll.scaleOf(dialog.content)
 			expect(height <= 321).to.equal(true)
-			local scroll = dialog.scroll.Instance
+			local scroll = dialog.scroll.frame
 			expect(scroll.AbsoluteCanvasSize.Y > scroll.AbsoluteSize.Y).to.equal(true)
 			expect(filters.AbsolutePosition.Y < scroll.AbsolutePosition.Y).to.equal(true)
 			expect(picked.AbsolutePosition.Y >= scroll.AbsolutePosition.Y + scroll.AbsoluteSize.Y).to.equal(
@@ -413,14 +413,14 @@ return function()
 			task.wait(0.3)
 			local view = dialog.Instance.AbsoluteSize.Y
 			expect(dialog.content.AbsoluteSize.Y <= view).to.equal(true)
-			local scroll = dialog.scroll.Instance
+			local scroll = dialog.scroll.frame
 			expect(scroll.AbsoluteCanvasSize.Y > scroll.AbsoluteSize.Y).to.equal(true)
 		end)
 
 		it("fits short content with no scrolling", function()
 			local dialog = Dialog.new({ app = app, open = true, maxHeight = 600, children = rows(2) })
 			task.wait(0.3)
-			local scroll = dialog.scroll.Instance
+			local scroll = dialog.scroll.frame
 			expect(scroll.AbsoluteCanvasSize.Y <= scroll.AbsoluteSize.Y + 1).to.equal(true)
 		end)
 	end)

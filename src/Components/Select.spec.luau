@@ -230,7 +230,7 @@ return function()
 		task.wait(0.1)
 		picker:open()
 		task.wait(0.3)
-		local list = picker.list.Instance
+		local list = picker.list.frame
 		expect(list.AbsoluteCanvasSize.Y > list.AbsoluteSize.Y).to.equal(true)
 		local root = app:portal("modal").AbsoluteSize
 		expect(picker.content.AbsolutePosition.Y + picker.content.AbsoluteSize.Y <= root.Y + 1).to.equal(true)
@@ -261,7 +261,7 @@ return function()
 			expect(safe.Visible).to.equal(true)
 			expect(safe.Size.Y.Offset).to.equal(34)
 			-- Under the list, not above it.
-			local list = region.list.Instance
+			local list = region.list.frame
 			expect(safe.AbsolutePosition.Y >= list.AbsolutePosition.Y + list.AbsoluteSize.Y - 1).to.equal(
 				true
 			)
