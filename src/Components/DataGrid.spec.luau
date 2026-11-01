@@ -125,6 +125,23 @@ return function()
 		expect(order(grid)).to.equal("1,2,3")
 	end)
 
+	it("sorts by several headers with multi and keeps the list in app state", function()
+		local data = {
+			{ userId = 1, name = "Zoe", score = 70 },
+			{ userId = 2, name = "amy", score = 90 },
+			{ userId = 3, name = "Bob", score = 70 },
+		}
+		local grid = make({ id = "board", data = data, multi = true })
+		grid:toggle("score")
+		grid:toggle("name")
+		expect(order(grid)).to.equal("2,3,1")
+		local sorting = app.state:get("ui.board.sorting")
+		expect(#sorting).to.equal(2)
+		expect(grid.sortButtons.score.priority.Text).to.equal("1")
+		expect(grid.sortButtons.name.priority.Text).to.equal("2")
+		expect(grid.sortButtons.name.priority.Visible).to.equal(true)
+	end)
+
 	it("sorts by the focused header on Enter", function()
 		local grid = make()
 		app.input:setMode("keyboard")

@@ -41,7 +41,8 @@ Lucy.DataGrid.new({
 | `data` | array, ref, computed or getter | | | The rows, any tables you like |
 | `columns` | table | | | The columns, see [Columns](#columns) |
 | `rowId` | function | the position | | Gives each row an id, so updates change cells instead of rebuilding rows |
-| `sorting` | table or `false` | `false` | yes | The sort, `{ id = "price", desc = true }` |
+| `sorting` | table or `false` | `false` | yes | The sort, `{ id = "price", desc = true }`; with `multi`, a list of them |
+| `multi` | boolean | `false` | | Sort by several columns: each header pressed breaks the ties of the ones before it |
 | `sortable` | boolean | `true` | | `false` turns sorting off |
 | `removable` | boolean | `true` | | A third press on a header clears the sort |
 | `descFirst` | boolean | `false` | | Every column sorts high to low on the first press |
@@ -79,7 +80,15 @@ settings and put it back, or change it from anywhere:
 app.state:set("ui.shop.sorting", { id = "level", desc = true })
 ```
 
-A sorted header shows `lucy:chevron-up` or `lucy:chevron-down`. To use your own
+With `multi`, the sort is a list, first sort first:
+
+```luau
+app.state:set("ui.shop.sorting", { { id = "level", desc = true }, { id = "name", desc = false } })
+```
+
+The headers are [SortButtons](sort-button.md). A sorted header shows
+`lucy:chevron-up` or `lucy:chevron-down`, and while more than one column sorts,
+a small number for its place. To use your own
 icons, see [Icons Lucy draws](../guide/icons.md#icons-lucy-draws).
 
 ## Methods and events
@@ -89,6 +98,7 @@ icons, see [Icons Lucy draws](../guide/icons.md#icons-lucy-draws).
 | `grid:toggle(columnId)` | What pressing that column's header does |
 | `grid.table` | The [Table](table.md) inside |
 | `grid.model` | The sorted rows and sort, from [`useTable`](../reference/composables.md#usetable) |
+| `grid.sortButtons` | The header [SortButtons](sort-button.md), by column id |
 
 Pressing a header reports `activate`, for [game sounds](../reference/composables.md#useuisound).
 

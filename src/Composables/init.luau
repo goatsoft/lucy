@@ -13,6 +13,7 @@
 			Lucy.useUiSound(h.app, { activate = playClick })     -- the game's own sounds
 			local gap = Lucy.useResponsive(h.app, { touch = 16, default = 8 })
 			local board = Lucy.useTable({ data = players, columns = columns })
+			local dances = Lucy.useSort({ data = list, columns = columns, multi = true })  -- dances.items()
 			Lucy.useWhile(open, function() return signal:Connect(onFire) end)  -- only while open
 			local timer = Lucy.useCountdown(endsAt)              -- timer.remaining(), timer.done()
 			local drag = Lucy.useDrag(handle, { onMove = move })  -- drag.dragging(), drag.delta()
@@ -26,6 +27,7 @@
 local Component = require(script.Parent.Core.Component)
 local Reactive = require(script.Parent.Core.Reactive)
 local Responsive = require(script.Parent.Core.Responsive)
+local SortModel = require(script.Parent.Core.SortModel)
 local TableModel = require(script.Parent.Core.TableModel)
 local UiEvents = require(script.Parent.Core.UiEvents)
 
@@ -154,6 +156,31 @@ end
 	setSorting, columns }; see Core/TableModel for the options. Its computeds
 	belong to the owner.
 ]]
+--[[
+	Any list, sorted by one column or several (Core/SortModel has the options):
+	data (an array, a ref or a getter), columns, sorting, multi, sortable,
+	removable, descFirst. Returns the sort model (sorting, list, toggle,
+	sortedBy, priority, canSort, setSorting, columns, sort) and items, a
+	computed of the data in order. With multi, a press on a new column adds it
+	as the next tiebreaker. Its computed belongs to the owner.
+
+		local dances = Lucy.useSort({
+			data = owned,
+			columns = { { key = "name" }, { key = "genre" }, { id = "rarity", get = rank, descFirst = true } },
+			sorting = { { id = "rarity", desc = true } },
+			multi = true,
+		})
+		Lucy.each(dances.items, tile)
+]]
+function Composables.useSort(options: { [string]: any })
+	requireOwner("useSort")
+	local model: any = SortModel.new(options)
+	model.items = Reactive.computed(function(): { any }
+		return model.sort(Reactive.toValue(options.data) or {})
+	end)
+	return model
+end
+
 function Composables.useTable(options: { [string]: any })
 	requireOwner("useTable")
 	return TableModel.new(options)

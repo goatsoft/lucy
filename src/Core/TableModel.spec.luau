@@ -206,6 +206,40 @@ return function()
 			scope:stop()
 		end)
 
+		it("sorts by several columns with multi, each new header breaking ties", function()
+			local data = {
+				{ userId = 1, name = "Dee", team = "red", score = 5 },
+				{ userId = 2, name = "Ann", team = "blue", score = 5 },
+				{ userId = 3, name = "Cal", team = "red", score = 9 },
+				{ userId = 4, name = "Bea", team = "blue", score = 9 },
+			}
+			local model, scope = make({
+				data = data,
+				columns = { { key = "name" }, { key = "team" }, { key = "score", descFirst = true } },
+				multi = true,
+			})
+			model.toggle("team")
+			model.toggle("score")
+			expect(names(model)).to.equal("Bea,Ann,Cal,Dee")
+			expect(model.priority("team")).to.equal(1)
+			expect(model.priority("score")).to.equal(2)
+			expect(#model.sorting()).to.equal(2)
+			model.toggle("team")
+			expect(names(model)).to.equal("Cal,Dee,Bea,Ann")
+			model.toggle("team")
+			expect(names(model)).to.equal("Cal,Bea,Dee,Ann")
+			expect(model.priority("score")).to.equal(1)
+			scope:stop()
+		end)
+
+		it("gives each sorted column a priority of 1 without multi", function()
+			local model, scope = make()
+			model.toggle("name")
+			expect(model.priority("name")).to.equal(1)
+			expect(model.priority("score")).to.equal(nil)
+			scope:stop()
+		end)
+
 		it("rejects a column with no id or key, and unknown sorts", function()
 			expect(function()
 				make({ columns = { { header = "?" } } })

@@ -33,6 +33,7 @@ Each component has its own page with its props, usage and examples:
 | [Sheet](sheet.md) | A panel from the side of the screen, a drawer from the bottom on touch |
 | [Skeleton](skeleton.md) | A pulsing placeholder while content loads |
 | [Slider](slider.md) | Picks a number in a range by dragging or with the arrows |
+| [SortButton](sort-button.md) | A column heading that sorts a list when pressed |
 | [Spinner](spinner.md) | A turning ring while something loads |
 | [Stack](stack.md) | A row or column that lays out its children |
 | [Switch](switch.md) | An on and off switch, with an optional label |

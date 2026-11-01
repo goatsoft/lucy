@@ -141,6 +141,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Sheet](references/components/sheet.md): A panel from the side of the screen, a drawer from the bottom on touch.
 - [Skeleton](references/components/skeleton.md): A pulsing placeholder while content loads.
 - [Slider](references/components/slider.md): Picks a number in a range by dragging or with the arrows.
+- [SortButton](references/components/sort-button.md): A column heading that sorts a list when pressed.
 - [Spinner](references/components/spinner.md): A turning ring that shows something is loading.
 - [Stack](references/components/stack.md): A row or column that lays out its children.
 - [Switch](references/components/switch.md): An on and off switch, with an optional label.

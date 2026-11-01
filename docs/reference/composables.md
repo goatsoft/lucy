@@ -33,6 +33,7 @@ To write your own, see [Share logic with composables](../guide/composables.md).
 | [`useFocusScope`](#usefocusscope) | Keeps keyboard and gamepad focus inside a frame while active |
 | [`useUiSound`](#useuisound) | Calls your functions when components are clicked, toggled, opened or closed |
 | [`useTable`](#usetable) | Sorted rows from your data and a list of columns |
+| [`useSort`](#usesort) | Any list sorted by one column or several, such as a grid of cards |
 | [`useWhile`](#usewhile) | Sets something up while a condition is true and cleans it up when it turns false |
 | [`useCountdown`](#usecountdown) | Whole seconds left until a time, for round and event timers |
 | [`useDrag`](#usedrag) | Follows the mouse or a finger dragging from a frame, such as a model the player spins |
@@ -160,7 +161,8 @@ board.toggle("name")            -- what a press on the Name header does
 | `data` | array, ref or getter | | The rows, any tables you like |
 | `columns` | table | | The columns, see below |
 | `rowId` | function | the position | Gives each row an id, so lists update by id |
-| `sorting` | table, ref or `false` | `false` | `{ id = "score", desc = true }`, or a ref to keep it in |
+| `sorting` | table, ref or `false` | `false` | `{ id = "score", desc = true }`, or a ref to keep it in. With `multi`, a list of them |
+| `multi` | boolean | `false` | Sort by several columns: a press on a column that is not sorted adds it as the next tiebreaker |
 | `sortable` | boolean | `true` | `false` turns sorting off for every column |
 | `removable` | boolean | `true` | A third press on a header clears the sort |
 | `descFirst` | boolean | `false` | Every column sorts high to low on the first press |
@@ -182,19 +184,56 @@ A column has:
 `"auto"` compares numbers as numbers and anything else as text. Text sorts the
 way a person reads it: `item2` comes before `item10`, and case does not count.
 Rows with no value for the column always go last, and rows with equal values
-keep the order of your data. One column sorts at a time.
+keep the order of your data. One column sorts at a time, unless `multi` is on:
+then the first column pressed leads, the next breaks its ties, and so on.
 
 ### What it returns
 
 | Name | What it is |
 |---|---|
 | `rows()` | The sorted rows. Each has `id`, `index` (its place in your data), `original` (your table) and `row:value(columnId)` |
-| `sorting()` | The sort, `{ id, desc }`, or `false` |
+| `sorting()` | The sort, `{ id, desc }`, or `false`. With `multi`, a list of them (empty for none) |
+| `list()` | The sorts as a list either way, first sort first |
 | `toggle(columnId)` | Sorts by the column in its first direction, then the other, then not at all |
 | `sortedBy(columnId)` | `"asc"`, `"desc"` or `false` |
+| `priority(columnId)` | The column's place in the sort: 1 leads, 2 breaks its ties, `nil` when it does not sort |
 | `canSort(columnId)` | Whether the column sorts |
 | `setSorting(sort)` | Sets the sort directly |
 | `columns` | The columns, with their ids worked out |
+
+## useSort
+
+Sorts any list by one column or several, and keeps it sorted as the list and
+the sort change. Use it for lists that are not tables, such as a grid of
+cards with [SortButton](../components/sort-button.md) headings over it.
+[`useTable`](#usetable) is built on it.
+
+```luau
+local RARITY = { Common = 1, Rare = 2, Epic = 3, Legendary = 4 }
+
+local emotes = Lucy.useSort({
+    data = owned,               -- an array, a ref or a getter
+    columns = {
+        { key = "name" },
+        { key = "style" },
+        { id = "rarity", get = function(emote) return RARITY[emote.rarity] end, descFirst = true },
+    },
+    sorting = { { id = "rarity", desc = true } },
+    multi = true,
+})
+
+Lucy.each(emotes.items, emoteCard)   -- the list, sorted
+emotes.toggle("name")                -- adds name as the tiebreaker for equal rarities
+```
+
+It takes `data` and the options of [`useTable`](#usetable) except `rowId` and
+`manual`, and returns what `useTable` returns, with `items` (a computed of
+your list, sorted) in place of `rows`. Its `sort(list)` sorts any other list the
+same way.
+
+With `multi`, each column's first press adds it at the end of the sort, a
+second press flips it where it is, and a third takes it out (or flips it back
+when `removable` is `false`). Without `multi`, a press replaces the sort.
 
 ## useWhile
 

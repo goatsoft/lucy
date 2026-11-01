@@ -12,6 +12,7 @@
 				{ id = "invite", sortable = false, cell = function(ctx) ... end },
 			},
 			sorting = { id = "score", desc = true },   -- the starting sort; false for none
+			multi = false,          -- true: each new header pressed breaks the ties of the ones before
 			sortable = true, removable = true, descFirst = false, manual = false,
 			onSortingChange = function(sorting, grid) end,
 			-- and any Table prop: highlight, striped, onRowClick, empty, maxHeight,
@@ -20,13 +21,16 @@
 		grid:toggle("score")    -- what pressing the Score header does
 
 	Columns take Table's fields and useTable's (sortable, sortFn, descFirst,
-	invert). A sortable header is a button showing lucy:chevron-up or
+	invert). A sortable header is a SortButton showing lucy:chevron-up or
 	lucy:chevron-down while it sorts; each press goes first direction, the other,
-	then unsorted (unless removable is false). The sort is kept in app state at
-	ui.<id>.sorting, so a game can save and restore it.
+	then unsorted (unless removable is false). With multi, a header that is not
+	sorted joins as the next tiebreaker and each sorted header shows its place.
+	The sort is kept in app state at ui.<id>.sorting (one sort or false; a list
+	with multi), so a game can save and restore it.
 
 	grid.table is the Table, grid.model the useTable result, grid.headers the
-	header buttons by column id, grid.sortIcons their icons.
+	header buttons by column id, grid.sortIcons their icons, grid.sortButtons
+	their SortButton handles.
 
 	State keys: sorting, visible.
 ]]
@@ -34,33 +38,19 @@
 local Component = require(script.Parent.Parent.Core.Component)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
-local Icon = require(script.Parent.Icon)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
+local SortButton = require(script.Parent.SortButton)
 local Table = require(script.Parent.Table)
 
 local DataGrid = {}
 
-local ACTIVATED = Element.on("Activated")
+-- The headers' looks are SortButton's.
+DataGrid.rules = {} :: { Component.Rule }
 
-DataGrid.rules = {
-	{
-		selector = ".ui-datagrid-sort",
-		priority = 0,
-		properties = { BackgroundColor3 = "$Accent", BackgroundTransparency = 1, BorderSizePixel = 0 },
-	},
-	{ selector = ".ui-datagrid-sort::UICorner", priority = 0, properties = { CornerRadius = "$RadiusSm" } },
-	{ selector = ".ui-datagrid-sort:Hover", priority = 10, properties = { BackgroundTransparency = 0 } },
-	{
-		selector = ".ui-datagrid-sort.ui-sorted > .ui-table-head",
-		priority = 10,
-		properties = { TextColor3 = "$Foreground" },
-	},
-} :: { Component.Rule }
-
-local HORIZONTAL = {
-	[Enum.TextXAlignment.Left] = Enum.HorizontalAlignment.Left,
-	[Enum.TextXAlignment.Center] = Enum.HorizontalAlignment.Center,
-	[Enum.TextXAlignment.Right] = Enum.HorizontalAlignment.Right,
+local ALIGN_NAME = {
+	[Enum.TextXAlignment.Left] = "left",
+	[Enum.TextXAlignment.Center] = "center",
+	[Enum.TextXAlignment.Right] = "right",
 }
 
 -- Props DataGrid hands to its Table as they are.
@@ -103,6 +93,7 @@ local spec: Component.Spec = {
 			columns = p.columns or {},
 			rowId = p.rowId,
 			sorting = sorting,
+			multi = p.multi,
 			sortable = p.sortable,
 			removable = p.removable,
 			descFirst = p.descFirst,
@@ -118,65 +109,33 @@ local spec: Component.Spec = {
 
 		h.headers = {}
 		h.sortIcons = {}
+		h.sortButtons = {}
 		local function headerCell(column: any, align: Enum.TextXAlignment): any
-			local label = Element.new("TextLabel", {
-				Name = "Label",
-				LayoutOrder = 1,
-				AutomaticSize = Enum.AutomaticSize.X,
-				Size = UDim2.fromScale(0, 1),
-				Text = if column.header ~= nil then tostring(column.header) else "",
-				Tags = { "ui-table-head" },
-			})
+			local text = if column.header ~= nil then tostring(column.header) else ""
 			if not model.canSort(column.id) then
-				label.AutomaticSize = Enum.AutomaticSize.None
-				label.Size = UDim2.fromScale(1, 1)
-				label.TextXAlignment = align
-				return label
+				return Element.new("TextLabel", {
+					Name = "Label",
+					Size = UDim2.fromScale(1, 1),
+					Text = text,
+					TextXAlignment = align,
+					Tags = { "ui-table-head" },
+				})
 			end
 			local id = column.id
-			local function direction(): string | false
-				return model.sortedBy(id)
-			end
-			local icon = Icon.new({
+			local button = SortButton.new({
 				app = app,
-				icon = function(): string
-					return if direction() == "desc" then "lucy:chevron-down" else "lucy:chevron-up"
-				end,
-				size = "sm",
-				variant = "muted",
-				name = "SortIcon",
-				layoutOrder = 2,
-				visible = function(): boolean
-					return direction() ~= false
-				end,
+				sort = model,
+				column = id,
+				text = text,
+				align = ALIGN_NAME[align] or "left",
+				size = UDim2.fromScale(1, 1),
 			})
-			local button = Element.new("TextButton", {
-				Name = "Sort",
-				Text = "",
-				AutoButtonColor = false,
-				Size = UDim2.fromScale(1, 1),
-				Tags = {
-					"ui-datagrid-sort" :: any,
-					["ui-sorted"] = function(): boolean
-						return direction() ~= false
-					end,
-				},
-				[ACTIVATED] = function()
-					h:toggle(id)
-				end,
-				Element.new("UIListLayout", {
-					FillDirection = Enum.FillDirection.Horizontal,
-					HorizontalAlignment = HORIZONTAL[align] or Enum.HorizontalAlignment.Left,
-					VerticalAlignment = Enum.VerticalAlignment.Center,
-					SortOrder = Enum.SortOrder.LayoutOrder,
-					Padding = UDim.new(0, 4),
-				}),
-				label,
-				icon.Instance,
-			})
-			h.headers[id] = button
-			h.sortIcons[id] = icon
-			return button
+			-- Kept so a game's own rules for DataGrid headers still match
+			button.Instance:AddTag("ui-datagrid-sort")
+			h.headers[id] = button.Instance
+			h.sortIcons[id] = button.icon
+			h.sortButtons[id] = button
+			return button.Instance
 		end
 
 		local tableProps: { [string]: any } = {
