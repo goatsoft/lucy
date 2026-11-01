@@ -103,6 +103,62 @@ return function()
 			expect(ending.position.X.Offset).to.equal(240)
 		end)
 
+		it("puts a popup beside its anchor on the right or left, aligned to its top", function()
+			local right = Overlay.place("popup", {
+				view = view,
+				anchor = anchor(100, 100, 160, 32),
+				content = Vector2.new(120, 200),
+				side = "right",
+			})
+			expect(right.side).to.equal("right")
+			expect(right.anchorPoint).to.equal(Vector2.new(0, 0))
+			expect(right.position).to.equal(UDim2.fromOffset(264, 100))
+			expect(right.width).to.equal(120)
+			expect(right.maxHeight).to.equal(600 - 16)
+
+			local left = Overlay.place("popup", {
+				view = view,
+				anchor = anchor(400, 300, 160, 32),
+				content = Vector2.new(120, 200),
+				side = "left",
+				align = "end",
+			})
+			expect(left.side).to.equal("left")
+			expect(left.anchorPoint).to.equal(Vector2.new(1, 0))
+			-- its bottom lines up with the anchor's bottom
+			expect(left.position).to.equal(UDim2.fromOffset(396, 332 - 200))
+		end)
+
+		it("flips a side popup to the other side, and keeps it on screen vertically", function()
+			local at = Overlay.place("popup", {
+				view = view,
+				anchor = anchor(700, 560, 90, 32),
+				content = Vector2.new(120, 200),
+				side = "right",
+			})
+			expect(at.side).to.equal("left")
+			expect(at.position.X.Offset).to.equal(696)
+			-- aligned to the anchor's top would run off the bottom: it moves up to fit
+			expect(at.position.Y.Offset).to.equal(600 - 200 - 8)
+		end)
+
+		it("picks a side that fits with auto: below, above, then beside", function()
+			local function side(x, y, w, h, content)
+				return Overlay.place("popup", {
+					view = view,
+					anchor = anchor(x, y, w, h),
+					content = content,
+					side = "auto",
+				}).side
+			end
+			-- a top bar's menu drops down, a bottom bar's pops up
+			expect(side(100, 10, 160, 32, Vector2.new(160, 200))).to.equal("bottom")
+			expect(side(100, 560, 160, 32, Vector2.new(160, 200))).to.equal("top")
+			-- too tall for above or below, but room to the right of a left-edge button
+			expect(side(10, 280, 40, 40, Vector2.new(160, 560))).to.equal("right")
+			expect(side(750, 280, 40, 40, Vector2.new(160, 560))).to.equal("left")
+		end)
+
 		it("fills the bottom for a drawer and a side for a panel", function()
 			local drawer = Overlay.place("drawer", { view = view, content = Vector2.new(0, 100) })
 			expect(drawer.anchorPoint).to.equal(Vector2.new(0, 1))
@@ -317,6 +373,61 @@ return function()
 			open(false)
 			open(true)
 			expect(overlay.presentation()).to.equal("popup")
+			scope:stop()
+		end)
+
+		it("takes the presentation as a getter, decided each time it opens", function()
+			local kind = Reactive.ref("center")
+			local overlay, open, scope = make({
+				presentation = function()
+					return kind()
+				end,
+			})
+			open(true)
+			expect(overlay.presentation()).to.equal("center")
+			kind("panel")
+			expect(overlay.presentation()).to.equal("center")
+			open(false)
+			open(true)
+			expect(overlay.presentation()).to.equal("panel")
+			scope:stop()
+		end)
+
+		it("lets a place function position the content, falling back when it gives nothing", function()
+			local gui = Harness.mount(app)
+			local trigger = Instance.new("TextButton")
+			trigger.Size = UDim2.fromOffset(160, 32)
+			trigger.Position = UDim2.fromOffset(40, 40)
+			trigger.Parent = gui
+			local custom = true
+			local seen
+			local overlay, open, scope = make({
+				presentation = "popup",
+				anchor = trigger,
+				place = function(_presentation, input)
+					seen = input
+					if not custom then
+						return nil
+					end
+					return {
+						anchorPoint = Vector2.new(0.5, 0.5),
+						position = UDim2.fromOffset(123, 45),
+						maxHeight = 100,
+					}
+				end,
+			})
+			open(true)
+			task.wait(0.1)
+			expect(overlay.content.AnchorPoint).to.equal(Vector2.new(0.5, 0.5))
+			expect(overlay.content.Position).to.equal(UDim2.fromOffset(123, 45))
+			expect(overlay.maxHeight()).to.equal(100)
+			expect(seen.anchor).to.be.ok()
+			expect(seen.view.X > 0).to.equal(true)
+			open(false)
+			custom = false
+			open(true)
+			task.wait(0.1)
+			expect(overlay.content.AnchorPoint).to.equal(Vector2.new(0, 0))
 			scope:stop()
 		end)
 

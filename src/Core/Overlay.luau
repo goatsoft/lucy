@@ -6,13 +6,15 @@
 		local overlay = Overlay.use(h.app, {
 			open = h:ref("open"),       -- a writable ref; back and outside presses write false
 			content = frame,            -- what floats; placed by the overlay
-			presentation = "auto",      -- auto | popup | panel | drawer | center
+			presentation = "auto",      -- auto | popup | panel | drawer | center (or a getter)
 			prefer = "popup",           -- auto off touch: popup | panel (touch is always drawer)
 			anchor = trigger,           -- popup: place next to this (an instance, handle or getter)
-			side = "bottom",            -- popup: bottom | top, flips when the other has more room
+			side = "bottom",            -- popup: bottom | top | left | right, flips when the other has
+			                            -- more room; auto: below if it fits, then above, then beside
 			align = "start",            -- popup: start | center | end
 			width = 240,                -- popup: at least this (and the anchor's width); panel: this
 			panelSide = "right",        -- panel: left | right
+			place = nil,                -- (presentation, input) -> Placement?: places the content itself
 			modal = true,               -- false: no focus trap, presses pass through
 			scrim = nil,                -- the dim backdrop; defaults to modal and not a popup
 			dismissible = true,         -- back closes it (and outside presses, when modal)
@@ -163,14 +165,64 @@ function Overlay.place(presentation: string, input: PlaceInput): Placement
 	local m, gap = Overlay.margin, Overlay.gap
 	local top = anchor.position.Y
 	local bottom = top + anchor.size.Y
+	local leftEdge = anchor.position.X
+	local rightEdge = leftEdge + anchor.size.X
 	local below = view.Y - bottom - gap - m
 	local above = top - gap - m
-	local side = if input.side == "top" then "top" else "bottom"
+	local toRight = view.X - rightEdge - gap - m
+	local toLeft = leftEdge - gap - m
 	local want = input.content.Y
-	if side == "bottom" and want > below and above > below then
-		side = "top"
-	elseif side == "top" and want > above and below > above then
-		side = "bottom"
+	local wantX = input.width or input.content.X
+
+	local side = input.side or "bottom"
+	if side == "auto" then
+		-- Below if it fits, then above, then beside; with no room anywhere, where there is most
+		if want <= below then
+			side = "bottom"
+		elseif want <= above then
+			side = "top"
+		elseif wantX <= toRight then
+			side = "right"
+		elseif wantX <= toLeft then
+			side = "left"
+		else
+			side = if above > below then "top" else "bottom"
+		end
+	elseif side == "right" and wantX > toRight and toLeft > toRight then
+		side = "left"
+	elseif side == "left" and wantX > toLeft and toRight > toLeft then
+		side = "right"
+	elseif side ~= "right" and side ~= "left" then
+		side = if side == "top" then "top" else "bottom"
+		if side == "bottom" and want > below and above > below then
+			side = "top"
+		elseif side == "top" and want > above and below > above then
+			side = "bottom"
+		end
+	end
+
+	if side == "left" or side == "right" then
+		-- Beside the anchor: its own width, aligned to the anchor's top, centre or bottom, kept
+		-- on screen top to bottom
+		local width = math.max(0, math.min(wantX, view.X - m * 2))
+		local height = math.min(want, view.Y - m * 2)
+		local y
+		if input.align == "end" then
+			y = bottom - height
+		elseif input.align == "center" then
+			y = top + (anchor.size.Y - height) / 2
+		else
+			y = top
+		end
+		y = math.clamp(y, m, math.max(m, view.Y - height - m))
+		local x = if side == "right" then rightEdge + gap else leftEdge - gap
+		return {
+			anchorPoint = Vector2.new(if side == "right" then 0 else 1, 0),
+			position = UDim2.fromOffset(math.floor(x + 0.5), math.floor(y + 0.5)),
+			width = width,
+			maxHeight = math.max(0, math.floor(view.Y - m * 2)),
+			side = side,
+		}
 	end
 
 	local width = math.max(input.width or 0, anchor.size.X)
@@ -361,7 +413,8 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 	local function mode(): string
 		return if app.input then app.input:mode() else "mouse"
 	end
-	local presentation = Reactive.ref(Overlay.resolve(options.presentation, options.prefer, mode()))
+	local presentation =
+		Reactive.ref(Overlay.resolve(Reactive.toValue(options.presentation), options.prefer, mode()))
 	local maxHeight = Reactive.ref(math.huge)
 	local safeBottom = Reactive.ref(0)
 	local zIndex = Reactive.ref(10)
@@ -542,15 +595,17 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 				size = anchorObject.AbsoluteSize / scale,
 			}
 		end
-		local at = Overlay.place(presentation(), {
+		local input: PlaceInput = {
 			view = root.AbsoluteSize / scale,
 			content = content.AbsoluteSize / scale,
 			anchor = anchorRect,
 			width = options.width,
-			side = options.side,
+			side = Reactive.toValue(options.side),
 			align = options.align,
 			panelSide = options.panelSide,
-		})
+		}
+		local at = (options.place and options.place(presentation(), input))
+			or Overlay.place(presentation(), input)
 		content.AnchorPoint = at.anchorPoint
 		placedAt = at.position
 		content.Position = at.position + UDim2.fromOffset(0, slide.Value)
@@ -572,7 +627,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 
 	local function opened()
 		live:clean()
-		presentation(Overlay.resolve(options.presentation, options.prefer, mode()))
+		presentation(Overlay.resolve(Reactive.toValue(options.presentation), options.prefer, mode()))
 		anchorObject = resolveAnchor(options.anchor)
 		opener = anchorObject
 		layer += 1
