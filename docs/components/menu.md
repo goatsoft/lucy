@@ -56,6 +56,7 @@ end)
 | `width` | number | `220` | | List: at least this wide (and at least the anchor's width when above or below it) |
 | `radius` | number | by item count, `900` for a fan | | Ring: the distance from the centre to each button. Fan: the radius of its curve (larger is straighter) |
 | `shape` | string or responsive | `"round"` | | Ring and fan buttons: `round`, `squircle` or `square`, see [Button shapes](#button-shapes) |
+| `size` | string or responsive | `"md"` | | `md` or `lg`, like a [Button](button.md)'s: `lg` rows are as tall as a large button with larger text, and `lg` ring and fan buttons are bigger, with larger icons and labels |
 | `onSelect` | function | | | Called with `(value, handle)` when the player picks an action |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
@@ -193,6 +194,7 @@ When it closes, the anchor is selected again on a controller.
 | `menu:select(value)` | Picks `value` as if the player had, and closes it |
 | `menu.variant()` | The variant in use: `list`, `radial` or `arc` |
 | `menu.shape()` | The button shape in use: `round`, `squircle` or `square` |
+| `menu.size()` | The size in use: `md` or `lg` |
 | `menu.presentation()` | For a list, `"popup"` or `"drawer"`, for this opening |
 
 It reports `open` and `close`, and `select` with the value picked, for

@@ -17,6 +17,7 @@
 			width = 220,               -- list: at least this wide (and the anchor's width)
 			radius = nil,              -- radial: the ring's (by item count); arc: its curve's (900)
 			shape = "round",           -- radial and arc buttons: round | squircle | square
+			size = "md",               -- md | lg, like a Button's: lg rows and ring buttons are bigger
 			onSelect = function(value, menu) end,
 		})
 		clubButton.Activated:Connect(function() menu:toggle() end)
@@ -50,7 +51,7 @@
 	State keys: open, visible.
 	Events: "open", "close" and "select" with the value, for Lucy.useUiSound.
 	menu.items holds one list row per item, menu.slices one round button per
-	item, in order; menu.variant() is the variant in use.
+	item, in order; menu.variant(), menu.shape() and menu.size() are the ones in use.
 	Menu.ring, Menu.fan, Menu.toward, Menu.fit, Menu.around, Menu.nudge, Menu.angles,
 	Menu.pick and Menu.itemBounds are the geometry it uses.
 ]]
@@ -71,10 +72,14 @@ local Menu = {}
 
 Menu.variants = { "list", "radial", "arc" }
 Menu.shapes = { "round", "squircle", "square" }
+Menu.sizes = { "md", "lg" }
 
--- A round button's size and the room under it for its label.
-Menu.sliceSize = 56
+-- A round button's size at each size (sliceSize is md's) and the room under it for its label
+-- (lg's text is larger, so it has captionGrow more).
+Menu.sliceSizes = { md = 56, lg = 72 }
+Menu.sliceSize = Menu.sliceSizes.md
 Menu.captionRoom = 26
+Menu.captionGrow = 6
 -- How far a label sits from its button: beside it (a fan) or under it (a ring).
 Menu.captionGap = 10
 Menu.captionDrop = 4
@@ -395,6 +400,27 @@ Menu.rules = {
 		properties = { CornerRadius = UDim.new(0, 17 + Menu.itemRingPad) },
 	},
 	{
+		selector = ".ui-menu-item-ring.ui-menu-squircle.ui-menu-lg >> .ui-part-ring-corner",
+		priority = 6,
+		properties = { CornerRadius = UDim.new(0, 22 + Menu.itemRingPad) },
+	},
+	-- size = "lg": larger text on rows, labels and initials
+	{
+		selector = ".ui-menu-item.ui-menu-lg >> .ui-menu-item-label",
+		priority = 5,
+		properties = { TextSize = "$TextBase" },
+	},
+	{
+		selector = ".ui-menu-slice.ui-menu-lg >> .ui-menu-caption",
+		priority = 5,
+		properties = { TextSize = "$TextBase" },
+	},
+	{
+		selector = ".ui-menu-slice.ui-menu-lg >> .ui-menu-slice-mark",
+		priority = 5,
+		properties = { TextSize = "$TextBase" },
+	},
+	{
 		selector = ".ui-menu-item-ring.ui-menu-square >> .ui-part-ring-corner",
 		priority = 5,
 		properties = { CornerRadius = "$RadiusMd" },
@@ -460,13 +486,28 @@ local spec: Component.Spec = {
 		h.variant = variant
 		local shape = Composables.useResponsive(app, p.shape or "round") :: () -> string
 		h.shape = shape
+		local sizeName = Composables.useResponsive(app, p.size or "md") :: () -> string
+		h.size = sizeName
+		local function large(): boolean
+			return sizeName() == "lg"
+		end
+		local function sliceSize(): number
+			return Menu.sliceSizes[sizeName()] or Menu.sliceSize
+		end
+		local function captionRoom(): number
+			return Menu.captionRoom + (if large() then Menu.captionGrow else 0)
+		end
 		local function isList(): boolean
 			return variant() == "list"
 		end
 		local function isRing(): boolean
 			return not isList()
 		end
-		local height = Composables.useMetric(app, "ControlMd")
+		local heightMd = Composables.useMetric(app, "ControlMd")
+		local heightLg = Composables.useMetric(app, "ControlLg")
+		local function height(): number
+			return if large() then heightLg() else heightMd()
+		end
 
 		-- The ring's radius: by item count, so neighbours never overlap. A label sits under
 		-- each button, so neighbours stay a button and a label apart.
@@ -474,14 +515,14 @@ local spec: Component.Spec = {
 			if p.radius then
 				return p.radius
 			end
-			local gap = Menu.sliceSize + Menu.captionRoom + 8
+			local gap = sliceSize() + captionRoom() + 8
 			if variant() == "arc" then
 				return Menu.fanRadius
 			end
 			return math.max(80, math.ceil(gap / 2 / math.sin(math.pi / math.max(count, 2))))
 		end
 		local function extent(): number
-			return radius() + Menu.sliceSize / 2 + Menu.captionRoom
+			return radius() + sliceSize() / 2 + captionRoom()
 		end
 		-- Where each round button sits around the centre; set when it is placed.
 		local points = Reactive.ref(Menu.ring(count, 80) :: { Vector2 })
@@ -496,11 +537,14 @@ local spec: Component.Spec = {
 			Component.list({ Padding = UDim.new(0, 2) }) :: any,
 		})
 		-- When any item has an icon, every label starts after the icon's column.
-		local indent = 0
+		local hasIcon = false
 		for _, item in entries do
 			if item.icon then
-				indent = 24
+				hasIcon = true
 			end
+		end
+		local function indent(): number
+			return if not hasIcon then 0 elseif large() then 28 else 24
 		end
 		for index, item in entries do
 			local function off(): boolean
@@ -521,14 +565,18 @@ local spec: Component.Spec = {
 				Visible = isList,
 				Interactable = usable,
 				Selectable = usable,
-				Tags = { "ui-menu-item" :: any, ["ui-disabled"] = off },
+				Tags = { "ui-menu-item" :: any, ["ui-disabled"] = off, ["ui-menu-lg"] = large },
 				[ACTIVATED] = function()
 					h:select(item.value)
 				end,
 				Element.new("TextLabel", {
 					Name = "Label",
-					Position = UDim2.fromOffset(indent, 0),
-					Size = UDim2.new(1, -(indent + hintRoom), 1, 0),
+					Position = function(): UDim2
+						return UDim2.fromOffset(indent(), 0)
+					end,
+					Size = function(): UDim2
+						return UDim2.new(1, -(indent() + hintRoom), 1, 0)
+					end,
 					TextXAlignment = Enum.TextXAlignment.Left,
 					TextTruncate = Enum.TextTruncate.AtEnd,
 					Text = item.text,
@@ -536,7 +584,14 @@ local spec: Component.Spec = {
 				}),
 			})
 			if item.icon then
-				local icon = Icon.new({ app = app, icon = item.icon, size = "sm", name = "Icon" })
+				local icon = Icon.new({
+					app = app,
+					icon = item.icon,
+					size = function(): string
+						return if large() then "md" else "sm"
+					end,
+					name = "Icon",
+				})
 				icon.Instance.AnchorPoint = Vector2.new(0, 0.5)
 				icon.Instance.Position = UDim2.fromScale(0, 0.5)
 				icon.Instance.Parent = row
@@ -609,7 +664,10 @@ local spec: Component.Spec = {
 				Text = "",
 				AutoButtonColor = false,
 				AnchorPoint = Vector2.new(0.5, 0.5),
-				Size = UDim2.fromOffset(Menu.sliceSize, Menu.sliceSize),
+				Size = function(): UDim2
+					local side = sliceSize()
+					return UDim2.fromOffset(side, side)
+				end,
 				Position = function(): UDim2
 					local at = points()[index] or Vector2.zero
 					return UDim2.new(0.5, math.floor(at.X + 0.5), 0.5, math.floor(at.Y + 0.5))
@@ -625,6 +683,7 @@ local spec: Component.Spec = {
 					"ui-menu-slice" :: any,
 					"ui-ring-host",
 					["ui-disabled"] = off,
+					["ui-menu-lg"] = large,
 					["ui-menu-squircle"] = function(): boolean
 						return shape() == "squircle"
 					end,
@@ -658,7 +717,7 @@ local spec: Component.Spec = {
 				-- A pill beside its button is as tall as its text (and padding), so a game's
 				-- theme can give it any text size
 				Size = function(): UDim2
-					return UDim2.fromOffset(0, if beside() then 0 else 20)
+					return UDim2.fromOffset(0, if beside() then 0 elseif large() then 24 else 20)
 				end,
 				AutomaticSize = function(): Enum.AutomaticSize
 					return if beside() then Enum.AutomaticSize.XY else Enum.AutomaticSize.X
@@ -673,13 +732,13 @@ local spec: Component.Spec = {
 			local caption = captions[index]
 			local captionSize = Reactive.ref(Vector2.zero)
 			local function measure()
-				local scale = slice.AbsoluteSize.X / Menu.sliceSize
+				local scale = slice.AbsoluteSize.X / sliceSize()
 				captionSize(if scale > 0 then caption.AbsoluteSize / scale else caption.AbsoluteSize)
 			end
 			caption:GetPropertyChangedSignal("AbsoluteSize"):Connect(measure)
 			measure()
 			local function itemBounds(): (Vector2, Vector2)
-				return Menu.itemBounds(labelSide(), Menu.sliceSize, captionSize(), Menu.itemRingPad)
+				return Menu.itemBounds(labelSide(), sliceSize(), captionSize(), Menu.itemRingPad)
 			end
 			Element.hydrate(Component.partRing(app), {
 				Name = "ItemRing",
@@ -694,6 +753,7 @@ local spec: Component.Spec = {
 				end,
 				Tags = {
 					"ui-menu-item-ring" :: any,
+					["ui-menu-lg"] = large,
 					["ui-menu-squircle"] = function(): boolean
 						return shape() == "squircle"
 					end,
@@ -704,7 +764,14 @@ local spec: Component.Spec = {
 				Parent = slice,
 			})
 			if item.icon then
-				local icon = Icon.new({ app = app, icon = item.icon, size = 24, name = "Icon" })
+				local icon = Icon.new({
+					app = app,
+					icon = item.icon,
+					size = function(): number
+						return if large() then 32 else 24
+					end,
+					name = "Icon",
+				})
 				icon.Instance.AnchorPoint = Vector2.new(0.5, 0.5)
 				icon.Instance.Position = UDim2.fromScale(0.5, 0.5)
 				icon.Instance.Parent = slice
@@ -774,7 +841,7 @@ local spec: Component.Spec = {
 					-- on the side toward the middle, the curve bending away from them.
 					local up = if center.Y > view.Y / 2 then -1 else 1
 					local labelsLeft = center.X >= view.X / 2
-					local size = Menu.sliceSize
+					local size = sliceSize()
 					local start = (if anchor then anchor.size.Y / 2 else 0) + 12 + size / 2
 					local fan, tilt =
 						Menu.fan(count, start, size + Menu.fanGap, r, up, if labelsLeft then 1 else -1)
@@ -857,6 +924,7 @@ function Menu.new(props: { [string]: any }?)
 	local given: { [string]: any } = table.clone(props or {})
 	check("variant", Menu.variants, given.variant or "list")
 	check("shape", Menu.shapes, given.shape or "round")
+	check("size", Menu.sizes, given.size or "md")
 	given._menuEntries = normalize(given.items)
 	local handle = Component.mount(spec, given)
 	function handle.open(h)
