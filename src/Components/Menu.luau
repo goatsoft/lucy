@@ -170,7 +170,8 @@ end
 
 -- Where the focus ring of a ring or fan item goes, in its button's own space: round the button
 -- (`size` square) and its label (`caption`, the label's size) on `side` ("left", "right" or
--- "below"), with `pad` of room. Returns its top left corner and its size.
+-- "below"), with `pad` of room, and twice that past the label's far end (the ring's stroke sits
+-- inside its edge, so it would run into the label's text). Returns its top left corner and size.
 function Menu.itemBounds(side: string, size: number, caption: Vector2, pad: number): (Vector2, Vector2)
 	local minX, minY, maxX, maxY = 0, 0, size, size
 	local middle = size / 2
@@ -178,14 +179,14 @@ function Menu.itemBounds(side: string, size: number, caption: Vector2, pad: numb
 		minY = math.min(0, middle - caption.Y / 2)
 		maxY = math.max(size, middle + caption.Y / 2)
 		if side == "left" then
-			minX = -Menu.captionGap - caption.X
+			minX = -Menu.captionGap - caption.X - pad
 		else
-			maxX = size + Menu.captionGap + caption.X
+			maxX = size + Menu.captionGap + caption.X + pad
 		end
 	else
 		minX = math.min(0, middle - caption.X / 2)
 		maxX = math.max(size, middle + caption.X / 2)
-		maxY = math.max(size, size + Menu.captionDrop + caption.Y)
+		maxY = math.max(size, size + Menu.captionDrop + caption.Y + pad)
 	end
 	return Vector2.new(minX - pad, minY - pad), Vector2.new(maxX - minX + pad * 2, maxY - minY + pad * 2)
 end
@@ -389,12 +390,12 @@ Menu.rules = {
 	-- A ring or fan item's focus ring (round its button and label) follows the button's shape: a
 	-- pill round a round button, a rounded box round a squircle or square one
 	{
-		selector = ".ui-menu-item-ring.ui-menu-squircle::UICorner",
+		selector = ".ui-menu-item-ring.ui-menu-squircle >> .ui-part-ring-corner",
 		priority = 5,
 		properties = { CornerRadius = UDim.new(0, 17 + Menu.itemRingPad) },
 	},
 	{
-		selector = ".ui-menu-item-ring.ui-menu-square::UICorner",
+		selector = ".ui-menu-item-ring.ui-menu-square >> .ui-part-ring-corner",
 		priority = 5,
 		properties = { CornerRadius = "$RadiusMd" },
 	},

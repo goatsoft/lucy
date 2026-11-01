@@ -78,19 +78,20 @@ return function()
 		end)
 
 		it("bounds a ring button and its label, beside it or under it, with room around", function()
-			-- A 56 button, a 60x20 label beside it (10 away) or under it (4 away), 6 of room
+			-- A 56 button, a 60x20 label beside it (10 away) or under it (4 away), 6 of room, and
+			-- twice that past the label's far end, so the ring never runs into the label's text
 			local at, size = Menu.itemBounds("right", 56, Vector2.new(60, 20), 6)
 			expect(at).to.equal(Vector2.new(-6, -6))
-			expect(size).to.equal(Vector2.new(56 + 10 + 60 + 12, 56 + 12))
+			expect(size).to.equal(Vector2.new(56 + 10 + 60 + 18, 56 + 12))
 
 			at, size = Menu.itemBounds("left", 56, Vector2.new(60, 20), 6)
-			expect(at).to.equal(Vector2.new(-10 - 60 - 6, -6))
-			expect(size).to.equal(Vector2.new(60 + 10 + 56 + 12, 56 + 12))
+			expect(at).to.equal(Vector2.new(-10 - 60 - 12, -6))
+			expect(size).to.equal(Vector2.new(60 + 10 + 56 + 18, 56 + 12))
 
 			-- Under it: a wide label sets the width, centred on the button
 			at, size = Menu.itemBounds("below", 56, Vector2.new(80, 20), 6)
 			expect(at).to.equal(Vector2.new(-12 - 6, -6))
-			expect(size).to.equal(Vector2.new(80 + 12, 56 + 4 + 20 + 12))
+			expect(size).to.equal(Vector2.new(80 + 12, 56 + 4 + 20 + 18))
 
 			-- A label taller than the button sets the height beside it
 			at, size = Menu.itemBounds("right", 56, Vector2.new(60, 80), 0)
