@@ -2,9 +2,13 @@
 --[[
 	Badge
 
-		Badge.new({ text = "New", variant = "default" }) -- default | secondary | destructive | outline
+		Badge.new({
+			text = "New",
+			variant = "default",   -- default | secondary | destructive | outline
+			shape = "rounded",     -- rounded | square (only slightly rounded: a tag or a label)
+		})
 
-	State keys: text, variant, visible.
+	State keys: text, variant, shape, visible.
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
@@ -13,6 +17,7 @@ local Element = require(script.Parent.Parent.Core.Element)
 local Badge = {}
 
 Badge.variants = { "default", "secondary", "destructive", "outline" }
+Badge.shapes = { "rounded", "square" }
 
 local rules: { Component.Rule } = {
 	{
@@ -27,6 +32,12 @@ local rules: { Component.Rule } = {
 		},
 	},
 	{ selector = ".ui-badge::UICorner", priority = 0, properties = { CornerRadius = "$RadiusMd" } },
+	-- square: the smallest radius, for tags and labels that should not read as pills
+	{
+		selector = ".ui-badge-shape-square::UICorner",
+		priority = 5,
+		properties = { CornerRadius = "$RadiusSm" },
+	},
 	{
 		selector = ".ui-badge::UIPadding",
 		priority = 0,
@@ -71,14 +82,22 @@ local function check(variant: string)
 	end
 end
 
+local function checkShape(shape: string)
+	if not table.find(Badge.shapes, shape) then
+		error(`[Lucy] unknown Badge shape "{shape}" (expected {table.concat(Badge.shapes, ", ")})`, 0)
+	end
+end
+
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "badge",
-	defaults = { text = "Badge", variant = "default", visible = true },
+	defaults = { text = "Badge", variant = "default", shape = "rounded", visible = true },
 	rules = Badge.rules,
 	render = function(h)
-		check(h:get("variant")) -- an unknown variant fails the mount
+		check(h:get("variant")) -- an unknown variant or shape fails the mount
+		checkShape(h:get("shape"))
 		local variant = h:ref("variant")
+		local shape = h:ref("shape")
 		return Element.new("TextLabel", {
 			AutomaticSize = Enum.AutomaticSize.XY,
 			Size = UDim2.fromOffset(0, 0),
@@ -90,6 +109,11 @@ local spec: Component.Spec = {
 					local name = variant()
 					check(name)
 					return "ui-badge-variant-" .. name
+				end,
+				["ui-badge-shape-square"] = function(): boolean
+					local name = shape()
+					checkShape(name)
+					return name == "square"
 				end,
 			},
 		})

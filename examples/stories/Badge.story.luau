@@ -4,11 +4,16 @@ return {
 	controls = {
 		text = "New",
 		variant = { "default", "secondary", "destructive", "outline" },
+		shape = { "rounded", "square" },
 	},
 	render = function(ctx)
 		local Lucy = ctx.Lucy
 		return {
-			Lucy.Badge.new({ text = ctx.controls.text, variant = ctx.controls.variant }),
+			Lucy.Badge.new({
+				text = ctx.controls.text,
+				variant = ctx.controls.variant,
+				shape = ctx.controls.shape,
+			}),
 			Lucy.Stack.new({
 				direction = "horizontal",
 				gap = "Space2",

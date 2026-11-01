@@ -30,6 +30,7 @@ Lucy.Stack.new({
 |---|---|---|---|---|
 | `text` | string | `"Badge"` | yes | The label |
 | `variant` | string | `"default"` | yes | `default`, `secondary`, `destructive` or `outline` |
+| `shape` | string | `"rounded"` | yes | `rounded`, or `square`: only slightly rounded (`$RadiusSm`), for tags and labels such as a rarity |
 | `visible` | boolean | `true` | yes | Shows or hides the badge |
 
 It also takes the [props every component takes](index.md#using-a-component).

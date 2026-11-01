@@ -56,6 +56,28 @@ return function()
 		).to.equal(true)
 	end)
 
+	it("is rounded by default and only slightly rounded when square", function()
+		local round = Badge.new({ app = app, Parent = gui, text = "NEW" })
+		local square = Badge.new({ app = app, Parent = gui, text = "RARE", shape = "square" })
+		expect(round.Instance:HasTag("ui-badge-shape-square")).to.equal(false)
+		expect(square.Instance:HasTag("ui-badge-shape-square")).to.equal(true)
+		local radius
+		for _, rule in Badge.rules do
+			if rule.selector == ".ui-badge-shape-square::UICorner" then
+				radius = rule.properties.CornerRadius
+			end
+		end
+		expect(radius).to.equal("$RadiusSm")
+		square:set("shape", "rounded")
+		expect(square.Instance:HasTag("ui-badge-shape-square")).to.equal(false)
+	end)
+
+	it("rejects unknown shapes", function()
+		expect(function()
+			Badge.new({ app = app, shape = "star" })
+		end).to.throw()
+	end)
+
 	it("rejects unknown variants", function()
 		expect(function()
 			Badge.new({ app = app, variant = "gold" })
