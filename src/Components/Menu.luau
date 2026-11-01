@@ -40,7 +40,8 @@
 	Ring buttons show the item's icon (or its initials) with its label under
 	it. shape (a value or a responsive value) picks the outline of ring and fan
 	buttons: round, squircle (a rounded square) or square (slightly rounded
-	corners).
+	corners). A ring or fan item's focus ring goes round the whole item, its
+	button and its label (each button's ItemRing, a Component.partRing).
 
 	It opens on the app's overlay layer as a modal: keyboard and gamepad focus
 	stays inside, back and a press outside close it, and focus returns to the
@@ -50,8 +51,8 @@
 	Events: "open", "close" and "select" with the value, for Lucy.useUiSound.
 	menu.items holds one list row per item, menu.slices one round button per
 	item, in order; menu.variant() is the variant in use.
-	Menu.ring, Menu.fan, Menu.toward, Menu.fit, Menu.around, Menu.nudge, Menu.angles
-	and Menu.pick are the geometry it uses.
+	Menu.ring, Menu.fan, Menu.toward, Menu.fit, Menu.around, Menu.nudge, Menu.angles,
+	Menu.pick and Menu.itemBounds are the geometry it uses.
 ]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -74,6 +75,11 @@ Menu.shapes = { "round", "squircle", "square" }
 -- A round button's size and the room under it for its label.
 Menu.sliceSize = 56
 Menu.captionRoom = 26
+-- How far a label sits from its button: beside it (a fan) or under it (a ring).
+Menu.captionGap = 10
+Menu.captionDrop = 4
+-- The room between a ring or fan item (its button and label) and the focus ring round it.
+Menu.itemRingPad = 6
 -- A fan's curve: the radius of the circle its buttons follow, and the room between them.
 Menu.fanRadius = 900
 Menu.fanGap = 10
@@ -160,6 +166,28 @@ function Menu.fit(center: Vector2, extent: number, view: Vector2, margin: number
 		return math.clamp(value, low, high)
 	end
 	return Vector2.new(axis(center.X, view.X), axis(center.Y, view.Y))
+end
+
+-- Where the focus ring of a ring or fan item goes, in its button's own space: round the button
+-- (`size` square) and its label (`caption`, the label's size) on `side` ("left", "right" or
+-- "below"), with `pad` of room. Returns its top left corner and its size.
+function Menu.itemBounds(side: string, size: number, caption: Vector2, pad: number): (Vector2, Vector2)
+	local minX, minY, maxX, maxY = 0, 0, size, size
+	local middle = size / 2
+	if side == "left" or side == "right" then
+		minY = math.min(0, middle - caption.Y / 2)
+		maxY = math.max(size, middle + caption.Y / 2)
+		if side == "left" then
+			minX = -Menu.captionGap - caption.X
+		else
+			maxX = size + Menu.captionGap + caption.X
+		end
+	else
+		minX = math.min(0, middle - caption.X / 2)
+		maxX = math.max(size, middle + caption.X / 2)
+		maxY = math.max(size, size + Menu.captionDrop + caption.Y)
+	end
+	return Vector2.new(minX - pad, minY - pad), Vector2.new(maxX - minX + pad * 2, maxY - minY + pad * 2)
 end
 
 -- The centre of a ring opened from an anchor: around the anchor when the whole ring fits there,
@@ -358,6 +386,18 @@ Menu.rules = {
 		},
 	},
 	{ selector = ".ui-menu-slice:Hover", priority = 10, properties = { BackgroundColor3 = "$Accent" } },
+	-- A ring or fan item's focus ring (round its button and label) follows the button's shape: a
+	-- pill round a round button, a rounded box round a squircle or square one
+	{
+		selector = ".ui-menu-item-ring.ui-menu-squircle::UICorner",
+		priority = 5,
+		properties = { CornerRadius = UDim.new(0, 17 + Menu.itemRingPad) },
+	},
+	{
+		selector = ".ui-menu-item-ring.ui-menu-square::UICorner",
+		priority = 5,
+		properties = { CornerRadius = "$RadiusMd" },
+	},
 	{ selector = ".ui-menu-slice.ui-disabled", priority = 30, properties = { BackgroundTransparency = 0.5 } },
 	{
 		selector = ".ui-menu-slice-mark",
@@ -579,8 +619,10 @@ local spec: Component.Spec = {
 				Visible = isRing,
 				Interactable = usable,
 				Selectable = usable,
+				-- Its focus ring goes round the whole item, button and label (the ItemRing below)
 				Tags = {
 					"ui-menu-slice" :: any,
+					"ui-ring-host",
 					["ui-disabled"] = off,
 					["ui-menu-squircle"] = function(): boolean
 						return shape() == "squircle"
@@ -608,9 +650,9 @@ local spec: Component.Spec = {
 				Position = function(): UDim2
 					local side = labelSide()
 					return if side == "left"
-						then UDim2.new(0, -10, 0.5, 0)
-						elseif side == "right" then UDim2.new(1, 10, 0.5, 0)
-						else UDim2.new(0.5, 0, 1, 4)
+						then UDim2.new(0, -Menu.captionGap, 0.5, 0)
+						elseif side == "right" then UDim2.new(1, Menu.captionGap, 0.5, 0)
+						else UDim2.new(0.5, 0, 1, Menu.captionDrop)
 				end,
 				-- A pill beside its button is as tall as its text (and padding), so a game's
 				-- theme can give it any text size
@@ -622,6 +664,42 @@ local spec: Component.Spec = {
 				end,
 				Text = item.text,
 				Tags = { "ui-menu-caption" :: any, ["ui-disabled"] = off, ["ui-menu-caption-pill"] = beside },
+				Parent = slice,
+			})
+
+			-- The item's focus ring (Component.partRing), round the button and its label. The label's
+			-- size is measured in the button's own units: a UIScale above scales AbsoluteSize, not offsets.
+			local caption = captions[index]
+			local captionSize = Reactive.ref(Vector2.zero)
+			local function measure()
+				local scale = slice.AbsoluteSize.X / Menu.sliceSize
+				captionSize(if scale > 0 then caption.AbsoluteSize / scale else caption.AbsoluteSize)
+			end
+			caption:GetPropertyChangedSignal("AbsoluteSize"):Connect(measure)
+			measure()
+			local function itemBounds(): (Vector2, Vector2)
+				return Menu.itemBounds(labelSide(), Menu.sliceSize, captionSize(), Menu.itemRingPad)
+			end
+			Element.hydrate(Component.partRing(app), {
+				Name = "ItemRing",
+				AnchorPoint = Vector2.zero,
+				Position = function(): UDim2
+					local at = itemBounds()
+					return UDim2.fromOffset(math.floor(at.X), math.floor(at.Y))
+				end,
+				Size = function(): UDim2
+					local _, size = itemBounds()
+					return UDim2.fromOffset(math.ceil(size.X), math.ceil(size.Y))
+				end,
+				Tags = {
+					"ui-menu-item-ring" :: any,
+					["ui-menu-squircle"] = function(): boolean
+						return shape() == "squircle"
+					end,
+					["ui-menu-square"] = function(): boolean
+						return shape() == "square"
+					end,
+				},
 				Parent = slice,
 			})
 			if item.icon then

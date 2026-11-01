@@ -164,6 +164,10 @@ holds keyboard and gamepad focus while open:
 - **Stick:** on a ring or fan, point the left stick at a button to select it.
 - **Back:** B, Backspace or Escape closes it without picking anything.
 
+On a ring or fan, the focus ring goes round the whole action, its button and
+its label, following the button's shape: a pill round a round button, a rounded
+box round a squircle or square one.
+
 When it closes, the anchor is selected again on a controller.
 
 ## Methods and events

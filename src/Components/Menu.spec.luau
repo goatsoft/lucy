@@ -77,6 +77,27 @@ return function()
 			expect(center.Y + 100 <= button.Y - size.Y / 2).to.equal(true)
 		end)
 
+		it("bounds a ring button and its label, beside it or under it, with room around", function()
+			-- A 56 button, a 60x20 label beside it (10 away) or under it (4 away), 6 of room
+			local at, size = Menu.itemBounds("right", 56, Vector2.new(60, 20), 6)
+			expect(at).to.equal(Vector2.new(-6, -6))
+			expect(size).to.equal(Vector2.new(56 + 10 + 60 + 12, 56 + 12))
+
+			at, size = Menu.itemBounds("left", 56, Vector2.new(60, 20), 6)
+			expect(at).to.equal(Vector2.new(-10 - 60 - 6, -6))
+			expect(size).to.equal(Vector2.new(60 + 10 + 56 + 12, 56 + 12))
+
+			-- Under it: a wide label sets the width, centred on the button
+			at, size = Menu.itemBounds("below", 56, Vector2.new(80, 20), 6)
+			expect(at).to.equal(Vector2.new(-12 - 6, -6))
+			expect(size).to.equal(Vector2.new(80 + 12, 56 + 4 + 20 + 12))
+
+			-- A label taller than the button sets the height beside it
+			at, size = Menu.itemBounds("right", 56, Vector2.new(60, 80), 0)
+			expect(at).to.equal(Vector2.new(0, -12))
+			expect(size).to.equal(Vector2.new(126, 80))
+		end)
+
 		it("picks the item a stick points at, and nothing for a small push", function()
 			local angles = Menu.angles(Menu.ring(4, 100))
 			-- screen directions: x right, y down
@@ -187,6 +208,22 @@ return function()
 			expect(menu.slices[1].Visible).to.equal(true)
 			expect(menu.items[1].Visible).to.equal(false)
 			expect(menu.slices[3].Selectable).to.equal(false) -- disabled
+		end)
+
+		it("rings a whole ring or arc item, its button and its label, when it has focus", function()
+			local menu = make({ variant = "arc", shape = "squircle" })
+			menu:open()
+			local slice = menu.slices[1]
+			-- The button's own ring hides (ui-ring-host) and the item's shows
+			expect(slice:HasTag("ui-ring-host")).to.equal(true)
+			local ring = slice:FindFirstChild("ItemRing") :: Frame
+			expect(ring).to.be.ok()
+			expect(ring:HasTag("ui-part-ring")).to.equal(true)
+			expect(ring:HasTag("ui-menu-item-ring")).to.equal(true)
+			expect(ring:HasTag("ui-menu-squircle")).to.equal(true)
+			expect(ring.Selectable).to.equal(false)
+			-- It reaches past the button, toward its label
+			expect(ring.Size.X.Offset > Menu.sliceSize).to.equal(true)
 		end)
 
 		it("follows a responsive variant as the input changes", function()
