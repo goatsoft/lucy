@@ -18,22 +18,29 @@ return function()
 			expect(near(points[4], Vector2.new(-100, 0))).to.equal(true)
 		end)
 
-		it("fans an arc's items around a direction, a fixed angle apart", function()
-			-- straight up, three items 30 degrees apart
-			local points = Menu.arc(3, 100, -90, 30)
-			expect(near(points[2], Vector2.new(0, -100))).to.equal(true)
-			expect(near(points[1], Vector2.new(-50, -86.6))).to.equal(true)
-			expect(near(points[3], Vector2.new(50, -86.6))).to.equal(true)
+		it("stacks a fan's items along a gentle curve, a step apart, tilting more as it goes", function()
+			-- rising and bending right, like a dock's stack
+			local points, tilts = Menu.fan(3, 50, 60, 1000, -1, 1)
+			expect(#points).to.equal(3)
+			expect(points[1].Y).to.be.near(-50, 0.1)
+			for i = 2, 3 do
+				expect(points[i].Y < points[i - 1].Y).to.equal(true)
+				expect(points[i].X > points[i - 1].X).to.equal(true)
+				expect(tilts[i] > tilts[i - 1]).to.equal(true)
+				expect((points[i] - points[i - 1]).Magnitude).to.be.near(60, 0.5)
+			end
+			expect(tilts[1] > 0).to.equal(true)
+
+			-- dropping and bending left mirrors it
+			local down = Menu.fan(3, 50, 60, 1000, 1, -1)
+			expect(near(down[3], Vector2.new(-points[3].X, -points[3].Y))).to.equal(true)
 		end)
 
-		it("points an arc from its anchor toward the middle of the screen", function()
+		it("finds the direction toward the middle of the screen", function()
 			local view = Vector2.new(800, 600)
-			-- a button in the bottom right corner fans up and to the left
 			local corner = Menu.toward(Vector2.new(760, 560), view)
 			expect(corner > -180 and corner < -90).to.equal(true)
-			-- a button at the top middle fans straight down
 			expect(math.abs(Menu.toward(Vector2.new(400, 20), view) - 90) < 1).to.equal(true)
-			-- one at the left middle fans right
 			expect(math.abs(Menu.toward(Vector2.new(20, 300), view)) < 1).to.equal(true)
 		end)
 
@@ -44,21 +51,18 @@ return function()
 			expect(Menu.fit(Vector2.new(400, 300), 100, view, 8)).to.equal(Vector2.new(400, 300))
 		end)
 
-		it("spreads a long arc no wider than arcSpread", function()
-			expect(Menu.arcStep(3)).to.equal(Menu.arcSpacing)
-			expect(Menu.arcStep(7)).to.be.near(Menu.arcSpread / 6, 0.001)
-			expect(Menu.arcStep(1)).to.equal(Menu.arcSpacing)
-		end)
-
 		it("nudges points that spill off the screen back on, and leaves the rest", function()
 			local view = Vector2.new(800, 600)
 			local points = { Vector2.new(-50, 0), Vector2.new(50, 40) }
-			expect(Menu.nudge(Vector2.new(400, 300), points, 20, 10, view, 8)).to.equal(Vector2.zero)
-			-- the lower point's label would end at 590 + 10 + 10 = 610
-			local moved = Menu.nudge(Vector2.new(400, 550), points, 20, 10, view, 8)
-			expect(moved).to.equal(Vector2.new(0, 592 - 610))
-			local left = Menu.nudge(Vector2.new(20, 300), points, 20, 10, view, 8)
-			expect(left).to.equal(Vector2.new(8 - (20 - 50 - 10), 0))
+			-- a label of 100 to the left of each point
+			local pad = { left = 110, right = 10, top = 10, bottom = 10 }
+			expect(Menu.nudge(Vector2.new(400, 300), points, pad, view, 8)).to.equal(Vector2.zero)
+			-- the lower point would end at 550 + 40 + 10 = 600
+			expect(Menu.nudge(Vector2.new(400, 550), points, pad, view, 8)).to.equal(
+				Vector2.new(0, 592 - 600)
+			)
+			-- the left point's label would start at 150 - 50 - 110 = -10
+			expect(Menu.nudge(Vector2.new(150, 300), points, pad, view, 8)).to.equal(Vector2.new(18, 0))
 		end)
 
 		it("opens a ring around an anchor that has room, and clear of one by the edge", function()

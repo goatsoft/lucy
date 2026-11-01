@@ -15,7 +15,7 @@
 			side = "auto",             -- list: auto | bottom | top | left | right
 			align = "start",           -- list: start | center | end
 			width = 220,               -- list: at least this wide (and the anchor's width)
-			radius = nil,              -- radial and arc: the circle's radius, by item count if left out
+			radius = nil,              -- radial: the ring's (by item count); arc: its curve's (900)
 			shape = "round",           -- radial and arc buttons: round | squircle | square
 			onSelect = function(value, menu) end,
 		})
@@ -33,11 +33,14 @@
 	  radial  a ring of round buttons around the anchor (or the screen centre);
 	          when it does not fit around an anchor by the edge it opens clear
 	          of the anchor, toward the middle; the stick points at one
-	  arc     a fan of round buttons from the anchor, opening toward the middle
-	          of the screen, so a corner button fans inward
-	Ring and arc buttons show the item's icon (or its initials) with its label
-	under it. shape (a value or a responsive value) picks their outline: round,
-	squircle (a rounded square) or square (slightly rounded corners).
+	  arc     a fan like a dock's stack: buttons one above another from the
+	          anchor (below it from an anchor in the top half) along a gentle
+	          curve, each tilted with it, its label in a pill on the side toward
+	          the middle; up and down walk it
+	Ring buttons show the item's icon (or its initials) with its label under
+	it. shape (a value or a responsive value) picks the outline of ring and fan
+	buttons: round, squircle (a rounded square) or square (slightly rounded
+	corners).
 
 	It opens on the app's overlay layer as a modal: keyboard and gamepad focus
 	stays inside, back and a press outside close it, and focus returns to the
@@ -47,8 +50,8 @@
 	Events: "open", "close" and "select" with the value, for Lucy.useUiSound.
 	menu.items holds one list row per item, menu.slices one round button per
 	item, in order; menu.variant() is the variant in use.
-	Menu.ring, Menu.arc, Menu.arcStep, Menu.toward, Menu.fit, Menu.around, Menu.nudge,
-	Menu.angles and Menu.pick are the geometry it uses.
+	Menu.ring, Menu.fan, Menu.toward, Menu.fit, Menu.around, Menu.nudge, Menu.angles
+	and Menu.pick are the geometry it uses.
 ]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -68,12 +71,12 @@ local Menu = {}
 Menu.variants = { "list", "radial", "arc" }
 Menu.shapes = { "round", "squircle", "square" }
 
--- A round button's size, the room under it for its label, and an arc's spacing in degrees.
+-- A round button's size and the room under it for its label.
 Menu.sliceSize = 56
 Menu.captionRoom = 26
-Menu.arcSpacing = 34
--- An arc never spreads wider than this, in degrees: more items get a wider radius instead.
-Menu.arcSpread = 120
+-- A fan's curve: the radius of the circle its buttons follow, and the room between them.
+Menu.fanRadius = 900
+Menu.fanGap = 10
 -- How far the stick must be pushed before it points at an item.
 Menu.deadzone = 0.5
 
@@ -91,43 +94,41 @@ function Menu.ring(count: number, radius: number, start: number?): { Vector2 }
 	return points
 end
 
--- count points on a circle of `radius`, `spacing` degrees apart and centred on `direction`.
-function Menu.arc(count: number, radius: number, direction: number, spacing: number): { Vector2 }
-	local points = {}
+-- A fan like a dock's stack: count buttons one after another from an anchor along a gentle
+-- curve. `start` is the distance from the anchor's centre to the first button, `step` the distance
+-- between buttons, both along the curve. `up` is -1 to rise up the screen and 1 to drop down it;
+-- `bend` is 1 to curve right and -1 to curve left. Returns each button's offset from the anchor's
+-- centre and its tilt in degrees, so each faces along the curve.
+function Menu.fan(
+	count: number,
+	start: number,
+	step: number,
+	radius: number,
+	up: number,
+	bend: number
+): ({ Vector2 }, { number })
+	local points, tilts = {}, {}
 	for i = 1, count do
-		local angle = math.rad(direction + (i - (count + 1) / 2) * spacing)
-		points[i] = Vector2.new(math.cos(angle), math.sin(angle)) * radius
+		local theta = (start + (i - 1) * step) / radius
+		points[i] = Vector2.new(bend * radius * (1 - math.cos(theta)), up * radius * math.sin(theta))
+		tilts[i] = math.deg(theta) * bend * -up
 	end
-	return points
+	return points, tilts
 end
 
--- The degrees between an arc's neighbours: arcSpacing, closer when that would spread the arc
--- wider than arcSpread.
-function Menu.arcStep(count: number): number
-	if count < 2 then
-		return Menu.arcSpacing
-	end
-	return math.min(Menu.arcSpacing, Menu.arcSpread / (count - 1))
-end
+export type Pad = { left: number, right: number, top: number, bottom: number }
 
--- How far to move `center` so every point around it (each `size` around, its label under it)
--- is `margin` inside the screen.
-function Menu.nudge(
-	center: Vector2,
-	points: { Vector2 },
-	size: number,
-	below: number,
-	view: Vector2,
-	margin: number
-): Vector2
+-- How far to move `center` so every point around it, with `pad` around each, is `margin` inside
+-- the screen.
+function Menu.nudge(center: Vector2, points: { Vector2 }, pad: Pad, view: Vector2, margin: number): Vector2
 	if #points == 0 then
 		return Vector2.zero
 	end
 	local low, high = Vector2.new(math.huge, math.huge), Vector2.new(-math.huge, -math.huge)
 	for _, point in points do
 		local at = center + point
-		low = low:Min(at - Vector2.new(size / 2, size / 2))
-		high = high:Max(at + Vector2.new(size / 2, size / 2 + below))
+		low = low:Min(at - Vector2.new(pad.left, pad.top))
+		high = high:Max(at + Vector2.new(pad.right, pad.bottom))
 	end
 	local function axis(lowValue: number, highValue: number, limit: number): number
 		if lowValue < margin then
@@ -386,6 +387,17 @@ Menu.rules = {
 		properties = { PaddingLeft = "$Space1", PaddingRight = "$Space1" },
 	},
 	{ selector = ".ui-menu-caption.ui-disabled", priority = 30, properties = { TextTransparency = 0.5 } },
+	-- A fan's labels are pills beside their buttons
+	{
+		selector = ".ui-menu-caption.ui-menu-caption-pill::UICorner",
+		priority = 10,
+		properties = { CornerRadius = UDim.new(0.5, 0) },
+	},
+	{
+		selector = ".ui-menu-caption.ui-menu-caption-pill::UIPadding",
+		priority = 10,
+		properties = { PaddingLeft = "$Space3", PaddingRight = "$Space3" },
+	},
 } :: { Component.Rule }
 
 local spec: Component.Spec = {
@@ -418,7 +430,7 @@ local spec: Component.Spec = {
 			end
 			local gap = Menu.sliceSize + Menu.captionRoom + 8
 			if variant() == "arc" then
-				return math.max(110, math.ceil(gap / 2 / math.sin(math.rad(Menu.arcStep(count) / 2))))
+				return Menu.fanRadius
 			end
 			return math.max(80, math.ceil(gap / 2 / math.sin(math.pi / math.max(count, 2))))
 		end
@@ -517,8 +529,13 @@ local spec: Component.Spec = {
 			children = { listFrame },
 		})
 
-		-- The ring or arc.
+		-- The ring or arc. A fan's buttons tilt along its curve, with their labels beside them
+		-- (left or right); a ring's labels sit below. Set when it is placed.
+		local tilts = Reactive.ref({} :: { number })
+		local labelSide = Reactive.ref("below")
+		local fanSize = Reactive.ref(Vector2.zero)
 		local slices = {}
+		local captions = {}
 		local ringFrame = Element.new("Frame", {
 			Name = "Ring",
 			BackgroundTransparency = 1,
@@ -526,6 +543,9 @@ local spec: Component.Spec = {
 			Size = function(): UDim2
 				if not isRing() then
 					return UDim2.fromOffset(0, 0)
+				elseif variant() == "arc" then
+					local size = fanSize()
+					return UDim2.fromOffset(math.ceil(size.X), math.ceil(size.Y))
 				end
 				local side = math.ceil(extent() * 2)
 				return UDim2.fromOffset(side, side)
@@ -548,6 +568,9 @@ local spec: Component.Spec = {
 					local at = points()[index] or Vector2.zero
 					return UDim2.new(0.5, math.floor(at.X + 0.5), 0.5, math.floor(at.Y + 0.5))
 				end,
+				Rotation = function(): number
+					return if variant() == "arc" then tilts()[index] or 0 else 0
+				end,
 				Visible = isRing,
 				Interactable = usable,
 				Selectable = usable,
@@ -564,15 +587,33 @@ local spec: Component.Spec = {
 				[ACTIVATED] = function()
 					h:select(item.value)
 				end,
-				Element.new("TextLabel", {
-					Name = "Caption",
-					AnchorPoint = Vector2.new(0.5, 0),
-					Position = UDim2.new(0.5, 0, 1, 4),
-					Size = UDim2.fromOffset(0, 20),
-					AutomaticSize = Enum.AutomaticSize.X,
-					Text = item.text,
-					Tags = { "ui-menu-caption" :: any, ["ui-disabled"] = off },
-				}),
+			})
+			local function beside(): boolean
+				return labelSide() ~= "below"
+			end
+			captions[index] = Element.new("TextLabel", {
+				Name = "Caption",
+				AnchorPoint = function(): Vector2
+					local side = labelSide()
+					return if side == "left"
+						then Vector2.new(1, 0.5)
+						elseif side == "right" then Vector2.new(0, 0.5)
+						else Vector2.new(0.5, 0)
+				end,
+				Position = function(): UDim2
+					local side = labelSide()
+					return if side == "left"
+						then UDim2.new(0, -10, 0.5, 0)
+						elseif side == "right" then UDim2.new(1, 10, 0.5, 0)
+						else UDim2.new(0.5, 0, 1, 4)
+				end,
+				Size = function(): UDim2
+					return UDim2.fromOffset(0, if beside() then 28 else 20)
+				end,
+				AutomaticSize = Enum.AutomaticSize.X,
+				Text = item.text,
+				Tags = { "ui-menu-caption" :: any, ["ui-disabled"] = off, ["ui-menu-caption-pill"] = beside },
+				Parent = slice,
 			})
 			if item.icon then
 				local icon = Icon.new({ app = app, icon = item.icon, size = 24, name = "Icon" })
@@ -635,13 +676,42 @@ local spec: Component.Spec = {
 				local r = radius()
 				if variant() == "radial" then
 					points(Menu.ring(count, r))
+					tilts({})
+					labelSide("below")
 					center = if anchor
 						then Menu.around(center, anchor.size, extent(), view, Overlay.margin)
 						else Menu.fit(center, extent(), view, Overlay.margin)
 				else
-					local fan = Menu.arc(count, r, Menu.toward(center, view), Menu.arcStep(count))
+					-- Up from an anchor in the lower half, down from one in the upper half; labels
+					-- on the side toward the middle, the curve bending away from them.
+					local up = if center.Y > view.Y / 2 then -1 else 1
+					local labelsLeft = center.X >= view.X / 2
+					local size = Menu.sliceSize
+					local start = (if anchor then anchor.size.Y / 2 else 0) + 12 + size / 2
+					local fan, tilt =
+						Menu.fan(count, start, size + Menu.fanGap, r, up, if labelsLeft then 1 else -1)
 					points(fan)
-					center += Menu.nudge(center, fan, Menu.sliceSize, Menu.captionRoom, view, Overlay.margin)
+					tilts(tilt)
+					labelSide(if labelsLeft then "left" else "right")
+					local labelRoom = 0
+					for index, item in entries do
+						local measured = captions[index].AbsoluteSize.X
+						labelRoom = math.max(labelRoom, measured, #item.text * 8 + 24)
+					end
+					labelRoom += 10
+					local pad = {
+						left = size / 2 + (if labelsLeft then labelRoom else 0),
+						right = size / 2 + (if labelsLeft then 0 else labelRoom),
+						top = size / 2,
+						bottom = size / 2,
+					}
+					center += Menu.nudge(center, fan, pad, view, Overlay.margin)
+					-- The frame around the centre covers every button and label.
+					local reach = Vector2.zero
+					for _, point in fan do
+						reach = reach:Max(Vector2.new(math.abs(point.X), math.abs(point.Y)))
+					end
+					fanSize(Vector2.new(reach.X + size / 2 + labelRoom, reach.Y + size / 2) * 2)
 				end
 				return {
 					anchorPoint = Vector2.new(0.5, 0.5),
@@ -663,9 +733,10 @@ local spec: Component.Spec = {
 		h.presentation = overlay.presentation
 		Component.claimSelection(app, overlay.root)
 
-		-- The stick points at a round button while a ring or arc is open.
+		-- The stick points at a round button while a ring is open (a fan is a stack: up and down
+		-- walk it).
 		Composables.useWhile(function(): boolean
-			return open() == true and isRing()
+			return open() == true and variant() == "radial"
 		end, function()
 			return UserInputService.InputChanged:Connect(function(input: InputObject)
 				if input.KeyCode ~= Enum.KeyCode.Thumbstick1 then

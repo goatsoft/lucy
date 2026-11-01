@@ -47,7 +47,7 @@ end)
 | `side` | string | `"auto"` | | List: `auto`, `bottom`, `top`, `left` or `right`, see [Where it opens](#where-it-opens) |
 | `align` | string | `"start"` | | List: `start`, `center` or `end`: how the list lines up with the anchor |
 | `width` | number | `220` | | List: at least this wide (and at least the anchor's width when above or below it) |
-| `radius` | number | by item count | | Ring and fan: the distance from the centre to each button |
+| `radius` | number | by item count, `900` for a fan | | Ring: the distance from the centre to each button. Fan: the radius of its curve (larger is straighter) |
 | `shape` | string or responsive | `"round"` | | Ring and fan buttons: `round`, `squircle` or `square`, see [Button shapes](#button-shapes) |
 | `onSelect` | function | | | Called with `(value, handle)` when the player picks an action |
 | `visible` | boolean | `true` | yes | Shows or hides it |
@@ -74,12 +74,15 @@ An item is a value, shown as its text, or a table with `value`, and optionally:
   edge of the screen (a button in a bottom bar), it opens clear of the anchor,
   toward the middle, so it never covers it. On a controller the left stick
   points at a button, and A picks it.
-- **`arc`:** a fan of round buttons from the anchor, opening toward the middle
-  of the screen. A button in a corner fans inward; one in a top bar fans down.
-  A fan spreads no wider than 120 degrees (more items make it wider instead),
-  and moves in when a button would be off the screen.
+- **`arc`:** a fan like a dock's stack: buttons one above another from the
+  anchor along a gentle curve, each tilted a little more than the last, with
+  its label in a pill beside it. It rises from an anchor in the lower half of
+  the screen and drops from one in the upper half; the labels sit on the side
+  toward the middle and the curve bends away from them. It moves in when a
+  button or label would be off the screen. The first item sits nearest the
+  anchor, and up and down on a controller walk the stack.
 
-Ring and fan buttons show their label under them.
+Ring buttons show their label under them.
 
 ```luau
 Lucy.Menu.new({
