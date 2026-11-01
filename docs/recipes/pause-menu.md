@@ -1,7 +1,7 @@
 ---
 title: Pause menu
 description: A pause menu that opens on B or Backspace and from a button, with a dimmed backdrop, options on top, a confirm before leaving, and gameplay keys off while it is open.
-order: 3
+order: 4
 ---
 
 # Pause menu

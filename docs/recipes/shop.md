@@ -1,7 +1,7 @@
 ---
 title: Shop
 description: An Emote Shop dialog with a grid of dances, Buy buttons that grey out when the player can't afford them, a confirm before buying, a hotkey and a HUD button.
-order: 5
+order: 6
 ---
 
 # Shop

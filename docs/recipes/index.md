@@ -1,6 +1,6 @@
 ---
 title: Recipes
-description: "Whole screens from Club Lucy you can copy into a game and change: audio settings that save, a pause menu, a dance floor HUD and an emote shop."
+description: "Where each part of a game goes, then whole screens from Club Lucy you can copy into a game and change: audio settings that save, a pause menu, a dance floor HUD and an emote shop."
 order: 1
 ---
 
@@ -9,6 +9,9 @@ order: 1
 Each recipe is a whole piece of a game, written out in full, that you can copy
 and change. They use only what the guides explain, and link to them as they go.
 
+- [Lay out a game](game-layout.md): where each part goes, from the one App to
+  scenes, panels and features on the client and services and requests on the
+  server. Start here
 - [Settings menu that saves](settings.md): Music, Sound effects and Crowd
   volume sliders and a theme picker bound to app state, kept between sessions
 - [Pause menu](pause-menu.md): opens on B or Backspace and from a button, with a

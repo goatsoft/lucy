@@ -1,7 +1,7 @@
 ---
 title: HUD
 description: A dance floor heads-up display with a combo badge, coins that pop when they change, a hype meter that fills with the crowd, and a toast for combo milestones.
-order: 4
+order: 5
 ---
 
 # HUD

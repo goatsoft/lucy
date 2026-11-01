@@ -1,7 +1,7 @@
 ---
 title: Settings menu that saves
 description: Music, sound effects and crowd volume sliders and a theme picker bound to app state, loaded when the player joins and saved when they leave.
-order: 2
+order: 3
 ---
 
 # Settings menu that saves
