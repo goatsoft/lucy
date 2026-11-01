@@ -178,6 +178,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/marquee': RouteRecordInfo<
+      '/docs/components/marquee',
+      '/docs/components/marquee',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/number-field': RouteRecordInfo<
       '/docs/components/number-field',
       '/docs/components/number-field',
@@ -381,9 +388,23 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/guide/server': RouteRecordInfo<
+      '/docs/guide/server',
+      '/docs/guide/server',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/guide/themes': RouteRecordInfo<
       '/docs/guide/themes',
       '/docs/guide/themes',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/guide/world-ui': RouteRecordInfo<
+      '/docs/guide/world-ui',
+      '/docs/guide/world-ui',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -674,6 +695,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/marquee.md': {
+      routes:
+        | '/docs/components/marquee'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/number-field.md': {
       routes:
         | '/docs/components/number-field'
@@ -906,9 +935,25 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/guide/server.md': {
+      routes:
+        | '/docs/guide/server'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/guide/themes.md': {
       routes:
         | '/docs/guide/themes'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/guide/world-ui.md': {
+      routes:
+        | '/docs/guide/world-ui'
       views:
         | never
       pathParamNames:
