@@ -21,7 +21,9 @@
 		pushScope({ root, defaultFocus, returnFocus }) confines Tab/arrow navigation
 		to `root` (dialogs and modal scenes push one). When the player picks up a
 		gamepad or presses Tab with nothing selected, the top scope's defaultFocus
-		is selected. When the scope pops with focus inside it, focus goes back to
+		is selected, when it is pushed and again a frame later if focus ended up
+		outside it (the engine can undo a selection made as a dialog first shows).
+		When the scope pops with focus inside it, focus goes back to
 		returnFocus (an object or a function returning one), or else to what had
 		focus when the scope was pushed, if it can still take focus, or else to
 		the control nearest where that was (a Buy button that disabled itself).
@@ -308,6 +310,18 @@ function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
 	table.insert(self._scopes, scope)
 	if self:isNavigating() then
 		self:focusDefault()
+		-- Roblox can undo a selection made on the frame a dialog first shows and put it back where
+		-- it was; once it has drawn (next frame), select the default again if focus ended up outside.
+		task.delay(0, function()
+			if self._scopes[#self._scopes] ~= scope or not self:isNavigating() then
+				return
+			end
+			local focused = self._focused
+			local root = scope.root
+			if root and not (focused and focused.Parent and focused:IsDescendantOf(root)) then
+				self:focusDefault()
+			end
+		end)
 	end
 	return function()
 		local index = table.find(self._scopes, scope)

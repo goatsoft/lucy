@@ -204,6 +204,27 @@ return function()
 		expect(app.input:focused()).to.equal(opener)
 	end)
 
+	it("takes focus back when the engine undoes it as the dialog opens", function()
+		local GuiService = game:GetService("GuiService")
+		local gui = Harness.mount(app)
+		local opener = Instance.new("TextButton")
+		opener.Parent = gui
+		app.input:setMode("gamepad")
+		app.input:focus(opener)
+		local dialog = Dialog.new({ app = app, actions = { { text = "OK" } } })
+		dialog:open()
+		expect(app.input:focused()).to.equal(dialog.actions[1].Instance)
+		-- What Roblox does when it selects something on the frame it first shows: it puts the
+		-- selection back where it was, and Lucy follows the engine.
+		app.input:markFocus(opener)
+		pcall(function()
+			GuiService.SelectedObject = opener
+		end)
+		task.wait()
+		task.wait()
+		expect(app.input:focused()).to.equal(dialog.actions[1].Instance)
+	end)
+
 	it("stacks a dialog opened later above an earlier one", function()
 		local first = Dialog.new({ app = app, open = true })
 		local second = Dialog.new({ app = app, open = true })
