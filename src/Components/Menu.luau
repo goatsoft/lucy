@@ -396,7 +396,12 @@ Menu.rules = {
 	{
 		selector = ".ui-menu-caption.ui-menu-caption-pill::UIPadding",
 		priority = 10,
-		properties = { PaddingLeft = "$Space3", PaddingRight = "$Space3" },
+		properties = {
+			PaddingLeft = "$Space3",
+			PaddingRight = "$Space3",
+			PaddingTop = "$Space1",
+			PaddingBottom = "$Space1",
+		},
 	},
 } :: { Component.Rule }
 
@@ -607,10 +612,14 @@ local spec: Component.Spec = {
 						elseif side == "right" then UDim2.new(1, 10, 0.5, 0)
 						else UDim2.new(0.5, 0, 1, 4)
 				end,
+				-- A pill beside its button is as tall as its text (and padding), so a game's
+				-- theme can give it any text size
 				Size = function(): UDim2
-					return UDim2.fromOffset(0, if beside() then 28 else 20)
+					return UDim2.fromOffset(0, if beside() then 0 else 20)
 				end,
-				AutomaticSize = Enum.AutomaticSize.X,
+				AutomaticSize = function(): Enum.AutomaticSize
+					return if beside() then Enum.AutomaticSize.XY else Enum.AutomaticSize.X
+				end,
 				Text = item.text,
 				Tags = { "ui-menu-caption" :: any, ["ui-disabled"] = off, ["ui-menu-caption-pill"] = beside },
 				Parent = slice,
