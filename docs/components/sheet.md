@@ -42,7 +42,9 @@ settings:open()
 | `title` | string | `""` | yes | The heading |
 | `description` | string | `""` | yes | Text under the heading |
 | `actions` | table | | | Buttons along the bottom, the same as [Dialog actions](dialog.md#actions) |
+| `header` | table | | | Instances or handles under the title, such as filters. They stay put while the body scrolls |
 | `children` | table | | | Instances or handles to put in the scrolling body |
+| `footer` | table | | | Instances or handles under the body, above the actions. They stay put while the body scrolls |
 | `side` | string | `"right"` | | `left` or `right`: the edge the panel comes from |
 | `width` | number | `360` | | The panel's width in pixels, at most 90% of the screen |
 | `presentation` | string | `"auto"` | | `auto`, `panel` or `drawer` |
@@ -68,6 +70,9 @@ motion it just appears. Its background runs to the bottom of the screen, and on
 a phone with a home bar it leaves room above that bar, so the last row and the
 actions stay clear of it.
 
+The title, the `header` and `footer` slots and the actions stay where they are;
+only the body between them scrolls, in whatever height they leave.
+
 While a modal sheet is open, keyboard and gamepad focus stay inside it, and the
 first thing in the body is selected. When it closes, focus goes back to
 whatever had it before.
@@ -81,6 +86,8 @@ whatever had it before.
 | `sheet:toggle()` | Opens it if closed, closes it if open |
 | `sheet.presentation()` | `"panel"` or `"drawer"`, for this opening |
 | `sheet.body` | The [ScrollArea](scroll-area.md) that holds `children` |
+| `sheet.headerSlot` | The frame that holds `header` |
+| `sheet.footerSlot` | The frame that holds `footer` |
 | `sheet.content` | The panel or drawer itself |
 
 ## Examples

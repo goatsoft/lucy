@@ -93,6 +93,38 @@ return function()
 		expect(first.LayoutOrder < second.LayoutOrder).to.equal(true)
 	end)
 
+	it("puts header and footer children outside the scrolling body", function()
+		local filters, picked, row = button("Filters"), button("Picked"), button("Row")
+		local sheet = Sheet.new({
+			app = app,
+			open = true,
+			title = "Dances",
+			header = { filters },
+			children = { row },
+			footer = { picked },
+			actions = { { text = "Done" } },
+		})
+		expect(filters.Parent).to.equal(sheet.headerSlot)
+		expect(picked.Parent).to.equal(sheet.footerSlot)
+		expect(row:IsDescendantOf(sheet.body.Instance)).to.equal(true)
+		expect(filters:IsDescendantOf(sheet.body.Instance)).to.equal(false)
+		expect(picked:IsDescendantOf(sheet.body.Instance)).to.equal(false)
+		task.wait(0.2)
+		-- Header under the title, body next, footer slot above the actions.
+		expect(filters.AbsolutePosition.Y > sheet.titleLabel.AbsolutePosition.Y).to.equal(true)
+		expect(sheet.body.Instance.AbsolutePosition.Y >= filters.AbsolutePosition.Y + filters.AbsoluteSize.Y).to.equal(
+			true
+		)
+		expect(picked.AbsolutePosition.Y < sheet.actions[1].Instance.AbsolutePosition.Y).to.equal(true)
+	end)
+
+	it("shows a footer slot with no actions", function()
+		local sheet = Sheet.new({ app = app, open = true, footer = { button("Picked") } })
+		expect(sheet.footer.Visible).to.equal(true)
+		expect(sheet.actionsRow.Visible).to.equal(false)
+		expect(sheet.headerSlot.Visible).to.equal(false)
+	end)
+
 	it("hides the footer with no actions", function()
 		local sheet = Sheet.new({ app = app, open = true })
 		expect(sheet.footer.Visible).to.equal(false)

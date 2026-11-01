@@ -367,6 +367,47 @@ return function()
 			expect(dialog.footer.AbsoluteSize.Y > 0).to.equal(true)
 		end)
 
+		it("keeps header and footer children in place while the body scrolls", function()
+			local filters = Instance.new("Frame")
+			filters.Name = "Filters"
+			filters.Size = UDim2.new(1, 0, 0, 30)
+			local picked = Instance.new("Frame")
+			picked.Name = "Picked"
+			picked.Size = UDim2.new(1, 0, 0, 30)
+			local dialog = Dialog.new({
+				app = app,
+				open = true,
+				title = "Dances",
+				maxHeight = 320,
+				header = { filters },
+				children = rows(30),
+				footer = { picked },
+				actions = { { text = "OK" } },
+			})
+			task.wait(0.3)
+			expect(filters.Parent).to.equal(dialog.headerSlot)
+			expect(picked.Parent).to.equal(dialog.footerSlot)
+			local height = dialog.content.AbsoluteSize.Y / Scroll.scaleOf(dialog.content)
+			expect(height <= 321).to.equal(true)
+			local scroll = dialog.scroll.Instance
+			expect(scroll.AbsoluteCanvasSize.Y > scroll.AbsoluteSize.Y).to.equal(true)
+			expect(filters.AbsolutePosition.Y < scroll.AbsolutePosition.Y).to.equal(true)
+			expect(picked.AbsolutePosition.Y >= scroll.AbsolutePosition.Y + scroll.AbsoluteSize.Y).to.equal(
+				true
+			)
+			expect(picked.AbsolutePosition.Y < dialog.actions[1].Instance.AbsolutePosition.Y).to.equal(true)
+		end)
+
+		it("shows a footer slot with no actions, and hides empty slots", function()
+			local picked = Instance.new("Frame")
+			local dialog = Dialog.new({ app = app, footer = { picked } })
+			expect(dialog.footer.Visible).to.equal(true)
+			expect(dialog.actionsRow.Visible).to.equal(false)
+			expect(dialog.headerSlot.Visible).to.equal(false)
+			local plain = Dialog.new({ app = app })
+			expect(plain.footer.Visible).to.equal(false)
+		end)
+
 		it("fits the screen with a long body even without maxHeight", function()
 			local dialog = Dialog.new({ app = app, open = true, title = "Rules", children = rows(60) })
 			task.wait(0.3)

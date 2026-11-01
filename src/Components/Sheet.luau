@@ -7,7 +7,9 @@
 			id = "settings",
 			title = "Settings",
 			description = "Saved to your profile.",
+			header = { ... },                       -- under the title, stays put (sheet.headerSlot)
 			children = { ... },                     -- into sheet.body, which scrolls
+			footer = { ... },                       -- above the actions, stays put (sheet.footerSlot)
 			actions = {                             -- buttons along the bottom, like Dialog's
 				{ text = "Done" },
 			},
@@ -25,6 +27,9 @@
 			onOpenChange = function(open, sheet) end,
 		})
 		settings:open()  settings:close()  settings:toggle()
+
+	The header and footer slots stay where they are while the body scrolls
+	between them; the body gets whatever height they leave.
 
 	Sheets float on the app's overlay layer with dialogs and popups, newest on
 	top. The panel or drawer is decided each time it opens: a drawer when the
@@ -177,6 +182,20 @@ local spec: Component.Spec = {
 		h.descriptionLabel = label("ui-sheet-description", 2, h:ref("description"))
 		h.descriptionLabel.Parent = text
 
+		text.LayoutOrder = 1
+		-- The header slot: filters, tabs or anything else that stays put over the body.
+		local headerSlot = Component.box({
+			Name = "HeaderSlot",
+			Size = UDim2.fromScale(1, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			LayoutOrder = 2,
+			Visible = p.header ~= nil,
+		})
+		Component.list({ Padding = UDim.new(0, gap), Parent = headerSlot })
+		if p.header then
+			Component.adopt(headerSlot, p.header)
+		end
+
 		local header = Element.new("Frame", {
 			Name = "Header",
 			Size = UDim2.fromScale(1, 0),
@@ -184,7 +203,12 @@ local spec: Component.Spec = {
 			LayoutOrder = 2,
 			Tags = { "ui-sheet-part" },
 			[OUT_SIZE] = headerSize :: any,
+			Element.new("UIListLayout", {
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				Padding = UDim.new(0, gap),
+			}),
 			text,
+			headerSlot,
 		})
 		if showClose then
 			h.closeButton = Button.close({
@@ -195,6 +219,31 @@ local spec: Component.Spec = {
 			})
 		end
 
+		-- The footer: the footer slot (stays put under the body), then the actions.
+		local footerSlot = Component.box({
+			Name = "FooterSlot",
+			Size = UDim2.fromScale(1, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			LayoutOrder = 1,
+			Visible = p.footer ~= nil,
+		})
+		Component.list({ Padding = UDim.new(0, gap), Parent = footerSlot })
+		if p.footer then
+			Component.adopt(footerSlot, p.footer)
+		end
+		local actionsRow = Element.new("Frame", {
+			Name = "Actions",
+			Size = UDim2.fromScale(1, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			LayoutOrder = 2,
+			Tags = { "ui-sheet-part" },
+		})
+		Component.list({
+			FillDirection = Enum.FillDirection.Horizontal,
+			HorizontalAlignment = Enum.HorizontalAlignment.Right,
+			Padding = Component.space(app, "Space2", 8),
+			Parent = actionsRow,
+		})
 		local footer = Element.new("Frame", {
 			Name = "Footer",
 			Size = UDim2.fromScale(1, 0),
@@ -202,12 +251,12 @@ local spec: Component.Spec = {
 			LayoutOrder = 5,
 			Tags = { "ui-sheet-part" },
 			[OUT_SIZE] = footerSize :: any,
-		})
-		Component.list({
-			FillDirection = Enum.FillDirection.Horizontal,
-			HorizontalAlignment = Enum.HorizontalAlignment.Right,
-			Padding = Component.space(app, "Space2", 8),
-			Parent = footer,
+			Element.new("UIListLayout", {
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				Padding = UDim.new(0, gap),
+			}),
+			footerSlot,
+			actionsRow,
 		})
 		for index, action in p.actions or {} do
 			local actionHandle = Button.new({
@@ -223,10 +272,12 @@ local spec: Component.Spec = {
 					end
 				end,
 			})
-			actionHandle.Instance.Parent = footer
+			actionHandle.Instance.Parent = actionsRow
 			table.insert(actionHandles, actionHandle)
 		end
-		footer.Visible = #actionHandles > 0
+		actionsRow.Visible = #actionHandles > 0
+		local hasFooter = #actionHandles > 0 or p.footer ~= nil
+		footer.Visible = hasFooter
 
 		-- The body may use what the overlay offers, less the header, footer, padding and gaps.
 		local content: Frame
@@ -240,7 +291,7 @@ local spec: Component.Spec = {
 				scale = 1
 			end
 			local used = pad * 2 + headerSize().Y / scale + gap
-			if #actionHandles > 0 then
+			if hasFooter then
 				used += footerSize().Y / scale + gap
 			end
 			if isDrawer() then
@@ -365,6 +416,7 @@ local spec: Component.Spec = {
 
 		h.overlay, h.content, h.body, h.footer, h.actions =
 			overlay.scrim, content, body, footer, actionHandles
+		h.headerSlot, h.footerSlot, h.actionsRow = headerSlot, footerSlot, actionsRow
 		h.handleBar, h.presentation = handleBar, overlay.presentation
 		Component.claimSelection(app, overlay.root)
 

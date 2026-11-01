@@ -34,7 +34,9 @@ quit:open()
 | `title` | string | `""` | yes | The heading |
 | `description` | string | `""` | yes | Text under the heading |
 | `actions` | table | | | Buttons along the bottom, see [Actions](#actions) |
+| `header` | table | | | Instances or handles under the title, such as tabs or filters. They stay put while the body scrolls |
 | `children` | table | | | Instances or handles to put in the content area |
+| `footer` | table | | | Instances or handles under the body, above the actions. They stay put while the body scrolls |
 | `dismissible` | boolean | `true` | | Whether B, Backspace, the overlay and the close button can close it |
 | `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it (off by default when `modal` is `false`) |
 | `modal` | boolean | `true` | | `false` lets clicks reach what is behind it and lets focus move out of it |
@@ -51,7 +53,8 @@ Without a `Parent`, it goes into the app's modal layer, above every scene. A
 dialog opened later shows above one opened earlier.
 
 When the content is taller than `maxHeight`, or than the screen, the body
-scrolls and the title and actions stay where they are. So leave out a table's
+scrolls and the title, the `header` and `footer` slots and the actions stay
+where they are. So leave out a table's
 `maxHeight` inside a dialog, unless the table should scroll on its own.
 
 While a modal dialog is open, keyboard and gamepad focus stay inside it. When
@@ -82,6 +85,8 @@ An action closes the dialog after its `onClick` runs, unless `onClick` returns
 | `dialog:toggle()` | Opens it if closed, closes it if open |
 | `dialog.body` | The frame that holds `children` (hidden when there are none) |
 | `dialog.scroll` | The [ScrollArea](scroll-area.md) around the body |
+| `dialog.headerSlot` | The frame that holds `header` |
+| `dialog.footerSlot` | The frame that holds `footer` |
 
 ## Alert dialogs
 

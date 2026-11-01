@@ -6,7 +6,9 @@
 			id = "quit",
 			title = "Leave match?",
 			description = "You will drop your cash.",
-			children = { ... },                     -- into dialog.body
+			header = { ... },                       -- under the title, stays put (dialog.headerSlot)
+			children = { ... },                     -- into dialog.body, which scrolls
+			footer = { ... },                       -- above the actions, stays put (dialog.footerSlot)
 			actions = {
 				{ text = "Stay", variant = "outline" },
 				{ text = "Leave", variant = "destructive", onClick = function(dialog) leave() end },
@@ -31,7 +33,8 @@
 
 	An action closes the dialog after its onClick unless onClick returns false.
 	The body (dialog.body holds the children) scrolls when the dialog would be
-	taller than maxHeight or the screen; the header and actions stay put.
+	taller than maxHeight or the screen; the title, the header and footer slots
+	and the actions stay put.
 	Dialogs mount into the app's "modal" portal (above every scene) unless Parent is given,
 	and stack with sheets and popups by the order they open (Core/Overlay).
 
@@ -180,6 +183,7 @@ function Dialog.new(props: { [string]: any }?)
 			-- Measured, so the body knows how much height is left for it.
 			local headerSize = Reactive.ref(Vector2.zero)
 			local footerSize = Reactive.ref(Vector2.zero)
+			local footerShown = false -- set once the footer is made; bodyCap reads it
 			local header = Element.new("Frame", {
 				Name = "Header",
 				BackgroundTransparency = 1,
@@ -189,12 +193,25 @@ function Dialog.new(props: { [string]: any }?)
 				[OUT_SIZE] = headerSize :: any,
 			})
 			header.Parent = inner
+			Component.list({ Padding = gap, Parent = header })
 			local text = Component.box({
 				Name = "Text",
 				Size = UDim2.new(1, if showClose then -44 else 0, 0, 0),
 				AutomaticSize = Enum.AutomaticSize.Y,
+				LayoutOrder = 1,
 				Parent = header,
 			})
+			-- The header slot: filters, tabs or anything else that stays put over the body.
+			local headerSlot = Component.box({
+				Name = "HeaderSlot",
+				LayoutOrder = 2,
+				Visible = p.header ~= nil,
+				Parent = header,
+			})
+			Component.list({ Padding = gap, Parent = headerSlot })
+			if p.header then
+				Component.adopt(headerSlot, p.header)
+			end
 			Component.list({ Padding = UDim.new(0, 6), Parent = text })
 			h.titleLabel = label("ui-dialog-title", 1, h:ref("title"))
 			h.titleLabel.Parent = text
@@ -234,7 +251,7 @@ function Dialog.new(props: { [string]: any }?)
 					scale = 1
 				end
 				local used = pad * 2 + headerSize().Y / scale + gap.Offset
-				if #actionHandles > 0 then
+				if footerShown then
 					used += footerSize().Y / scale + gap.Offset
 				end
 				return math.max(0, math.floor(cap - used))
@@ -261,11 +278,24 @@ function Dialog.new(props: { [string]: any }?)
 				[OUT_SIZE] = footerSize :: any,
 			})
 			footer.Parent = inner
+			Component.list({ Padding = gap, Parent = footer })
+			-- The footer slot stays put under the body, over the actions.
+			local footerSlot = Component.box({
+				Name = "FooterSlot",
+				LayoutOrder = 1,
+				Visible = p.footer ~= nil,
+				Parent = footer,
+			})
+			Component.list({ Padding = gap, Parent = footerSlot })
+			if p.footer then
+				Component.adopt(footerSlot, p.footer)
+			end
+			local actionsRow = Component.box({ Name = "Actions", LayoutOrder = 2, Parent = footer })
 			Component.list({
 				FillDirection = Enum.FillDirection.Horizontal,
 				HorizontalAlignment = Enum.HorizontalAlignment.Right,
 				Padding = Component.space(h.app, "Space2", 8),
-				Parent = footer,
+				Parent = actionsRow,
 			})
 			for index, action in p.actions or {} do
 				local actionHandle = Button.new({
@@ -281,11 +311,13 @@ function Dialog.new(props: { [string]: any }?)
 						end
 					end,
 				})
-				actionHandle.Instance.Parent = footer
+				actionHandle.Instance.Parent = actionsRow
 				table.insert(actionHandles, actionHandle)
 				h.maid:give(actionHandle)
 			end
-			footer.Visible = #actionHandles > 0
+			actionsRow.Visible = #actionHandles > 0
+			footerShown = #actionHandles > 0 or p.footer ~= nil
+			footer.Visible = footerShown
 
 			-- Stacking, back, focus and the dimmed backdrop (owned, so destroy pops them).
 			local overlay = Overlay.use(h.app, {
@@ -319,6 +351,7 @@ function Dialog.new(props: { [string]: any }?)
 			overlayRef(overlay)
 			h.overlay, h.content, h.body, h.footer, h.actions =
 				overlay.scrim, content, body, footer, actionHandles
+			h.headerSlot, h.footerSlot, h.actionsRow = headerSlot, footerSlot, actionsRow
 			Component.claimSelection(h.app, root)
 
 			-- Side effects of opening: the owner hears.
