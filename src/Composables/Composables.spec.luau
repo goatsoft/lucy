@@ -320,6 +320,28 @@ return function()
 			scope:stop()
 		end)
 
+		it("does not rerun setup when the condition reads something new but stays true", function()
+			local list = Reactive.ref({ "a" })
+			local log = {}
+			local scope = Reactive.effectScope(true)
+			scope:run(function()
+				Composables.useWhile(function()
+					return #list() > 0
+				end, function()
+					table.insert(log, "setup")
+					return function()
+						table.insert(log, "cleanup")
+					end
+				end)
+			end)
+			list({ "a", "b" })
+			list({ "b" })
+			expect(table.concat(log, ",")).to.equal("setup")
+			list({})
+			expect(table.concat(log, ",")).to.equal("setup,cleanup")
+			scope:stop()
+		end)
+
 		it("takes a getter, such as the app's modal state", function()
 			local released = 0
 			local scope = Reactive.effectScope(true)

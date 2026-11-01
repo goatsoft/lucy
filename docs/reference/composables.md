@@ -209,8 +209,9 @@ when the condition turns false or the owner stops. The condition is a ref, a
 getter or a value. The function can return a cleanup function or a connection,
 call `Lucy.onCleanup`, or make effects of its own; all of it is cleaned up.
 
-Only the condition starts it again: values the function reads along the way do
-not.
+Only the condition turning true or false starts it again. Values the function
+reads along the way do not, and nor does a getter that reads something new but
+stays true, such as `#queue() > 0` while dances are added to the queue.
 
 A common use is switching gameplay keys and movement off while a menu is open
 (see [Hotkeys and modal input](../guide/actions.md)):

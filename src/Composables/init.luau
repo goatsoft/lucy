@@ -163,8 +163,9 @@ end
 	Runs `setup` each time `condition` (a ref, getter or value) turns true, and
 	cleans up what it made when it turns false or the owner stops. `setup` may
 	return a cleanup function or an RBXScriptConnection, and may call onCleanup or
-	make effects of its own. Its reads are not tracked, so only `condition` reruns
-	it.
+	make effects of its own. Its reads are not tracked, and a getter that reads
+	something new but stays true does not restart it: only `condition` turning
+	true or false does.
 
 		Lucy.useWhile(function() return app:modalOpen() end, function()
 			return app.actions:disable("gameplay", "movement")
@@ -172,8 +173,12 @@ end
 ]]
 function Composables.useWhile(condition: Reactive.MaybeRef<boolean>, setup: () -> any)
 	requireOwner("useWhile")
+	-- A boolean the effect follows, so only a flip reruns it
+	local active = Reactive.computed(function(): boolean
+		return Reactive.toValue(condition) and true or false
+	end)
 	Reactive.watchEffect(function(onCleanup)
-		if not Reactive.toValue(condition) then
+		if not active() then
 			return
 		end
 		local scope = Reactive.effectScope(true)
