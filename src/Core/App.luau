@@ -79,6 +79,7 @@ export type App = typeof(setmetatable(
 		parent: Instance,
 		maid: Maid.Maid,
 		selectionImage: Frame,
+		selectionRing: Frame,
 		theme: Theme.Theme,
 		state: AppState.AppState,
 		input: InputManager.InputManager,
@@ -125,7 +126,8 @@ function App.new(config: { [string]: any }?): App
 	self._portals = {}
 	self._adaptive = {}
 
-	-- One blank template replaces Roblox's default selection ring everywhere.
+	-- Lucy's components take one blank template in place of Roblox's default selection ring
+	-- (Component.claimSelection) and draw a styled ring of their own.
 	local blank = Instance.new("Frame")
 	blank.Name = self.namePrefix .. "NoSelectionImage"
 	blank.BackgroundTransparency = 1
@@ -133,15 +135,6 @@ function App.new(config: { [string]: any }?): App
 	blank.Size = UDim2.fromScale(1, 1)
 	self.selectionImage = blank
 	self.maid:give(blank)
-	if self.parent:IsA("PlayerGui") then
-		local previous = self.parent.SelectionImageObject
-		self.parent.SelectionImageObject = blank
-		self.maid:give(function()
-			if self.parent.SelectionImageObject == blank then
-				self.parent.SelectionImageObject = previous
-			end
-		end)
-	end
 
 	self.theme = Theme.new({
 		name = self.namePrefix .. "Styles",
@@ -153,6 +146,48 @@ function App.new(config: { [string]: any }?): App
 		parent = options.styleParent,
 	})
 	self.maid:give(self.theme)
+
+	-- UI Lucy did not build (a game's older ScreenGuis) sits outside the style sheet, so it gets
+	-- the same ring as PlayerGui's selection image: $Ring at $FocusRing, inside the edge.
+	local ring = Instance.new("Frame")
+	ring.Name = self.namePrefix .. "SelectionRing"
+	ring.BackgroundTransparency = 1
+	ring.BorderSizePixel = 0
+	ring.Size = UDim2.fromScale(1, 1)
+	local ringCorner = Instance.new("UICorner")
+	ringCorner.Parent = ring
+	local ringStroke = Instance.new("UIStroke")
+	ringStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	ringStroke.BorderStrokePosition = Enum.BorderStrokePosition.Inner
+	ringStroke.Parent = ring
+	local function paintRing()
+		local color = self.theme:resolve("Ring")
+		if typeof(color) == "Color3" then
+			ringStroke.Color = color
+		end
+		local thickness = self.theme:resolve("FocusRing")
+		if type(thickness) == "number" then
+			ringStroke.Thickness = thickness
+		end
+		local radius = self.theme:resolve("RadiusMd")
+		if typeof(radius) == "UDim" then
+			ringCorner.CornerRadius = radius
+		end
+	end
+	paintRing()
+	self.maid:give(self.theme.Changed:Connect(paintRing))
+	self.maid:give(self.theme.DensityChanged:Connect(paintRing))
+	self.selectionRing = ring
+	self.maid:give(ring)
+	if self.parent:IsA("PlayerGui") then
+		local previous = self.parent.SelectionImageObject
+		self.parent.SelectionImageObject = ring
+		self.maid:give(function()
+			if self.parent.SelectionImageObject == ring then
+				self.parent.SelectionImageObject = previous
+			end
+		end)
+	end
 
 	-- Roblox draws text larger at the player's text size; controls grow to fit.
 	-- See-through backgrounds follow the player's background transparency.

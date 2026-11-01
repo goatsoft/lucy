@@ -18,8 +18,10 @@ touch), `input.device` (desktop, console, tablet, mobile), `input.density`,
 
 Focus is Lucy's:
 
-- The App sets a blank `SelectionImageObject` on PlayerGui and on every component,
-  so the engine never draws its ring.
+- The App sets a blank `SelectionImageObject` on every component, so the engine
+  never draws its ring there. PlayerGui's `SelectionImageObject` is `app.selectionRing`,
+  a `$Ring` outline at `$FocusRing`, so UI the game built without Lucy (outside the
+  style sheet) shows the same ring when selected.
 - The focused object gets the `ui-focus-visible` tag only while navigating with
   keyboard or gamepad, and a base rule draws a themed UIStroke ring (`$Ring`).
   Text inputs show the ring whenever focused, like shadcn.

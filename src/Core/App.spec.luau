@@ -120,6 +120,24 @@ return function()
 		expect(app:nextId("badge")).to.equal("badge-1")
 	end)
 
+	it("rings UI it did not build in the theme's $Ring, following the theme", function()
+		-- PlayerGui's selection image: what the engine draws around a selected object that is not a
+		-- Lucy component (Lucy's own keep app.selectionImage, blank, and draw a styled ring).
+		local ring = app.selectionRing
+		expect(ring).to.be.ok()
+		expect(ring).never.to.equal(app.selectionImage)
+		local stroke = ring:FindFirstChildOfClass("UIStroke") :: UIStroke
+		expect(stroke).to.be.ok()
+		expect(stroke.Color).to.equal(app.theme:resolve("Ring"))
+		expect(stroke.Thickness).to.equal(app.theme:resolve("FocusRing"))
+		app:setTheme("dark")
+		expect(stroke.Color).to.equal(app.theme:resolve("Ring"))
+		cleanup()
+		expect(ring.Parent).to.equal(nil)
+		expect(stroke.Parent).to.equal(nil)
+		app, cleanup = Harness.app()
+	end)
+
 	it("removes everything it made on destroy", function()
 		local gui = app:portal("modal")
 		local folder = app.theme.folder

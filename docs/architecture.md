@@ -156,8 +156,10 @@ Select row, a radio option, a sortable header, your own buttons built with
 component from the focused object up with a `press(object)` method that returns
 true takes it.
 
-Roblox's own selection image is replaced with a blank frame; Lucy draws its own
-ring with the `ui-focus-visible` tag only while navigating with keys or a pad.
+Roblox's own selection image is replaced with a blank frame on Lucy's components;
+Lucy draws its own ring with the `ui-focus-visible` tag only while navigating with
+keys or a pad. Everything else in PlayerGui (a game's older ScreenGuis) gets
+`app.selectionRing` instead, the same `$Ring` outline drawn by the engine.
 
 ### Back keys
 
