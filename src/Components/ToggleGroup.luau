@@ -8,7 +8,7 @@
 			type = "single",       -- single | multiple
 			value = "House",       -- single: a value or false; multiple: a list
 			required = false,      -- single: picking the picked item again keeps it
-			variant = "default",   -- default | outline (the Toggle looks)
+			variant = "default",   -- default | outline | line (the Toggle looks)
 			size = "md",           -- sm | md | lg
 			orientation = "horizontal", -- horizontal | vertical
 			gap = "Space1",
@@ -136,6 +136,9 @@ local spec: Component.Spec = {
 				[ACTIVATED] = function()
 					h:select(itemValue)
 				end,
+				Toggle.indicator(function(): boolean
+					return variant() == "line" and (selected :: any)() == true
+				end) :: any,
 			})
 			Component.adopt(button, item.children)
 			buttons[index] = button

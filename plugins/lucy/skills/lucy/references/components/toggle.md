@@ -29,7 +29,7 @@ Lucy.Stack.new({
 |---|---|---|---|---|
 | `text` | string | `""` | yes | The text on it |
 | `pressed` | boolean | `false` | yes | Whether it is on |
-| `variant` | string | `"default"` | yes | `default` or `outline` |
+| `variant` | string | `"default"` | yes | `default`, `outline`, or `line`: text only, with a line under it while pressed |
 | `size` | string | `"md"` | yes | `sm`, `md` or `lg` |
 | `disabled` | boolean | `false` | yes | Greys it out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |

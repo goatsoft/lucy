@@ -8,7 +8,7 @@
 				{ value = "moves", text = "Moves", content = function() return buildMoves() end },
 			},
 			value = "songs",       -- the first tab when left out
-			variant = "default",   -- default | outline (the tab bar's toggle look)
+			variant = "default",   -- default | outline | line (the tab bar's toggle look; line underlines the picked tab)
 			size = "md",           -- sm | md | lg
 			gap = "Space2",        -- between the tab bar and the panels
 			disabled = false,

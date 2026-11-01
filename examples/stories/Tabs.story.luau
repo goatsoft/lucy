@@ -3,7 +3,7 @@ return {
 	description = "A DJ booth with three tabs. Each panel keeps its state when you switch away.",
 	width = 480,
 	controls = {
-		variant = { "default", "outline" },
+		variant = { "default", "outline", "line" },
 		size = { options = { "sm", "md", "lg" }, default = "md" },
 	},
 	render = function(ctx)

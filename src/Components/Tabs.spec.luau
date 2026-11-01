@@ -41,6 +41,37 @@ return function()
 		expect(tabs.list.items[1]:HasTag("ui-selected")).to.equal(true)
 	end)
 
+	it("underlines the picked tab with the line variant", function()
+		local _, _, items = panels()
+		local tabs = Tabs.new({ app = app, Parent = gui, items = items, variant = "line" })
+		local first, second = tabs.list.items[1], tabs.list.items[2]
+		local firstLine = first:FindFirstChild("Indicator") :: Frame
+		local secondLine = second:FindFirstChild("Indicator") :: Frame
+		expect(firstLine.Visible).to.equal(true)
+		expect(secondLine.Visible).to.equal(false)
+		Harness.flush()
+		-- no button look: no fill, muted text until picked, and the line in the primary colour
+		expect(Harness.styled(first, "BackgroundTransparency")).to.equal(1)
+		expect(Harness.colorEq(Harness.styled(first, "TextColor3"), app.theme:resolve("Foreground"))).to.equal(
+			true
+		)
+		expect(Harness.colorEq(Harness.styled(second, "TextColor3"), app.theme:resolve("MutedForeground"))).to.equal(
+			true
+		)
+		expect(Harness.colorEq(Harness.styled(firstLine, "BackgroundColor3"), app.theme:resolve("Primary"))).to.equal(
+			true
+		)
+		tabs:select("moves")
+		expect(firstLine.Visible).to.equal(false)
+		expect(secondLine.Visible).to.equal(true)
+	end)
+
+	it("shows no underline with the other variants", function()
+		local _, _, items = panels()
+		local tabs = Tabs.new({ app = app, Parent = gui, items = items })
+		expect((tabs.list.items[1]:FindFirstChild("Indicator") :: Frame).Visible).to.equal(false)
+	end)
+
 	it("fits its tab bar to the tabs", function()
 		local _, _, items = panels()
 		local tabs = Tabs.new({ app = app, Parent = gui, items = items, size = "sm" })

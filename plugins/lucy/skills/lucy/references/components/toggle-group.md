@@ -24,7 +24,7 @@ Lucy.ToggleGroup.new({
 | `type` | string | `"single"` | | `single` picks one, `multiple` picks any number |
 | `value` | any | `false`, or `{}` for multiple | yes | The picked value, or the list of picked values |
 | `required` | boolean | `false` | | Single only: picking the picked item again keeps it picked |
-| `variant` | string | `"default"` | yes | `default` or `outline` |
+| `variant` | string | `"default"` | yes | `default`, `outline`, or `line`: text only, with a line under the picked items |
 | `size` | string | `"md"` | yes | `sm`, `md` or `lg` |
 | `orientation` | string | `"horizontal"` | | `horizontal` for a row, `vertical` for a column |
 | `gap` | spacing | `"Space1"` | | Space between items |

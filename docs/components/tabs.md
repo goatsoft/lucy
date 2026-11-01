@@ -36,7 +36,7 @@ Lucy.Tabs.new({
 |---|---|---|---|---|
 | `items` | table | | | The tabs, in order (see below) |
 | `value` | any | the first tab | yes | The tab shown |
-| `variant` | string | `"default"` | yes | The tab bar's look: `default` or `outline` |
+| `variant` | string | `"default"` | yes | The tab bar's look: `default`, `outline`, or `line` for text tabs with a line under the picked one |
 | `size` | string | `"md"` | yes | The tab bar's size: `sm`, `md` or `lg` |
 | `gap` | spacing | `"Space2"` | | Space between the tab bar and the panels |
 | `shoulderButtons` | boolean | `true` | | LB and RB switch tabs while focus is inside |
@@ -82,6 +82,20 @@ panel frame.
 | `tabs:select(value)` | Shows that tab, as if the player picked it |
 
 ## Examples
+
+Text tabs with a line under the picked one, for the sections of a big menu:
+
+```luau
+Lucy.Tabs.new({
+    variant = "line",
+    items = {
+        { value = "moves", text = "Moves", content = buildMoves },
+        { value = "packs", text = "Packs", content = buildPacks },
+        { value = "drinks", text = "Drinks", content = buildDrinks },
+    },
+    Parent = shop,
+})
+```
 
 Open the shop on a tab kept in app state:
 

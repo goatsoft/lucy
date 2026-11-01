@@ -3,7 +3,7 @@ return {
 	description = "Buttons that stay pressed. Click one to turn it on or off.",
 	width = 420,
 	controls = {
-		variant = { "default", "outline" },
+		variant = { "default", "outline", "line" },
 		size = { options = { "sm", "md", "lg" }, default = "md" },
 		disabled = false,
 	},

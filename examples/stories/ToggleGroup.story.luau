@@ -3,7 +3,7 @@ return {
 	description = "Genre chips (pick several) and a 1 to 5 vote (pick one).",
 	width = 480,
 	controls = {
-		variant = { "default", "outline" },
+		variant = { "default", "outline", "line" },
 		size = { options = { "sm", "md", "lg" }, default = "md" },
 		disabled = false,
 	},

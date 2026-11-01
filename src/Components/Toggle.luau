@@ -5,7 +5,7 @@
 		Toggle.new({
 			text = "Bold",
 			pressed = false,
-			variant = "default",   -- default | outline
+			variant = "default",   -- default | outline | line (an underline when on, as tabs)
 			size = "md",           -- sm | md | lg
 			disabled = false,
 			visible = true,
@@ -27,7 +27,7 @@ local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Toggle = {}
 
-Toggle.variants = { "default", "outline" }
+Toggle.variants = { "default", "outline", "line" }
 Toggle.sizes = { "sm", "md", "lg" }
 
 local ACTIVATED = Element.on("Activated")
@@ -108,6 +108,32 @@ Toggle.rules = {
 		priority = VARIANT,
 		properties = { PaddingLeft = "$Space4", PaddingRight = "$Space4" },
 	},
+	-- line: text only, muted until on, with an underline (the Indicator) when on
+	{
+		selector = ".ui-toggle-variant-line",
+		priority = VARIANT,
+		properties = { TextColor3 = "$MutedForeground" },
+	},
+	{
+		selector = ".ui-toggle-variant-line::UICorner",
+		priority = VARIANT,
+		properties = { CornerRadius = UDim.new(0, 0) },
+	},
+	{
+		selector = ".ui-toggle-variant-line:Hover",
+		priority = STATE + 1,
+		properties = { BackgroundTransparency = 1, TextColor3 = "$Foreground" },
+	},
+	{
+		selector = ".ui-toggle-variant-line.ui-selected",
+		priority = SELECTED + 1,
+		properties = { BackgroundTransparency = 1, TextColor3 = "$Foreground" },
+	},
+	{
+		selector = ".ui-toggle-indicator",
+		priority = BASE,
+		properties = { BackgroundColor3 = "$Primary", BorderSizePixel = 0 },
+	},
 	{ selector = ".ui-toggle.ui-disabled", priority = DISABLED, properties = { TextTransparency = 0.5 } },
 	{
 		selector = ".ui-toggle.ui-selected.ui-disabled",
@@ -135,6 +161,18 @@ function Toggle.tags(variant: string, size: string): { string }
 		tagLists[key] = list
 	end
 	return list
+end
+
+-- The line variant's underline, shown while `shown` is true (a toggle that is on).
+function Toggle.indicator(shown: () -> boolean): Frame
+	return Element.new("Frame", {
+		Name = "Indicator",
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.fromScale(0, 1),
+		Size = UDim2.new(1, 0, 0, 2),
+		Visible = shown,
+		Tags = { "ui-toggle-indicator" },
+	})
 end
 
 -- Built once and shared by every mount (h.props holds each mount's props).
@@ -184,6 +222,9 @@ local spec: Component.Spec = {
 			[ACTIVATED] = function()
 				h:toggle()
 			end,
+			Toggle.indicator(function(): boolean
+				return variant() == "line" and (pressed() :: any) == true
+			end) :: any,
 		})
 		Component.adopt(root, p.children)
 		return root
