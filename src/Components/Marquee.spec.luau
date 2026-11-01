@@ -87,6 +87,52 @@ return function()
 		expect(marquee.scrolling).to.equal(false)
 	end)
 
+	it("loops a long text round without a jump when loop is on", function()
+		local marquee = Marquee.new({
+			app = app,
+			Parent = box,
+			text = LONG,
+			loop = true,
+			gap = 40,
+			pause = 0,
+			speed = 4000,
+		})
+		Harness.flush()
+		task.wait(0.3)
+		expect(marquee.scrolling).to.equal(true)
+		local copy = marquee.repeatStrip
+		expect(copy.Text).to.equal(LONG)
+		expect(copy.Visible).to.equal(true)
+		local width = marquee.strip.AbsoluteSize.X
+		-- Never further than one text and its gap: the copy is then where the strip began
+		expect(-offset(marquee) >= 0 and -offset(marquee) <= width + 40).to.equal(true)
+		expect(math.abs(copy.Position.X.Offset - (offset(marquee) + width + 40)) <= 1).to.equal(true)
+	end)
+
+	it("wraps its loop after one text and its gap, holding only at the very start", function()
+		-- 100 px a second, a 0.5 s hold, a 300 px text and a 50 px gap: one lap is 3.5 s
+		expect(Marquee.loopOffsetAt(0.2, 350, 100, 0.5)).to.equal(0)
+		expect(Marquee.loopOffsetAt(1.5, 350, 100, 0.5)).to.equal(100)
+		expect(math.abs(Marquee.loopOffsetAt(4.5, 350, 100, 0.5) - 50) < 1e-6).to.equal(true)
+	end)
+
+	it("hides the loop's copy while the text fits", function()
+		local marquee =
+			Marquee.new({ app = app, Parent = box, text = "Hi", loop = true, pause = 0, speed = 400 })
+		Harness.flush()
+		task.wait(0.2)
+		expect(offset(marquee)).to.equal(0)
+		expect(marquee.repeatStrip.Visible).to.equal(false)
+	end)
+
+	it("styles the loop's copy like the strip", function()
+		local marquee = Marquee.new({ app = app, Parent = box, text = LONG, loop = true })
+		marquee.strip.TextSize = 33
+		marquee.strip.TextColor3 = Color3.new(1, 0, 0)
+		expect(marquee.repeatStrip.TextSize).to.equal(33)
+		expect(marquee.repeatStrip.TextColor3).to.equal(Color3.new(1, 0, 0))
+	end)
+
 	it("refuses an unknown variant", function()
 		expect(function()
 			Marquee.new({ app = app, Parent = box, text = "x", variant = "giant" })

@@ -3,7 +3,9 @@
 
 A single line that slides to show all of itself when it is wider than its
 space, then slides back, holding a moment at each end. Use it for song titles,
-tickers and names on boards, where wrapping would break the layout.
+tickers and names on boards, where wrapping would break the layout. With
+`loop` on it goes round instead, like a ticker: a copy of the text follows the
+first one a gap behind, so it never stops or jumps back.
 
 ```luau
 local track = app.state:ref("server.dj.title")
@@ -32,13 +34,17 @@ so give it a parent with a width, such as a [Stack](stack.md) column.
 | `variant` | string | `"p"` | yes | Its style: any [Text](text.md) variant |
 | `visible` | boolean | `true` | yes | Shows or hides it, and starts or stops the moving |
 | `speed` | number | `40` | | Pixels a second while it moves |
-| `pause` | number | `1.5` | | Seconds it holds at each end |
+| `pause` | number | `1.5` | | Seconds it holds at each end; with `loop`, only before it first moves |
+| `loop` | boolean | `false` | | Goes round in one direction, its copy following, instead of back and forth |
+| `gap` | number | `48` | | Pixels between the text and its copy when it loops |
 | `richText` | boolean | `false` | | Turns on Roblox rich text tags such as `<b>` |
 
 It also takes the [props every component takes](index.md#using-a-component).
 
 `handle.strip` is the moving TextLabel, for your own rules: tag it and style it
-with tokens. `handle.scrolling` says whether it is moving right now.
+with tokens. `handle.scrolling` says whether it is moving right now. With `loop`,
+`handle.repeatStrip` is the copy; it takes its text size, color and font from
+the strip, so style the strip.
 
 ## Examples
 
@@ -62,5 +68,17 @@ Lucy.Marquee.new({
     speed = 25,
     pause = 3,
     Parent = footer,
+})
+```
+
+A ticker that goes round without stopping, for a long line of news:
+
+```luau
+Lucy.Marquee.new({
+    text = "Sign-ups are open at The Lab · DJ GOD is on the decks · Next round in 2 minutes",
+    variant = "large",
+    loop = true,
+    speed = 90,
+    Parent = ticker,
 })
 ```

@@ -14,6 +14,14 @@ return {
 			Lucy.Text.new({ text = "NOW PLAYING", variant = "small" }),
 			Lucy.Marquee.new({ id = "now-playing", text = c.text, variant = c.variant, visible = c.visible }),
 			Lucy.Marquee.new({ text = "Fits: no scrolling", variant = "muted" }),
+			Lucy.Text.new({ text = "TICKER", variant = "small" }),
+			Lucy.Marquee.new({
+				id = "ticker",
+				text = c.text,
+				variant = c.variant,
+				visible = c.visible,
+				loop = true,
+			}),
 		}
 	end,
 }
