@@ -11,7 +11,8 @@
 			placeholder = "Region",    -- shown until something is picked
 			disabled = false,
 			size = UDim2,              -- the trigger's size; full width, control height when left out
-			side = "bottom",           -- bottom | top: where the list opens, flipping when there is no room
+			side = "bottom",           -- bottom | top | left | right | auto: where the list opens, flipping
+			                           -- when there is no room
 			align = "start",           -- start | center | end
 			onValueChange = function(value, select) end,
 			Parent = form,

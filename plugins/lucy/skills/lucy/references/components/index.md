@@ -21,6 +21,7 @@ Each component has its own page with its props, usage and examples:
 | [Item](item.md) | A row in a list, with media, a title, a description and actions |
 | [Kbd](kbd.md) | The key to press, for the player's keyboard or controller |
 | [Marquee](marquee.md) | One line of text that scrolls when it is too long to fit |
+| [Menu](menu.md) | Actions that open as a list, a ring or a fan and close once one is picked |
 | [Number Field](number-field.md) | A number with minus and plus buttons, typed or stepped |
 | [Panel](panel.md) | A card with a header, content and footer |
 | [Pressable](pressable.md) | A surface the player can click that holds anything |

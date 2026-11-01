@@ -40,7 +40,7 @@ Lucy.Stack.new({
 | `open` | boolean | `false` | yes | Whether the list is open |
 | `disabled` | boolean | `false` | yes | Stops the player opening it, and closes it |
 | `size` | UDim2 | full width, control height | | The button's size |
-| `side` | string | `"bottom"` | | `bottom` or `top`: where the list opens. It flips when the other side has more room |
+| `side` | string | `"bottom"` | | `bottom`, `top`, `left` or `right`: where the list opens. It flips when the other side has more room. `auto` opens below if it fits, then above, then beside |
 | `align` | string | `"start"` | | `start`, `center` or `end`: how the list lines up with the button |
 | `onValueChange` | function | | | Called with `(value, handle)` when the value changes |
 | `visible` | boolean | `true` | yes | Shows or hides it |

@@ -129,6 +129,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Item](references/components/item.md): A row in a list, with media, a title, a description and actions.
 - [Kbd](references/components/kbd.md): The key to press, for the player's keyboard or controller.
 - [Marquee](references/components/marquee.md): One line of text that scrolls back and forth when it is too long to fit.
+- [Menu](references/components/menu.md): Actions that open as a list, a ring or a fan and close once one is picked.
 - [Number Field](references/components/number-field.md): A number with minus and plus buttons, typed or stepped.
 - [Panel](references/components/panel.md): A card with a header, content and footer.
 - [Pressable](references/components/pressable.md): A surface the player can click that holds anything, such as a card in a shop.
