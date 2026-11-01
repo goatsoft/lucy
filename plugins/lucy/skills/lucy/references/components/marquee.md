@@ -20,7 +20,9 @@ Lucy.Marquee.new({
 ```
 
 Text that fits stays still and left aligned. It only moves while visible, and
-starts again from the beginning whenever its text changes. When the player asks
+starts again from the beginning whenever its text changes, except with `loop`:
+a ticker carries on from where it was, so live text such as a score or a
+countdown never makes it stop. When the player asks
 for reduced motion it stays still, cut off at the edge.
 
 The Marquee fills its parent's width and is as tall as one line of its variant,

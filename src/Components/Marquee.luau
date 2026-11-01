@@ -9,7 +9,8 @@
 	variant: the Text variants (h1 to h4, p, lead, large, small, muted, label)
 	speed    pixels a second while it moves (40)
 	pause    seconds it holds at each end (1.5); with loop, only before it first moves
-	loop     scrolls on round in one direction, a copy of the text following the first
+	loop     scrolls on round in one direction, a copy of the text following the first,
+	         and carries on from where it was when the text changes
 	gap      pixels between the text and its copy when it loops (48)
 	richText Roblox rich text tags
 
@@ -163,18 +164,23 @@ local spec: Component.Spec = {
 			copy,
 		})
 
-		-- Side effect: move the strip while visible, from the start each time the text changes.
+		-- Side effect: move the strip while visible, from the start each time the text changes. A
+		-- loop is a ticker: a new text carries on from where the old one was, so its clock lives here.
 		h.scrolling = false
+		local loopClock = 0
 		Reactive.watchEffect(function()
 			text()
 			local on = visible() == true and not Preferences.reducedMotion()
-			offset(0)
-			looping(false)
+			if not loop or not on then
+				offset(0)
+				looping(false)
+				loopClock = 0
+			end
 			h.scrolling = false
 			if not on then
 				return
 			end
-			local t = 0
+			local t = if loop then loopClock else 0
 			local heartbeat = RunService.Heartbeat:Connect(function(dt: number)
 				local width = strip.AbsoluteSize.X
 				local overflow = width - frame.AbsoluteSize.X
@@ -188,6 +194,7 @@ local spec: Component.Spec = {
 				t += dt
 				h.scrolling = true
 				if loop then
+					loopClock = t
 					local at = Marquee.loopOffsetAt(t, width + gap, speed, pause)
 					offset(at)
 					copyAt(width + gap - at)
@@ -199,7 +206,10 @@ local spec: Component.Spec = {
 			Reactive.onCleanup(function()
 				heartbeat:Disconnect()
 				h.scrolling = false
-				looping(false)
+				-- A loop's copy stays up across a text change (no blink); hiding it is the effect's job
+				if not loop then
+					looping(false)
+				end
 			end)
 		end)
 		return frame

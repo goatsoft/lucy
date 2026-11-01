@@ -116,6 +116,20 @@ return function()
 		expect(math.abs(Marquee.loopOffsetAt(4.5, 350, 100, 0.5) - 50) < 1e-6).to.equal(true)
 	end)
 
+	it("keeps going when its text changes while it loops", function()
+		local text = Reactive.ref(LONG)
+		local marquee =
+			Marquee.new({ app = app, Parent = box, text = text, loop = true, pause = 0, speed = 400 })
+		Harness.flush()
+		task.wait(0.3)
+		local before = -offset(marquee)
+		expect(before > 0).to.equal(true)
+		text(LONG .. " (live)")
+		task.wait(0.1)
+		-- On from where it was, not back to the start
+		expect(-offset(marquee) > before).to.equal(true)
+	end)
+
 	it("hides the loop's copy while the text fits", function()
 		local marquee =
 			Marquee.new({ app = app, Parent = box, text = "Hi", loop = true, pause = 0, speed = 400 })
