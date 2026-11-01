@@ -125,6 +125,7 @@ local function density(controls: { number }, text: { number })
 		ControlMd = UDim2.fromOffset(0, controls[2]),
 		ControlLg = UDim2.fromOffset(0, controls[3]),
 		ControlIcon = UDim2.fromOffset(controls[4], controls[4]),
+		ControlXl = UDim2.fromOffset(0, controls[5]),
 		TextXs = text[1],
 		TextSm = text[2],
 		TextBase = text[3],
@@ -137,12 +138,12 @@ local function density(controls: { number }, text: { number })
 end
 
 Tokens.densities = {
-	-- 32 / 36 / 40 px controls and the base type scale
-	default = density({ 32, 36, 40, 36 }, { 12, 14, 16, 18, 20, 24, 30, 36 }),
+	-- 32 / 36 / 40 px controls (icon 36, xl 48) and the base type scale
+	default = density({ 32, 36, 40, 36, 48 }, { 12, 14, 16, 18, 20, 24, 30, 36 }),
 	-- Apple HIG / Material: 44px minimum touch targets
-	touch = density({ 40, 44, 48, 44 }, { 12, 14, 16, 18, 20, 24, 30, 36 }),
+	touch = density({ 40, 44, 48, 44, 56 }, { 12, 14, 16, 18, 20, 24, 30, 36 }),
 	-- Console, read from a sofa
-	tv = density({ 44, 52, 60, 52 }, { 14, 16, 18, 22, 24, 28, 34, 42 }),
+	tv = density({ 44, 52, 60, 52, 72 }, { 14, 16, 18, 22, 24, 28, 34, 42 }),
 }
 Tokens.defaultDensity = "default"
 

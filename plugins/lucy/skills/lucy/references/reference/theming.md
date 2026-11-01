@@ -108,6 +108,7 @@ with `BorderStrokePosition = Enum.BorderStrokePosition.Inner`.
 | Token | `default` | `touch` | `tv` |
 |---|---|---|---|
 | `ControlSm`, `ControlMd`, `ControlLg` | 32, 36, 40 | 40, 44, 48 | 44, 52, 60 |
+| `ControlXl` | 48 | 56 | 72 |
 | `ControlIcon` | 36 square | 44 square | 52 square |
 | `TextXs` to `Text4xl` | 12, 14, 16, 18, 20, 24, 30, 36 | same as default | 14, 16, 18, 22, 24, 28, 34, 42 |
 

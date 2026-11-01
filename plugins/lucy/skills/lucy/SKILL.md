@@ -117,7 +117,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Alert](references/components/alert.md): A box that calls attention to a message, such as a server notice.
 - [Avatar](references/components/avatar.md): A player's headshot, or a monogram for a bot or an empty slot.
 - [Badge](references/components/badge.md): A small label for a status or a count.
-- [Button](references/components/button.md): A button, in six variants and four sizes.
+- [Button](references/components/button.md): A button, in six variants and five sizes.
 - [Checkbox](references/components/checkbox.md): A box that can be checked, with an optional label.
 - [Collapsible](references/components/collapsible.md): A header that shows or hides what is under it.
 - [DataGrid](references/components/data-grid.md): A table the player can sort by pressing its headers.

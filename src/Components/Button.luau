@@ -6,7 +6,7 @@
 			text = "Play",
 			icon = "lucide:play",  -- optional: drawn before the text; alone with size = "icon"
 			variant = "default",   -- default | destructive | outline | secondary | ghost | link
-			size = "md",           -- sm | md | lg | icon
+			size = "md",           -- sm | md | lg | xl | icon
 			disabled = false,
 			visible = true,
 			hint = { keyboard = Enum.KeyCode.E, gamepad = Enum.KeyCode.DPadUp }, -- optional key cap
@@ -37,7 +37,7 @@ local Kbd = require(script.Parent.Kbd)
 local Button = {}
 
 Button.variants = { "default", "destructive", "outline", "secondary", "ghost", "link" }
-Button.sizes = { "sm", "md", "lg", "icon" }
+Button.sizes = { "sm", "md", "lg", "xl", "icon" }
 
 local ACTIVATED = Element.on("Activated") -- built once, not per button
 
@@ -151,6 +151,17 @@ local rules: { Component.Rule } = {
 		selector = ".ui-button-size-lg::UIPadding",
 		priority = VARIANT,
 		properties = { PaddingLeft = "$Space6", PaddingRight = "$Space6" },
+	},
+	-- xl: a game's HUD and big calls to action
+	{
+		selector = ".ui-button-size-xl",
+		priority = VARIANT,
+		properties = { Size = "$ControlXl", TextSize = "$TextLg" },
+	},
+	{
+		selector = ".ui-button-size-xl::UIPadding",
+		priority = VARIANT,
+		properties = { PaddingLeft = "$Space8", PaddingRight = "$Space8" },
 	},
 	{
 		selector = ".ui-button-size-icon",

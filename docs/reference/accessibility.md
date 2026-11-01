@@ -110,6 +110,7 @@ grows by as much as the text in it does.
 | `ControlSm` | `TextXs` |
 | `ControlMd` | `TextSm` |
 | `ControlLg` | `TextBase` |
+| `ControlXl` | `TextLg` |
 | `ControlIcon` | nothing: it holds an icon, not text |
 
 This holds in every density. `useMetric` and `app.theme:resolve` give the grown

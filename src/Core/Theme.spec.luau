@@ -103,6 +103,7 @@ return function()
 			expect(height("ControlSm")).to.equal(32 + 6) -- TextXs 12
 			expect(height("ControlMd")).to.equal(36 + 7) -- TextSm 14
 			expect(height("ControlLg")).to.equal(40 + 8) -- TextBase 16
+			expect(height("ControlXl")).to.equal(48 + 9) -- TextLg 18
 		end)
 
 		it("leaves icon buttons alone: they have no text", function()

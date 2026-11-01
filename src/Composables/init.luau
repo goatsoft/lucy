@@ -81,7 +81,7 @@ local function metricsVersion(app: any): () -> number
 	return read
 end
 
--- A control size token (ControlSm, ControlMd, ControlLg, ControlIcon) in pixels.
+-- A control size token (ControlSm, ControlMd, ControlLg, ControlXl, ControlIcon) in pixels.
 -- Follows the density and the player's text size.
 function Composables.useMetric(app: any, token: string): Reactive.Computed<number>
 	requireOwner("useMetric")

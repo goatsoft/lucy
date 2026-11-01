@@ -2,7 +2,7 @@
 # Button
 
 A button the player can click, tap or select with a gamepad. It comes in six
-variants and four sizes.
+variants and five sizes.
 
 ```luau
 Lucy.Stack.new({
@@ -30,7 +30,7 @@ Lucy.Stack.new({
 | `text` | string | `"Button"`, or `""` with an icon | yes | The label |
 | `icon` | string | | yes | An [icon](icon.md) name drawn before the text, in the text's colour. See below |
 | `variant` | string | `"default"` | yes | `default`, `destructive`, `outline`, `secondary`, `ghost` or `link` |
-| `size` | string | `"md"` | yes | `sm`, `md`, `lg` or `icon` |
+| `size` | string | `"md"` | yes | `sm`, `md`, `lg`, `xl` (a game's HUD) or `icon` |
 | `disabled` | boolean | `false` | yes | Greys the button out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides the button |
 | `hint` | table or string | | | A key to show after the text: the props of a [Kbd](kbd.md), or an action's name. See below |

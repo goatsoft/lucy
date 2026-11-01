@@ -53,7 +53,7 @@ local height = Lucy.useMetric(app, "ControlMd")
 ```
 
 Returns a computed number: the height in pixels of a control token
-(`ControlSm`, `ControlMd`, `ControlLg` or `ControlIcon`) in the current
+(`ControlSm`, `ControlMd`, `ControlLg`, `ControlXl` or `ControlIcon`) in the current
 density. The tokens themselves are UDim2 sizes; this is their height.
 
 ## useResponsive

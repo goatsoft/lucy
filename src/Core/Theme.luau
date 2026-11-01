@@ -329,7 +329,8 @@ function Theme.setDensity(self: Theme, name: string)
 end
 
 -- Each control height and the text it holds. ControlIcon holds an icon only.
-local GROWS: { [string]: string } = { ControlSm = "TextXs", ControlMd = "TextSm", ControlLg = "TextBase" }
+local GROWS: { [string]: string } =
+	{ ControlSm = "TextXs", ControlMd = "TextSm", ControlLg = "TextBase", ControlXl = "TextLg" }
 
 --[[
 	Grows control heights for larger text: each Control token gets what
