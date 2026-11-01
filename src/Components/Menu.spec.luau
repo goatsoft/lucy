@@ -44,6 +44,18 @@ return function()
 			expect(Menu.fit(Vector2.new(400, 300), 100, view, 8)).to.equal(Vector2.new(400, 300))
 		end)
 
+		it("opens a ring around an anchor that has room, and clear of one by the edge", function()
+			local view = Vector2.new(800, 600)
+			local size = Vector2.new(100, 40)
+			expect(Menu.around(Vector2.new(400, 300), size, 100, view, 8)).to.equal(Vector2.new(400, 300))
+
+			local button = Vector2.new(400, 570)
+			local center = Menu.around(button, size, 100, view, 8)
+			expect(center.X).to.be.near(400, 0.01)
+			-- the whole ring sits above the button's top edge
+			expect(center.Y + 100 <= button.Y - size.Y / 2).to.equal(true)
+		end)
+
 		it("picks the item a stick points at, and nothing for a small push", function()
 			local angles = Menu.angles(Menu.ring(4, 100))
 			-- screen directions: x right, y down

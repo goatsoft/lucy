@@ -30,8 +30,9 @@
 	  list    a list next to its anchor, on the side that fits (side = "auto"
 	          opens below, then above, then beside), kept on screen; a drawer
 	          from the bottom on touch
-	  radial  a ring of round buttons around the anchor (or the screen centre),
-	          moved in until the whole ring is on screen; the stick points at one
+	  radial  a ring of round buttons around the anchor (or the screen centre);
+	          when it does not fit around an anchor by the edge it opens clear
+	          of the anchor, toward the middle; the stick points at one
 	  arc     a fan of round buttons from the anchor, opening toward the middle
 	          of the screen, so a corner button fans inward
 	Ring and arc buttons show the item's icon (or its initials) with its label
@@ -46,7 +47,7 @@
 	Events: "open", "close" and "select" with the value, for Lucy.useUiSound.
 	menu.items holds one list row per item, menu.slices one round button per
 	item, in order; menu.variant() is the variant in use.
-	Menu.ring, Menu.arc, Menu.toward, Menu.fit, Menu.angles and Menu.pick are
+	Menu.ring, Menu.arc, Menu.toward, Menu.fit, Menu.around, Menu.angles and Menu.pick are
 	the geometry it uses.
 ]]
 
@@ -117,6 +118,26 @@ function Menu.fit(center: Vector2, extent: number, view: Vector2, margin: number
 		return math.clamp(value, low, high)
 	end
 	return Vector2.new(axis(center.X, view.X), axis(center.Y, view.Y))
+end
+
+-- The centre of a ring opened from an anchor: around the anchor when the whole ring fits there,
+-- otherwise clear of it toward the middle of the screen, so the ring never covers the button that
+-- opened it.
+function Menu.around(
+	anchorCenter: Vector2,
+	anchorSize: Vector2,
+	extent: number,
+	view: Vector2,
+	margin: number
+): Vector2
+	local fitted = Menu.fit(anchorCenter, extent, view, margin)
+	if (fitted - anchorCenter).Magnitude < 0.5 then
+		return fitted
+	end
+	local angle = math.rad(Menu.toward(anchorCenter, view))
+	local direction = Vector2.new(math.cos(angle), math.sin(angle))
+	local along = math.abs(direction.X) * anchorSize.X / 2 + math.abs(direction.Y) * anchorSize.Y / 2
+	return Menu.fit(anchorCenter + direction * (extent + along + 8), extent, view, margin)
 end
 
 -- Each point's angle from the centre.
@@ -573,7 +594,9 @@ local spec: Component.Spec = {
 				local r = radius()
 				if variant() == "radial" then
 					points(Menu.ring(count, r))
-					center = Menu.fit(center, extent(), view, Overlay.margin)
+					center = if anchor
+						then Menu.around(center, anchor.size, extent(), view, Overlay.margin)
+						else Menu.fit(center, extent(), view, Overlay.margin)
 				else
 					points(Menu.arc(count, r, Menu.toward(center, view), Menu.arcSpacing))
 				end

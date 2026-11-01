@@ -77,8 +77,10 @@ An item is a value, shown as its text, or a table with `value`, and optionally:
 - **`list`:** a list next to its anchor, like a dropdown. On touch it is a
   drawer from the bottom of the screen, where a thumb can reach it.
 - **`radial`:** a ring of round buttons around the anchor, or the middle of the
-  screen with no anchor, moved in until the whole ring is on screen. On a
-  controller the left stick points at a button, and A picks it.
+  screen with no anchor. When the ring does not fit around an anchor by the
+  edge of the screen (a button in a bottom bar), it opens clear of the anchor,
+  toward the middle, so it never covers it. On a controller the left stick
+  points at a button, and A picks it.
 - **`arc`:** a fan of round buttons from the anchor, opening toward the middle
   of the screen. A button in a corner fans inward; one in a top bar fans down.
 
