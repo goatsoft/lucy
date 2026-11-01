@@ -38,6 +38,13 @@ describe('config', () => {
     assert.equal(parseConfig({ lucy: false }).lucy, false)
     assert.throws(() => parseConfig({ lucy: 'no' }), /"lucy" must be true or false/)
   })
+  it('names uploads from a template with the sheet hash in it', () => {
+    assert.equal(parseConfig({}).name, 'lucy-icons-{hash}')
+    assert.equal(parseConfig({ name: 'Game_IconSheet_{hash}' }).name, 'Game_IconSheet_{hash}')
+    assert.throws(() => parseConfig({ name: 'Game_IconSheet' }), /"name" must hold \{hash\}/)
+    assert.throws(() => parseConfig({ name: 42 }), /"name" must hold \{hash\}/)
+    assert.throws(() => parseConfig({ name: 'x'.repeat(50) + '{hash}' }), /at most 50/)
+  })
 })
 
 describe('layout', () => {
@@ -182,6 +189,19 @@ describe('build', () => {
       assert.equal(fake.uploads.length, 2)
       assert.deepEqual(removed.icons, ['lucide:heart', 'lucide:star'])
       assert.ok(!(await readFile(join(root, 'src/Icons.luau'), 'utf8')).includes('lucide:bell'))
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
+  it('names each upload from the config, with the sheet hash', async () => {
+    const root = await game({ 'src/Hud.luau': `Icon.new({ icon = "lucide:heart" })` }, { name: 'Game_IconSheet_{hash}' })
+    try {
+      const fake = fakeUploads()
+      await build({ config: join(root, 'lucy-icons.json'), sources: offlineSources, upload: fake.upload })
+      const lock = JSON.parse(await readFile(join(root, 'lucy-icons.lock.json'), 'utf8'))
+      const sheetHash = Object.keys(lock.sheets)[0] as string
+      assert.deepEqual(fake.uploads, [`Game_IconSheet_${sheetHash.slice(0, 8)}`])
     } finally {
       await rm(root, { recursive: true, force: true })
     }

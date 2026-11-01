@@ -73,6 +73,12 @@ lucy-icons loads one sheet, not its own plus GOATsoft's. `"lucy": false` leaves
 them out. Lucy's own sheet is built the same way, so `Core/IconSheet` holds only
 the `lucy:*` names and Icon reads its slot list from it.
 
+## Amendment: upload names (lucy-icons 0.3.0, 2026-11-01)
+
+A sheet is uploaded under the config's `name`, a template whose `{hash}` becomes
+the first 8 characters of the sheet's hash (`lucy-icons-{hash}` by default), so
+a game or group with a naming rule for its assets can follow it.
+
 ## Alternatives considered
 
 - **Upload each icon on its own.** Simple ids, but an upload per icon against a

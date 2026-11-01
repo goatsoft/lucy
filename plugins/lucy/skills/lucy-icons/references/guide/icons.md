@@ -122,6 +122,7 @@ Add `lucy-icons.json` beside it:
 | `output` | `src/shared/Icons.luau` | The module to write |
 | `lock` | `lucy-icons.lock.json` | The lock file. Commit it |
 | `creator` | | Who owns the uploads: `{ "userId": "..." }` or `{ "groupId": "..." }` |
+| `name` | `lucy-icons-{hash}` | Each sheet's name on Roblox. `{hash}` becomes the first 8 characters of the sheet's hash, so each sheet has a name of its own. At most 50 characters |
 | `size` | `64` | Each icon's size in the sheet, in pixels |
 | `sheet` | `1024` | Sheet size in pixels |
 | `padding` | `4` | Space around each icon in the sheet |

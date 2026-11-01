@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve } from 'node:path'
-import { loadConfig } from './config.ts'
+import { loadConfig, uploadName } from './config.ts'
 import type { Layout } from './layout.ts'
 import { slot } from './layout.ts'
 import { orderFor, readLock, writeLock, type Lock } from './lock.ts'
@@ -199,7 +199,7 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
   let uploaded = 0
   for (const p of missing) {
     log(`uploading sheet ${p.i + 1} of ${sheetCount}`)
-    const id = await (uploader as Uploader)(p.png, `lucy-icons-${p.hash.slice(0, 8)}`)
+    const id = await (uploader as Uploader)(p.png, uploadName(config.name, p.hash))
     ids[p.i] = id
     newLock.sheets[p.hash] = id
     uploaded += 1

@@ -21,6 +21,8 @@ export interface Config {
   padding: number
   /** Who owns the uploads: a user id or a group id. */
   creator?: { userId?: string; groupId?: string }
+  /** Each uploaded sheet's name on Roblox; {hash} becomes the first 8 characters of the sheet's hash. */
+  name: string
   /** Where downloaded icon data and unuploaded sheets go. */
   cache: string
   /** Write Lucy's slots (lucy:close and the rest) into the module, drawn on the game's own sheet. */
@@ -38,7 +40,11 @@ export const defaults: Config = {
   padding: 4,
   cache: '.lucy-icons',
   lucy: true,
+  name: 'lucy-icons-{hash}',
 }
+
+/** Roblox's limit on an asset's name. */
+const NAME_LIMIT = 50
 
 export interface Loaded {
   config: Config
@@ -99,6 +105,16 @@ export function parseConfig(raw: unknown): Config {
     if (typeof lucy !== 'boolean') throw new Error('"lucy" must be true or false')
     config.lucy = lucy
   }
+  const name = input['name']
+  if (name !== undefined) {
+    if (typeof name !== 'string' || !name.includes('{hash}')) {
+      throw new Error('"name" must hold {hash}, so each sheet gets a name of its own')
+    }
+    if (uploadName(name, '0'.repeat(32)).length > NAME_LIMIT) {
+      throw new Error(`"name" can be at most ${NAME_LIMIT} characters with the hash in it`)
+    }
+    config.name = name
+  }
   if (config.sheet > 4096) throw new Error('"sheet" can be at most 4096')
   if (config.size + config.padding * 2 > config.sheet) throw new Error('a cell does not fit in a sheet')
   const creator = input['creator']
@@ -117,6 +133,11 @@ export function parseConfig(raw: unknown): Config {
     if (!isName(name)) throw new Error(`"${name}" in "include" is not a set:name icon name`)
   }
   return config
+}
+
+/** A sheet's upload name: the config's name with {hash} replaced by the hash's first 8 characters. */
+export function uploadName(template: string, hash: string): string {
+  return template.replaceAll('{hash}', hash.slice(0, 8))
 }
 
 const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*:[a-z0-9]+(?:[-_][a-z0-9]+)*$/
