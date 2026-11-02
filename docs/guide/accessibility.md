@@ -1,7 +1,7 @@
 ---
 title: Make your UI accessible
 description: Check your own UI so every player can read it, reach it with a keyboard or gamepad, and use it at any text size.
-order: 7
+order: 5
 ---
 
 # Make your UI accessible

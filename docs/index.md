@@ -157,12 +157,21 @@ app.toast.success("Dance-off won", { description = "+250 coins" })
 
 ## Next
 
-- [Build screens with scenes](guide/scenes.md): screens, a HUD, menus on top, and back
-- [Add a theme](guide/themes.md): your game's colours, light and dark, and a theme of your own
+The basics, in order:
+
+1. [Build screens with scenes](guide/scenes.md): screens, a HUD, menus on top, and back
+2. [Work with app state](guide/app-state.md): your game's data, read, written and shown
+3. [Hotkeys and modal input](guide/actions.md): keys and buttons for every device, and menus that pause gameplay keys
+
+Then build out your game:
+
+- [Add a theme](guide/themes.md) and [icons](guide/icons.md): your game's colours, fonts and pictures
+- [Share state with the server](guide/server.md): rounds, scores and each player's coins, sent to every App
+- [UI in the world](guide/world-ui.md): boards on parts and name tags over heads
 - [Make your UI accessible](guide/accessibility.md): readable colours, focus, text size and motion
 - [Components](components/index.md): a page for each component with its props and examples
-- [Recipes](recipes/index.md): whole screens to copy: a settings menu that saves, a pause menu, a HUD and a shop
-- [Stories and preview](stories.md): see your UI in Studio without pressing Play
-- [Use Lucy with agents](guide/agents.md): give your coding agent Lucy's skills
-- [Architecture](architecture.md): how the pieces fit together
-- [Benchmarks](benchmarks.md): what mounting and updating UI costs
+- [Recipes](recipes/index.md): whole pieces to copy, from laying out a game to a HUD, menus, a shop and saved player data
+
+When you need more, [Go further](guide/components.md) covers your own components
+and composables, stories and agents, and the [Reference](reference/api.md) lists
+everything on Lucy.

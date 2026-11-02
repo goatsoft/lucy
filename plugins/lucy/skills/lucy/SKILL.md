@@ -165,7 +165,6 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Work with app state](references/guide/app-state.md): Keep game data in the app's store and bind UI to it with state:ref, state.root, lists and subscribers.
 - [Build a component](references/guide/components.md): Write a Stepper component step by step, with state keys, h:ref, bindings, methods and a value bound to app state.
 - [Share logic with composables](references/guide/composables.md): Use Lucy's built in composables and write your own, such as a cooldown for a hype button.
-- [Save data](references/guide/saving.md): Save player data and leaderboards through Lucy.DataQueue, which paces DataStore requests to the engine's limits, caches reads and writes what is pending when the server closes.
 - [Build screens with scenes](references/guide/scenes.md): Split your UI into scenes, move between screens, show a HUD over them, open a pause menu on top, and handle back with a gamepad.
 - [Share state with the server](references/guide/server.md): Keep server state in Lucy's store on the server, see it in every App at server.*, and send requests back with checks.
 - [Add a theme](references/guide/themes.md): Pick your game's colours, let players switch light and dark, make a theme of your own, and style your own UI with the same tokens.
@@ -175,14 +174,17 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Everything on Lucy](references/reference/api.md): Every name the Lucy module exports, what it is for, and the page that explains it.
 - [The App](references/reference/app.md): Lucy.App.new and every option it takes, the parts an App holds, and its methods.
 - [Composables](references/reference/composables.md): Every composable Lucy comes with, what each one takes and returns, and when to use it.
+- [The data queue](references/reference/data-queue.md): Lucy.DataQueue paces DataStore requests to the engine's limits, caches reads, keeps leaderboards and writes what is pending when the server closes. Every method and option.
 - [Devtools](references/reference/devtools.md): Look at a running UI in Studio, and press, set and focus things the way a player would, from the command bar or a coding agent.
+- [The server](references/reference/server.md): Lucy.Server and app.server, every option and method, which paths reach which players, and how changes travel.
 - [The store](references/reference/store.md): How app.state works, what it holds, every method, and the rules for reading, writing and following it.
 - [Theming](references/reference/theming.md): Every theme option, colour token, primitive and density value, the Tokens helpers, app.theme's methods and how style rules work.
 - [Known issues](references/known-issues.md): Problems Lucy cannot fix on its own, what you will see, why, and what to do instead.
 - [Lay out a game](references/recipes/game-layout.md): Where each part of a Lucy game goes: one App, utils, features, composables, components, world UI, panels and scenes on the client; services and requests on the server.
 - [HUD](references/recipes/hud.md): A dance floor heads-up display with a combo badge, coins that pop when they change, a hype meter that fills with the crowd, and a toast for combo milestones.
-- [Recipes](references/recipes/index.md): Where each part of a game goes, then whole screens from Club Lucy you can copy into a game and change: audio settings that save, a pause menu, a dance floor HUD and an emote shop.
+- [Recipes](references/recipes/index.md): Where each part of a game goes, then whole pieces from Club Lucy you can copy into a game and change: a HUD, a pause menu, audio settings that save, an emote shop and saved player data.
 - [Pause menu](references/recipes/pause-menu.md): A pause menu that opens on B or Backspace and from a button, with a dimmed backdrop, options on top, a confirm before leaving, and gameplay keys off while it is open.
+- [Save player data](references/recipes/save-data.md): Each dancer's coins and best combo loaded into the server's store when they join and saved as they change, with a Top dancers board that every player sees.
 - [Settings menu that saves](references/recipes/settings.md): Music, sound effects and crowd volume sliders and a theme picker bound to app state, loaded when the player joins and saved when they leave.
 - [Shop](references/recipes/shop.md): An Emote Shop dialog with a grid of dances, Buy buttons that grey out when the player can't afford them, a confirm before buying, a hotkey and a HUD button.
 <!-- /generated:guides -->

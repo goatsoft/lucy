@@ -1,7 +1,7 @@
 ---
 title: Accessibility
 description: What Lucy does so players can read, reach and use your UI, the contrast it promises, the Roblox accessibility settings it follows, and Lucy.Preferences.
-order: 6
+order: 7
 ---
 
 # Accessibility

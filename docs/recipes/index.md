@@ -1,6 +1,6 @@
 ---
 title: Recipes
-description: "Where each part of a game goes, then whole screens from Club Lucy you can copy into a game and change: audio settings that save, a pause menu, a dance floor HUD and an emote shop."
+description: "Where each part of a game goes, then whole pieces from Club Lucy you can copy into a game and change: a HUD, a pause menu, audio settings that save, an emote shop and saved player data."
 order: 1
 ---
 
@@ -12,11 +12,13 @@ and change. They use only what the guides explain, and link to them as they go.
 - [Lay out a game](game-layout.md): where each part goes, from the one App to
   utils, features, panels and scenes on the client, and services and requests
   on the server. Start here
-- [Settings menu that saves](settings.md): Music, Sound effects and Crowd
-  volume sliders and a theme picker bound to app state, kept between sessions
+- [HUD](hud.md): coins that pop when they change, a combo badge and a hype meter
 - [Pause menu](pause-menu.md): opens on B or Backspace and from a button, with a
   dimmed backdrop, a Club lights switch in Options, and gameplay keys off while
   it is open
-- [HUD](hud.md): coins that pop when they change, a combo badge and a hype meter
+- [Settings menu that saves](settings.md): Music, Sound effects and Crowd
+  volume sliders and a theme picker bound to app state, kept between sessions
 - [Shop](shop.md): the Emote Shop, a grid of dances, a confirm before buying,
   and a hotkey
+- [Save player data](save-data.md): coins and a best combo loaded when a dancer
+  joins and saved as they change, and a Top dancers board

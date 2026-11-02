@@ -1,7 +1,7 @@
 ---
 title: Use Lucy with agents
 description: Give Claude Code, Codex or Antigravity Lucy's skills, so they build your UI with Lucy's components and rules.
-order: 10
+order: 4
 ---
 
 # Use Lucy with agents

@@ -1,7 +1,7 @@
 ---
 title: Devtools
 description: Look at a running UI in Studio, and press, set and focus things the way a player would, from the command bar or a coding agent.
-order: 8
+order: 10
 ---
 
 # Devtools

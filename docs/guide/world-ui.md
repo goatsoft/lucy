@@ -1,7 +1,7 @@
 ---
 title: UI in the world
 description: Put Lucy UI on parts and over players' heads with SurfaceGuis and BillboardGuis that follow the theme and take clicks.
-order: 11
+order: 4
 ---
 
 # UI in the world

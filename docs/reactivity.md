@@ -1,7 +1,7 @@
 ---
 title: Reactivity
 description: ref, computed, reactive and watch; Lucy.new for declarative UI; springs and tweens.
-order: 2
+order: 4
 ---
 
 # Reactivity

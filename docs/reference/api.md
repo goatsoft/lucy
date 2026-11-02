@@ -57,8 +57,8 @@ the [composables reference](composables.md).
 
 | Name | What it is | More |
 |---|---|---|
-| `Lucy.Server` | The server's store, sent to each player's App at `server.*`, and requests from them: `Lucy.Server.new(options)` | [Share state with the server](../guide/server.md) |
-| `Lucy.DataQueue` | DataStore requests paced to the engine's limits, with cached reads and a flush on close: `Lucy.DataQueue.new(options)` | [Save data](../guide/saving.md) |
+| `Lucy.Server` | The server's store, sent to each player's App at `server.*`, and requests from them: `Lucy.Server.new(options)` | [The server](server.md) |
+| `Lucy.DataQueue` | DataStore requests paced to the engine's limits, with cached reads and a flush on close: `Lucy.DataQueue.new(options)` | [The data queue](data-queue.md) |
 
 ## Themes and colour
 

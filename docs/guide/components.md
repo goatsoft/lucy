@@ -1,7 +1,7 @@
 ---
 title: Build a component
 description: Write a Stepper component step by step, with state keys, h:ref, bindings, methods and a value bound to app state.
-order: 8
+order: 1
 ---
 
 # Build a component

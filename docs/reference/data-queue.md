@@ -1,5 +1,10 @@
-<!-- Made by scripts/skills.ts from docs/guide/saving.md. Edit the doc, not this file. -->
-# Save data
+---
+title: The data queue
+description: Lucy.DataQueue paces DataStore requests to the engine's limits, caches reads, keeps leaderboards and writes what is pending when the server closes. Every method and option.
+order: 9
+---
+
+# The data queue
 
 DataStores take only so many requests: about one write to a key every 6
 seconds, and a budget per minute for each kind of request. A game that saves on
@@ -10,6 +15,9 @@ is the slow Stop, and a Play that will not start until the old one has ended.
 `Lucy.DataQueue` sits between your game and its DataStores on the server. Writes
 return at once and are sent when the engine has room; reads are cached; what is
 pending is written when the server closes.
+
+For a whole example, a profile and a leaderboard shown in the App, see
+[Save player data](../recipes/save-data.md).
 
 ## Make one queue
 

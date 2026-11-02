@@ -93,24 +93,12 @@ local bought = app.server:call("buy", "moonwalk") -- waits for the answer
 handler or it failed. Requests sent before the link has found the server wait
 and go when it has. Requests from a player who has left are refused.
 
-## How it travels
-
-Once a frame, the server compares what changed with what each player last got
-and sends only the differences. Tables that did not change are skipped whole,
-so a large tree costs little while it is still. A player gets everything when
-their App says it is ready. Write related values in `server.state:batch` so
-players never see half a change.
-
-| Option | Default | What it does |
-|---|---|---|
-| `state` | `{}` | The starting tree; `shared` and `players` are added if missing |
-| `namePrefix` | `"Lucy_"` | The remotes folder is `<namePrefix>Server` in ReplicatedStorage; pass the same to the App's `server` option |
-| `parent` | ReplicatedStorage | Where the remotes folder goes |
-
-The App's `server` option is `true`, or a table with `namePrefix` and
-`parent` when the server uses others.
+Write related values in `server.state:batch` so players never see half a
+change. Every option and method, and how changes travel, are in
+[The server](../reference/server.md).
 
 ## Next
 
-- [Work with app state](app-state.md)
 - [UI in the world](world-ui.md): boards and name tags drawn from server state
+- [Save player data](../recipes/save-data.md): load a profile into the server's
+  store when a player joins and save it as it changes

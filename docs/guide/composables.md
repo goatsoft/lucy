@@ -1,7 +1,7 @@
 ---
 title: Share logic with composables
 description: Use Lucy's built in composables and write your own, such as a cooldown for a hype button.
-order: 9
+order: 2
 ---
 
 # Share logic with composables

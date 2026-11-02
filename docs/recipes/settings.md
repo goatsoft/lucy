@@ -1,7 +1,7 @@
 ---
 title: Settings menu that saves
 description: Music, sound effects and crowd volume sliders and a theme picker bound to app state, loaded when the player joins and saved when they leave.
-order: 3
+order: 5
 ---
 
 # Settings menu that saves
@@ -10,9 +10,9 @@ An audio settings screen for Club Lucy: Music, Sound effects and Crowd volume
 sliders, and a theme picker. Each control is bound to app state, the game reads
 the same state, and the server keeps the settings between sessions.
 
-Lucy's part is the menu and the state. Saving is your game's: Lucy never
-talks to the server. Here the server keeps the settings in a DataStore and the
-client asks for them when it starts.
+Lucy's part is the menu and the state. Here the server keeps the settings in
+a DataStore of their own, and the client asks for them before it makes the App
+so the saved theme is there from the first frame.
 
 ## The menu
 
@@ -184,5 +184,6 @@ DataStores work in Studio only when the place is published and
 the menu still works with the defaults, and the server warns that nothing is
 saved.
 
-A game that already saves player data should keep settings with the rest of it
-and send them the same way.
+A game that already saves player data should keep settings with the rest of
+it, such as in the profile from [Save player data](save-data.md), and send
+changes with a request.
