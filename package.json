@@ -18,7 +18,7 @@
     "skills": "node scripts/skills.ts",
     "skills:check": "node scripts/skills.ts --check",
     "changeset": "changeset",
-    "release": "pnpm -r --filter \"@goatsoft/lucy-icons\" build && node scripts/publish.ts"
+    "release": "pnpm -r --filter \"./libs/*\" build && node scripts/publish.ts"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

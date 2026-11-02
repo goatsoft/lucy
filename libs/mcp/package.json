@@ -1,6 +1,7 @@
 {
   "name": "@goatsoft/lucy-mcp",
   "version": "0.0.0",
+  "private": true,
   "description": "An MCP server for building Roblox UI with Lucy: look at and drive a running Lucy UI in Studio, through Studio's own MCP server.",
   "keywords": [
     "roblox",
