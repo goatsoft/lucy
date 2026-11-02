@@ -165,6 +165,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Work with app state](references/guide/app-state.md): Keep game data in the app's store and bind UI to it with state:ref, state.root, lists and subscribers.
 - [Build a component](references/guide/components.md): Write a Stepper component step by step, with state keys, h:ref, bindings, methods and a value bound to app state.
 - [Share logic with composables](references/guide/composables.md): Use Lucy's built in composables and write your own, such as a cooldown for a hype button.
+- [Save data](references/guide/saving.md): Save player data and leaderboards through Lucy.DataQueue, which paces DataStore requests to the engine's limits, caches reads and writes what is pending when the server closes.
 - [Build screens with scenes](references/guide/scenes.md): Split your UI into scenes, move between screens, show a HUD over them, open a pause menu on top, and handle back with a gamepad.
 - [Share state with the server](references/guide/server.md): Keep server state in Lucy's store on the server, see it in every App at server.*, and send requests back with checks.
 - [Add a theme](references/guide/themes.md): Pick your game's colours, let players switch light and dark, make a theme of your own, and style your own UI with the same tokens.

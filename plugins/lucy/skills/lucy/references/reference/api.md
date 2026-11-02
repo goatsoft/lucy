@@ -48,6 +48,13 @@ the [composables reference](composables.md).
 | `Lucy.SceneManager` | The scenes' class; use `app.scenes` | [Build screens with scenes](../guide/scenes.md) |
 | `Lucy.InputManager` | Input's class; use `app.input` | [Input and focus](../architecture.md#input-and-focus) |
 
+## On the server
+
+| Name | What it is | More |
+|---|---|---|
+| `Lucy.Server` | The server's store, sent to each player's App at `server.*`, and requests from them: `Lucy.Server.new(options)` | [Share state with the server](../guide/server.md) |
+| `Lucy.DataQueue` | DataStore requests paced to the engine's limits, with cached reads and a flush on close: `Lucy.DataQueue.new(options)` | [Save data](../guide/saving.md) |
+
 ## Themes and colour
 
 | Name | What it is | More |

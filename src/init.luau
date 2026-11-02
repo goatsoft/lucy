@@ -39,6 +39,7 @@ local Element = require(Core.Element)
 local Animate = require(Core.Animate)
 local App = require(Core.App)
 local Server = require(Core.Server)
+local DataQueue = require(Core.DataQueue)
 local AppState = require(Core.AppState)
 local Component = require(Core.Component)
 local SceneManager = require(Core.SceneManager)
@@ -113,6 +114,7 @@ local Lucy = {
 	-- Framework
 	App = App,
 	Server = Server,
+	DataQueue = DataQueue,
 	AppState = AppState,
 	Theme = Theme,
 	Tokens = require(Core.Tokens),
