@@ -9,7 +9,8 @@ order: 1
 Each recipe is a whole piece of a game, written out in full, that you can copy
 and change. They use only what the guides explain, and link to them as they go.
 
-- [Lay out a game](game-layout.md): where each part goes, from the one App to
+- [Game folder structure](folder-structure.md): a suggested layout for your
+  game folder, and where each part goes, from the one App to
   utils, features, panels and scenes on the client, and services and requests
   on the server. Start here
 - [HUD](hud.md): coins that pop when they change, a combo badge and a hype meter

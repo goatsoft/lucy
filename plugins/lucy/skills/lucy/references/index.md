@@ -159,7 +159,7 @@ Then build out your game:
 - [UI in the world](guide/world-ui.md): boards on parts and name tags over heads
 - [Make your UI accessible](guide/accessibility.md): readable colours, focus, text size and motion
 - [Components](components/index.md): a page for each component with its props and examples
-- [Recipes](recipes/index.md): whole pieces to copy, from laying out a game to a HUD, menus, a shop and saved player data
+- [Recipes](recipes/index.md): whole pieces to copy, from a game folder structure to a HUD, menus, a shop and saved player data
 
 When you need more, [Go further](guide/components.md) covers your own components
 and composables, stories and agents, and the [Reference](reference/api.md) lists

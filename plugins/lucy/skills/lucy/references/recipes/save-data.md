@@ -6,7 +6,7 @@ The server loads it when they join, the player sees it at `server.me.profile`,
 and every change is saved without the game asking. A Top dancers sheet shows the
 best combos in the club.
 
-It builds on [Lay out a game](game-layout.md): one data queue beside the one
+It builds on the [Game folder structure](folder-structure.md): one data queue beside the one
 server, a Profiles service, and a panel on the client. It uses
 [Lucy.Server](../reference/server.md) for what players see and
 [Lucy.DataQueue](../reference/data-queue.md) for the DataStores.
@@ -107,7 +107,7 @@ return Profiles
   write every few seconds.
 - The batch makes coins and best one change, so the profile is saved once.
 
-A service such as `Combos` in [Lay out a game](game-layout.md#the-server)
+A service such as `Combos` in the [Game folder structure](folder-structure.md#the-server)
 calls `Profiles.award(player, hits * 10, hits)` when a dance ends.
 
 ## The board

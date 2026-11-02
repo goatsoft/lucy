@@ -40,7 +40,7 @@ only: the next update from the server replaces anything written there.
 | `parent` | ReplicatedStorage | Where the remotes folder goes |
 
 Make one server, early, in one server script, and share it through a
-ModuleScript that returns it (see [Lay out a game](../recipes/game-layout.md#the-server)).
+ModuleScript that returns it (see [Game folder structure](../recipes/folder-structure.md#the-server)).
 
 ## On the server
 

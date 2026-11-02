@@ -1,15 +1,11 @@
----
-title: Lay out a game
-description: "Where each part of a Lucy game goes: one App, utils, features, composables, components, world UI, panels and scenes on the client; services and requests on the server."
-order: 2
----
+<!-- Made by scripts/skills.ts from docs/recipes/folder-structure.md. Edit the doc, not this file. -->
+# Game folder structure
 
-# Lay out a game
-
-A game soon has more UI than one script can hold. This layout gives each kind
-of thing Lucy has a folder of its own, so a new file has an obvious home and
-every `require` points the same way. The other recipes are single scripts to
-keep them short; in a game, their parts go in these folders.
+A suggested layout for your game folder. A game soon has more UI than one
+script can hold, so this layout gives each kind of thing Lucy has a folder of
+its own: a new file has an obvious home and every `require` points the same
+way. The other recipes are single scripts to keep them short; in a game, their
+parts go in these folders.
 
 ## The folders
 
