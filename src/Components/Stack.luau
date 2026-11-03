@@ -5,7 +5,7 @@
 		Stack.new({
 			direction = "vertical",   -- vertical | horizontal
 			gap = "Space4",           -- spacing token name, pixels or a UDim
-			align = "start",          -- cross axis: start | center | end
+			align = "start",          -- cross axis: start | center | end | stretch (children fill it)
 			justify = "start",        -- main axis: start | center | end | between
 			padding = "Space4",       -- optional, same forms as gap
 			wrap = false,
@@ -69,6 +69,16 @@ local spec: Component.Spec = {
 		local function between(): boolean
 			return justify() == "between"
 		end
+		local function stretch(): boolean
+			return align() == "stretch"
+		end
+		-- A flex for one axis: the main axis takes "between", the cross axis "stretch"
+		local function flex(main: boolean): Enum.UIFlexAlignment
+			if main then
+				return if between() then Enum.UIFlexAlignment.SpaceBetween else Enum.UIFlexAlignment.None
+			end
+			return if stretch() then Enum.UIFlexAlignment.Fill else Enum.UIFlexAlignment.None
+		end
 
 		h.layout = Element.new("UIListLayout", {
 			SortOrder = Enum.SortOrder.LayoutOrder,
@@ -80,16 +90,13 @@ local spec: Component.Spec = {
 				return Component.space(app, gap(), 0)
 			end),
 			HorizontalFlex = layout(function()
-				return if horizontal() and between()
-					then Enum.UIFlexAlignment.SpaceBetween
-					else Enum.UIFlexAlignment.None
+				return flex(horizontal())
 			end),
 			VerticalFlex = layout(function()
-				return if not horizontal() and between()
-					then Enum.UIFlexAlignment.SpaceBetween
-					else Enum.UIFlexAlignment.None
+				return flex(not horizontal())
 			end),
-			-- Cross axis follows align, main axis follows justify ("between" is a flex).
+			-- Cross axis follows align, main axis follows justify ("between" and "stretch" are
+			-- flexes; a stretched cross axis aligns to the start).
 			HorizontalAlignment = layout(function()
 				local key = if horizontal() then (if between() then "start" else justify()) else align()
 				return H[key or "start"] or H.start

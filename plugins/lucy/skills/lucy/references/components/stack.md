@@ -24,7 +24,7 @@ Lucy.Stack.new({
 | `direction` | string | `"vertical"` | | `vertical` for a column, `horizontal` for a row |
 | `gap` | spacing | `0` | | Space between children |
 | `padding` | spacing | none | | Space around the inside edge |
-| `align` | string | `"start"` | | Across the stack: `start`, `center` or `end` |
+| `align` | string | `"start"` | | Across the stack: `start`, `center`, `end` or `stretch` (each child fills the stack's width in a column, its height in a row) |
 | `justify` | string | `"start"` | | Along the stack: `start`, `center`, `end` or `between` |
 | `wrap` | boolean | `false` | | Moves children to a new line when they do not fit |
 | `size` | UDim2 | see below | | The stack's size |
@@ -88,6 +88,23 @@ Lucy.Stack.new({
         Lucy.Button.new({ text = "Next track" }),
     },
     Parent = footer,
+})
+```
+
+A menu whose buttons all take its full width:
+
+```luau
+Lucy.Stack.new({
+    align = "stretch",
+    gap = "Space2",
+    size = UDim2.fromOffset(240, 0),
+    automaticSize = Enum.AutomaticSize.Y,
+    children = {
+        Lucy.Button.new({ text = "Request a song" }),
+        Lucy.Button.new({ text = "Cheer the dancer" }),
+        Lucy.Button.new({ text = "Leave the floor", variant = "ghost" }),
+    },
+    Parent = parent,
 })
 ```
 

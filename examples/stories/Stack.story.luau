@@ -5,7 +5,7 @@ return {
 	controls = {
 		direction = { "horizontal", "vertical" },
 		gap = { options = { "Space1", "Space2", "Space4", "Space6" }, default = "Space2" },
-		align = { "start", "center", "end" },
+		align = { "start", "center", "end", "stretch" },
 		justify = { "start", "center", "end", "between" },
 	},
 	render = function(ctx)

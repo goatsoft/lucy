@@ -68,6 +68,48 @@ return function()
 		expect(stack.layout.Padding).to.equal(UDim.new(0, 16))
 	end)
 
+	it("stretches children across a column with align stretch", function()
+		local stack = Stack.new({ app = app, Parent = gui, align = "stretch" })
+		expect(stack.layout.HorizontalFlex).to.equal(Enum.UIFlexAlignment.Fill)
+		expect(stack.layout.VerticalFlex).to.equal(Enum.UIFlexAlignment.None)
+		expect(stack.layout.HorizontalAlignment).to.equal(Enum.HorizontalAlignment.Left)
+	end)
+
+	it("stretches children down a row with align stretch", function()
+		local stack = Stack.new({ app = app, Parent = gui, direction = "horizontal", align = "stretch" })
+		expect(stack.layout.VerticalFlex).to.equal(Enum.UIFlexAlignment.Fill)
+		expect(stack.layout.HorizontalFlex).to.equal(Enum.UIFlexAlignment.None)
+		expect(stack.layout.VerticalAlignment).to.equal(Enum.VerticalAlignment.Top)
+	end)
+
+	it("keeps justify between on the main axis while align stretches the cross axis", function()
+		local stack = Stack.new({
+			app = app,
+			Parent = gui,
+			direction = "horizontal",
+			align = "stretch",
+			justify = "between",
+		})
+		expect(stack.layout.HorizontalFlex).to.equal(Enum.UIFlexAlignment.SpaceBetween)
+		expect(stack.layout.VerticalFlex).to.equal(Enum.UIFlexAlignment.Fill)
+	end)
+
+	it("makes a child as wide as a stretched column", function()
+		local child = Instance.new("Frame")
+		child.Size = UDim2.fromOffset(20, 20)
+		local stack = Stack.new({
+			app = app,
+			Parent = gui,
+			align = "stretch",
+			size = UDim2.fromOffset(200, 100),
+			children = { child },
+		})
+		task.wait()
+		-- The harness may scale the screen: compare with the stack, not with 200
+		expect(stack.Instance.AbsoluteSize.X > 20).to.equal(true)
+		expect(child.AbsoluteSize.X).to.equal(stack.Instance.AbsoluteSize.X)
+	end)
+
 	it("accepts component handles as children", function()
 		local inner = Stack.new({ app = app })
 		local outer = Stack.new({ app = app, Parent = gui, children = { inner } })
