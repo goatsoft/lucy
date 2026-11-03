@@ -43,6 +43,7 @@ Each component has its own page with its props, usage and examples:
 | [Toaster](toaster.md) | Toast notifications through `app.toast` |
 | [Toggle](toggle.md) | A button that stays pressed until it is clicked again |
 | [Toggle Group](toggle-group.md) | A row of toggles where the player picks one or several |
+| [Waveform](waveform.md) | A row of columns from levels: a song's loudness, an equaliser, a meter |
 
 ## Using a component
 

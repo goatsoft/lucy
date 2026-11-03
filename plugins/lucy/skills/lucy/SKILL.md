@@ -151,6 +151,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Toaster](references/components/toaster.md): Toast notifications through app.toast.
 - [Toggle Group](references/components/toggle-group.md): A row of toggles where the player picks one or several.
 - [Toggle](references/components/toggle.md): A button that stays pressed until it is clicked again.
+- [Waveform](references/components/waveform.md): A row of columns from levels, for a song's loudness, an equaliser or a meter.
 <!-- /generated:components -->
 
 ## Guides and reference

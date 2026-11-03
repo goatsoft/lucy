@@ -173,6 +173,7 @@ local Lucy = {
 	Toaster = require(Components.Toaster),
 	Toggle = require(Components.Toggle),
 	ToggleGroup = require(Components.ToggleGroup),
+	Waveform = require(Components.Waveform),
 }
 
 -- Lucy.Devtools is required the first time it is read (ADR 0027).

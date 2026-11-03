@@ -149,7 +149,10 @@ function S.ink(root, screen)
 				if stroke and stroke.Enabled and stroke.Transparency < 1 then
 					box = r
 				end
-				if not box and IMAGE[d.ClassName] and d.Image ~= "" and d.ImageTransparency < 1 then
+				-- An image set by Image, or by ImageContent (a canvas: EditableImage)
+				local hasImage = IMAGE[d.ClassName]
+					and (d.Image ~= "" or (d :: any).ImageContent.SourceType ~= Enum.ContentSourceType.None)
+				if not box and hasImage and d.ImageTransparency < 1 then
 					box = r
 				end
 				if
