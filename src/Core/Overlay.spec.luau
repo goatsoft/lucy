@@ -338,6 +338,37 @@ return function()
 			scope:stop()
 		end)
 
+		it("puts a catcher behind its content, so a press there never reaches the scrim", function()
+			-- The content is Active, but in Roblox that does not stop a button behind it: without
+			-- the catcher the scrim fires for a press on an empty part of a dialog
+			local overlay, open, scope = make({ presentation = "center" })
+			open(true)
+			Harness.flush()
+			task.wait() -- it follows on the content's change signals, deferred a frame
+			local content = overlay.content
+			local sink = overlay.root:FindFirstChild("ContentSink") :: TextButton
+			expect(sink).to.be.ok()
+			expect(sink:IsA("TextButton")).to.equal(true)
+			expect(sink.Selectable).to.equal(false)
+			expect(sink.ZIndex > overlay.scrim.ZIndex).to.equal(true)
+			expect(sink.ZIndex < content.ZIndex).to.equal(true)
+			expect((sink.AbsolutePosition - content.AbsolutePosition).Magnitude < 1).to.equal(true)
+			expect((sink.AbsoluteSize - content.AbsoluteSize).Magnitude < 1).to.equal(true)
+			content.Size = UDim2.fromOffset(260, 90)
+			Harness.flush()
+			task.wait() -- it follows on the content's change signals, deferred a frame
+			expect((sink.AbsoluteSize - content.AbsoluteSize).Magnitude < 1).to.equal(true)
+			expect((sink.AbsolutePosition - content.AbsolutePosition).Magnitude < 1).to.equal(true)
+			scope:stop()
+		end)
+
+		it("has no catcher when not modal", function()
+			local overlay, open, scope = make({ modal = false })
+			open(true)
+			expect(overlay.root:FindFirstChild("ContentSink")).to.equal(nil)
+			scope:stop()
+		end)
+
 		it("closes when its anchor goes away", function()
 			local gui = Harness.mount(app)
 			local trigger = Instance.new("TextButton")

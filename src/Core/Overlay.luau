@@ -531,7 +531,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 	}) :: Frame
 
 	local natural = content.Size
-	content.ZIndex = math.max(content.ZIndex, 2)
+	content.ZIndex = math.max(content.ZIndex, 3)
 	if modal then
 		content.SelectionGroup = true
 		content.SelectionBehaviorUp = Enum.SelectionBehavior.Stop
@@ -559,6 +559,45 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		end)
 		Reactive.onCleanup(function()
 			connection:Disconnect()
+		end)
+
+		-- A clear button just behind the content, over the scrim and always its size: an Active
+		-- content does not stop the scrim's button in Roblox, so without it a press on an empty
+		-- part of a dialog (its body, its header text) would close it as an outside press.
+		local sink = Instance.new("TextButton")
+		sink.Name = "ContentSink"
+		sink.Text = ""
+		sink.AutoButtonColor = false
+		sink.Selectable = false
+		sink.BackgroundTransparency = 1
+		sink.BorderSizePixel = 0
+		sink.ZIndex = 2
+		sink.Parent = root
+		-- Placed in shares of the root, as absolute pixels are after any UIScale and offsets
+		-- before it
+		local function follow()
+			local whole = root.AbsoluteSize
+			sink.Visible = content.Visible
+			if whole.X <= 0 or whole.Y <= 0 then
+				return
+			end
+			local at = content.AbsolutePosition - root.AbsolutePosition
+			local size = content.AbsoluteSize
+			sink.Position = UDim2.fromScale(at.X / whole.X, at.Y / whole.Y)
+			sink.Size = UDim2.fromScale(size.X / whole.X, size.Y / whole.Y)
+		end
+		local follows = {
+			content:GetPropertyChangedSignal("AbsolutePosition"):Connect(follow),
+			content:GetPropertyChangedSignal("AbsoluteSize"):Connect(follow),
+			content:GetPropertyChangedSignal("Visible"):Connect(follow),
+			root:GetPropertyChangedSignal("AbsolutePosition"):Connect(follow),
+			root:GetPropertyChangedSignal("AbsoluteSize"):Connect(follow),
+		}
+		follow()
+		Reactive.onCleanup(function()
+			for _, c in follows do
+				c:Disconnect()
+			end
 		end)
 	end
 
