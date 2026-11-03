@@ -27,6 +27,8 @@
 		returnFocus (an object or a function returning one), or else to what had
 		focus when the scope was pushed, if it can still take focus, or else to
 		the control nearest where that was (a Buy button that disabled itself).
+		returnFocus = false leaves nothing selected (a HUD whose buttons must not
+		keep the gamepad's left stick).
 
 	Shoulder buttons:
 		LB / RB call app.input:shoulder(-1 / 1): the nearest component around the
@@ -331,7 +333,7 @@ function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
 		local focused = self._focused
 		if focused and scope.root and focused:IsDescendantOf(scope.root) then
 			self:focus(nil)
-			if self:isNavigating() then
+			if scope.returnFocus ~= false and self:isNavigating() then
 				local back = self:_usable(scope.returnFocus)
 					or self:_usable(previous)
 					or (previousAt and self:_nearest(previousAt))

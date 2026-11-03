@@ -47,6 +47,7 @@ settings:open()
 | `scrim` | boolean | `true` | | `false` drops the dimmed backdrop. The backdrop fades in and out |
 | `showClose` | boolean | `true` | | Shows the close button in the corner |
 | `defaultFocus` | object, handle or function | | | What is selected when it opens on a keyboard or gamepad, instead of the first thing in the body. A function is called with the sheet. A non modal sheet takes focus only when this is given |
+| `returnFocus` | object, handle, getter or `false` | | | Where keyboard and gamepad focus goes when it closes, in place of what opened it. `false` leaves nothing selected, for a menu or panel opened from a HUD whose buttons must not keep the left stick |
 | `onOpenChange` | function | | | Called with `(open, handle)` when it opens or closes |
 
 It also takes the [props every component takes](index.md#using-a-component).

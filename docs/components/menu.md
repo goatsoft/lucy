@@ -50,6 +50,7 @@ end)
 | `items` | table | | | The actions, see [Items](#items) |
 | `variant` | string or responsive | `"list"` | | `list`, `radial` or `arc`, see [Variants](#variants) |
 | `anchor` | instance, handle or getter | | | What it opens from. With none, a ring opens in the middle of the screen |
+| `returnFocus` | object, handle, getter or `false` | | | Where keyboard and gamepad focus goes when it closes, in place of its anchor. `false` leaves nothing selected, for a menu or panel opened from a HUD whose buttons must not keep the left stick |
 | `open` | boolean | `false` | yes | Whether it is open |
 | `side` | string | `"auto"` | | List: `auto`, `bottom`, `top`, `left` or `right`, see [Where it opens](#where-it-opens) |
 | `align` | string | `"start"` | | List: `start`, `center` or `end`: how the list lines up with the anchor |

@@ -22,6 +22,8 @@
 			onBack = nil,               -- runs on back in place of closing (an alert's cancel)
 			closeOnOutside = nil,       -- defaults to dismissible when modal, false otherwise
 			defaultFocus = fn,          -- what keyboard and gamepad select first
+			returnFocus = nil,          -- where focus goes when it closes: nil the anchor (or what
+			                            -- had it), an object, handle or getter, or false for nothing
 			onClose = fn,               -- (reason) "back" | "outside" | "anchor" | "code"
 			parent = nil,               -- defaults to the app's "modal" portal; false leaves it
 			id = "settings",            -- shown as overlay.top in app state
@@ -35,8 +37,8 @@
 
 	Every overlay stacks by the order it opened, newest on top, whatever its
 	kind. While open, modal ones are a focus scope whose selection group stops
-	at its edges, and focus returns to the anchor (or whatever had it) when they
-	close. A non modal one with focus = true is a focus scope the same way, but
+	at its edges, and focus returns to the anchor (or whatever had it, or
+	returnFocus) when they close. A non modal one with focus = true is a focus scope the same way, but
 	the gamepad can still leave it. The app publishes overlay.count, overlay.modal and overlay.top.
 	Placement follows the viewport, the anchor and the content's size while
 	open; the presentation does not change until it opens again.
@@ -773,9 +775,15 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 				end
 				return target or Overlay.firstSelectable(content)
 			end,
-			returnFocus = function()
-				return opener
-			end,
+			returnFocus = if options.returnFocus == false
+				then false
+				else function(): any
+					local target = options.returnFocus
+					if type(target) == "function" then
+						target = target()
+					end
+					return if target ~= nil then target else opener
+				end,
 		})
 	end
 

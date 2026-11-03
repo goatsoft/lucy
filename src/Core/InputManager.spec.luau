@@ -166,6 +166,23 @@ return function()
 			expect(app.input:focused()).to.equal(opener)
 		end)
 
+		it("leaves nothing selected when returnFocus is false", function()
+			local gui = Harness.mount(app)
+			local opener = Instance.new("TextButton")
+			opener.Position = UDim2.fromOffset(0, 300)
+			opener.Parent = gui
+			local panel = Instance.new("Frame")
+			panel.Parent = gui
+			local inside = Instance.new("TextButton")
+			inside.Parent = panel
+			app.input:setMode("gamepad")
+			app.input:focus(opener)
+			local pop = app.input:pushScope({ root = panel, defaultFocus = inside, returnFocus = false })
+			expect(app.input:focused()).to.equal(inside)
+			pop()
+			expect(app.input:focused()).to.equal(nil)
+		end)
+
 		it("takes returnFocus as a function and skips it when hidden", function()
 			local gui = Harness.mount(app)
 			local opener = Instance.new("TextButton")

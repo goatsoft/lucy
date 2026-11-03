@@ -144,6 +144,25 @@ return function()
 			expect(menu:get("open")).to.equal(false)
 		end)
 
+		it("gives focus back to its anchor on close, or to nothing with returnFocus false", function()
+			local trigger = Instance.new("TextButton")
+			trigger.Position = UDim2.fromOffset(0, 400)
+			trigger.Parent = gui
+			app.input:setMode("gamepad")
+			app.input:focus(trigger)
+			local menu = make({ id = "back", anchor = trigger })
+			menu:open()
+			expect(app.input:focused()).never.to.equal(trigger)
+			menu:close()
+			expect(app.input:focused()).to.equal(trigger)
+
+			local hud = make({ id = "hud", anchor = trigger, returnFocus = false })
+			hud:open()
+			expect(app.input:focused()).never.to.equal(trigger)
+			hud:close()
+			expect(app.input:focused()).to.equal(nil)
+		end)
+
 		it("picks an item: reports it, emits select and closes", function()
 			local picked, events = {}, {}
 			local function on(name: string)

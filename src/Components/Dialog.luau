@@ -20,6 +20,8 @@
 			showClose = true,
 			defaultFocus = function(dialog) return dialog.actions[1] end, -- or an object or handle;
 			                          -- a non modal dialog takes focus only when this is given
+			returnFocus = nil,        -- focus on close: nil what opened it, an object, handle or
+			                          -- getter, or false for nothing
 			size = "md",              -- sm | md | lg | xl | full: how wide it gets
 			maxWidth = nil,           -- pixels, instead of size
 			maxHeight = nil,          -- pixels (a number, ref or getter); the body scrolls past it
@@ -323,6 +325,7 @@ function Dialog.new(props: { [string]: any }?)
 			local overlay = Overlay.use(h.app, {
 				open = open,
 				content = content,
+				returnFocus = p.returnFocus,
 				presentation = "center",
 				modal = modal,
 				-- A non modal dialog takes focus only when told what to focus

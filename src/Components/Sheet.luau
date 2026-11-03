@@ -24,6 +24,8 @@
 			defaultFocus = nil,       -- what keyboard and gamepad select first (an object, handle or
 			                          -- function called with the sheet); else the first thing in the
 			                          -- body. A non modal sheet takes focus only when this is given
+			returnFocus = nil,        -- focus on close: nil what opened it, an object, handle or
+			                          -- getter, or false for nothing
 			onOpenChange = function(open, sheet) end,
 		})
 		settings:open()  settings:close()  settings:toggle()
@@ -382,6 +384,7 @@ local spec: Component.Spec = {
 		local overlay = Overlay.use(app, {
 			open = open,
 			content = content,
+			returnFocus = p.returnFocus,
 			presentation = p.presentation or "auto",
 			prefer = "panel",
 			panelSide = p.side,

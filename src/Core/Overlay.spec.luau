@@ -446,6 +446,45 @@ return function()
 			scope:stop()
 		end)
 
+		it("leaves nothing selected on close with returnFocus false", function()
+			local gui = Harness.mount(app)
+			local trigger = Instance.new("TextButton")
+			trigger.Position = UDim2.fromOffset(0, 400)
+			trigger.Parent = gui
+			app.input:setMode("gamepad")
+			app.input:focus(trigger)
+			local overlay, open, scope =
+				make({ presentation = "popup", anchor = trigger, returnFocus = false })
+			open(true)
+			expect(app.input:focused()).to.equal(overlay.content:FindFirstChild("Inside"))
+			open(false)
+			expect(app.input:focused()).to.equal(nil)
+			scope:stop()
+		end)
+
+		it("gives focus on close to returnFocus in place of the anchor", function()
+			local gui = Harness.mount(app)
+			local trigger = Instance.new("TextButton")
+			trigger.Position = UDim2.fromOffset(0, 400)
+			trigger.Parent = gui
+			local elsewhere = Instance.new("TextButton")
+			elsewhere.Position = UDim2.fromOffset(300, 400)
+			elsewhere.Parent = gui
+			app.input:setMode("gamepad")
+			app.input:focus(trigger)
+			local _, open, scope = make({
+				presentation = "popup",
+				anchor = trigger,
+				returnFocus = function()
+					return elsewhere
+				end,
+			})
+			open(true)
+			open(false)
+			expect(app.input:focused()).to.equal(elsewhere)
+			scope:stop()
+		end)
+
 		it("places the content and offers a height cap while open", function()
 			local gui = Harness.mount(app)
 			local trigger = Instance.new("TextButton")

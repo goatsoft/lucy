@@ -36,6 +36,7 @@ quit:open()
 | `scrim` | boolean | `true` | | `false` drops the dimmed backdrop. The backdrop fades in and out |
 | `showClose` | boolean | `true` | | Shows the close button in the corner |
 | `defaultFocus` | object, handle or function | | | What is selected when it opens on a keyboard or gamepad. A function is called with the dialog. A non modal dialog takes focus only when this is given |
+| `returnFocus` | object, handle, getter or `false` | | | Where keyboard and gamepad focus goes when it closes, in place of what opened it. `false` leaves nothing selected, for a menu or panel opened from a HUD whose buttons must not keep the left stick |
 | `size` | string | `"md"` | | How wide it gets: `sm` (384), `md` (448), `lg` (512), `xl` (640) or `full` |
 | `maxWidth` | number | | | The widest it gets in pixels, instead of `size` |
 | `maxHeight` | number, ref or getter | | | The tallest it gets in pixels. The body scrolls past it |

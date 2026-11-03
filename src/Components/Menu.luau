@@ -12,6 +12,8 @@
 			},
 			variant = { gamepad = "radial", touch = "arc", default = "list" },
 			anchor = clubButton,       -- an instance, handle or getter; nothing centres it
+			returnFocus = nil,         -- focus on close: nil the anchor, an object, handle or
+			                           -- getter, or false for nothing (a HUD button)
 			side = "auto",             -- list: auto | bottom | top | left | right
 			align = "start",           -- list: start | center | end
 			width = 220,               -- list: at least this wide (and the anchor's width)
@@ -810,6 +812,7 @@ local spec: Component.Spec = {
 		local overlay = Overlay.use(app, {
 			open = open,
 			content = content,
+			returnFocus = p.returnFocus,
 			presentation = function(): string
 				return if isList() then "auto" else "popup"
 			end,
