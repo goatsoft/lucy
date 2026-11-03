@@ -56,6 +56,7 @@ app.scenes:register("Title", {
 | `enter(scene, params)` | runs every time the scene shows, with what you passed to `goTo`, `push` or `show` |
 | `exit(scene)` | runs every time it hides |
 | `defaultFocus(scene)` | what keyboard and gamepad players start on: an Instance or a component. Optional: without it, the first thing that can take focus. Overlays ignore it |
+| `returnFocus` | where keyboard and gamepad focus goes when the scene exits: an Instance, a component, or `function(scene)` returning one. Optional: without it, what had focus before. `false` leaves nothing selected, for a scene opened from a HUD whose buttons must not keep the left stick. Overlays ignore it |
 | `onBack(scene)` | B or Backspace on a screen, when nothing is open on top |
 | `keepAlive` | `true` (the default) keeps the UI when the scene hides; `false` destroys it and builds it again next time |
 | `ignoreGuiInset` | `true` (the default) draws under Roblox's top bar; see [Safe area](#safe-area) |

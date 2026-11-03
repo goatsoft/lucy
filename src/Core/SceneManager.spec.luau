@@ -216,6 +216,54 @@ return function()
 			expect(app.input:topScope().root).to.equal(scenes:get("Game").gui)
 		end)
 
+		local function focusScene(name, returnFocus)
+			scenes:register(name, {
+				layer = "modal",
+				build = function(scene)
+					local inside = Instance.new("TextButton")
+					inside.Name = "Inside"
+					inside.Parent = scene.gui
+				end,
+				defaultFocus = function(scene)
+					return scene.gui:FindFirstChild("Inside")
+				end,
+				returnFocus = returnFocus,
+			})
+		end
+
+		it("leaves nothing selected on exit with returnFocus false", function()
+			local gui = Harness.mount(app)
+			local opener = Instance.new("TextButton")
+			opener.Parent = gui
+			focusScene("Editor", false)
+			app.input:setMode("gamepad")
+			app.input:focus(opener)
+			scenes:push("Editor")
+			expect(app.input:focused()).to.equal(scenes:get("Editor").gui:FindFirstChild("Inside"))
+			scenes:pop()
+			expect(app.input:focused()).to.equal(nil)
+		end)
+
+		it("gives focus on exit to returnFocus, called with the scene", function()
+			local gui = Harness.mount(app)
+			local opener = Instance.new("TextButton")
+			opener.Parent = gui
+			local elsewhere = Instance.new("TextButton")
+			elsewhere.Position = UDim2.fromOffset(300, 0)
+			elsewhere.Parent = gui
+			local given
+			focusScene("Editor", function(scene)
+				given = scene
+				return elsewhere
+			end)
+			app.input:setMode("gamepad")
+			app.input:focus(opener)
+			scenes:push("Editor")
+			scenes:pop()
+			expect(app.input:focused()).to.equal(elsewhere)
+			expect(given).to.equal(scenes:get("Editor"))
+		end)
+
 		it("goes back by popping the stack, then asking the screen", function()
 			local backed = 0
 			scenes:register("Menu", {

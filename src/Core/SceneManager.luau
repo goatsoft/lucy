@@ -20,6 +20,8 @@
 			enter = function(scene, params) end,
 			exit = function(scene) end,
 			defaultFocus = function(scene) return scene.playButton end, -- gamepad/keyboard start
+			returnFocus = nil,           -- focus when it exits: nil what had it before, an object,
+			                             -- handle or function(scene), or false for nothing
 			onBack = function(scene) end, -- a back key (B, Backspace) with nothing else to close
 		})
 		app.scenes:goTo("Title")
@@ -254,6 +256,12 @@ function SceneManager._enter(self: SceneManager, name: string, displayOrder: num
 					then def.defaultFocus(scene)
 					else def.defaultFocus
 			end,
+			returnFocus = if def.returnFocus == false
+				then false
+				elseif type(def.returnFocus) == "function" then function()
+					return def.returnFocus(scene)
+				end
+				else def.returnFocus,
 		})
 	end
 end
