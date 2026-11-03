@@ -19,6 +19,8 @@
 			                             -- width, blended between stops (in place of color)
 			fade = 0,                    -- 0 to 1: how far cells fade out towards the top (or both
 			                             -- edges when centred); 0 keeps them solid
+			trail = 0,                   -- 0 to 1: a glow over the columns just behind the progress,
+			                             -- this share of the width, so playing reads as moving
 			track = false,               -- blocks and dots: the unlit cells too, faintly
 			peaks = false,               -- a cap above each column
 			stretch = false,             -- heights from just under the quietest level to the
@@ -35,8 +37,12 @@
 	when the levels, colours, theme or size change; playing only moves the clip. Live games need
 	"Allow Mesh / Image APIs" on for the canvas; without it they get the Frames.
 
-	Handle: mode ("canvas" | "frames"); canvas: lit, dim (the EditableImages), clip; frames:
-	columns[i] = { bar?, cells, peak? }.
+	With trail, a third canvas holds a lighter copy of the lit drawing (glow), shown only over the
+	trail by a gradient (glowFade) that playing moves; with Frames the columns in the trail are
+	lightened.
+
+	Handle: mode ("canvas" | "frames"); canvas: lit, dim, glow? (the EditableImages), clip,
+	glowFade?; frames: columns[i] = { bar?, cells, peak? }.
 ]]
 
 local AssetService = game:GetService("AssetService")
@@ -54,6 +60,7 @@ local MIN_SHARE = 0.06 -- the quietest column's height, so silence still shows
 local FLOOR = 0.85 -- stretch: heights start just under the quietest level
 local CURVE = 1.4 -- stretch: loud parts stand out
 local DIM = 0.6 -- transparency of columns not yet played
+local GLOW = 0.55 -- how far the trail lightens a colour towards white
 local TRACK = 0.88 -- transparency of unlit cells with track
 local PEAK = 2 -- a peak cap's thickness in pixels
 local MAX_CANVAS = 1024 -- Roblox's largest EditableImage side
@@ -101,6 +108,20 @@ function Waveform.fractionAt(frame: GuiObject, x: number): number
 		return 0
 	end
 	return math.clamp((x - frame.AbsolutePosition.X) / frame.AbsoluteSize.X, 0, 1)
+end
+
+-- The glow's transparency across the width: shown from `trail` behind `progress` (clear) up to
+-- `progress` (solid), hidden elsewhere
+function Waveform.trailFade(progress: number, trail: number): NumberSequence
+	local at = math.clamp(progress, 0.002, 0.998)
+	local from = math.max(0.001, at - math.max(trail, 0.001))
+	return NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(from, 1),
+		NumberSequenceKeypoint.new(at, 0),
+		NumberSequenceKeypoint.new(math.min(0.999, at + 0.001), 1),
+		NumberSequenceKeypoint.new(1, 1),
+	})
 end
 
 -- A blank canvas, or nil when the device cannot make one (memory budget, or image APIs off).
@@ -160,6 +181,8 @@ local spec: Component.Spec = {
 		local gap: number = p.gap or 2
 		local renderer: string = p.renderer or "auto"
 		local fade: number = math.clamp(p.fade or 0, 0, 1)
+		local trail: number = math.clamp(p.trail or 0, 0, 1)
+		local WHITE = Color3.new(1, 1, 1)
 		-- A transparency with the fade at height t (0 bottom or middle, 1 edge) on top of it
 		local function faded(base: number, t: number): number
 			return 1 - (1 - base) * (1 - fade * t)
@@ -243,23 +266,48 @@ local spec: Component.Spec = {
 			litLabel.Size = UDim2.fromScale(1, 1)
 			litLabel.Parent = clip
 		end
+		local glowLabel: ImageLabel? = nil
+		if renderer ~= "frames" and trail > 0 then
+			local label = Instance.new("ImageLabel")
+			label.Name = "Glow"
+			label.BackgroundTransparency = 1
+			label.Size = UDim2.fromScale(1, 1)
+			label.ZIndex = 2
+			label.Parent = root
+			local gradient = Instance.new("UIGradient")
+			gradient.Name = "Fade"
+			gradient.Transparency = NumberSequence.new(1)
+			gradient.Parent = label
+			h.glowFade = gradient
+			glowLabel = label
+		end
 		local function ensureCanvas(size: Vector2): boolean
 			if h.lit and h.lit.Size == size then
 				return true
 			end
 			local dim = Waveform._createCanvas(size)
 			local lit = dim and Waveform._createCanvas(size)
-			if not (dim and lit) then
-				if dim then
-					dim:Destroy()
+			local glow = if lit and glowLabel then Waveform._createCanvas(size) else nil
+			if not (dim and lit) or (glowLabel and not glow) then
+				for _, image in { dim, lit, glow } do
+					if image then
+						image:Destroy()
+					end
 				end
 				return false
 			end
 			if h.lit then
 				h.lit:Destroy()
 				h.dim:Destroy()
+				if h.glow then
+					h.glow:Destroy()
+				end
 			end
-			h.dim, h.lit = dim, lit
+			h.dim, h.lit, h.glow = dim, lit, glow
+			if glowLabel and glow then
+				glowLabel.Visible = true
+				glowLabel.ImageContent = Content.fromObject(glow)
+			end
 			dimLabel.Visible = true
 			clip.Visible = true
 			dimLabel.ImageContent = Content.fromObject(dim)
@@ -276,7 +324,37 @@ local spec: Component.Spec = {
 			if not ensureCanvas(Vector2.new(width, height)) then
 				return false
 			end
-			local dim, lit = h.dim :: EditableImage, h.lit :: EditableImage
+			local dim = h.dim :: EditableImage
+			local litImage = h.lit :: EditableImage
+			local glowImage: EditableImage? = h.glow
+			-- With trail, what is drawn lit is drawn on the glow too, lighter
+			local lit: any = litImage
+			if glowImage then
+				lit = {
+					DrawRectangle = function(
+						_,
+						at: Vector2,
+						size: Vector2,
+						colour: Color3,
+						t: number,
+						how: any
+					)
+						litImage:DrawRectangle(at, size, colour, t, how)
+						glowImage:DrawRectangle(at, size, colour:Lerp(WHITE, GLOW), t, how)
+					end,
+					DrawCircle = function(
+						_,
+						at: Vector2,
+						radius: number,
+						colour: Color3,
+						t: number,
+						how: any
+					)
+						litImage:DrawCircle(at, radius, colour, t, how)
+						glowImage:DrawCircle(at, radius, colour:Lerp(WHITE, GLOW), t, how)
+					end,
+				}
+			end
 			local full = Vector2.new(width, height)
 			local overwrite = Enum.ImageCombineType.Overwrite
 			dim:DrawRectangle(Vector2.zero, full, Color3.new(), 1, overwrite)
@@ -289,7 +367,7 @@ local spec: Component.Spec = {
 			local shares = Waveform.heights(levels, p.stretch == true)
 			local columnWidth = width / count
 			local function rect(
-				image: EditableImage,
+				image: any,
 				x: number,
 				y: number,
 				w: number,
@@ -460,6 +538,7 @@ local spec: Component.Spec = {
 					bar.Position = UDim2.fromScale(0, if centred then 0.5 else 1)
 					bar.Size = UDim2.fromScale(1, share)
 					bar.BackgroundColor3 = cellColour(index, 0)
+					bar:SetAttribute("colour", bar.BackgroundColor3)
 					if p.gradient or fade > 0 then
 						local g = Instance.new("UIGradient")
 						g.Rotation = -90
@@ -488,6 +567,7 @@ local spec: Component.Spec = {
 						cell.Position = UDim2.new(0, 0, 1 - row / cells, gap / 2)
 						cell.Size = UDim2.new(1, 0, 1 / cells, -gap)
 						cell.BackgroundColor3 = cellColour(index, t)
+						cell:SetAttribute("colour", cell.BackgroundColor3)
 						cell.Visible = on or p.track == true
 						cell:SetAttribute("lit", on)
 						cell:SetAttribute("height", t)
@@ -525,12 +605,26 @@ local spec: Component.Spec = {
 					clip.Size = UDim2.fromScale(progress, 1)
 					litLabel.Size = UDim2.fromScale(if progress > 0 then 1 / progress else 1, 1)
 				end
+				if h.glowFade then
+					h.glowFade.Transparency = Waveform.trailFade(progress, trail)
+				end
 				return
 			end
 			local count = #h.columns
 			for index, entry in h.columns do
-				local played = (index - 0.5) / count <= progress
+				local middle = (index - 0.5) / count
+				local played = middle <= progress
+				-- In the trail: lightened, most at the progress
+				local glow = if trail > 0
+						and played
+						and progress - middle <= trail
+					then GLOW * (1 - (progress - middle) / trail)
+					else 0
 				for _, cell in entry.cells do
+					local own = cell:GetAttribute("colour") :: Color3?
+					if own then
+						cell.BackgroundColor3 = if glow > 0 then own:Lerp(WHITE, glow) else own
+					end
 					local on = cell:GetAttribute("lit") ~= false
 					local t = (cell:GetAttribute("height") :: number?) or 0
 					local base = if not on then TRACK elseif played then 0 else DIM
@@ -571,6 +665,9 @@ local spec: Component.Spec = {
 					dimLabel.Visible = false
 					clip.Visible = false
 				end
+				if glowLabel then
+					glowLabel.Visible = false
+				end
 				drawFrames(levels, variant)
 			end
 			Reactive.untrack(function()
@@ -597,6 +694,9 @@ local spec: Component.Spec = {
 			if h.lit then
 				h.lit:Destroy()
 				h.dim:Destroy()
+			end
+			if h.glow then
+				h.glow:Destroy()
 			end
 		end)
 

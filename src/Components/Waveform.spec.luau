@@ -119,6 +119,30 @@ return function()
 			expect(w.columns[4].bar.BackgroundTransparency).to.equal(0)
 		end)
 
+		it("lights the columns just behind the progress brighter with trail", function()
+			local w = Waveform.new({
+				app = app,
+				Parent = gui,
+				renderer = "frames",
+				levels = { 1, 1, 1, 1, 1, 1, 1, 1 },
+				variant = "bars",
+				color = "$Primary",
+				progress = 0.5,
+				trail = 0.25,
+				size = sizeOf(),
+			})
+			local function brightness(c: Color3): number
+				return c.R + c.G + c.B
+			end
+			local far, near = w.columns[1].bar.BackgroundColor3, w.columns[4].bar.BackgroundColor3
+			expect(Harness.colorEq(far, app.theme:resolve("Primary"))).to.equal(true)
+			expect(brightness(near) > brightness(far)).to.equal(true)
+			-- Ahead of the progress: no glow
+			expect(Harness.colorEq(w.columns[6].bar.BackgroundColor3, app.theme:resolve("Primary"))).to.equal(
+				true
+			)
+		end)
+
 		it("lights every column with no progress", function()
 			local w = Waveform.new({
 				app = app,
@@ -372,6 +396,49 @@ return function()
 				expect(w.clip.Size.X.Scale).to.equal(0.25)
 				progress(0.75)
 				expect(w.clip.Size.X.Scale).to.equal(0.75)
+			end)
+
+			it("glows the stretch just behind the progress with trail", function()
+				local progress = Reactive.ref(0.5)
+				local w = Waveform.new({
+					app = app,
+					Parent = gui,
+					levels = { 1, 1, 1, 1 },
+					variant = "blocks",
+					cells = 4,
+					color = "$Primary",
+					progress = progress,
+					trail = 0.2,
+					size = sizeOf(),
+				})
+				Harness.flush()
+				expect(w.mode).to.equal("canvas")
+				expect(w.glow).to.be.ok()
+				-- The glow drawing is a lighter copy of the lit one
+				local size = w.lit.Size
+				local x, y = math.floor(size.X / 8), size.Y - math.floor(size.Y / 8)
+				local lit = pixel(w.lit, x, y)
+				local glow = pixel(w.glow, x, y)
+				expect(glow.R + glow.G + glow.B > lit.R + lit.G + lit.B).to.equal(true)
+				-- Shown only just behind the progress, strongest at it
+				local function at(t: number): number
+					local points = w.glowFade.Transparency.Keypoints
+					for i = 2, #points do
+						local a, b = points[i - 1], points[i]
+						if t <= b.Time then
+							local span = b.Time - a.Time
+							local k = if span > 0 then (t - a.Time) / span else 1
+							return a.Value + (b.Value - a.Value) * k
+						end
+					end
+					return points[#points].Value
+				end
+				expect(at(0.1)).to.be.near(1, 0.01)
+				expect(at(0.49) < 0.2).to.equal(true)
+				expect(at(0.6)).to.be.near(1, 0.01)
+				progress(0.8)
+				expect(at(0.79) < 0.2).to.equal(true)
+				expect(at(0.5)).to.be.near(1, 0.01)
 			end)
 
 			it("draws again when the theme changes", function()

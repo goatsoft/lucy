@@ -31,7 +31,7 @@ return {
 		end
 		return {
 			Lucy.Text.new({
-				text = "dots, a gradient up the height fading out, the unlit dots faint",
+				text = "dots, a gradient up the height fading out, the unlit dots faint, a glowing trail",
 				variant = "muted",
 			}),
 			Lucy.Waveform.new({
@@ -42,6 +42,7 @@ return {
 				gradient = { "$Purple500", "$Pink500" },
 				track = true,
 				fade = 0.6,
+				trail = 0.12,
 				gap = 1,
 				height = 110,
 				onSeek = seek,

@@ -55,6 +55,7 @@ Lucy.Waveform.new({
 | `gradient` | table | | | `{ bottom, top }` tokens or Color3s: colour by height in place of `color`. Centred, it runs from the middle out |
 | `stops` | table | | | Colours along the width, `{ { 0, "$Sky400" }, { 0.5, "$Pink500" } }`: each column takes the blend at its middle, and before the first stop or after the last it keeps that stop's colour. In place of `color`; `gradient` wins over it |
 | `fade` | number | `0` | | From 0 to 1: how far cells fade out towards the top, or towards both edges when centred. `0.6` leaves the top cells 40% solid, so loud moments trail off like a glow |
+| `trail` | number | `0` | | From 0 to 1: a glow over the columns just behind `progress`, this share of the width, brightest at the play position. It moves as the song plays, so playing reads as smooth movement even where columns and gaps would make the edge look like it steps (try `0.1`) |
 | `track` | boolean | `false` | | Shows the unlit cells too, faintly, for `blocks` and `dots` |
 | `peaks` | boolean | `false` | | A thin cap above each column |
 | `stretch` | boolean | `false` | | Heights run from just under the quietest level to the loudest, curved, so loud music that never goes quiet still shows its shape |
@@ -78,6 +79,8 @@ Mesh / Image APIs** turned on (Experience Settings, Security, in Studio; or Conf
 on the Creator Dashboard). Studio always allows it. Refused, the waveform draws with Frames
 instead, with at most 64 columns and 12 cells, averaged down. `renderer = "frames"` always
 draws with Frames; `renderer = "canvas"` never falls back.
+
+With `trail`, a third canvas holds a lighter copy of the lit columns, and a gradient that playing moves shows it only over the trail, so the glow costs no drawing while it plays. With Frames, the columns in the trail are lightened instead.
 
 `handle.mode` says which it is using: `"canvas"` or `"frames"`.
 
