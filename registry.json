@@ -4,6 +4,7 @@
   "components": {
     "accordion": "Sections the player opens and closes, one or several at a time",
     "alert": "A box that calls attention to a message",
+    "arrow": "A big arrow that points at something on screen, grows in and bounces",
     "avatar": "A player's headshot, or a monogram for a bot",
     "badge": "Small status label",
     "button": "Button with variants, sizes and an optional key hint",

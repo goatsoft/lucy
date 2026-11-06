@@ -137,6 +137,7 @@ local Lucy = {
 	-- Components
 	Accordion = require(Components.Accordion),
 	Alert = require(Components.Alert),
+	Arrow = require(Components.Arrow),
 	Avatar = require(Components.Avatar),
 	Badge = require(Components.Badge),
 	Button = require(Components.Button),
