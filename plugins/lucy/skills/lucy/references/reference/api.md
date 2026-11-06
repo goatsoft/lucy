@@ -74,12 +74,12 @@ the [composables reference](composables.md).
 
 ## Components
 
-`Lucy.Accordion`, `Alert`, `Avatar`, `Badge`, `Button`, `Checkbox`,
-`Collapsible`, `DataGrid`, `Dialog`, `Grid`, `Icon`, `Image`, `Input`, `Item`,
-`Kbd`, `NumberField`, `Panel`, `Pressable`, `Progress`, `RadioGroup`,
-`ScrollArea`, `Select`, `Separator`, `Sheet`, `Skeleton`, `Slider`, `Spinner`,
-`Stack`, `Switch`, `Table`, `Tabs`, `Text`, `Toaster`, `Toggle`,
-`ToggleGroup` and `Tour`. Each has a page under [Components](../components/index.md).
+`Lucy.Accordion`, `Alert`, `Arrow`, `Avatar`, `Badge`, `Button`, `Checkbox`,
+`Collapsible`, `DataGrid`, `Dialog`, `Grid`, `Icon`, `Image`, `InlineConfirm`,
+`Input`, `Item`, `Kbd`, `NumberField`, `Panel`, `Pressable`, `Progress`,
+`RadioGroup`, `ScrollArea`, `Select`, `Separator`, `Sheet`, `Skeleton`,
+`Slider`, `Spinner`, `Stack`, `Switch`, `Table`, `Tabs`, `Text`, `Toaster`,
+`Toggle`, `ToggleGroup` and `Tour`. Each has a page under [Components](../components/index.md).
 
 ## Tools
 

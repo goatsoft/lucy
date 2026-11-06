@@ -13,7 +13,8 @@
 			progress = "save.tours.first-show",  -- optional state path the game persists
 			quiet = true,                         -- the default: app.quiet for the run, allowing "tour"
 			skippable = true,
-			text = { next = "NEXT", skip = "SKIP", confirm = "Skip the tour?", keepGoing = "KEEP GOING" },
+			text = { next = "NEXT", skip = "SKIP", confirm = "Are you sure?", yes = "YES", no = "NO" },
+			pointer = { variant = "arrow" },      -- Lucy.Arrow props for every step, or false for none
 			onStep = function(step, index) end,   -- a step is on screen (play its voice line here)
 			onDone = function() end,
 			onSkip = function() end,
@@ -37,32 +38,43 @@
 		action   an action whose keys show as a key cap in the callout
 		scrim    false: no dimming (presses outside the target are still blocked)
 		pad      the cut-out's margin around the target (8)
+		pointer  Lucy.Arrow props for this step (over the tour's), or false for no arrow
 
 	While a step's target is shown, the tour layer (the "tour" portal, above dialogs and
 	below toasts) blocks every press outside it with four buttons, dims the screen but
 	for the target, rings it, points a callout at it and keeps gamepad focus on it. Until
-	the target is shown the tour waits and draws and blocks nothing.
+	the target is shown the tour waits and draws and blocks nothing. A Lucy.Arrow
+	(tour.pointer) points at the target from the side away from the callout.
 
-	Back asks to skip: a "Skip the tour?" dialog, KEEP GOING first. The tour layer hides
-	while it is open. With skippable = false, back does nothing while a step is shown.
+	Motion: the cut-out and callout glide from one target to the next, the callout
+	fades and slides in, a ring ripples out from the target, and the arrow grows in
+	and bounces. With reduced motion the tour jumps between targets, the callout
+	only fades and the ripple is off (the arrow fades in and stays still).
+
+	SKIP and back ask first, in the callout (Lucy.InlineConfirm): "Are you sure?"
+	YES skips, NO (or back again) goes back to the step. With skippable = false,
+	back does nothing while a step is shown.
 
 	With progress, the tour writes { step = n } there as it goes, and { finished = "done" }
 	or { finished = "skipped" } at the end. One tour runs at a time; the app publishes
 	tour = { id, step, index, waiting } while one runs.
 
-	Parts: tour.root, tour.blockers (top, bottom, left, right), tour.ring, tour.callout,
-	tour.arrow, tour.title, tour.text, tour.hint (Kbd), tour.next and tour.skipButton
-	(Buttons), tour.confirm (the Dialog).
+	Parts: tour.root, tour.blockers (top, bottom, left, right), tour.ring, tour.pulse,
+	tour.callout, tour.arrow (the callout's notch), tour.cover (fades the callout in),
+	tour.pointer (Lucy.Arrow), tour.title, tour.text, tour.hint (Kbd), tour.next and
+	tour.skipButton (Buttons), tour.confirm (Lucy.InlineConfirm).
 ]]
 
 local RunService = game:GetService("RunService")
 
+local Arrow = require(script.Parent.Arrow)
 local Button = require(script.Parent.Button)
-local Dialog = require(script.Parent.Dialog)
 local Element = require(script.Parent.Parent.Core.Element)
+local InlineConfirm = require(script.Parent.InlineConfirm)
 local Kbd = require(script.Parent.Kbd)
 local Maid = require(script.Parent.Parent.Core.Maid)
 local Overlay = require(script.Parent.Parent.Core.Overlay)
+local Preferences = require(script.Parent.Parent.Core.Preferences)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
 local UiEvents = require(script.Parent.Parent.Core.UiEvents)
@@ -71,7 +83,13 @@ local Tour = {}
 Tour.__index = Tour
 
 Tour.defaults = { pad = 8, width = 300, arrow = 12, gap = 6 }
-Tour.text = { next = "NEXT", skip = "SKIP", confirm = "Skip the tour?", keepGoing = "KEEP GOING" }
+Tour.text = { next = "NEXT", skip = "SKIP", confirm = "Are you sure?", yes = "YES", no = "NO" }
+-- Seconds: the glide between targets, the callout's entrance, one ripple of the ring.
+Tour.timing = { glide = 0.3, enter = 0.25, pulse = 1.2 }
+-- Pixels: how far the callout slides in, how far the ripple spreads, the gap
+-- between the pointer's tip and the cut-out.
+Tour.motion = { slide = 8, ripple = 14, pointerGap = 4 }
+Tour.pointer = { variant = "arrow", motion = "bounce", size = "md", color = "Ring", icon = "" }
 Tour.channel = "tour"
 Tour.sides = { "auto", "top", "bottom", "left", "right" }
 
@@ -139,6 +157,17 @@ Tour.rules = {
 		selector = ".ui-tour-arrow",
 		priority = 0,
 		properties = { BackgroundColor3 = "$Popover", BorderSizePixel = 0 },
+	},
+	{
+		selector = ".ui-tour-cover",
+		priority = 0,
+		properties = { BackgroundColor3 = "$Popover", BorderSizePixel = 0 },
+	},
+	{ selector = ".ui-tour-cover::UICorner", priority = 0, properties = { CornerRadius = "$RadiusLg" } },
+	{
+		selector = ".ui-tour-callout >> .ui-inline-confirm-question",
+		priority = 1,
+		properties = { TextColor3 = "$PopoverForeground" },
 	},
 	{
 		selector = ".ui-tour-title",
@@ -292,10 +321,9 @@ function Tour.new(app: any, options: { [string]: any })
 	local index = Reactive.ref(0)
 	local running = Reactive.ref(false)
 	local waiting = Reactive.ref(true)
-	local confirming = Reactive.ref(false)
 	local scrim = Reactive.ref(true)
 
-	self._index, self._running, self._waiting, self._confirming = index, running, waiting, confirming
+	self._index, self._running, self._waiting = index, running, waiting
 	self._scrim = scrim
 	self.index = function(): number
 		return index()
@@ -307,7 +335,7 @@ function Tour.new(app: any, options: { [string]: any })
 		return waiting()
 	end
 	self.confirming = function(): boolean
-		return confirming()
+		return self.confirm ~= nil and self.confirm.asking()
 	end
 	self.step = function(): Step?
 		return if running() then steps[index()] else nil
@@ -349,6 +377,46 @@ function Tour.new(app: any, options: { [string]: any })
 			ZIndex = 2,
 			Tags = { "ui-tour-ring" },
 		})
+
+		-- A ripple out from the ring. Its stroke is its own (not a style rule), so
+		-- its transparency can change every frame; its colour follows the theme.
+		local themeTick = Reactive.ref(0)
+		local themeConn = app.theme.Changed:Connect(function()
+			themeTick(themeTick() + 1)
+		end)
+		Reactive.onCleanup(function()
+			themeConn:Disconnect()
+		end)
+		self._pulseStroke = Element.new("UIStroke", {
+			Thickness = 2,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
+			Color = function(): Color3
+				themeTick()
+				local ring = app.theme:resolve("Ring")
+				return if typeof(ring) == "Color3" then ring else Color3.new(1, 1, 1)
+			end,
+		}) :: UIStroke
+		self.pulse = Element.new("Frame", {
+			Name = "Pulse",
+			ZIndex = 2,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Visible = false,
+			Element.new("UICorner", { CornerRadius = UDim.new(0, 6) }),
+			self._pulseStroke,
+		}) :: Frame
+
+		self.pointer = Arrow.new({ app = app, visible = false })
+		self.pointer.Instance.ZIndex = 3
+
+		self.cover = Element.new("Frame", {
+			Name = "Cover",
+			ZIndex = 5,
+			Active = false,
+			BackgroundTransparency = 1,
+			Tags = { "ui-tour-cover" },
+		}) :: Frame
 
 		self.arrow = Element.new("Frame", {
 			Name = "Arrow",
@@ -443,7 +511,7 @@ function Tour.new(app: any, options: { [string]: any })
 			layoutOrder = 3,
 			Parent = footer,
 			onClick = function()
-				self:skip()
+				self.confirm:ask()
 			end,
 		})
 
@@ -472,54 +540,44 @@ function Tour.new(app: any, options: { [string]: any })
 			AutomaticSize = Enum.AutomaticSize.Y,
 			Active = true,
 			Tags = { "ui-tour-callout" },
-			Element.new("UIListLayout", {
-				SortOrder = Enum.SortOrder.LayoutOrder,
-				Padding = UDim.new(0, 8),
-			}),
-			self.title,
-			self.text,
-			footer,
+			Element.new("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder }),
 		}) :: Frame
+
+		-- SKIP and back ask here: the step's words step aside for "Are you sure?".
+		self.confirm = InlineConfirm.new({
+			app = app,
+			question = text.confirm,
+			yes = text.yes,
+			no = text.no,
+			-- NO is the solid one: the tour would rather the player stayed
+			yesVariant = "outline",
+			noVariant = "default",
+			children = { self.title, self.text, footer },
+			Parent = self.callout,
+			onYes = function()
+				self:skip()
+			end,
+		})
 
 		self.root = Element.new("Frame", {
 			Name = "Tour",
 			BackgroundTransparency = 1,
 			Size = UDim2.fromScale(1, 1),
 			Visible = function()
-				return running() and not waiting() and not confirming()
+				return running() and not waiting()
 			end,
 			self.blockers.top,
 			self.blockers.bottom,
 			self.blockers.left,
 			self.blockers.right,
 			self.ring,
+			self.pulse,
+			self.pointer.Instance,
 			self.arrow,
 			self.callout,
+			self.cover,
 			Parent = portal,
 		}) :: Frame
-
-		self.confirm = Dialog.new({
-			app = app,
-			title = text.confirm,
-			size = "sm",
-			showClose = false,
-			actions = {
-				{ text = text.keepGoing },
-				{
-					text = text.skip,
-					variant = "outline",
-					onClick = function()
-						self:skip()
-					end,
-				},
-			},
-			defaultFocus = function(dialog)
-				return dialog.actions[1]
-			end,
-			onOpenChange = function(open)
-				confirming(open)
-			end,
-		})
 	end)
 	return self
 end
@@ -530,6 +588,17 @@ end
 -- root's own (unscaled) pixels; the blockers are written in shares of it.
 function Tour._layout(self: any, step: Step, target: GuiObject?)
 	local root: Frame = self.root
+	local still = Preferences.reducedMotion()
+	local since = os.clock() - (self._enterAt or 0)
+	local function eased(seconds: number): number
+		local p = math.clamp(since / seconds, 0, 1)
+		return 1 - (1 - p) ^ 3
+	end
+	-- The callout's entrance: 0 just shown, 1 settled.
+	local enter = eased(Tour.timing.enter)
+	self.cover.BackgroundTransparency = enter
+	self.cover.Visible = enter < 1
+	self.arrow.BackgroundTransparency = 1 - enter
 	local scale = Scroll.scaleOf(root)
 	if scale <= 0 then
 		scale = 1
@@ -552,9 +621,13 @@ function Tour._layout(self: any, step: Step, target: GuiObject?)
 			blockers[name].Visible = false
 		end
 		self.ring.Visible = false
+		self.pulse.Visible = false
 		self.arrow.Visible = false
+		self.pointer:set("visible", false)
+		self._drawn = nil
 		self.callout.AnchorPoint = Vector2.new(0.5, 0.5)
 		self.callout.Position = UDim2.fromScale(0.5, 0.5)
+		self:_cover()
 		return
 	end
 
@@ -566,6 +639,16 @@ function Tour._layout(self: any, step: Step, target: GuiObject?)
 	local pad = if step.pad ~= nil then step.pad else Tour.defaults.pad
 	local min = ((amin - origin) / scale - Vector2.new(pad, pad)):Max(Vector2.zero)
 	local max = ((amax - origin) / scale + Vector2.new(pad, pad)):Min(whole)
+	-- Glide from where the last step's cut-out was.
+	local from = self._from
+	if from and not still then
+		local e = eased(Tour.timing.glide)
+		if e < 1 then
+			min = from.min:Lerp(min, e)
+			max = from.max:Lerp(max, e)
+		end
+	end
+	self._drawn = { min = min, max = max }
 
 	blockers.top.Position = UDim2.fromScale(0, 0)
 	blockers.top.Size = share(whole.X, min.Y)
@@ -582,6 +665,18 @@ function Tour._layout(self: any, step: Step, target: GuiObject?)
 	self.ring.Visible = true
 	self.ring.Position = UDim2.fromOffset(min.X, min.Y)
 	self.ring.Size = UDim2.fromOffset(max.X - min.X, max.Y - min.Y)
+
+	-- The ripple: spreads out from the ring and fades, again and again.
+	if still then
+		self.pulse.Visible = false
+	else
+		local q = (since % Tour.timing.pulse) / Tour.timing.pulse
+		local spread = math.round(q * Tour.motion.ripple)
+		self.pulse.Visible = true
+		self.pulse.Position = UDim2.fromOffset(min.X - spread, min.Y - spread)
+		self.pulse.Size = UDim2.fromOffset(max.X - min.X + spread * 2, max.Y - min.Y + spread * 2)
+		self._pulseStroke.Transparency = q
+	end
 
 	-- The callout: the side is picked against the whole cut-out; above or below,
 	-- it is then centred on it rather than stretched to its width.
@@ -614,7 +709,16 @@ function Tour._layout(self: any, step: Step, target: GuiObject?)
 	Overlay.gap = saved
 	self.callout.Size = UDim2.fromOffset(width, 0)
 	self.callout.AnchorPoint = at.anchorPoint
-	self.callout.Position = at.position
+	-- It slides in from the target's side (it only fades with reduced motion).
+	local slide = if still then 0 else math.round((1 - enter) * Tour.motion.slide)
+	local toward = ({
+		top = Vector2.new(0, 1),
+		bottom = Vector2.new(0, -1),
+		left = Vector2.new(1, 0),
+		right = Vector2.new(-1, 0),
+	})[at.side or "bottom"] or Vector2.zero
+	self.callout.Position = at.position + UDim2.fromOffset(toward.X * slide, toward.Y * slide)
+	self:_cover()
 
 	-- The arrow sits on the callout's near edge, in line with the target's centre.
 	local corner = 12
@@ -635,7 +739,78 @@ function Tour._layout(self: any, step: Step, target: GuiObject?)
 		point = Vector2.new(left, math.clamp(centre.Y, top + corner, top + height - corner))
 	end
 	self.arrow.Visible = true
-	self.arrow.Position = UDim2.fromOffset(point.X, point.Y)
+	self.arrow.Position = UDim2.fromOffset(point.X + toward.X * slide, point.Y + toward.Y * slide)
+
+	self:_point(step, min, max, side, whole)
+end
+
+-- The cover sits over the callout and fades away as it comes in.
+function Tour._cover(self: any)
+	local callout: Frame = self.callout
+	local scale = Scroll.scaleOf(self.root)
+	if scale <= 0 then
+		scale = 1
+	end
+	self.cover.AnchorPoint = callout.AnchorPoint
+	self.cover.Position = callout.Position
+	self.cover.Size = UDim2.fromOffset(callout.AbsoluteSize.X / scale, callout.AbsoluteSize.Y / scale)
+end
+
+-- The pointer's props for a step: Arrow defaults, then the tour's, then the step's.
+function Tour._pointerProps(self: any, step: Step): { [string]: any }?
+	if step.target == nil or step.pointer == false or self.options.pointer == false then
+		return nil
+	end
+	local props = table.clone(Tour.pointer)
+	for _, layer in { self.options.pointer, step.pointer } do
+		if type(layer) == "table" then
+			for key, value in layer do
+				props[key] = value
+			end
+		end
+	end
+	return props
+end
+
+-- Points the arrow at the cut-out from the side away from the callout (the callout
+-- side is `side`), or from the left or right when that side has no room.
+function Tour._point(self: any, step: Step, min: Vector2, max: Vector2, side: string, whole: Vector2)
+	local pointer = self.pointer
+	if self:_pointerProps(step) == nil then
+		pointer:set("visible", false)
+		return
+	end
+	local length = pointer.Instance.Size.X.Offset * (1 + Arrow.travel) + Tour.motion.pointerGap
+	local gap = Tour.motion.pointerGap
+	local centre = (min + max) / 2
+	local room = {
+		down = min.Y - length >= 0,
+		up = max.Y + length <= whole.Y,
+		right = min.X - length >= 0,
+		left = max.X + length <= whole.X,
+	}
+	local away = ({ bottom = "down", top = "up", left = "left", right = "right" })[side] or "down"
+	local direction = if room[away]
+		then away
+		elseif room.right then "right"
+		elseif room.left then "left"
+		else nil
+	if direction == nil then
+		pointer:set("visible", false)
+		return
+	end
+	local tip = if direction == "down"
+		then Vector2.new(centre.X, min.Y - gap)
+		elseif direction == "up" then Vector2.new(centre.X, max.Y + gap)
+		elseif direction == "right" then Vector2.new(min.X - gap, centre.Y)
+		else Vector2.new(max.X + gap, centre.Y)
+	if pointer:get("direction") ~= direction then
+		pointer:set("direction", direction)
+	end
+	pointer.Instance.Position = UDim2.fromOffset(math.round(tip.X), math.round(tip.Y))
+	if not pointer:get("visible") then
+		pointer:set("visible", true)
+	end
 end
 
 -- Running --------------------------------------------------------------------
@@ -678,6 +853,7 @@ function Tour._showStep(self: any, at: number)
 	local live = Maid.new()
 	self._step = live
 	local shownOnce = false
+	self.confirm:cancel()
 	self._index(at)
 	self._waiting(true)
 	self:_save({ step = at })
@@ -751,6 +927,17 @@ function Tour._showStep(self: any, at: number)
 		if not shown then
 			return
 		end
+		if not shownOnce then
+			-- The entrance and glide start now, from the last cut-out drawn.
+			self._enterAt = os.clock()
+			self._from = self._drawn
+			local props = self:_pointerProps(step)
+			if props then
+				props.visible = nil
+				self.pointer:set(props)
+				self.pointer:replay()
+			end
+		end
 		self:_layout(step, target)
 		if not shownOnce then
 			shownOnce = true
@@ -762,10 +949,12 @@ function Tour._showStep(self: any, at: number)
 			end
 		end
 		-- Hold focus on the step while the player navigates.
-		if app.input:isNavigating() and not Reactive.peek(self._confirming) then
-			local rest = self:_focusTarget(step, target)
+		if app.input:isNavigating() then
+			local asking = Reactive.untrack(self.confirm.asking)
+			local rest = if asking then self.confirm.no.Instance else self:_focusTarget(step, target)
 			local focused = app.input:focused()
-			if rest and not inside(focused, target or rest) and not inside(focused, self.callout) then
+			local free = if asking then false else inside(focused, target or rest)
+			if rest and not free and not inside(focused, self.callout) then
 				app.input:focus(rest)
 			end
 		end
@@ -811,11 +1000,11 @@ function Tour.start(self: any, at: number?): boolean
 		end)
 	end
 	run:give(app.input:pushBack(function(): boolean?
-		if Reactive.peek(self._waiting) or Reactive.peek(self._confirming) then
+		if Reactive.peek(self._waiting) then
 			return false
 		end
 		if self.options.skippable ~= false then
-			self.confirm:open()
+			self.confirm:ask()
 		end
 		return true
 	end))
@@ -858,9 +1047,9 @@ function Tour._finish(self: any, how: string?)
 		self._run:destroy()
 		self._run = nil
 	end
-	if Reactive.peek(self._confirming) then
-		self.confirm:close()
-	end
+	self.confirm:cancel()
+	self.pointer:set("visible", false)
+	self._drawn, self._from = nil, nil
 	self._running(false)
 	self._waiting(true)
 	local app = self.app

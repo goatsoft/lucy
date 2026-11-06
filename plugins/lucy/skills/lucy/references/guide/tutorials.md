@@ -58,8 +58,8 @@ Every option is on the [Tour](../components/tour.md) page.
 
 ## Let the player out
 
-Back (B on a gamepad, Backspace) asks "Skip the tour?" and SKIP in the callout
-ends it at once. Let players replay it later, from a settings screen or a
+SKIP in the callout and back (B on a gamepad, Backspace) ask "Are you sure?"
+in the callout, with YES and NO; YES skips. Let players replay it later, from a settings screen or a
 kiosk:
 
 ```luau

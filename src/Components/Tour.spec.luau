@@ -357,61 +357,72 @@ return function()
 		end)
 	end)
 
-	describe("back asks to skip", function()
-		it("opens a confirm, hiding the tour layer; keep going carries on", function()
+	describe("skipping asks first", function()
+		local function tourWithSkip()
 			button("menu")
-			local skipped = false
+			local result = { skipped = false }
 			local tour = Tour.new(app, {
 				id = "first",
 				steps = steps(),
 				onSkip = function()
-					skipped = true
+					result.skipped = true
 				end,
 			})
 			tour:start()
 			frame()
-			expect(app.input:back()).to.equal(true)
+			return tour, result
+		end
+
+		it("SKIP asks in the callout: Are you sure? YES / NO", function()
+			local tour, result = tourWithSkip()
+			tour.skipButton:click()
+			expect(result.skipped).to.equal(false)
 			expect(tour.confirming()).to.equal(true)
-			expect(tour.root.Visible).to.equal(false)
-			tour.confirm.actions[1]:click() -- KEEP GOING
-			expect(tour.confirming()).to.equal(false)
-			expect(tour.running()).to.equal(true)
-			expect(skipped).to.equal(false)
+			expect(tour.root.Visible).to.equal(true)
+			expect(tour.confirm.Instance:IsDescendantOf(tour.callout)).to.equal(true)
+			expect(tour.confirm.question.Text).to.equal("Are you sure?")
+			expect(tour.confirm.no:get("variant")).to.equal("default")
+			expect(tour.confirm.yes:get("variant")).to.equal("outline")
+			expect(tour.text.Visible and tour.text:IsDescendantOf(tour.confirm.content)).to.equal(true)
+			expect(tour.confirm.content.Visible).to.equal(false)
 			tour:stop()
 		end)
 
-		it("skips from the confirm", function()
-			button("menu")
-			local skipped = false
-			local tour = Tour.new(app, {
-				id = "first",
-				steps = steps(),
-				onSkip = function()
-					skipped = true
-				end,
-			})
-			tour:start()
-			frame()
-			app.input:back()
-			tour.confirm.actions[2]:click() -- SKIP
-			expect(skipped).to.equal(true)
+		it("NO goes back to the step", function()
+			local tour, result = tourWithSkip()
+			tour.skipButton:click()
+			tour.confirm.no:click()
+			expect(tour.confirming()).to.equal(false)
+			expect(tour.confirm.content.Visible).to.equal(true)
+			expect(tour.running()).to.equal(true)
+			expect(result.skipped).to.equal(false)
+			tour:stop()
+		end)
+
+		it("YES skips", function()
+			local tour, result = tourWithSkip()
+			tour.skipButton:click()
+			tour.confirm.yes:click()
+			expect(result.skipped).to.equal(true)
 			expect(tour.running()).to.equal(false)
 		end)
 
-		it("skips from the callout's SKIP", function()
-			button("menu")
-			local skipped = false
-			local tour = Tour.new(app, {
-				id = "first",
-				steps = steps(),
-				onSkip = function()
-					skipped = true
-				end,
-			})
-			tour:start()
-			frame()
+		it("back asks too, and back again answers NO", function()
+			local tour, result = tourWithSkip()
+			expect(app.input:back()).to.equal(true)
+			expect(tour.confirming()).to.equal(true)
+			expect(app.input:back()).to.equal(true)
+			expect(tour.confirming()).to.equal(false)
+			expect(result.skipped).to.equal(false)
+			tour:stop()
+		end)
+
+		it("a new step puts the question away", function()
+			local tour = tourWithSkip()
 			tour.skipButton:click()
-			expect(skipped).to.equal(true)
+			tour:advance()
+			expect(tour.confirming()).to.equal(false)
+			tour:stop()
 		end)
 
 		it("swallows back when it cannot be skipped", function()
@@ -422,6 +433,134 @@ return function()
 			expect(app.input:back()).to.equal(true)
 			expect(tour.confirming()).to.equal(false)
 			expect(tour.skipButton.Instance.Visible).to.equal(false)
+			tour:stop()
+		end)
+	end)
+
+	describe("the pointer", function()
+		local function near(a: number, b: number): boolean
+			return math.abs(a - b) <= 2
+		end
+
+		it("points at the target from the side away from the callout", function()
+			local menu = button("menu", UDim2.fromOffset(400, 300))
+			local tour = Tour.new(app, {
+				id = "first",
+				steps = { { id = "menu", target = "menu", text = "Open the menu", side = "bottom" } },
+			})
+			tour:start()
+			frame()
+			frame()
+			local pointer = tour.pointer
+			expect(pointer.Instance.Visible).to.equal(true)
+			expect(pointer:get("direction")).to.equal("down")
+			local tip = pointer.Instance.AbsolutePosition.Y + pointer.Instance.AbsoluteSize.Y
+			local top = tour.ring.AbsolutePosition.Y
+			expect(tip <= top + 1).to.equal(true)
+			expect(
+				near(
+					pointer.Instance.AbsolutePosition.X + pointer.Instance.AbsoluteSize.X / 2,
+					menu.Instance.AbsolutePosition.X + menu.Instance.AbsoluteSize.X / 2
+				)
+			).to.equal(true)
+			tour:stop()
+		end)
+
+		it("takes Arrow props, or false for none; a centred step has none", function()
+			button("menu")
+			local tour = Tour.new(app, {
+				id = "first",
+				pointer = { variant = "chevron" },
+				steps = {
+					{ id = "a", target = "menu", text = "Hi", waitFor = "next" },
+					{
+						id = "b",
+						target = "menu",
+						text = "Hi",
+						waitFor = "next",
+						pointer = { variant = "triangle" },
+					},
+					{ id = "c", target = "menu", text = "Hi", waitFor = "next", pointer = false },
+					{ id = "d", text = "Bye" },
+				},
+			})
+			tour:start()
+			frame()
+			expect(tour.pointer:get("variant")).to.equal("chevron")
+			tour:advance()
+			frame()
+			expect(tour.pointer:get("variant")).to.equal("triangle")
+			tour:advance()
+			frame()
+			expect(tour.pointer.Instance.Visible).to.equal(false)
+			tour:advance()
+			frame()
+			expect(tour.pointer.Instance.Visible).to.equal(false)
+			tour:stop()
+		end)
+	end)
+
+	describe("motion", function()
+		local Preferences = require(script.Parent.Parent.Core.Preferences)
+		afterEach(function()
+			Preferences.setReducedMotion(nil)
+		end)
+
+		local function twoSteps()
+			button("menu", UDim2.fromOffset(100, 100))
+			local join = button("join", UDim2.fromOffset(500, 400))
+			local tour = Tour.new(app, {
+				id = "first",
+				steps = {
+					{ id = "menu", target = "menu", text = "Hi", waitFor = "next" },
+					{ id = "join", target = "join", text = "Hi", waitFor = "next" },
+				},
+			})
+			tour:start()
+			frame()
+			return tour, join
+		end
+
+		local function onTarget(tour, target): boolean
+			local pad = Tour.defaults.pad * Scroll.scaleOf(tour.root)
+			return math.abs(tour.ring.AbsolutePosition.X - (target.Instance.AbsolutePosition.X - pad)) <= 1
+		end
+
+		it("glides the cut-out from one target to the next", function()
+			local tour, join = twoSteps()
+			tour:advance()
+			task.wait()
+			task.wait()
+			expect(onTarget(tour, join)).to.equal(false)
+			task.wait(Tour.timing.glide + 0.1)
+			expect(onTarget(tour, join)).to.equal(true)
+			tour:stop()
+		end)
+
+		it("fades the callout in and pulses the ring", function()
+			local tour = twoSteps()
+			tour:advance()
+			task.wait()
+			expect(tour.cover.BackgroundTransparency < 1).to.equal(true)
+			task.wait(Tour.timing.enter + 0.1)
+			expect(tour.cover.BackgroundTransparency).to.equal(1)
+			local sizes = {}
+			for _ = 1, 20 do
+				sizes[tour.pulse.Size.X.Offset] = true
+				task.wait(0.03)
+			end
+			expect(next(sizes, next(sizes))).to.be.ok()
+			tour:stop()
+		end)
+
+		it("with reduced motion jumps to the next target and keeps the ring still", function()
+			Preferences.setReducedMotion(true)
+			local tour, join = twoSteps()
+			tour:advance()
+			task.wait()
+			task.wait()
+			expect(onTarget(tour, join)).to.equal(true)
+			expect(tour.pulse.Visible).to.equal(false)
 			tour:stop()
 		end)
 	end)

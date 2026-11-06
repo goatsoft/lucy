@@ -115,6 +115,7 @@ they are exact; this page only says where things are and what agents get wrong.
 <!-- generated:components -->
 - [Accordion](references/components/accordion.md): Sections the player opens and closes, one or several at a time.
 - [Alert](references/components/alert.md): A box that calls attention to a message, such as a server notice.
+- [Arrow](references/components/arrow.md): A big arrow that points at something on screen, grows in and bounces.
 - [Avatar](references/components/avatar.md): A player's headshot, or a monogram for a bot or an empty slot.
 - [Badge](references/components/badge.md): A small label for a status or a count.
 - [Button](references/components/button.md): A button, in six variants and five sizes.
@@ -125,6 +126,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Grid](references/components/grid.md): Rows of equal cells, such as shop items or emotes.
 - [Icon](references/components/icon.md): A small picture in the theme's colours, by name or asset id.
 - [Image](references/components/image.md): A picture from an asset id or a thumbnail.
+- [Inline Confirm](references/components/inline-confirm.md): Asks "Are you sure?" in place, with YES and NO.
 - [Input](references/components/input.md): A text field, on one line or several.
 - [Item](references/components/item.md): A row in a list, with media, a title, a description and actions.
 - [Kbd](references/components/kbd.md): The key to press, for the player's keyboard or controller.

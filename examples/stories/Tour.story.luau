@@ -4,6 +4,7 @@ return {
 	controls = {
 		side = { "auto", "top", "bottom", "left", "right" },
 		scrim = true,
+		pointer = { "arrow", "chevron", "triangle" },
 	},
 	render = function(ctx)
 		local Lucy = ctx.Lucy
@@ -30,6 +31,7 @@ return {
 			end
 			tour = Lucy.Tour.new(app, {
 				id = "story",
+				pointer = { variant = c.pointer() },
 				steps = {
 					{ id = "hi", title = "Welcome!", text = "Here is a quick look around." },
 					{
@@ -42,14 +44,14 @@ return {
 					{
 						id = "shop",
 						target = "story-tour-shop",
-						text = "The shop sells new looks.",
+						text = "Press Shop to see new looks.",
 						side = c.side(),
 						scrim = c.scrim(),
 					},
 					{
 						id = "crew",
 						target = "story-tour-crew",
-						text = "Your crew lives here.",
+						text = "Press Crew to meet your crew.",
 						side = c.side(),
 						scrim = c.scrim(),
 					},
@@ -86,7 +88,12 @@ return {
 					variant = "muted",
 					align = "center",
 				}),
-				Lucy.Button.new({ text = "Start tour", variant = "secondary", onClick = build }),
+				Lucy.Button.new({
+					id = "story-tour-start",
+					text = "Start tour",
+					variant = "secondary",
+					onClick = build,
+				}),
 			},
 		})
 	end,

@@ -32,15 +32,24 @@ While a step's target is on screen:
 
 - the screen dims, but for a cut-out round the target, with a ring on it;
 - presses outside the cut-out do nothing, presses on the target work as usual;
-- a callout next to the target holds the step's title and text, with an arrow
-  pointing at it;
+- a callout next to the target holds the step's title and text, with a small
+  notch pointing at it;
+- a big [Arrow](arrow.md) points at the target from the other side, grows in and
+  bounces toward it, and a ring ripples out from the target;
 - on a gamepad or keyboard, focus moves to the target and stays there.
+
+Moving on, the cut-out and callout glide to the next target and the callout
+fades and slides in. With reduced motion (see
+[Accessibility](../reference/accessibility.md)) the tour jumps between targets,
+the callout only fades, the ripple is off and the arrow fades in and keeps still.
 
 Until the target is on screen (a menu that has not opened yet), the tour waits
 and draws nothing, so the player can never get stuck behind it.
 
-The back keys (B, Backspace) ask "Skip the tour?", with KEEP GOING picked
-first. The callout's SKIP button does the same without asking.
+SKIP in the callout and the back keys (B, Backspace) ask first, in the callout
+itself ([InlineConfirm](inline-confirm.md)): the step's words step aside for
+"Are you sure?" with YES and NO; NO is the solid button and is picked first. YES skips; NO, or back again,
+puts the step back.
 
 ## Options
 
@@ -51,7 +60,8 @@ first. The callout's SKIP button does the same without asking.
 | `progress` | string | | A state path the tour writes its progress to, so a rejoin carries on (see Progress) |
 | `quiet` | boolean | `true` | Keeps the app quiet while it runs: toasts wait until it ends (see [Write a tutorial](../guide/tutorials.md#quiet-mode)) |
 | `skippable` | boolean | `true` | `false` hides SKIP and makes back do nothing while a step shows |
-| `text` | table | | Your own words for `next`, `skip`, `confirm` and `keepGoing` |
+| `text` | table | | Your own words for `next`, `skip`, `confirm` ("Are you sure?"), `yes` and `no` |
+| `pointer` | table or `false` | | [Arrow](arrow.md) props for every step's arrow (`{ variant = "chevron", color = "Primary" }`), or `false` for none |
 | `onStep` | function | | `(step, index)`, the first time each step is on screen. Play a voice line here |
 | `onDone` | function | | The player finished the last step |
 | `onSkip` | function | | The player skipped |
@@ -68,6 +78,7 @@ first. The callout's SKIP button does the same without asking.
 | `action` | An action name (see [Hotkeys](../guide/actions.md)) whose key shows in the callout |
 | `scrim` | `false`: no dimming. Presses outside the target are still blocked |
 | `pad` | Room between the target and the cut-out's edge, in pixels (`8`) |
+| `pointer` | [Arrow](arrow.md) props for this step's arrow, over the tour's, or `false` for none |
 
 `waitFor` is one of:
 
@@ -124,9 +135,16 @@ end,
 ## Look
 
 Rules on the tags `ui-tour-scrim`, `ui-tour-ring`, `ui-tour-callout`,
-`ui-tour-arrow`, `ui-tour-title` and `ui-tour-text`, with the theme's
-`Overlay`, `Ring`, `Popover`, `PopoverForeground` and `Border` colours. The
-tour floats above dialogs and below toasts.
+`ui-tour-arrow` (the callout's notch), `ui-tour-cover`, `ui-tour-title` and
+`ui-tour-text`, with the theme's `Overlay`, `Ring`, `Popover`,
+`PopoverForeground` and `Border` colours. The ripple and the pointer take
+`Ring`. The tour floats above dialogs and below toasts.
+
+Parts: `tour.root`, `tour.blockers`, `tour.ring`, `tour.pulse` (the ripple),
+`tour.callout`, `tour.arrow`, `tour.cover`, `tour.pointer` (an Arrow),
+`tour.title`, `tour.text`, `tour.hint`, `tour.next`, `tour.skipButton` and
+`tour.confirm` (an InlineConfirm). `Tour.timing` and `Tour.motion` hold the
+speeds and distances.
 
 ## Preview
 

@@ -121,18 +121,29 @@ target can never trap the player. Once shown:
   whenever it lands outside (the gamepad's own selection included). The
   previous focus comes back when the tour ends.
 - **The callout** is placed by `Overlay.place("popup", ...)` against the
-  cut-out, with an arrow on the near edge pointing at the target. It holds the
+  cut-out, with a notch on the near edge pointing at the target. It holds the
   title, text, the step's key hint, NEXT when the step waits for it, and SKIP
   with the back key's hint.
+- **The pointer** is a `Lucy.Arrow` (its own component, so games point at
+  things with it outside tours too: arrow, chevron or triangle; bounce, pulse
+  or none; any token colour, or the game's own icon). It points at the cut-out
+  from the side away from the callout, or from the left or right when that side
+  has no room. `pointer` on the tour or a step passes Arrow props, `false` turns
+  it off. Players did not see what to press with only a callout and a ring.
+- **Motion.** The cut-out and callout glide to the next target (0.3 s), the
+  callout fades and slides in from the target's side (0.25 s, a cover over it
+  fades: CanvasGroups blur text), a ring ripples out from the target, the arrow
+  grows in with an overshoot and bounces. Reduced motion: jump between targets,
+  fade only, no ripple, a still arrow that fades in.
 - `onStep(step, index)` runs when the step is first shown, never while
   waiting; the game plays its line there and decides what to do when a line
   has no recording yet. Lucy never waits on audio.
 
-**Back asks to skip.** While a skippable tour runs, back (B, Backspace) opens a
-small confirm, "Skip the tour?" with KEEP GOING (focused) and SKIP. The tour
-layer hides while it is open so the dialog can be pressed. Back on the confirm
-keeps going. A tour with `skippable = false` swallows back. Text is
-overridable (`text = { skip, confirm, keepGoing, next }`).
+**Skipping asks first, in place.** SKIP and back (B, Backspace) both ask in the
+callout with `Lucy.InlineConfirm`: the step's words step aside for "Are you
+sure?" with YES and NO (NO focused). YES skips; NO, or back again, puts the step
+back. A new step puts the question away. A tour with `skippable = false`
+swallows back. Text is overridable (`text = { next, skip, confirm, yes, no }`).
 
 **Progress.** With `progress`, the tour writes `{ step = index }` there as it
 goes and `{ finished = "done" | "skipped" }` at the end; `start()` resumes at
@@ -171,3 +182,7 @@ the first.
   get `after`.
 - **Back skips at once, or a held B.** The user picked a confirm: one stray
   press does not throw a new player out of the tutorial.
+- **A "Skip the tour?" Dialog** (the first version), and SKIP skipping at once.
+  Replaced: with SKIP the only button in the callout, players pressed it without
+  reading; a dialog over the tour hid what it was asking about. The question now
+  sits where SKIP was pressed, and both ways in ask.
