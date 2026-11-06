@@ -38,6 +38,7 @@
     "tabs": "Tab bar with one panel per tab",
     "text": "Headings, body copy and labels",
     "toaster": "Toast notifications through app.toast",
+    "tour": "A guided walk through the game's own UI, one step at a time",
     "toggle": "Button that stays pressed until clicked again",
     "toggle-group": "Toggles where the player picks one or several",
     "waveform": "A row of columns from levels: a song's loudness, an equaliser, a meter"

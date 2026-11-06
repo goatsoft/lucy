@@ -173,6 +173,7 @@ local Lucy = {
 	Toaster = require(Components.Toaster),
 	Toggle = require(Components.Toggle),
 	ToggleGroup = require(Components.ToggleGroup),
+	Tour = require(Components.Tour),
 	Waveform = require(Components.Waveform),
 }
 

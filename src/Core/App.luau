@@ -104,6 +104,7 @@ export type App = typeof(setmetatable(
 App.portalOrder = {
 	test = 400,
 	modal = 900,
+	tour = 950,
 	toast = 1000,
 }
 

@@ -13,15 +13,16 @@ fit together.
 
 ```
 App ─────────────── one per client, owns everything below
-├─ AppState         one tree of tables: ui.<id>, scenes, toasts, input, theme
+├─ AppState         one tree of tables: ui.<id>, scenes, toasts, input, theme, quiet, tour
 ├─ Theme            Universal Styling sheet graph + all StyleRules
 │   └─ Tokens       OKLCH palette (via Oklab), light/dark themes, densities
 ├─ InputManager     mode, device, focus ring, focus scopes, Tab nav, back
 ├─ SceneManager     one ScreenGui per scene, layers, stack, overlays
 ├─ Adaptive         UIScale per gui with device profiles, constraints, StyleQuery
-├─ portals          shared ScreenGuis: "modal" (900), "toast" (1000)
+├─ portals          shared ScreenGuis: "modal" (900), "tour" (950), "toast" (1000)
 ├─ world guis       SurfaceGuis and BillboardGuis on parts (createSurface, createBillboard)
 ├─ server           ServerLink: a Lucy.Server mirrored at server.*, with the server option
+├─ quiet            reasons the app should not talk to the player, by channel
 └─ toast            toast API, installed when Components/Toaster exists
 ```
 
@@ -98,6 +99,7 @@ Every token, option and method is in the [theming reference](reference/theming.m
 | overlay | 100+ | any, independent (`scenes.visible`) | HUD, chat |
 | modal | 200+ | stacked (`scenes.stack`) | Pause, Settings |
 | portal: modal | 900 | dialogs and anything else floating, newest on top | Dialog, Dialog.alert |
+| portal: tour | 950 | the running tour's cut-out and callout | Tour |
 | portal: toast | 1000 | toasts | app.toast |
 
 [Build screens with scenes](guide/scenes.md) shows how to register and move between them.

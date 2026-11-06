@@ -41,6 +41,7 @@ Each component has its own page with its props, usage and examples:
 | [Tabs](tabs.md) | A tab bar with one panel per tab |
 | [Text](text.md) | Headings, body copy and labels |
 | [Toaster](toaster.md) | Toast notifications through `app.toast` |
+| [Tour](tour.md) | A guided walk through your game's own UI, one step at a time |
 | [Toggle](toggle.md) | A button that stays pressed until it is clicked again |
 | [Toggle Group](toggle-group.md) | A row of toggles where the player picks one or several |
 | [Waveform](waveform.md) | A row of columns from levels: a song's loudness, an equaliser, a meter |

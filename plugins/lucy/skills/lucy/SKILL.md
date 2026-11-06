@@ -151,6 +151,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Toaster](references/components/toaster.md): Toast notifications through app.toast.
 - [Toggle Group](references/components/toggle-group.md): A row of toggles where the player picks one or several.
 - [Toggle](references/components/toggle.md): A button that stays pressed until it is clicked again.
+- [Tour](references/components/tour.md): A guided walk through your game's own UI, one step at a time.
 - [Waveform](references/components/waveform.md): A row of columns from levels, for a song's loudness, an equaliser or a meter.
 <!-- /generated:components -->
 
@@ -169,6 +170,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Build screens with scenes](references/guide/scenes.md): Split your UI into scenes, move between screens, show a HUD over them, open a pause menu on top, and handle back with a gamepad.
 - [Share state with the server](references/guide/server.md): Keep server state in Lucy's store on the server, see it in every App at server.*, and send requests back with checks.
 - [Add a theme](references/guide/themes.md): Pick your game's colours, let players switch light and dark, make a theme of your own, and style your own UI with the same tokens.
+- [Write a tutorial](references/guide/tutorials.md): Walk a new player through your game's own menus with Lucy.Tour, and keep everything else quiet while you do.
 - [UI in the world](references/guide/world-ui.md): Put Lucy UI on parts and over players' heads with SurfaceGuis and BillboardGuis that follow the theme and take clicks.
 - [Stories and preview](references/stories.md): Write stories for your UI and preview them in Studio, in edit mode or in Play.
 - [Accessibility](references/reference/accessibility.md): What Lucy does so players can read, reach and use your UI, the contrast it promises, the Roblox accessibility settings it follows, and Lucy.Preferences.
