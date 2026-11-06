@@ -14,7 +14,14 @@
 		app.toast.dismiss(id)                    -- or app.toast.dismiss() for all
 
 	options: description, kind, duration (seconds, math.huge = until dismissed),
-	action { label, onClick }, id.
+	action { label, onClick }, id, channel, quiet.
+
+	Quiet mode (app.quiet, ADR 0038): a toast on a channel the app is quiet for
+	(channel defaults to "default") follows its quiet option:
+		quiet = "hold"   the default: shown once the channel is allowed again,
+		                 the newest visibleToasts only, timed from then
+		quiet = "drop"   thrown away (news that goes stale)
+		quiet = "show"   shown anyway (errors, disconnects)
 
 	Toasts live in AppState at "toasts" (newest last) so the app can read, clear
 	or drive them. Toaster.add / dismiss / expire are pure list functions.
@@ -40,6 +47,7 @@ local Toaster = {}
 Toaster.kinds = { "default", "success", "error", "warning", "info" }
 Toaster.defaults = { duration = 4, visibleToasts = 3, width = 356 }
 Toaster.positions = { "top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right" }
+Toaster.quietRules = { "hold", "drop", "show" }
 
 local function checkPosition(position: string)
 	if not table.find(Toaster.positions, position) then
@@ -196,29 +204,83 @@ function Toaster.install(app)
 		end
 	end
 
+	-- Toasts held while their channel is quiet, oldest first.
+	local held: Reactive.Ref<{ any }> = Reactive.ref({})
+
+	local function publish(toast: { [string]: any })
+		ensureMounted()
+		toast.createdAt = clock()
+		app.state:update("toasts", function(list)
+			return Toaster.add(list or {}, toast)
+		end)
+	end
+
+	-- Lets held toasts out once their channel is allowed again.
+	local release = Reactive.effectScope(true)
+	release:run(function()
+		Reactive.watchEffect(function()
+			local waiting = held()
+			local out, keep = {}, {}
+			for _, toast in waiting do
+				if app.quiet:allows(toast.channel) then
+					table.insert(out, toast)
+				else
+					table.insert(keep, toast)
+				end
+			end
+			if #out == 0 then
+				return
+			end
+			Reactive.untrack(function()
+				held(keep)
+				local first = math.max(1, #out - Toaster.defaults.visibleToasts + 1)
+				for index = first, #out do
+					publish(out[index])
+				end
+			end)
+		end)
+	end);
+	(app.maid :: any):give(function()
+		release:stop()
+	end)
+
 	local function show(message: string, options: { [string]: any }?)
 		local opts: { [string]: any } = options or {}
 		local kind = opts.kind or "default"
 		if not table.find(Toaster.kinds, kind) then
 			error(`[Lucy] unknown toast kind "{kind}"`, 3)
 		end
+		local rule = opts.quiet or "hold"
+		if not table.find(Toaster.quietRules, rule) then
+			error(`[Lucy] unknown toast quiet rule "{rule}" (expected hold, drop, show)`, 3)
+		end
 		local id = opts.id
 		if id == nil then
 			counter += 1
 			id = "toast-" .. counter
 		end
-		ensureMounted()
-		app.state:update("toasts", function(list)
-			return Toaster.add(list or {}, {
-				id = id,
-				title = message,
-				description = opts.description,
-				kind = kind,
-				duration = opts.duration or Toaster.defaults.duration,
-				action = opts.action,
-				createdAt = clock(),
-			})
+		local toast = {
+			id = id,
+			title = message,
+			description = opts.description,
+			kind = kind,
+			duration = opts.duration or Toaster.defaults.duration,
+			action = opts.action,
+			channel = opts.channel or "default",
+		}
+		local allowed = Reactive.untrack(function()
+			return app.quiet:allows(toast.channel)
 		end)
+		if rule == "show" or allowed then
+			publish(toast)
+		elseif rule == "hold" then
+			held(Toaster.add(
+				Reactive.untrack(function()
+					return held()
+				end),
+				toast
+			))
+		end
 		return id
 	end
 
@@ -236,6 +298,12 @@ function Toaster.install(app)
 	end
 	api.message = api.default
 	function api.dismiss(id: string?)
+		held(Toaster.dismiss(
+			Reactive.untrack(function()
+				return held()
+			end),
+			id
+		))
 		app.state:update("toasts", function(list)
 			return Toaster.dismiss(list or {}, id)
 		end)

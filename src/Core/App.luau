@@ -11,6 +11,7 @@
 		app.actions Actions, named keys in sets switched on and off together (ADR 0026)
 		app.scenes  SceneManager, title screen / game / menus (ADR 0005)
 		app.toast   toast notifications, if the Toaster component is present
+		app.quiet   quiet mode: reasons the app should not talk to the player (ADR 0038)
 		app.server  the link to a Lucy.Server, with the server option (Core/ServerLink)
 		app:modalOpen()  true while a modal dialog, sheet, popup or modal scene is open (tracked)
 		app:createSurface(name, opts) / app:createBillboard(name, opts)  UI in the world (Core/World)
@@ -57,6 +58,7 @@ local Context = require(script.Parent.Context)
 local InputManager = require(script.Parent.InputManager)
 local Maid = require(script.Parent.Maid)
 local Preferences = require(script.Parent.Preferences)
+local Quiet = require(script.Parent.Quiet)
 local Reactive = require(script.Parent.Reactive)
 local SceneManager = require(script.Parent.SceneManager)
 local ServerLink = require(script.Parent.ServerLink)
@@ -84,6 +86,7 @@ export type App = typeof(setmetatable(
 		state: AppState.AppState,
 		input: InputManager.InputManager,
 		actions: Actions.Actions,
+		quiet: Quiet.Quiet,
 		scenes: SceneManager.SceneManager,
 		server: ServerLink.ServerLink?,
 		destroyed: boolean?,
@@ -226,6 +229,8 @@ function App.new(config: { [string]: any }?): App
 
 	self.actions = Actions.new(self, options.actions)
 	self.maid:give(self.actions)
+
+	self.quiet = Quiet.new(self)
 
 	if editMode() then
 		self.theme.folder.Archivable = false

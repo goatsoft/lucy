@@ -14,6 +14,10 @@
 	above it uses the newest map registered in a top-level scope (one with no
 	owner), so components made by plain scripts are covered too. `sound = false`
 	in a component's props silences that component.
+
+	UiEvents.observe(app, fn(handle, event, value)) hears every event of the
+	app's components, silenced ones included, and returns a stop function
+	(Lucy.Tour uses it to see the player press a step's target).
 ]]
 
 local Reactive = require(script.Parent.Reactive)
@@ -76,9 +80,35 @@ local function find(handle: any, event: string): any
 	return nil
 end
 
+function UiEvents.observe(app: any, fn: (handle: any, event: string, value: any) -> ()): () -> ()
+	local list: { any } = app._uiObservers or {}
+	app._uiObservers = list
+	table.insert(list, fn)
+	local stopped = false
+	return function()
+		if stopped then
+			return
+		end
+		stopped = true
+		local index = table.find(list, fn)
+		if index then
+			table.remove(list, index)
+		end
+	end
+end
+
 -- Tells the game `event` happened on `handle`. A failing listener is reported,
 -- never raised, so a sound can't break a click.
 function UiEvents.emit(handle: any, event: string, value: any?)
+	local observers: { any }? = handle.app and handle.app._uiObservers
+	if observers and #observers > 0 then
+		for _, observer: any in table.clone(observers) do
+			local ok, err = pcall(observer, handle, event, value)
+			if not ok then
+				task.spawn(error, `[Lucy] ui event observer for "{event}" errored: {err}`, 0)
+			end
+		end
+	end
 	if handle.props.sound == false then
 		return
 	end

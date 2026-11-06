@@ -222,4 +222,96 @@ return function()
 			expect(is(title, "TextColor3", "PopoverForeground")).to.equal(true)
 		end)
 	end)
+
+	describe("while quiet", function()
+		local app, cleanup, now
+		beforeEach(function()
+			app, cleanup = Harness.app({ theme = "light", namePrefix = "ToastQuiet_" })
+			now = 0
+			app.clock = function()
+				return now
+			end
+		end)
+		afterEach(function()
+			cleanup()
+		end)
+
+		local function titles(): { string }
+			local out = {}
+			for _, toast in app.toast.list() do
+				table.insert(out, toast.title)
+			end
+			return out
+		end
+
+		it("holds toasts and shows them when quiet ends", function()
+			local release = app.quiet:push("tour")
+			app.toast("Level up")
+			expect(#app.toast.list()).to.equal(0)
+			now = 10
+			release()
+			local list = app.toast.list()
+			expect(#list).to.equal(1)
+			expect(list[1].title).to.equal("Level up")
+			expect(list[1].createdAt).to.equal(10)
+		end)
+
+		it("keeps only the newest visibleToasts when it lets them out", function()
+			local release = app.quiet:push("tour")
+			for i = 1, 5 do
+				app.toast("t" .. i)
+			end
+			release()
+			local shown = titles()
+			expect(#shown).to.equal(3)
+			expect(shown[1]).to.equal("t3")
+			expect(shown[3]).to.equal("t5")
+		end)
+
+		it("replaces a held toast updated by id", function()
+			local release = app.quiet:push("tour")
+			local id = app.toast("Uploading")
+			app.toast("Uploaded", { id = id })
+			release()
+			local shown = titles()
+			expect(#shown).to.equal(1)
+			expect(shown[1]).to.equal("Uploaded")
+		end)
+
+		it("drops toasts that ask to be dropped", function()
+			local release = app.quiet:push("tour")
+			app.toast("Next show soon", { quiet = "drop" })
+			release()
+			expect(#app.toast.list()).to.equal(0)
+		end)
+
+		it("shows toasts that ask to be shown", function()
+			app.quiet:push("tour")
+			app.toast.error("Disconnected", { quiet = "show" })
+			expect(#app.toast.list()).to.equal(1)
+		end)
+
+		it("shows a toast on a channel the reason allows", function()
+			app.quiet:push("tour", { allow = { "tour" } })
+			app.toast("Nice!", { channel = "tour" })
+			app.toast("Other")
+			local shown = titles()
+			expect(#shown).to.equal(1)
+			expect(shown[1]).to.equal("Nice!")
+		end)
+
+		it("dismissing a held toast forgets it", function()
+			local release = app.quiet:push("tour")
+			local id = app.toast("Level up")
+			app.toast.dismiss(id)
+			release()
+			expect(#app.toast.list()).to.equal(0)
+		end)
+
+		it("rejects an unknown quiet rule", function()
+			expect(function()
+				app.toast("x", { quiet = "later" })
+			end).to.throw()
+		end)
+	end)
 end

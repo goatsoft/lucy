@@ -51,6 +51,7 @@ Every option is optional.
 | `app.actions` | Hotkeys, in sets you switch on and off | [Hotkeys and modal input](../guide/actions.md) |
 | `app.input` | The input mode and device, focus and the back keys | [Input and focus](../architecture.md#input-and-focus) |
 | `app.toast` | Toasts: `app.toast("Saved")`, `app.toast.success(...)` | [Toaster](../components/toaster.md) |
+| `app.quiet` | Quiet mode: `app.quiet:push(reason)`, `app.quiet:allows(channel)`, `app.quiet:after(channel, fn)` | [Quiet mode](../guide/tutorials.md#quiet-mode) |
 | `app.server` | With the `server` option: `send` and `call` requests to the server | [Share state with the server](../guide/server.md) |
 
 ## Methods

@@ -35,6 +35,12 @@ or gamepad focus.
 | `duration` | number | `4` | Seconds before it closes. `math.huge` keeps it until dismissed |
 | `action` | table | | A button: `{ label = "Join", onClick = join }` |
 | `id` | string | made up for you | Pass the id of a toast that is showing to update it in place |
+| `channel` | string | `"default"` | What kind of message it is, for quiet mode |
+| `quiet` | string | `"hold"` | While its channel is quiet: `hold` shows it when quiet ends, `drop` throws it away, `show` shows it anyway |
+
+While the app is quiet (a tutorial is running, see [Quiet mode](../guide/tutorials.md#quiet-mode)),
+toasts on other channels wait and show when it ends, the newest
+`visibleToasts` only.
 
 ## Settings
 
