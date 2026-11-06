@@ -24,6 +24,7 @@ Each component has its own page with its props, usage and examples:
 | [Grid](grid.md) | Rows of equal cells, such as shop items or emotes |
 | [Icon](icon.md) | A small picture in the theme's colours, by name or asset id |
 | [Image](image.md) | A picture from an asset id or a thumbnail |
+| [Inline Confirm](inline-confirm.md) | Asks "Are you sure?" in place, with YES and NO |
 | [Input](input.md) | A text field, on one line or several |
 | [Item](item.md) | A row in a list, with media, a title, a description and actions |
 | [Kbd](kbd.md) | The key to press, for the player's keyboard or controller |

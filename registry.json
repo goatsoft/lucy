@@ -15,6 +15,7 @@
     "grid": "Rows of equal cells",
     "icon": "Small picture in the theme's colours, by name or asset id",
     "image": "Picture from an asset id or a thumbnail",
+    "inline-confirm": "Asks to confirm in place, with YES and NO",
     "input": "Text field on one line",
     "item": "List row with media, title, description and actions",
     "kbd": "The key to press for the player's keyboard or controller",

@@ -148,6 +148,7 @@ local Lucy = {
 	Grid = require(Components.Grid),
 	Icon = require(Components.Icon),
 	Image = require(Components.Image),
+	InlineConfirm = require(Components.InlineConfirm),
 	Input = require(Components.Input),
 	Item = require(Components.Item),
 	Kbd = require(Components.Kbd),
