@@ -43,6 +43,10 @@ Lucy.Grid.new({
 | `align` | string | `"start"` | | Where a row that is not full sits: `start`, `center` or `end` |
 | `size` | UDim2 | see below | | The grid's size |
 | `children` | table | | | Instances, handles or functions to put in it |
+| `virtual` | boolean | `false` | | Builds only the cells near the view, see [Long lists](#long-lists) |
+| `items` | table | | | With `virtual`: the list, as an array, a ref or a getter |
+| `item` | function | | | With `virtual`: draws one cell, `item(entry, index)`, where `index` is a getter |
+| `key` | function | the index | | With `virtual`: `key(entry, index)` names a cell, so a new list moves it rather than rebuilding it |
 | `visible` | boolean | `true` | yes | Shows or hides the grid |
 
 It also takes the [props every component takes](index.md#using-a-component).
@@ -111,6 +115,49 @@ Lucy.Grid.new({
 
 Put a grid in a [Scroll Area](scroll-area.md) when it can grow taller than the
 screen.
+
+## Long lists
+
+A shop of hundreds of items is slow to open and slow to scroll when every card
+exists at once. With `virtual = true`, the grid is as tall as all its rows, but
+only the cells in the view of the [Scroll Area](scroll-area.md) around it, and
+two rows either side, exist. They are built as they come near the view and
+removed as they leave.
+
+Give it `items` and an `item` function instead of `children`, with `columns`
+or `minCellWidth` and a `cellHeight` in pixels:
+
+```luau
+Lucy.ScrollArea.new({
+    size = UDim2.fromScale(1, 1),
+    children = {
+        Lucy.Grid.new({
+            virtual = true,
+            items = emotes,
+            key = function(emote) return emote.id end,
+            item = function(emote)
+                return EmoteCard.new(emote)
+            end,
+            minCellWidth = 140,
+            cellHeight = 180,
+            gap = "Space2",
+        }),
+    },
+    Parent = shop,
+})
+```
+
+When `items` changes, cells with a `key` that is still there move to their new
+place; only new ones are built. Filter a shop by setting a new list.
+
+`handle.cellFor(key)` is a cell's frame while it is built, and
+`handle.cellCount()` how many cells are built. A virtual grid has no
+UIGridLayout: it places its cells itself. With no Scroll Area (or other
+ScrollingFrame) around it, it builds every cell.
+
+Pictures in cells that are not built yet have not loaded either. Preload them
+with `ContentProvider:PreloadAsync` before the player opens the shop, so a cell
+shows its picture the moment it is built.
 
 ## Preview
 

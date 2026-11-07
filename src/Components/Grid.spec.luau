@@ -2,6 +2,7 @@ return function()
 	local Grid = require(script.Parent.Grid)
 	local Reactive = require(script.Parent.Parent.Core.Reactive)
 	local Harness = require(script.Parent.Parent.Testing.Harness)
+	local Scroll = require(script.Parent.Parent.Core.Scroll)
 
 	local app, cleanup, gui
 	beforeEach(function()
@@ -115,5 +116,129 @@ return function()
 		local grid = Grid.new({ app = app, Parent = gui, visible = visible })
 		visible(false)
 		expect(grid.Instance.Visible).to.equal(false)
+	end)
+
+	describe("virtual", function()
+		local ScrollArea = require(script.Parent.ScrollArea)
+
+		local function numbers(n: number): { number }
+			local out = {}
+			for i = 1, n do
+				out[i] = i
+			end
+			return out
+		end
+
+		-- A grid of numbered cells in a 400 by 300 scroll area.
+		local function make(props: { [string]: any }): (any, ScrollingFrame)
+			local area =
+				ScrollArea.new({ app = app, Parent = gui, size = UDim2.fromOffset(400, 300), fade = false })
+			props.app = app
+			props.virtual = true
+			props.item = props.item
+				or function(n: number)
+					local label = Instance.new("TextLabel")
+					label.Name = `N{n}`
+					label.Text = tostring(n)
+					label.Size = UDim2.fromScale(1, 1)
+					return label
+				end
+			local grid = Grid.new(props)
+			grid.Instance.Parent = area.content
+			Harness.flush()
+			task.wait(0.1)
+			return grid, area.frame :: ScrollingFrame
+		end
+
+		it("needs a cellHeight", function()
+			expect(function()
+				Grid.new({
+					app = app,
+					Parent = gui,
+					virtual = true,
+					columns = 4,
+					items = numbers(10),
+					item = function() end,
+				})
+			end).to.throw()
+		end)
+
+		it("builds only the cells near the view, in a frame as tall as all of them", function()
+			local grid, scroller = make({ items = numbers(1000), columns = 4, cellHeight = 50, gap = 0 })
+			-- 1000 cells in 4 columns are 250 rows of 50
+			expect(near(grid.Instance.AbsoluteSize.Y / Scroll.scaleOf(grid.Instance), 250 * 50)).to.equal(
+				true
+			)
+			expect(grid.cellCount() < 4 * 16).to.equal(true)
+			expect(grid.cellFor(1)).to.be.ok()
+			expect(grid.cellFor(500)).to.equal(nil)
+			-- Scroll to row 100 (cells 397 to 400)
+			local scale = Scroll.scaleOf(scroller)
+			scroller.CanvasPosition = Vector2.new(0, 99 * 50 * scale)
+			task.wait(0.2)
+			expect(grid.cellFor(397)).to.be.ok()
+			expect(grid.cellFor(1)).to.equal(nil)
+			expect(grid.cellFor(397):FindFirstChild("N397", true)).to.be.ok()
+		end)
+
+		it("places each cell by its column and row", function()
+			local grid = make({ items = numbers(20), columns = 4, cellHeight = 50, gap = 10 })
+			local first, sixth = grid.cellFor(1), grid.cellFor(6)
+			local scale = Scroll.scaleOf(grid.Instance)
+			local origin = grid.Instance.AbsolutePosition
+			local width = grid.Instance.AbsoluteSize.X / scale
+			local cell = (width - 3 * 10) / 4
+			expect(near(first.AbsoluteSize.X / scale, cell)).to.equal(true)
+			expect(near(first.AbsoluteSize.Y / scale, 50)).to.equal(true)
+			-- cell 6 is column 2, row 2
+			expect(near((sixth.AbsolutePosition.X - origin.X) / scale, cell + 10)).to.equal(true)
+			expect(near((sixth.AbsolutePosition.Y - origin.Y) / scale, 60)).to.equal(true)
+			-- 20 cells are 5 rows: 5 * 50 + 4 * 10
+			expect(near(grid.Instance.AbsoluteSize.Y / scale, 290)).to.equal(true)
+		end)
+
+		it("follows its items, keeping the cells it can by key", function()
+			local items = Reactive.ref(numbers(8))
+			local built = 0
+			local grid = make({
+				items = items,
+				columns = 4,
+				cellHeight = 50,
+				item = function(n: number)
+					built += 1
+					local frame = Instance.new("Frame")
+					frame.Name = `N{n}`
+					return frame
+				end,
+				key = function(n: number)
+					return n
+				end,
+			})
+			expect(built).to.equal(8)
+			local kept = grid.cellFor(5)
+			items({ 5, 6, 7, 8, 9 })
+			Harness.flush()
+			task.wait(0.1)
+			expect(built).to.equal(9)
+			expect(grid.cellFor(5)).to.equal(kept)
+			expect(grid.cellFor(1)).to.equal(nil)
+			-- 5 is first now: column 1, row 1
+			expect(near(kept.AbsolutePosition.X, grid.Instance.AbsolutePosition.X)).to.equal(true)
+			expect(near(kept.AbsolutePosition.Y, grid.Instance.AbsolutePosition.Y)).to.equal(true)
+		end)
+
+		it("fits columns to minCellWidth", function()
+			local grid = make({ items = numbers(12), minCellWidth = 120, gap = 10, cellHeight = 40 })
+			local scale = Scroll.scaleOf(grid.Instance)
+			local width = grid.Instance.AbsoluteSize.X / scale
+			local n = Grid.fit(width, 120, 10)
+			local second = grid.cellFor(2)
+			expect(
+				near(
+					(second.AbsolutePosition.X - grid.Instance.AbsolutePosition.X) / scale,
+					(width - 10 * (n - 1)) / n + 10
+				)
+			).to.equal(true)
+		end)
 	end)
 end
