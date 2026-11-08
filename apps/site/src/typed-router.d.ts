@@ -549,9 +549,100 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
-    '/docs/reference/composables': RouteRecordInfo<
+    '/docs/reference/composables/': RouteRecordInfo<
+      '/docs/reference/composables/',
       '/docs/reference/composables',
-      '/docs/reference/composables',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-back-handler': RouteRecordInfo<
+      '/docs/reference/composables/use-back-handler',
+      '/docs/reference/composables/use-back-handler',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-count': RouteRecordInfo<
+      '/docs/reference/composables/use-count',
+      '/docs/reference/composables/use-count',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-countdown': RouteRecordInfo<
+      '/docs/reference/composables/use-countdown',
+      '/docs/reference/composables/use-countdown',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-density': RouteRecordInfo<
+      '/docs/reference/composables/use-density',
+      '/docs/reference/composables/use-density',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-drag': RouteRecordInfo<
+      '/docs/reference/composables/use-drag',
+      '/docs/reference/composables/use-drag',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-focus-scope': RouteRecordInfo<
+      '/docs/reference/composables/use-focus-scope',
+      '/docs/reference/composables/use-focus-scope',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-metric': RouteRecordInfo<
+      '/docs/reference/composables/use-metric',
+      '/docs/reference/composables/use-metric',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-responsive': RouteRecordInfo<
+      '/docs/reference/composables/use-responsive',
+      '/docs/reference/composables/use-responsive',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-reveal': RouteRecordInfo<
+      '/docs/reference/composables/use-reveal',
+      '/docs/reference/composables/use-reveal',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-sort': RouteRecordInfo<
+      '/docs/reference/composables/use-sort',
+      '/docs/reference/composables/use-sort',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-table': RouteRecordInfo<
+      '/docs/reference/composables/use-table',
+      '/docs/reference/composables/use-table',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-ui-sound': RouteRecordInfo<
+      '/docs/reference/composables/use-ui-sound',
+      '/docs/reference/composables/use-ui-sound',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-while': RouteRecordInfo<
+      '/docs/reference/composables/use-while',
+      '/docs/reference/composables/use-while',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -1210,9 +1301,113 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
-    '../../docs/reference/composables.md': {
+    '../../docs/reference/composables/index.md': {
       routes:
-        | '/docs/reference/composables'
+        | '/docs/reference/composables/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-back-handler.md': {
+      routes:
+        | '/docs/reference/composables/use-back-handler'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-count.md': {
+      routes:
+        | '/docs/reference/composables/use-count'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-countdown.md': {
+      routes:
+        | '/docs/reference/composables/use-countdown'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-density.md': {
+      routes:
+        | '/docs/reference/composables/use-density'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-drag.md': {
+      routes:
+        | '/docs/reference/composables/use-drag'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-focus-scope.md': {
+      routes:
+        | '/docs/reference/composables/use-focus-scope'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-metric.md': {
+      routes:
+        | '/docs/reference/composables/use-metric'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-responsive.md': {
+      routes:
+        | '/docs/reference/composables/use-responsive'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-reveal.md': {
+      routes:
+        | '/docs/reference/composables/use-reveal'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-sort.md': {
+      routes:
+        | '/docs/reference/composables/use-sort'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-table.md': {
+      routes:
+        | '/docs/reference/composables/use-table'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-ui-sound.md': {
+      routes:
+        | '/docs/reference/composables/use-ui-sound'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-while.md': {
+      routes:
+        | '/docs/reference/composables/use-while'
       views:
         | never
       pathParamNames:

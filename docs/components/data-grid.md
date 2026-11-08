@@ -97,10 +97,10 @@ icons, see [Icons Lucy draws](../guide/icons.md#icons-lucy-draws).
 |---|---|
 | `grid:toggle(columnId)` | What pressing that column's header does |
 | `grid.table` | The [Table](table.md) inside |
-| `grid.model` | The sorted rows and sort, from [`useTable`](../reference/composables.md#usetable) |
+| `grid.model` | The sorted rows and sort, from [`useTable`](../reference/composables/use-table.md) |
 | `grid.sortButtons` | The header [SortButtons](sort-button.md), by column id |
 
-Pressing a header reports `activate`, for [game sounds](../reference/composables.md#useuisound).
+Pressing a header reports `activate`, for [game sounds](../reference/composables/use-ui-sound.md).
 
 ## Examples
 

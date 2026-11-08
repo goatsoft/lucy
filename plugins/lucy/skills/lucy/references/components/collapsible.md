@@ -50,7 +50,7 @@ header into the content and back.
 It also takes the [props every component takes](index.md#using-a-component).
 
 When the player opens or closes it, it reports `toggle` with the new open state
-for [useUiSound](../reference/composables.md#useuisound).
+for [useUiSound](../reference/composables/use-ui-sound.md).
 
 ## Methods
 

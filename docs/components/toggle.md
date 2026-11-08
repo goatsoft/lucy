@@ -46,7 +46,7 @@ Lucy.Stack.new({
 It also takes the [props every component takes](index.md#using-a-component).
 
 When the player turns it on or off, it reports `toggle` with the new value for
-[useUiSound](../reference/composables.md#useuisound).
+[useUiSound](../reference/composables/use-ui-sound.md).
 
 ## Methods
 

@@ -46,7 +46,7 @@ player.
 It also takes the [props every component takes](index.md#using-a-component).
 
 When the player opens or closes a section, that section reports `toggle` with
-its open state for [useUiSound](../reference/composables.md#useuisound).
+its open state for [useUiSound](../reference/composables/use-ui-sound.md).
 
 ## Methods
 

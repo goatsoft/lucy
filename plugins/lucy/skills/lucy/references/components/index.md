@@ -225,7 +225,7 @@ return Stat
   Button and Pressable.
 - **Report what the player did** with `h:emit(event, value)` (`activate`, `toggle`,
   `open`, `close`), so games can play sounds for it through
-  [useUiSound](../reference/composables.md#useuisound).
+  [useUiSound](../reference/composables/use-ui-sound.md).
 
 ### Watchers are a last resort
 

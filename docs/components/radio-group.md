@@ -52,7 +52,7 @@ An option is a value (shown as its text) or a table:
 
 Once something is picked, the player can pick another option but cannot clear
 it. When the player picks one, it reports `select` with that value for
-[useUiSound](../reference/composables.md#useuisound).
+[useUiSound](../reference/composables/use-ui-sound.md).
 
 `handle.items` holds one table per option, in order, with its `root`, `circle`,
 `dot` and `label`.

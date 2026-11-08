@@ -69,7 +69,7 @@ for your own parts.
 Instance, a connection, a function to call, or anything with a `Destroy` or
 `destroy` method.
 
-`build` runs in the scene's own scope, so [composables](../reference/composables.md)
+`build` runs in the scene's own scope, so [composables](../reference/composables/index.md)
 work in it, and the components, bindings and watchers it makes last until the
 scene is destroyed.
 

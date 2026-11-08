@@ -59,7 +59,7 @@ Lucy.Text.new({
 
 A [Text](../components/text.md) with a numeric `value` formats numbers with
 `Lucy.Format.number` by default, and so does an animated count from
-[`useCount`](composables.md#usecount) when rendered.
+[`useCount`](composables/use-count.md) when rendered.
 
 ## Lucy.Scroll
 

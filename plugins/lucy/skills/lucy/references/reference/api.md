@@ -31,7 +31,7 @@ check a name exists before you use it, and find the page that explains it.
 `Lucy.useDensity`, `useMetric`, `useResponsive`, `useBackHandler`,
 `useFocusScope`, `useUiSound`, `useTable`, `useWhile`, `useCountdown`, `useDrag`,
 `useReveal` and `useCount`. See
-the [composables reference](composables.md).
+the [composables reference](composables/index.md).
 
 ## Animation
 

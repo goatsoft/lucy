@@ -179,7 +179,20 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Accessibility](references/reference/accessibility.md): What Lucy does so players can read, reach and use your UI, the contrast it promises, the Roblox accessibility settings it follows, and Lucy.Preferences.
 - [Everything on Lucy](references/reference/api.md): Every name the Lucy module exports, what it is for, and the page that explains it.
 - [The App](references/reference/app.md): Lucy.App.new and every option it takes, the parts an App holds, and its methods.
-- [Composables](references/reference/composables.md): Every composable Lucy comes with, what each one takes and returns, and when to use it.
+- [Composables](references/reference/composables/index.md): State over time and behaviour shared between components. Every Lucy.use* composable.
+- [useBackHandler](references/reference/composables/use-back-handler.md): Intercepts back inputs while active, calling your function.
+- [useCount](references/reference/composables/use-count.md): Counts a number smoothly up or down to a target value with easing.
+- [useCountdown](references/reference/composables/use-countdown.md): Synchronized countdown of whole seconds remaining until a timestamp.
+- [useDensity](references/reference/composables/use-density.md): Returns a getter for the current device density profile.
+- [useDrag](references/reference/composables/use-drag.md): Follows a mouse or touch drag starting from a target GUI element.
+- [useFocusScope](references/reference/composables/use-focus-scope.md): Traps keyboard and gamepad focus inside a container while active.
+- [useMetric](references/reference/composables/use-metric.md): Computes a control size token in pixels following density.
+- [useResponsive](references/reference/composables/use-responsive.md): Returns a getter for a responsive value keyed by device, input mode, breakpoint or orientation.
+- [useReveal](references/reference/composables/use-reveal.md): Types text out character by character for dialogue and narrative lines.
+- [useSort](references/reference/composables/use-sort.md): Multi-column sorting engine for any arbitrary list of items.
+- [useTable](references/reference/composables/use-table.md): Manages sorting for tabular data and column definitions.
+- [useUiSound](references/reference/composables/use-ui-sound.md): Registers sound callbacks for UI component events like clicks, toggles and opens.
+- [useWhile](references/reference/composables/use-while.md): Runs a setup function while a condition is true, cleaning it up when false.
 - [The data queue](references/reference/data-queue.md): Lucy.DataQueue paces DataStore requests to the engine's limits, caches reads, keeps leaderboards and writes what is pending when the server closes. Every method and option.
 - [Devtools](references/reference/devtools.md): Look at a running UI in Studio, and press, set and focus things the way a player would, from the command bar or a coding agent.
 - [The server](references/reference/server.md): Lucy.Server and app.server, every option and method, which paths reach which players, and how changes travel.

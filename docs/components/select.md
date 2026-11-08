@@ -112,7 +112,7 @@ To use your own, see [Icons Lucy draws](../guide/icons.md#icons-lucy-draws).
 | `select.presentation()` | `"popup"` or `"drawer"`, for this opening |
 
 When the player picks an option, it reports `select` with the value, for
-[game sounds](../reference/composables.md).
+[game sounds](../reference/composables/use-ui-sound.md).
 
 ## Examples
 

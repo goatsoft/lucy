@@ -55,7 +55,7 @@ grow to fit the panel shown. Put a [Scroll Area](scroll-area.md) in a panel for
 long content.
 
 When the player picks a tab, it reports `select` with the tab's value for
-[useUiSound](../reference/composables.md#useuisound).
+[useUiSound](../reference/composables/use-ui-sound.md).
 
 ## Gamepad
 

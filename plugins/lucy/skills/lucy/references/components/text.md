@@ -107,7 +107,7 @@ Lucy.Text.new({
 })
 ```
 
-Both are [composables](../reference/composables.md) underneath, `useReveal` and `useCount`, so
+Both are [composables](../reference/composables/index.md) underneath, [`useReveal`](../reference/composables/use-reveal.md) and [`useCount`](../reference/composables/use-count.md), so
 anything else can type out or count up the same way.
 
 ## Preview

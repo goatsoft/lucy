@@ -169,7 +169,7 @@ Actions in a set you leave on, such as your menu keys, still fire while a
 dialog is open. To ignore one while a confirm is up, check
 `app.state:ref("overlay.top")`, as below.
 
-Put it together with [`useWhile`](../reference/composables.md#usewhile) to switch
+Put it together with [`useWhile`](../reference/composables/use-while.md) to switch
 gameplay keys and movement off while a menu is open:
 
 ```luau

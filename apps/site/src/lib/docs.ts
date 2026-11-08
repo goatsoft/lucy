@@ -26,7 +26,7 @@ export const nav = navGroups(data.pages, [
   { title: 'Components', match: (r) => r === '/docs/components' || r.startsWith('/docs/components/') },
   { title: 'Recipes', match: (r) => r.startsWith('/docs/recipes') },
   { title: 'Go further', match: (r) => goFurther.has(r) },
-  { title: 'Reference', match: (r) => reference.has(r) || r.startsWith('/docs/reference/') },
+  { title: 'Reference', match: (r) => reference.has(r) || (r.startsWith('/docs/reference/') && !r.startsWith('/docs/reference/composables/')) },
   { title: 'Contributing', match: (r) => r === '/docs/development' },
 ])
 

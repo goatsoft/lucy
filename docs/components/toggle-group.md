@@ -55,7 +55,7 @@ the picked item again clears it unless `required` is set. In a multiple group,
 `value` is a list, in the order of the items.
 
 When the player picks an item, it reports `select` with that item's value for
-[useUiSound](../reference/composables.md#useuisound).
+[useUiSound](../reference/composables/use-ui-sound.md).
 
 `handle.items` holds the item buttons, in order.
 

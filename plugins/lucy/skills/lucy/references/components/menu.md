@@ -186,7 +186,7 @@ When it closes, the anchor is selected again on a controller.
 | `menu.presentation()` | For a list, `"popup"` or `"drawer"`, for this opening |
 
 It reports `open` and `close`, and `select` with the value picked, for
-[game sounds](../reference/composables.md).
+[game sounds](../reference/composables/use-ui-sound.md).
 
 ## Preview
 

@@ -11,8 +11,8 @@ your own way. Press it to sort by that column, again to flip the order, and a
 third time to stop sorting by it. [DataGrid](data-grid.md)'s headers are
 SortButtons.
 
-It works with [`useSort`](../reference/composables.md#usesort) or
-[`useTable`](../reference/composables.md#usetable). With `multi` on, several
+It works with [`useSort`](../reference/composables/use-sort.md) or
+[`useTable`](../reference/composables/use-table.md). With `multi` on, several
 columns sort together: the first pressed leads, and each one pressed after it
 breaks the ties of the ones before. A small number shows each column's place
 while more than one sorts.
@@ -46,7 +46,7 @@ Lucy.Stack.new({
 
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
-| `sort` | table | | | What it sorts: the result of [`useSort`](../reference/composables.md#usesort) or [`useTable`](../reference/composables.md#usetable) |
+| `sort` | table | | | What it sorts: the result of [`useSort`](../reference/composables/use-sort.md) or [`useTable`](../reference/composables/use-table.md) |
 | `column` | string | | | The id of the column it sorts |
 | `text` | string | the column's `header` | | The label |
 | `align` | string | `"left"` | | `left`, `center` or `right` |
@@ -71,7 +71,7 @@ While its column sorts, the label is bright and `lucy:chevron-up` or
 | `button.icon` | The direction [Icon](icon.md) |
 | `button.priority` | The label with the column's place in the sort |
 
-A press reports `activate`, for [game sounds](../reference/composables.md#useuisound).
+A press reports `activate`, for [game sounds](../reference/composables/use-ui-sound.md).
 
 ## Preview
 
