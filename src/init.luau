@@ -145,6 +145,7 @@ local Lucy = {
 	Collapsible = require(Components.Collapsible),
 	DataGrid = require(Components.DataGrid),
 	Dialog = require(Components.Dialog),
+	Effect = require(Components.Effect),
 	Grid = require(Components.Grid),
 	Icon = require(Components.Icon),
 	Image = require(Components.Image),

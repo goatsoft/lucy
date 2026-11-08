@@ -12,6 +12,7 @@
     "collapsible": "A header that shows or hides what is under it",
     "data-grid": "A table the player can sort by pressing its headers",
     "dialog": "Modal dialog and alert dialog",
+    "effect": "Animated celebrations behind a reward or level up: rays, and your own types",
     "grid": "Rows of equal cells",
     "icon": "Small picture in the theme's colours, by name or asset id",
     "image": "Picture from an asset id or a thumbnail",

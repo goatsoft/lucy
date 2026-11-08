@@ -21,6 +21,7 @@ Each component has its own page with its props, usage and examples:
 | [Collapsible](collapsible.md) | A header that shows or hides what is under it |
 | [DataGrid](data-grid.md) | A table the player can sort by pressing its headers |
 | [Dialog](dialog.md) | A modal window, and alert dialogs that ask for a yes or no |
+| [Effect](effect.md) | An animated celebration behind a reward or a level up: rays, or your own |
 | [Grid](grid.md) | Rows of equal cells, such as shop items or emotes |
 | [Icon](icon.md) | A small picture in the theme's colours, by name or asset id |
 | [Image](image.md) | A picture from an asset id or a thumbnail |
