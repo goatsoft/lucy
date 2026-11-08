@@ -36,6 +36,11 @@ Lucy.Stack.new({
 | `richText` | boolean | `false` | | Turns on Roblox rich text tags such as `<b>` |
 | `reveal` | number or `true` | | | Types the text out, this many characters a second (`true`: 40), and again from the start whenever the text changes |
 | `revealing` | boolean | `false` | yes, read only | Whether it is typing out now |
+| `value` | number | | yes | Shows this number instead of `text`, formatted by `format` |
+| `format` | function | `Lucy.Format.number` | | Turns `value` into text, such as ``function(n) return `+{n} XP` end`` |
+| `count` | number or `true` | | | Counts up to `value` over this many seconds (`true`: 0.8), and on from where it is when it changes |
+| `from` | number | `0` | | Where the first count starts |
+| `counting` | boolean | `false` | yes, read only | Whether it is counting now |
 
 It also takes the [props every component takes](index.md#using-a-component).
 
@@ -100,6 +105,28 @@ line.Revealed:Connect(function()
 end)
 ```
 
+A number that counts up to its value, such as XP on a results screen. It counts on from where it
+is whenever the value changes, so a second reward adds to the first. `text:skipCount()` lands it at
+once, and `text.Counted` fires when it lands:
+
+```luau
+local xp = app.state:ref("player.xp")
+
+Lucy.Text.new({
+    value = xp,
+    count = true,
+    format = function(n)
+        return `{Lucy.Format.number(n)} XP`
+    end,
+    variant = "h2",
+    Parent = results,
+})
+```
+
+Both are [composables](../reference/composables.md) underneath, `useReveal` and `useCount`, so
+anything else can type out or count up the same way.
+
 ## Preview
 
-In Studio, from the command bar: `Lucy.Preview.show("Text")`.
+In Studio, from the command bar: `Lucy.Preview.show("Text")`, and `Lucy.Preview.show("TextMotion")`
+for the reveal and the count.

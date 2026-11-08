@@ -156,4 +156,99 @@ return function()
 			expect(text.Instance.MaxVisibleGraphemes).to.equal(Text.REVEAL_RATE)
 		end)
 	end)
+
+	describe("count", function()
+		local Animate = require(script.Parent.Parent.Core.Animate)
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+
+		beforeEach(function()
+			Animate.manual = true
+		end)
+		afterEach(function()
+			Animate.manual = false
+		end)
+
+		local function run(seconds: number)
+			for _ = 1, math.round(seconds * 60) do
+				Animate.step(1 / 60)
+			end
+		end
+
+		it("shows a value with thousands separators", function()
+			local text = Text.new({ app = app, Parent = gui, value = 4200 })
+			expect(text.Instance.Text).to.equal("4,200")
+			expect(text:get("counting")).to.equal(false)
+		end)
+
+		it("counts up from zero over count seconds", function()
+			local text = Text.new({ app = app, Parent = gui, value = 1000, count = 1 })
+			expect(text.Instance.Text).to.equal("0")
+			expect(text:get("counting")).to.equal(true)
+			run(0.5)
+			local mid = tonumber((text.Instance.Text:gsub(",", "")))
+			expect(mid > 0 and mid < 1000).to.equal(true)
+			run(0.6)
+			expect(text.Instance.Text).to.equal("1,000")
+			expect(text:get("counting")).to.equal(false)
+		end)
+
+		it("fires Counted once it lands", function()
+			local text = Text.new({ app = app, Parent = gui, value = 50, count = 0.5 })
+			local fired = 0
+			text.Counted:Connect(function()
+				fired += 1
+			end)
+			run(1)
+			expect(fired).to.equal(1)
+		end)
+
+		it("counts on from where it is when the value changes", function()
+			local value = Reactive.ref(100)
+			local text = Text.new({ app = app, Parent = gui, value = value, count = 1 })
+			run(1.2)
+			expect(text.Instance.Text).to.equal("100")
+			value(300)
+			expect(text.Instance.Text).to.equal("100")
+			run(0.5)
+			local mid = tonumber(text.Instance.Text)
+			expect(mid > 100 and mid < 300).to.equal(true)
+			run(0.6)
+			expect(text.Instance.Text).to.equal("300")
+		end)
+
+		it("counts from `from`, through the game's format", function()
+			local text = Text.new({
+				app = app,
+				Parent = gui,
+				value = 250,
+				from = 200,
+				count = 1,
+				format = function(n: number): string
+					return `+{n} XP`
+				end,
+			})
+			expect(text.Instance.Text).to.equal("+200 XP")
+			run(1.2)
+			expect(text.Instance.Text).to.equal("+250 XP")
+		end)
+
+		it("lands at once on skipCount", function()
+			local text = Text.new({ app = app, Parent = gui, value = 900, count = 2 })
+			local fired = 0
+			text.Counted:Connect(function()
+				fired += 1
+			end)
+			run(0.3)
+			text:skipCount()
+			expect(text.Instance.Text).to.equal("900")
+			expect(text:get("counting")).to.equal(false)
+			expect(fired).to.equal(1)
+		end)
+
+		it("takes count = true as the default time", function()
+			local text = Text.new({ app = app, Parent = gui, value = 10, count = true })
+			run(Text.COUNT_SECONDS + 0.1)
+			expect(text.Instance.Text).to.equal("10")
+		end)
+	end)
 end

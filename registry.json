@@ -39,7 +39,7 @@
     "switch": "On and off switch with optional label",
     "table": "Rows and columns for leaderboards, friends lists and inventories",
     "tabs": "Tab bar with one panel per tab",
-    "text": "Headings, body copy and labels",
+    "text": "Headings, body copy and labels, typed out or counted up",
     "toaster": "Toast notifications through app.toast",
     "tour": "A guided walk through the game's own UI, one step at a time",
     "toggle": "Button that stays pressed until clicked again",

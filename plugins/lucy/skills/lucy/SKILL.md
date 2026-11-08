@@ -123,6 +123,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Collapsible](references/components/collapsible.md): A header that shows or hides what is under it.
 - [DataGrid](references/components/data-grid.md): A table the player can sort by pressing its headers.
 - [Dialog](references/components/dialog.md): A modal window, and alert dialogs that ask for a yes or no.
+- [Effect](references/components/effect.md): An animated celebration behind a reward or a level up, in types you can add to.
 - [Grid](references/components/grid.md): Rows of equal cells, such as shop items or emotes.
 - [Icon](references/components/icon.md): A small picture in the theme's colours, by name or asset id.
 - [Image](references/components/image.md): A picture from an asset id or a thumbnail.
@@ -181,6 +182,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Composables](references/reference/composables.md): Every composable Lucy comes with, what each one takes and returns, and when to use it.
 - [The data queue](references/reference/data-queue.md): Lucy.DataQueue paces DataStore requests to the engine's limits, caches reads, keeps leaderboards and writes what is pending when the server closes. Every method and option.
 - [Devtools](references/reference/devtools.md): Look at a running UI in Studio, and press, set and focus things the way a player would, from the command bar or a coding agent.
+- [Format](references/reference/format.md): Turn numbers into text for the screen, such as 4200 into "4,200".
 - [The server](references/reference/server.md): Lucy.Server and app.server, every option and method, which paths reach which players, and how changes travel.
 - [The store](references/reference/store.md): How app.state works, what it holds, every method, and the rules for reading, writing and following it.
 - [Theming](references/reference/theming.md): Every theme option, colour token, primitive and density value, the Tokens helpers, app.theme's methods and how style rules work.

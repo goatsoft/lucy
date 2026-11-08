@@ -153,6 +153,8 @@ local board = Lucy.useTable({ data = dancers, columns = columns })  -- sorted ro
 Lucy.useWhile(isOpen, function() return signal:Connect(onBeat) end)  -- only while open
 local timer = Lucy.useCountdown(setEndsAt)                 -- timer.remaining(), timer.done()
 local drag = Lucy.useDrag(viewport, { onMove = spin })   -- drag.dragging(), drag.delta()
+local typed = Lucy.useReveal(line, { rate = 34 })        -- typed.visible(): characters shown
+local xp = Lucy.useCount(xpRef)                          -- xp.value(): counting up to it
 ```
 
 Write your own the same way: take refs or getters, return refs or computeds, and

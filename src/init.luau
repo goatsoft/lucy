@@ -106,6 +106,8 @@ local Lucy = {
 	useWhile = Composables.useWhile,
 	useCountdown = Composables.useCountdown,
 	useDrag = Composables.useDrag,
+	useReveal = Composables.useReveal,
+	useCount = Composables.useCount,
 
 	-- Animation (Core/Animate)
 	spring = Animate.spring,
@@ -119,6 +121,7 @@ local Lucy = {
 	Theme = Theme,
 	Tokens = require(Core.Tokens),
 	Oklab = require(Core.Oklab),
+	Format = require(script.Utils.Format),
 	Preferences = require(Core.Preferences),
 	Palette = require(Core.Palette),
 	SceneManager = SceneManager,

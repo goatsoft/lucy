@@ -37,6 +37,8 @@ To write your own, see [Share logic with composables](../guide/composables.md).
 | [`useWhile`](#usewhile) | Sets something up while a condition is true and cleans it up when it turns false |
 | [`useCountdown`](#usecountdown) | Whole seconds left until a time, for round and event timers |
 | [`useDrag`](#usedrag) | Follows the mouse or a finger dragging from a frame, such as a model the player spins |
+| [`useReveal`](#usereveal) | Types a text out a character at a time, for dialogue and story lines |
+| [`useCount`](#usecount) | Counts a number up to its value, for XP, coins and scores |
 
 ## useDensity
 
@@ -329,3 +331,96 @@ The left mouse button and one finger drag. When the owner stops mid drag, the
 drag ends and `onEnd` is called. A gamepad has no pointer, so give console
 players the same thing on a stick or buttons, such as an
 [action](../guide/actions.md) that turns the model.
+
+## useReveal
+
+```luau
+local speech = app.state:ref("npc.line")
+local typed = Lucy.useReveal(speech, { rate = 34 })
+
+Lucy.new "TextLabel" {
+    Text = speech,
+    MaxVisibleGraphemes = typed.visible,
+    Parent = dialogue,
+}
+```
+
+Types `text` (a string, ref or getter) out at `rate` characters a second, and
+again from the start whenever it changes. Bind `visible` to a TextLabel's
+`MaxVisibleGraphemes`: the whole text is laid out from the start, so words never
+jump to the next line as they appear.
+
+| Option | What it does |
+|---|---|
+| `rate` | Characters a second. Default 40 |
+| `rich` | The text has rich text tags such as `<b>`. Tags take no time, and `&amp;` counts as one character |
+
+| Name | What it is |
+|---|---|
+| `visible` | How many characters show, `-1` once it is all out |
+| `revealing` | `true` while it is typing out |
+| `skip()` | Shows the rest at once, such as on a press to skip ahead |
+| `done` | A Signal that fires each time a text is all out |
+
+A press that skips the line, then moves on once it is out:
+
+```luau
+local typed = Lucy.useReveal(speech, { rate = 34 })
+
+Lucy.Button.new({
+    text = function()
+        return if typed.revealing() then "Skip" else "Next"
+    end,
+    onClick = function()
+        if typed.revealing() then
+            typed.skip()
+        else
+            nextLine()
+        end
+    end,
+    Parent = dialogue,
+})
+```
+
+[Text](../components/text.md) has it built in: `reveal = 34`.
+
+## useCount
+
+```luau
+local xp = app.state:ref("player.xp")
+local shown = Lucy.useCount(xp, { seconds = 0.8 })
+
+Lucy.new "TextLabel" {
+    Text = function()
+        return `{Lucy.Format.number(shown.value())} XP`
+    end,
+    Parent = hud,
+}
+```
+
+Counts a number up (or down) to `value` (a number, ref or getter): from `from`
+at first, and on from where it is whenever `value` changes. It eases out as it
+lands, so big jumps still feel quick.
+
+| Option | What it does |
+|---|---|
+| `seconds` | How long each count takes. Default 0.8 |
+| `from` | Where the first count starts. Default 0; set it to the value to show it without counting |
+
+| Name | What it is |
+|---|---|
+| `value` | The number now. It is not rounded, so format it to show it: [`Lucy.Format.number`](format.md) |
+| `counting` | `true` while it is counting |
+| `skip()` | Lands it at once |
+| `done` | A Signal that fires each time it lands |
+
+A reward that pops when the count lands:
+
+```luau
+local reward = Lucy.useCount(250, { seconds = 1 })
+reward.done:Connect(function()
+    sounds.coin:Play()
+end)
+```
+
+[Text](../components/text.md) has it built in: `value = xp, count = true`.

@@ -17,6 +17,8 @@
 			Lucy.useWhile(open, function() return signal:Connect(onFire) end)  -- only while open
 			local timer = Lucy.useCountdown(endsAt)              -- timer.remaining(), timer.done()
 			local drag = Lucy.useDrag(handle, { onMove = move })  -- drag.dragging(), drag.delta()
+			local typed = Lucy.useReveal(line, { rate = 34 })    -- typed.visible(): characters shown
+			local xp = Lucy.useCount(xpRef, { seconds = 0.8 })   -- xp.value(): counting up to it
 			...
 		end
 
@@ -24,9 +26,11 @@
 	and register any cleanup with Lucy.onCleanup.
 ]]
 
+local Animate = require(script.Parent.Core.Animate)
 local Component = require(script.Parent.Core.Component)
 local Reactive = require(script.Parent.Core.Reactive)
 local Responsive = require(script.Parent.Core.Responsive)
+local Signal = require(script.Parent.Core.Signal)
 local SortModel = require(script.Parent.Core.SortModel)
 local TableModel = require(script.Parent.Core.TableModel)
 local UiEvents = require(script.Parent.Core.UiEvents)
@@ -425,6 +429,180 @@ function Composables.useDrag(target: Reactive.MaybeRef<GuiObject?>, options: Dra
 			return delta()
 		end),
 		cancel = finish,
+	}
+end
+
+-- How many characters a reader sees: rich text tags take none, an entity takes one
+local ENTITIES = { lt = "<", gt = ">", amp = "&", quot = '"', apos = "'" }
+local function visibleLength(text: string, rich: boolean): number
+	if rich then
+		text = text:gsub("<[^>]*>", ""):gsub("&(%a+);", function(name)
+			return ENTITIES[name]
+		end)
+	end
+	return utf8.len(text) or #text
+end
+
+export type Reveal = {
+	visible: Reactive.Computed<number>,
+	revealing: Reactive.Computed<boolean>,
+	skip: () -> (),
+	done: Signal.Signal,
+}
+
+--[[
+	Types a text out: how many of its characters to show, rising at `rate` a second
+	(default 40), from none each time the text changes. Bind `visible` to a
+	TextLabel's MaxVisibleGraphemes: the whole text is laid out from the start, so
+	words never jump to the next line as they appear. Returns { visible, revealing,
+	skip, done }: `visible` is -1 once it is all out; `skip()` shows the rest at
+	once; `done` (a Signal) fires each time a text is all out. options.rich: the
+	text has rich text tags, which take no time. Runs on Animate's driver.
+]]
+function Composables.useReveal(
+	text: Reactive.MaybeRef<string>,
+	options: { rate: number?, rich: boolean? }?
+): Reveal
+	requireOwner("useReveal")
+	local rate = math.max((options and options.rate) or 40, 1)
+	local rich = options ~= nil and options.rich == true
+	local shown = Reactive.ref(-1)
+	local typing = Reactive.ref(false)
+	local done = Signal.new()
+	local stopDrive: (() -> ())? = nil
+	local function halt()
+		if stopDrive then
+			stopDrive()
+			stopDrive = nil
+		end
+	end
+	local function finish()
+		halt()
+		shown(-1)
+		if Reactive.peek(typing) then
+			typing(false)
+			done:Fire()
+		end
+	end
+	Reactive.watch(function()
+		return Reactive.toValue(text)
+	end, function(value)
+		halt()
+		local total = visibleLength(tostring(value or ""), rich)
+		if total == 0 then
+			shown(-1)
+			typing(false)
+			return
+		end
+		local elapsed = 0
+		shown(0)
+		typing(true)
+		stopDrive = Animate.drive(function(dt: number): boolean
+			elapsed += dt
+			local count = math.floor(elapsed * rate + 1e-6)
+			if count >= total then
+				stopDrive = nil
+				finish()
+				return true
+			end
+			shown(count)
+			return false
+		end)
+	end, { immediate = true })
+	Reactive.onCleanup(function()
+		halt()
+		done:DisconnectAll()
+	end)
+	return {
+		visible = Reactive.computed(function()
+			return shown()
+		end),
+		revealing = Reactive.computed(function()
+			return typing()
+		end),
+		skip = finish,
+		done = done,
+	}
+end
+
+export type Count = {
+	value: Reactive.Computed<number>,
+	counting: Reactive.Computed<boolean>,
+	skip: () -> (),
+	done: Signal.Signal,
+}
+
+--[[
+	Counts a number up (or down) to `value`: from `options.from` (default 0) at first,
+	and from where it is whenever `value` changes, over `options.seconds` (default 0.8),
+	easing out as it lands. Returns { value, counting, skip, done }: `value` is the
+	number now (not rounded: round or format it to show it, Lucy.Format.number);
+	`skip()` lands it at once; `done` (a Signal) fires each time it lands. Runs on
+	Animate's driver.
+]]
+function Composables.useCount(
+	value: Reactive.MaybeRef<number>,
+	options: { seconds: number?, from: number? }?
+): Count
+	requireOwner("useCount")
+	local seconds = math.max((options and options.seconds) or 0.8, 0)
+	local shown = Reactive.ref((options and options.from) or 0)
+	local moving = Reactive.ref(false)
+	local done = Signal.new()
+	local goal = Reactive.peek(shown)
+	local stopDrive: (() -> ())? = nil
+	local function halt()
+		if stopDrive then
+			stopDrive()
+			stopDrive = nil
+		end
+	end
+	local function land()
+		halt()
+		shown(goal)
+		if Reactive.peek(moving) then
+			moving(false)
+			done:Fire()
+		end
+	end
+	Reactive.watch(function()
+		return tonumber(Reactive.toValue(value)) or 0
+	end, function(target)
+		halt()
+		goal = target
+		local from = Reactive.peek(shown)
+		if from == goal or seconds <= 0 then
+			shown(goal)
+			moving(false)
+			return
+		end
+		local elapsed = 0
+		moving(true)
+		stopDrive = Animate.drive(function(dt: number): boolean
+			elapsed += dt
+			local k = elapsed / seconds
+			if k >= 1 then
+				stopDrive = nil
+				land()
+				return true
+			end
+			shown(from + (goal - from) * (1 - (1 - k) ^ 3))
+			return false
+		end)
+	end, { immediate = true })
+	Reactive.onCleanup(function()
+		halt()
+		done:DisconnectAll()
+	end)
+	return {
+		value = Reactive.computed(function()
+			return shown()
+		end),
+		counting = Reactive.computed(function()
+			return moving()
+		end),
+		skip = land,
+		done = done,
 	}
 end
 

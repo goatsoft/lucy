@@ -34,7 +34,8 @@ check a name exists before you use it, and find the page that explains it.
 ## Composables
 
 `Lucy.useDensity`, `useMetric`, `useResponsive`, `useBackHandler`,
-`useFocusScope`, `useUiSound`, `useTable`, `useWhile`, `useCountdown` and `useDrag`. See
+`useFocusScope`, `useUiSound`, `useTable`, `useWhile`, `useCountdown`, `useDrag`,
+`useReveal` and `useCount`. See
 the [composables reference](composables.md).
 
 ## Animation
@@ -80,7 +81,7 @@ the [composables reference](composables.md).
 ## Components
 
 `Lucy.Accordion`, `Alert`, `Arrow`, `Avatar`, `Badge`, `Button`, `Checkbox`,
-`Collapsible`, `DataGrid`, `Dialog`, `Grid`, `Icon`, `Image`, `InlineConfirm`,
+`Collapsible`, `DataGrid`, `Dialog`, `Effect`, `Grid`, `Icon`, `Image`, `InlineConfirm`,
 `Input`, `Item`, `Kbd`, `NumberField`, `Panel`, `Pressable`, `Progress`,
 `RadioGroup`, `ScrollArea`, `Select`, `Separator`, `Sheet`, `Skeleton`,
 `Slider`, `Spinner`, `Stack`, `Switch`, `Table`, `Tabs`, `Text`, `Toaster`,
@@ -100,6 +101,7 @@ Lucy uses these itself, and you can too.
 | Name | What it is |
 |---|---|
 | `Lucy.Maid` | Collects things to clean up and cleans them in one call: `local maid = Lucy.Maid.new()`, `maid:give(thing)`, `maid:clean()`. Takes Instances, connections, functions, threads and anything with a `Destroy`, `destroy` or `Disconnect` method |
+| `Lucy.Format` | Turns values into text, such as `Format.number(4200)`, which is `"4,200"`. See [Format](format.md) |
 | `Lucy.Signal` | A small event for plain Luau objects: `Signal.new()`, `:Connect(fn)`, `:Once(fn)`, `:Fire(...)`, `:DisconnectAll()`. An error in one handler does not stop the others |
 
 `Lucy.Reactive`, `Lucy.Element` and `Lucy.Animate` are the modules behind the

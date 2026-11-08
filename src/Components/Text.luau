@@ -7,24 +7,32 @@
 	variant: h1 | h2 | h3 | h4 | p | lead | large | small | muted | label
 	align:   left | center | right
 	autoWidth = true sizes to the text instead of filling the parent's width.
-	reveal = 30 types the text out, 30 characters a second (true: Text.REVEAL_RATE), and again
-	from the start whenever it changes. The whole text is laid out from the start, so words never
-	jump to the next line as they appear. text:skipReveal() shows the rest at once;
-	text.Revealed (a Signal) fires when it is all out.
 
-	State keys: text, variant, align, visible, revealing (read only: typing out now).
+	Shortcuts for two text animations (each is a composable any label can use on its own):
+	reveal = 30 types the text out, 30 characters a second (true: Text.REVEAL_RATE), again from
+	the start whenever it changes (Lucy.useReveal). text:skipReveal() shows the rest at once;
+	text.Revealed (a Signal) fires when it is all out.
+	value = 4200 shows a number instead of text, through `format` (default Lucy.Format.number,
+	"4,200"; give your own, "+250 XP"). count = 0.8 counts up to it over that many seconds
+	(true: Text.COUNT_SECONDS), from `from` (default 0) and on from where it is when the value
+	changes (Lucy.useCount). text:skipCount() lands it at once; text.Counted fires when it lands.
+
+	State keys: text, variant, align, visible, value, revealing and counting (read only: typing
+	out, counting up now).
 ]]
 
-local Animate = require(script.Parent.Parent.Core.Animate)
 local Component = require(script.Parent.Parent.Core.Component)
+local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
+local Format = require(script.Parent.Parent.Utils.Format)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
-local Signal = require(script.Parent.Parent.Core.Signal)
 
 local Text = {}
 
 -- Characters a second for reveal = true
 Text.REVEAL_RATE = 40
+-- Seconds for count = true
+Text.COUNT_SECONDS = 0.8
 
 Text.variants = {
 	h1 = { TextSize = "$Text4xl", FontFace = "$FontDisplay" },
@@ -65,70 +73,6 @@ for name, properties in Text.variants do
 	)
 end
 
--- How many characters a reader sees: rich text tags take none, an entity takes one
-local ENTITIES = { lt = "<", gt = ">", amp = "&", quot = '"', apos = "'" }
-local function visibleLength(text: string, rich: boolean): number
-	if rich then
-		text = text:gsub("<[^>]*>", ""):gsub("&(%a+);", function(name)
-			return ENTITIES[name]
-		end)
-	end
-	return utf8.len(text) or #text
-end
-
--- The reveal: a count of characters shown (-1 all), stepped on Animate's driver
-local function useReveal(h: any, rate: number): Reactive.Ref<number>
-	local shown = Reactive.ref(-1)
-	local revealed = Signal.new()
-	h.Revealed = revealed
-	local stopDrive: (() -> ())? = nil
-	local function halt()
-		if stopDrive then
-			stopDrive()
-			stopDrive = nil
-		end
-	end
-	local function finish()
-		halt()
-		shown(-1)
-		if h:get("revealing") then
-			h:set("revealing", false)
-			revealed:Fire(h)
-		end
-	end
-	function h.skipReveal(_self)
-		finish()
-	end
-	Reactive.watch(h:ref("text"), function(value)
-		halt()
-		local total = visibleLength(tostring(value or ""), h.props.richText == true)
-		if total == 0 then
-			shown(-1)
-			h:set("revealing", false)
-			return
-		end
-		local elapsed = 0
-		shown(0)
-		h:set("revealing", true)
-		stopDrive = Animate.drive(function(dt: number): boolean
-			elapsed += dt
-			local count = math.floor(elapsed * rate + 1e-6)
-			if count >= total then
-				stopDrive = nil
-				finish()
-				return true
-			end
-			shown(count)
-			return false
-		end)
-	end, { immediate = true })
-	Reactive.onCleanup(function()
-		halt()
-		revealed:DisconnectAll()
-	end)
-	return shown
-end
-
 local function check(variant: string)
 	if Text.variants[variant] == nil then
 		error(`[Lucy] unknown Text variant "{variant}"`, 0)
@@ -138,7 +82,15 @@ end
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "text",
-	defaults = { text = "", variant = "p", align = "left", visible = true, revealing = false },
+	defaults = {
+		text = "",
+		variant = "p",
+		align = "left",
+		visible = true,
+		value = 0,
+		revealing = false,
+		counting = false,
+	},
 	rules = Text.rules,
 	render = function(h)
 		local p: Component.Props = h.props
@@ -148,14 +100,50 @@ local spec: Component.Spec = {
 			then Text.REVEAL_RATE
 			elseif type(p.reveal) == "number" then p.reveal
 			else nil
-		local shown: any = if rate then useReveal(h, rate) else -1
+		local visible: any = -1
+		if rate then
+			local typed = Composables.useReveal(h:ref("text"), { rate = rate, rich = p.richText == true })
+			visible = typed.visible
+			h.Revealed = typed.done
+			function h.skipReveal(_self)
+				typed.skip()
+			end
+			Reactive.watch(typed.revealing, function(on)
+				h:set("revealing", on)
+			end, { immediate = true })
+		end
+		-- A number (value) rather than text, counted up when count is set
+		local display: any = h:ref("text")
+		if p.value ~= nil then
+			local format = if type(p.format) == "function" then p.format else Format.number
+			local seconds = if p.count == true
+				then Text.COUNT_SECONDS
+				elseif type(p.count) == "number" then p.count
+				else 0
+			local number: any = h:ref("value")
+			if seconds > 0 then
+				local count = Composables.useCount(number, { seconds = seconds, from = tonumber(p.from) })
+				number = count.value
+				h.Counted = count.done
+				function h.skipCount(_self)
+					count.skip()
+				end
+				Reactive.watch(count.counting, function(on)
+					h:set("counting", on)
+				end, { immediate = true })
+			end
+			display = function()
+				local n = tonumber(number()) or 0
+				return format(math.floor(n + 0.5))
+			end
+		end
 		return Element.new("TextLabel", {
 			Size = if p.autoWidth then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0),
 			AutomaticSize = if p.autoWidth then Enum.AutomaticSize.XY else Enum.AutomaticSize.Y,
 			TextWrapped = not p.autoWidth,
 			RichText = p.richText == true,
-			Text = h:ref("text"),
-			MaxVisibleGraphemes = shown,
+			Text = display,
+			MaxVisibleGraphemes = visible,
 			Visible = h:ref("visible"),
 			TextXAlignment = function()
 				return ALIGN[align()] or Enum.TextXAlignment.Left
