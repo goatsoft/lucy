@@ -76,7 +76,7 @@ the [composables reference](composables.md).
 |---|---|---|
 | `Lucy.Responsive` | Pick a value by device, input, breakpoint or orientation: `Responsive.pick(app, { mobile = 2, default = 5 })` | [Components](../components/index.md) |
 | `Lucy.Adaptive` | Scales each ScreenGui for the device | [Scaling](../architecture.md#scaling) |
-| `Lucy.Scroll` | `Scroll.reveal(object)` scrolls every ScrollingFrame above `object` so it shows | This page |
+| `Lucy.Scroll` | `Scroll.reveal(object)` scrolls every ScrollingFrame above `object` so it shows | [Utils](utils.md#lucyscroll) |
 
 ## Components
 
@@ -94,15 +94,16 @@ the [composables reference](composables.md).
 | `Lucy.Preview` | Show stories in Studio | [Stories](../stories.md) |
 | `Lucy.Devtools` | Look at and drive a running UI in Studio | [Devtools](devtools.md) |
 
-## Helpers
+## Utils and helpers
 
 Lucy uses these itself, and you can too.
 
-| Name | What it is |
-|---|---|
-| `Lucy.Maid` | Collects things to clean up and cleans them in one call: `local maid = Lucy.Maid.new()`, `maid:give(thing)`, `maid:clean()`. Takes Instances, connections, functions, threads and anything with a `Destroy`, `destroy` or `Disconnect` method |
-| `Lucy.Format` | Turns values into text, such as `Format.number(4200)`, which is `"4,200"`. See [Format](format.md) |
-| `Lucy.Signal` | A small event for plain Luau objects: `Signal.new()`, `:Connect(fn)`, `:Once(fn)`, `:Fire(...)`, `:DisconnectAll()`. An error in one handler does not stop the others |
+| Name | What it is | More |
+|---|---|---|
+| `Lucy.Format` | Turns values into text, such as `Format.number(4200)`, which is `"4,200"` | [Utils](utils.md#lucyformat) |
+| `Lucy.Scroll` | Scrolls ScrollingFrames to reveal an object, calculates offsets and scales | [Utils](utils.md#lucyscroll) |
+| `Lucy.Signal` | A small event for plain Luau objects: `Signal.new()`, `:Connect(fn)`, `:Fire(...)` | [Utils](utils.md#lucysignal) |
+| `Lucy.Maid` | Collects things to clean up and cleans them in one call | [Utils](utils.md#lucymaid) |
 
 `Lucy.Reactive`, `Lucy.Element` and `Lucy.Animate` are the modules behind the
 shortcuts above (`Lucy.ref` is `Lucy.Reactive.ref`). Use the shortcuts.

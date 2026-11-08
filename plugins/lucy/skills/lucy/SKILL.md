@@ -182,10 +182,10 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Composables](references/reference/composables.md): Every composable Lucy comes with, what each one takes and returns, and when to use it.
 - [The data queue](references/reference/data-queue.md): Lucy.DataQueue paces DataStore requests to the engine's limits, caches reads, keeps leaderboards and writes what is pending when the server closes. Every method and option.
 - [Devtools](references/reference/devtools.md): Look at a running UI in Studio, and press, set and focus things the way a player would, from the command bar or a coding agent.
-- [Format](references/reference/format.md): Turn numbers into text for the screen, such as 4200 into "4,200".
 - [The server](references/reference/server.md): Lucy.Server and app.server, every option and method, which paths reach which players, and how changes travel.
 - [The store](references/reference/store.md): How app.state works, what it holds, every method, and the rules for reading, writing and following it.
 - [Theming](references/reference/theming.md): Every theme option, colour token, primitive and density value, the Tokens helpers, app.theme's methods and how style rules work.
+- [Utils](references/reference/utils.md): Plain helpers and utility classes: Lucy.Format, Lucy.Scroll, Lucy.Signal and Lucy.Maid.
 - [Known issues](references/known-issues.md): Problems Lucy cannot fix on its own, what you will see, why, and what to do instead.
 - [Game folder structure](references/recipes/folder-structure.md): A suggested layout for your game folder, and where each part of a Lucy game goes: one App, utils, features, composables, components, world UI, panels and scenes on the client; services and requests on the server.
 - [HUD](references/recipes/hud.md): A dance floor heads-up display with a combo badge, coins that pop when they change, a hype meter that fills with the crowd, and a toast for combo milestones.

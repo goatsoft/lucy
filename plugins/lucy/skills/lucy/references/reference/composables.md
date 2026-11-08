@@ -401,7 +401,7 @@ lands, so big jumps still feel quick.
 
 | Name | What it is |
 |---|---|
-| `value` | The number now. It is not rounded, so format it to show it: [`Lucy.Format.number`](format.md) |
+| `value` | The number now. It is not rounded, so format it to show it: [`Lucy.Format.number`](utils.md#formatnumber) |
 | `counting` | `true` while it is counting |
 | `skip()` | Lands it at once |
 | `done` | A Signal that fires each time it lands |

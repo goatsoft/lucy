@@ -87,6 +87,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/arrow': RouteRecordInfo<
+      '/docs/components/arrow',
+      '/docs/components/arrow',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/avatar': RouteRecordInfo<
       '/docs/components/avatar',
       '/docs/components/avatar',
@@ -136,6 +143,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/effect': RouteRecordInfo<
+      '/docs/components/effect',
+      '/docs/components/effect',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/grid': RouteRecordInfo<
       '/docs/components/grid',
       '/docs/components/grid',
@@ -153,6 +167,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/components/image': RouteRecordInfo<
       '/docs/components/image',
       '/docs/components/image',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/inline-confirm': RouteRecordInfo<
+      '/docs/components/inline-confirm',
+      '/docs/components/inline-confirm',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -181,6 +202,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/components/marquee': RouteRecordInfo<
       '/docs/components/marquee',
       '/docs/components/marquee',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/menu': RouteRecordInfo<
+      '/docs/components/menu',
+      '/docs/components/menu',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -262,6 +290,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/sort-button': RouteRecordInfo<
+      '/docs/components/sort-button',
+      '/docs/components/sort-button',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/spinner': RouteRecordInfo<
       '/docs/components/spinner',
       '/docs/components/spinner',
@@ -321,6 +356,20 @@ declare module 'vue-router/auto-routes' {
     '/docs/components/toggle-group': RouteRecordInfo<
       '/docs/components/toggle-group',
       '/docs/components/toggle-group',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/tour': RouteRecordInfo<
+      '/docs/components/tour',
+      '/docs/components/tour',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/waveform': RouteRecordInfo<
+      '/docs/components/waveform',
+      '/docs/components/waveform',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -402,6 +451,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/guide/tutorials': RouteRecordInfo<
+      '/docs/guide/tutorials',
+      '/docs/guide/tutorials',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/guide/world-ui': RouteRecordInfo<
       '/docs/guide/world-ui',
       '/docs/guide/world-ui',
@@ -430,6 +486,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/recipes/folder-structure': RouteRecordInfo<
+      '/docs/recipes/folder-structure',
+      '/docs/recipes/folder-structure',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/recipes/hud': RouteRecordInfo<
       '/docs/recipes/hud',
       '/docs/recipes/hud',
@@ -440,6 +503,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/recipes/pause-menu': RouteRecordInfo<
       '/docs/recipes/pause-menu',
       '/docs/recipes/pause-menu',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/recipes/save-data': RouteRecordInfo<
+      '/docs/recipes/save-data',
+      '/docs/recipes/save-data',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -486,9 +556,23 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/data-queue': RouteRecordInfo<
+      '/docs/reference/data-queue',
+      '/docs/reference/data-queue',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/devtools': RouteRecordInfo<
       '/docs/reference/devtools',
       '/docs/reference/devtools',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/server': RouteRecordInfo<
+      '/docs/reference/server',
+      '/docs/reference/server',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -503,6 +587,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/reference/theming': RouteRecordInfo<
       '/docs/reference/theming',
       '/docs/reference/theming',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/utils': RouteRecordInfo<
+      '/docs/reference/utils',
+      '/docs/reference/utils',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -591,6 +682,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/arrow.md': {
+      routes:
+        | '/docs/components/arrow'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/avatar.md': {
       routes:
         | '/docs/components/avatar'
@@ -647,6 +746,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/effect.md': {
+      routes:
+        | '/docs/components/effect'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/grid.md': {
       routes:
         | '/docs/components/grid'
@@ -666,6 +773,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/image.md': {
       routes:
         | '/docs/components/image'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/inline-confirm.md': {
+      routes:
+        | '/docs/components/inline-confirm'
       views:
         | never
       pathParamNames:
@@ -698,6 +813,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/marquee.md': {
       routes:
         | '/docs/components/marquee'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/menu.md': {
+      routes:
+        | '/docs/components/menu'
       views:
         | never
       pathParamNames:
@@ -791,6 +914,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/sort-button.md': {
+      routes:
+        | '/docs/components/sort-button'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/spinner.md': {
       routes:
         | '/docs/components/spinner'
@@ -858,6 +989,22 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/toggle-group.md': {
       routes:
         | '/docs/components/toggle-group'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/tour.md': {
+      routes:
+        | '/docs/components/tour'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/waveform.md': {
+      routes:
+        | '/docs/components/waveform'
       views:
         | never
       pathParamNames:
@@ -951,6 +1098,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/guide/tutorials.md': {
+      routes:
+        | '/docs/guide/tutorials'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/guide/world-ui.md': {
       routes:
         | '/docs/guide/world-ui'
@@ -983,6 +1138,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/recipes/folder-structure.md': {
+      routes:
+        | '/docs/recipes/folder-structure'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/recipes/hud.md': {
       routes:
         | '/docs/recipes/hud'
@@ -994,6 +1157,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/recipes/pause-menu.md': {
       routes:
         | '/docs/recipes/pause-menu'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/recipes/save-data.md': {
+      routes:
+        | '/docs/recipes/save-data'
       views:
         | never
       pathParamNames:
@@ -1047,9 +1218,25 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/reference/data-queue.md': {
+      routes:
+        | '/docs/reference/data-queue'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/reference/devtools.md': {
       routes:
         | '/docs/reference/devtools'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/server.md': {
+      routes:
+        | '/docs/reference/server'
       views:
         | never
       pathParamNames:
@@ -1066,6 +1253,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/theming.md': {
       routes:
         | '/docs/reference/theming'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/utils.md': {
+      routes:
+        | '/docs/reference/utils'
       views:
         | never
       pathParamNames:
