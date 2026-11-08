@@ -75,6 +75,17 @@ function Animate.step(dt: number)
 	stepAll(dt)
 end
 
+-- Runs step(dt) every frame on the same driver as springs and tweens (Animate.step in tests)
+-- until it returns true or the returned stop is called. For animations that are not a value
+-- moving to a target, like Text's reveal.
+function Animate.drive(step: (dt: number) -> boolean): () -> ()
+	local animator = { step = step } :: Animator
+	start(animator)
+	return function()
+		stop(animator)
+	end
+end
+
 local function pack(value: any): (string?, { number }?)
 	local kind = typeof(value)
 	if kind == "number" then

@@ -34,6 +34,8 @@ Lucy.Stack.new({
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `autoWidth` | boolean | `false` | | Sizes to the text instead of filling the width, and stops wrapping |
 | `richText` | boolean | `false` | | Turns on Roblox rich text tags such as `<b>` |
+| `reveal` | number or `true` | | | Types the text out, this many characters a second (`true`: 40), and again from the start whenever the text changes |
+| `revealing` | boolean | `false` | yes, read only | Whether it is typing out now |
 
 It also takes the [props every component takes](index.md#using-a-component).
 
@@ -80,6 +82,22 @@ Rich text:
 
 ```luau
 Lucy.Text.new({ text = "Press <b>E</b> to dance", richText = true, Parent = prompt })
+```
+
+Text that types itself out, as a character's line in a dialogue box. The whole line is laid out
+from the start, so words never jump to the next line as they appear. `text:skipReveal()` shows the
+rest at once (a press to skip ahead), and `text.Revealed` fires once it is all out:
+
+```luau
+local line = Lucy.Text.new({
+    text = function() return speech() end,
+    variant = "lead",
+    reveal = 34,
+    Parent = dialogue,
+})
+line.Revealed:Connect(function()
+    nextButton:set("visible", true)
+end)
 ```
 
 ## Preview
