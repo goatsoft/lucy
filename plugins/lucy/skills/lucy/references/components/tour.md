@@ -80,7 +80,7 @@ puts the step back.
 
 | Value | Moves on when |
 |---|---|
-| `"press"` | The player presses the target, or something inside it. The default when there is a target |
+| `"press"` | The player presses the target, or something inside it, even when the press hides or removes it (a button that shuts its own panel). The default when there is a target |
 | `"next"` | The player presses NEXT. The default when there is no target |
 | `{ action = "dance" }` | The player presses the action's key |
 | `{ state = "me.coins", equals = 100 }` | A state key has that value |

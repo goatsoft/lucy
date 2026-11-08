@@ -125,6 +125,38 @@ return function()
 			expect(tour.running()).to.equal(false)
 		end)
 
+		it("advances when pressing the target hides it", function()
+			local menu
+			menu = button("menu", nil, {
+				onClick = function()
+					menu.Instance.Visible = false
+				end,
+			})
+			button("join", UDim2.fromOffset(100, 100))
+			local tour = Tour.new(app, { id = "first", steps = steps() })
+			tour:start()
+			frame()
+			menu:click()
+			expect(tour.index()).to.equal(2)
+			tour:stop()
+		end)
+
+		it("advances when pressing the target destroys it", function()
+			local menu
+			menu = button("menu", nil, {
+				onClick = function()
+					menu:destroy()
+				end,
+			})
+			button("join", UDim2.fromOffset(100, 100))
+			local tour = Tour.new(app, { id = "first", steps = steps() })
+			tour:start()
+			frame()
+			menu:click()
+			expect(tour.index()).to.equal(2)
+			tour:stop()
+		end)
+
 		it("does not advance when another control is pressed", function()
 			button("menu")
 			local other = button("other", UDim2.fromOffset(50, 50))
@@ -322,6 +354,50 @@ return function()
 			frame()
 			expect(tour.blockers.top:HasTag("ui-tour-scrim")).to.equal(false)
 			expect(tour.blockers.top.Visible).to.equal(true)
+			tour:stop()
+		end)
+
+		it("grows the callout to fit text that wraps", function()
+			button("menu")
+			local long = "Pick a song that makes you wanna move, then lock it in and build your routine."
+			local tour = Tour.new(app, {
+				id = "first",
+				steps = { { id = "menu", target = "menu", title = "LUCY", text = long } },
+			})
+			tour:start()
+			for _ = 1, 4 do
+				frame()
+			end
+			expect(tour.text.Text).to.equal(long)
+			expect(tour.text.TextFits).to.equal(true)
+			expect(tour.text.AbsoluteSize.Y >= tour.text.TextBounds.Y).to.equal(true)
+			tour:stop()
+		end)
+
+		it("grows the callout to fit its text near the bottom of the screen, and keeps it on it", function()
+			-- Roblox caps a frame's automatic height at the room left below its offset position
+			-- (wrongly under a UIScale), so a callout placed low lost lines of its text
+			local menu = button("menu", UDim2.fromOffset(200, 520))
+			local long =
+				"Pick a song that makes you wanna move, then lock it in and build your routine with me."
+			local tour = Tour.new(app, {
+				id = "first",
+				steps = { { id = "menu", target = "menu", side = "bottom", text = long } },
+			})
+			tour:start()
+			for _ = 1, 4 do
+				frame()
+			end
+			expect(tour.text.TextFits).to.equal(true)
+			local bottom = tour.callout.AbsolutePosition.Y + tour.callout.AbsoluteSize.Y
+			local rootBottom = tour.root.AbsolutePosition.Y + tour.root.AbsoluteSize.Y
+			expect(bottom <= rootBottom + 0.5).to.equal(true)
+			-- and not over the target
+			local target = menu.Instance
+			local overlaps = tour.callout.AbsolutePosition.Y
+					< target.AbsolutePosition.Y + target.AbsoluteSize.Y
+				and bottom > target.AbsolutePosition.Y
+			expect(overlaps).to.equal(false)
 			tour:stop()
 		end)
 

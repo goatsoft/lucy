@@ -27,7 +27,8 @@
 		id, text, title
 		target   a LucyId, a GuiObject, a handle or a getter returning one; none: centred text
 		waitFor  "press" (the default with a target): the target, or a component in it, is
-		         activated, toggled or selected (silenced ones too)
+		         activated, toggled or selected (silenced ones too, and ones the press
+		         hides or removes, such as a button that shuts its own panel)
 		         "next" (the default without one): the callout's NEXT button
 		         { action = name }                      an app.actions action is pressed
 		         { state = path, equals = value }       a state key equals a value
@@ -717,7 +718,14 @@ function Tour._layout(self: any, step: Step, target: GuiObject?)
 		left = Vector2.new(1, 0),
 		right = Vector2.new(-1, 0),
 	})[at.side or "bottom"] or Vector2.zero
-	self.callout.Position = at.position + UDim2.fromOffset(toward.X * slide, toward.Y * slide)
+	-- By scale, as the blockers are: Roblox caps a frame's automatic height at the room left
+	-- below its offset position (and works that room out wrongly under a UIScale), which cut a
+	-- low callout's text short.
+	local placed = at.position + UDim2.fromOffset(toward.X * slide, toward.Y * slide)
+	self.callout.Position = UDim2.fromScale(
+		placed.X.Scale + placed.X.Offset / whole.X,
+		placed.Y.Scale + placed.Y.Offset / whole.Y
+	)
 	self:_cover()
 
 	-- The arrow sits on the callout's near edge, in line with the target's centre.
@@ -853,6 +861,9 @@ function Tour._showStep(self: any, at: number)
 	local live = Maid.new()
 	self._step = live
 	local shownOnce = false
+	-- The target as last drawn: a press that hides or removes it (a button that shuts its own
+	-- panel) still lands on what the player was shown.
+	local lastTarget: GuiObject? = nil
 	self.confirm:cancel()
 	self._index(at)
 	self._waiting(true)
@@ -876,7 +887,7 @@ function Tour._showStep(self: any, at: number)
 			if not PRESS_EVENTS[event] then
 				return
 			end
-			local target = resolve(app, step.target)
+			local target = resolve(app, step.target) or lastTarget
 			if target and inside(handle.Instance, target) then
 				advance()
 			end
@@ -938,6 +949,7 @@ function Tour._showStep(self: any, at: number)
 				self.pointer:replay()
 			end
 		end
+		lastTarget = target
 		self:_layout(step, target)
 		if not shownOnce then
 			shownOnce = true
