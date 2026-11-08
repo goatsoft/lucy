@@ -21,6 +21,17 @@ Harness.caps = {
 	console = { tenFoot = true, gamepad = true, viewport = Vector2.new(1920, 1080) },
 }
 
+--[[
+	True where GUI layout runs live: Studio's edit mode and a client. On a running server (Play's
+	server, a headless CI run) Roblox lays guis out only when a property is read and fires no
+	change signals for AbsoluteSize, AbsoluteWindowSize or AbsoluteCanvasSize, and a
+	UIGridLayout's AbsoluteCellSize keeps its old value. No UI runs there in a game, so a spec
+	that needs layout to follow along checks this and keeps to what it can see.
+]]
+function Harness.laysOutLive(): boolean
+	return not (RunService:IsServer() and RunService:IsRunning())
+end
+
 function Harness.guiParent(): Instance
 	local player = Players.LocalPlayer
 	if player then

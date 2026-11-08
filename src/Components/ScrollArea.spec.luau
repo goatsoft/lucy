@@ -323,6 +323,9 @@ return function()
 			expect(area.frame:IsA("ScrollingFrame")).to.equal(true)
 			expect(area.frame.Parent).to.equal(area.Instance)
 			expect((next(area.fades))).to.equal(nil)
+			if not Harness.laysOutLive() then
+				return -- the fade follows the window and canvas sizes: live layout only
+			end
 			local first, last = firstLast(area)
 			expect(first).to.equal(0)
 			expect(last).to.equal(1)

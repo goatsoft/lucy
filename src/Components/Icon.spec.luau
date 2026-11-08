@@ -106,21 +106,25 @@ return function()
 		hooks._warn = function(message: string)
 			table.insert(warnings, message)
 		end
+		-- Icon remembers the names it has warned about for as long as the module lives, so a second
+		-- run in the same session needs names it has not seen yet
+		local run = tostring(math.random(1, 2 ^ 30))
+		local nope, gone = `test:nope{run}`, `test:gone{run}`
 		local ok, err = pcall(function()
-			local first = Icon.new({ app = app, Parent = gui, icon = "test:nope" })
+			local first = Icon.new({ app = app, Parent = gui, icon = nope })
 			expect(first.Instance.Image).to.equal("")
-			Icon.new({ app = app, Parent = gui, icon = "test:nope" })
+			Icon.new({ app = app, Parent = gui, icon = nope })
 			local name = Reactive.ref("test:heart")
 			local later = Icon.new({ app = app, Parent = gui, icon = name })
-			name("test:gone")
+			name(gone)
 			expect(later.Instance.Image).to.equal("")
 		end)
 		hooks._warn = previous
 		assert(ok, err)
 		expect(#warnings).to.equal(2)
-		expect(string.find(warnings[1], "test:nope", 1, true) ~= nil).to.equal(true)
+		expect(string.find(warnings[1], nope, 1, true) ~= nil).to.equal(true)
 		expect(string.find(warnings[1], "lucy-icons build", 1, true) ~= nil).to.equal(true)
-		expect(string.find(warnings[2], "test:gone", 1, true) ~= nil).to.equal(true)
+		expect(string.find(warnings[2], gone, 1, true) ~= nil).to.equal(true)
 	end)
 
 	it("comes in four sizes or a number of pixels", function()

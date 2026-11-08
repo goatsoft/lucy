@@ -93,14 +93,19 @@ return function()
 	end)
 
 	it("fits as many columns as the minimum cell width allows", function()
+		if not Harness.laysOutLive() then
+			return -- the columns follow the measured width: live layout only (Harness.laysOutLive)
+		end
 		local frame = box(400)
 		local grid = Grid.new({ app = app, Parent = frame, minCellWidth = 120, gap = 10, cellHeight = 40 })
 		Harness.flush()
 		-- (400 + 10) / (120 + 10) fits 3 columns
+		expect(grid.layout.CellSize.X.Scale).to.be.near(1 / 3, 1e-6)
 		expect(near(grid.layout.AbsoluteCellSize.X, (400 - 20) / 3)).to.equal(true)
 		frame.Size = UDim2.fromOffset(250, 600)
 		Harness.flush()
 		-- 260 / 130 fits 2
+		expect(grid.layout.CellSize.X.Scale).to.be.near(1 / 2, 1e-6)
 		expect(near(grid.layout.AbsoluteCellSize.X, (250 - 10) / 2)).to.equal(true)
 	end)
 

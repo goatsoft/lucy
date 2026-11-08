@@ -115,6 +115,10 @@ return function()
 			task.wait()
 			expect(arrow.scale.Scale < 1).to.equal(true)
 			task.wait(Arrow.timing.grow + 0.1)
+			-- Two more frames: it steps on Heartbeat, and after one long frame (a busy server) the
+			-- last step can still be inside the grow, on the overshoot
+			task.wait()
+			task.wait()
 			expect(near(arrow.scale.Scale, 1)).to.equal(true)
 		end)
 

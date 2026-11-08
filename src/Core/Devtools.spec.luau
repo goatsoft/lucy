@@ -21,6 +21,31 @@ return function()
 		cleanup()
 	end)
 
+	-- An app's bridge: with its app's parent, or on a client in PlayerScripts (it outlives respawns)
+	local function bridgeOf(a: any): BindableFunction?
+		local player = game:GetService("Players").LocalPlayer
+		local scripts = player and player:FindFirstChildOfClass("PlayerScripts")
+		return (scripts or a.parent):FindFirstChild(a.namePrefix .. "Devtools") :: BindableFunction?
+	end
+
+	-- Runs fn with no running app marked current (in Play, the story browser's app is), then marks
+	-- them again
+	local function noneCurrent<T...>(fn: () -> T...): T...
+		local unmarked = {}
+		for _, b in CollectionService:GetTagged("LucyDevtools") do
+			if b:GetAttribute("LucyCurrent") == true then
+				b:SetAttribute("LucyCurrent", false)
+				table.insert(unmarked, b)
+			end
+		end
+		local results = table.pack(pcall(fn))
+		for _, b in unmarked do
+			b:SetAttribute("LucyCurrent", true)
+		end
+		assert(results[1], results[2])
+		return table.unpack(results, 2, results.n)
+	end
+
 	-- The first node in `nodes` (depth first) whose id is `id`.
 	local function find(nodes: { any }, id: string): any
 		for _, node in nodes do
@@ -37,7 +62,7 @@ return function()
 
 	describe("the bridge", function()
 		it("is made in Studio, tagged, and goes with the app", function()
-			local bridge = app.parent:FindFirstChild(PREFIX .. "Devtools")
+			local bridge = bridgeOf(app) :: BindableFunction
 			expect(bridge ~= nil).to.equal(true)
 			expect(bridge:IsA("BindableFunction")).to.equal(true)
 			expect(table.find(CollectionService:GetTagged("LucyDevtools"), bridge) ~= nil).to.equal(true)
@@ -67,7 +92,7 @@ return function()
 
 		it("is left out with devtools = false", function()
 			local other, stop = Harness.app({ namePrefix = "NoDevtools_", devtools = false })
-			expect(other.parent:FindFirstChild("NoDevtools_Devtools")).to.equal(nil)
+			expect(bridgeOf(other)).to.equal(nil)
 			stop()
 		end)
 
@@ -93,9 +118,12 @@ return function()
 
 		it("picks the game's main app when several run", function()
 			local other, stop = Harness.app({ namePrefix = "DevtoolsOther_" })
-			-- Harness apps are never current; mark this one as App.new would.
-			app.parent:FindFirstChild(PREFIX .. "Devtools"):SetAttribute("LucyCurrent", true)
-			local ok, result = pcall(Devtools.state, "player.coins")
+			local ok, result = noneCurrent(function()
+				-- Harness apps are never current; mark this one as App.new would.
+				local bridge = bridgeOf(app) :: BindableFunction
+				bridge:SetAttribute("LucyCurrent", true)
+				return pcall(Devtools.state, "player.coins")
+			end)
 			stop()
 			local _ = other
 			expect(ok).to.equal(true)
@@ -104,7 +132,9 @@ return function()
 
 		it("names the apps when it can't tell which one is meant", function()
 			local other, stop = Harness.app({ namePrefix = "DevtoolsOther_" })
-			local ok, err = pcall(Devtools.tree)
+			local ok, err = noneCurrent(function()
+				return pcall(Devtools.tree)
+			end)
 			stop()
 			expect(ok).to.equal(false)
 			expect(string.find(tostring(err), PREFIX, 1, true) ~= nil).to.equal(true)

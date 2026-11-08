@@ -45,6 +45,8 @@ return function()
 				}
 			do
 				local before = Context.getCurrent()
+				-- Only what this mount made: in Play the story browser keeps its own preview open
+				local already = #leftovers()
 				local mounted =
 					Preview.mount(story, { parent = parent, theme = setup.theme, device = setup.device })
 				expect(mounted.error).to.equal(nil)
@@ -60,7 +62,7 @@ return function()
 					mounted:set(control.name, value)
 				end
 				mounted:destroy()
-				expect(#leftovers()).to.equal(0)
+				expect(#leftovers()).to.equal(already)
 				expect(Context.getCurrent()).to.equal(before)
 			end
 		end)

@@ -108,8 +108,10 @@ return function()
 			app, cleanup = Harness.app()
 		end)
 
-		it("is kept out of Play and the saved place in edit mode", function()
-			expect(app:createSurface("Archive", { adornee = part() }).Archivable).to.equal(false)
+		it("is kept out of Play and the saved place in edit mode, and left be in a running game", function()
+			local RunService = game:GetService("RunService")
+			local archivable = not (RunService:IsStudio() and not RunService:IsRunning())
+			expect(app:createSurface("Archive", { adornee = part() }).Archivable).to.equal(archivable)
 		end)
 
 		it("is not a screen gui for keyboard and gamepad navigation", function()
