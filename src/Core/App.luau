@@ -409,6 +409,8 @@ function App.createGui(self: App, name: string, options: { [string]: any }?): Sc
 			table.remove(self._guis, index)
 		end
 	end)
+	-- The app owns what it makes: destroying the app removes it
+	self.maid:give(gui)
 	gui.Parent = opts.parent or self.parent
 	return gui
 end
@@ -448,7 +450,6 @@ function App.portal(self: App, name: string, options: { [string]: any }?): Scree
 	opts.displayOrder = opts.displayOrder or App.portalOrder[name] or 700
 	local gui = self:createGui("Portal_" .. name, opts)
 	self._portals[name] = gui
-	self.maid:give(gui)
 	return gui
 end
 

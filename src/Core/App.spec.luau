@@ -140,23 +140,29 @@ return function()
 
 	it("removes everything it made on destroy", function()
 		local gui = app:portal("modal")
+		local screen = app:createGui("Screen")
 		local folder = app.theme.folder
 		cleanup()
 		expect(gui.Parent).to.equal(nil)
+		expect(screen.Parent).to.equal(nil)
 		expect(folder.Parent).to.equal(nil)
 		-- Re-create so afterEach has something to clean.
 		app, cleanup = Harness.app()
 	end)
 
-	it("keeps what it makes in edit mode out of Play and out of the saved place", function()
-		-- Specs run in Studio's edit mode, like previews and the docs renderer.
-		local RunService = game:GetService("RunService")
-		expect(RunService:IsRunning()).to.equal(false)
-		expect(app:createGui("Archive").Archivable).to.equal(false)
-		expect(app:portal("archive").Archivable).to.equal(false)
-		expect(app.actions.folder.Archivable).to.equal(false)
-		expect(app.theme.folder.Archivable).to.equal(false)
-	end)
+	it(
+		"keeps what it makes in edit mode out of Play and the saved place, and leaves it be in a running game",
+		function()
+			-- Specs run in Studio's edit mode (like previews and the docs renderer) and in Play or a
+			-- headless run (CI); what an app makes is archivable only when the game is running.
+			local RunService = game:GetService("RunService")
+			local archivable = not (RunService:IsStudio() and not RunService:IsRunning())
+			expect(app:createGui("Archive").Archivable).to.equal(archivable)
+			expect(app:portal("archive").Archivable).to.equal(archivable)
+			expect(app.actions.folder.Archivable).to.equal(archivable)
+			expect(app.theme.folder.Archivable).to.equal(archivable)
+		end
+	)
 
 	it("grows control heights to fit the player's text size", function()
 		local Preferences = require(script.Parent.Preferences)
