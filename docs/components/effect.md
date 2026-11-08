@@ -45,18 +45,37 @@ draws in and `handle.content` is the type's picture.
 
 ## Rays
 
-Rays fan out from the middle one after another, then slowly turn. Every other
-ray is fainter, and each fades in from the middle and out to its tip.
+A starburst, as light glints off something shiny: brightest in the middle and
+dimmer the further out. A glow with a white hot centre sits over layers of soft
+rays. At the back are long, thin, faint ones; each layer in front has fewer,
+shorter, wider and brighter rays, and the front one is a white four point glint.
+They fan out from the middle one after another, then slowly turn, every other
+layer the other way. While it runs it gleams, as loot does: the burst swells a
+little and each ray flares for a moment at its own time.
+
+```luau
+Lucy.Effect.new({ type = "rays", variant = "warning", Parent = levelStage })
+```
 
 | Option | Type | Default | What it does |
 |---|---|---|---|
-| `count` | number | `12` | How many rays round the circle |
-| `spin` | number | `18` | Degrees a second it turns (`0`: still) |
-| `width` | number | `0.06` | Each ray's width, as a share of the burst |
+| `count` | number | `12` | Rays in the back layer (each layer in front has fewer) |
+| `layers` | number | `3` | How many layers of rays |
+| `spin` | number | `18` | Degrees a second the back layer turns (`0`: still) |
+| `width` | number | `0.28` | The front layer's rays, as a share of the burst |
+| `core` | boolean | `true` | The glow in the middle |
+| `pulse` | boolean | `true` | The gleam: the swell and the flares |
 
-The rays are on the handle (`handle.rays`) and carry `ui-effect-rays-ray`,
-`ui-effect-rays-ray-alt` (every other one) and `ui-effect-rays-ray-<variant>`,
-for your own styling.
+The glow reaches a little past the burst's square, so give it room to fade out
+(nothing that clips, such as a CanvasGroup, right at its edge).
+
+The parts are on the handle: `handle.layers` (each `{ rays, arms, wheel }`, back
+first), `handle.rays` (every ray), `handle.core` (the glow, then its hot centre)
+and `handle.pulse` (the UIScale it swells by). Each ray carries
+`ui-effect-rays-ray`, `ui-effect-rays-ray-<variant>`, `ui-effect-rays-layer-<n>`
+(from 1 at the back) and `ui-effect-rays-front` on the front layer; the glow
+carries `ui-effect-rays-core`, and its centre `ui-effect-rays-hot`, for your own
+styling.
 
 ## Your own types
 
@@ -98,6 +117,25 @@ Lucy.Effect.new({ type = "halo", Parent = reward })
 | `ctx.variant()` | The current variant |
 | `ctx.option(name)` | One of the type's options: the prop, or its default |
 | `ctx.handle` | The effect, to put parts on for your own code |
+
+### Textures
+
+`Lucy.Effect.textures` has soft images for drawing light, white with their shape
+in the transparency, so tint them with `ImageColor3`:
+
+| Name | What it is |
+|---|---|
+| `streak` | One ray of light pointing up: brightest and widest at its base (the bottom edge), fading to a point. Stretch it to any length and width |
+| `glow` | A round glow, hot in the middle, falling off smoothly to nothing at the edge |
+
+```luau
+Lucy.new("ImageLabel")({
+    Image = Lucy.Effect.textures.glow,
+    ImageColor3 = Color3.new(1, 1, 1),
+    BackgroundTransparency = 1,
+    Size = UDim2.fromScale(0.5, 0.5),
+})
+```
 
 ## Preview
 

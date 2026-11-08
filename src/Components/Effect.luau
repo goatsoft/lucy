@@ -224,4 +224,7 @@ end
 -- Built-in types
 Effect.register("rays", require(script.Parent.Effects.Rays))
 
+-- The shared textures (white, shape in the alpha) for effect types to draw with: streak, glow
+Effect.textures = require(script.Parent.Effects.Textures)
+
 return Effect
