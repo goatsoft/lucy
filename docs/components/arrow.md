@@ -10,6 +10,9 @@ new item in the shop, a door they can walk through. It grows in when it shows,
 then keeps moving so the eye finds it. [Tour](tour.md) points at each step's
 target with one.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-arrow-light.webp" alt="Arrow example" loading="lazy"><img class="example-dark" src="/images/examples/components-arrow-dark.webp" alt="Arrow example" loading="lazy"></figure>
+
 ```luau
 local arrow = Lucy.Arrow.new({
     direction = "down",

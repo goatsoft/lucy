@@ -16,8 +16,8 @@ so the saved theme is there from the first frame.
 
 ## The menu
 
-<!-- preview screen -->
-<figure class="example-preview example-screen"><img class="example-light" src="/images/examples/recipes-settings-light.webp" alt="Settings menu that saves example" loading="lazy"><img class="example-dark" src="/images/examples/recipes-settings-dark.webp" alt="Settings menu that saves example" loading="lazy"></figure>
+<!-- preview screen trim -->
+<figure class="example-preview example-trim"><img class="example-light" src="/images/examples/recipes-settings-light.webp" alt="Settings menu that saves example" loading="lazy"><img class="example-dark" src="/images/examples/recipes-settings-dark.webp" alt="Settings menu that saves example" loading="lazy"></figure>
 
 ```luau [StarterPlayerScripts/UI.client.luau]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

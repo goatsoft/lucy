@@ -11,8 +11,8 @@ greys out when the player can't afford it. Buying asks first, then takes the coi
 shows a toast. B on a keyboard, X on a gamepad and a HUD button open and close
 it, and the character stops while it is open.
 
-<!-- preview screen then="shop:open()" -->
-<figure class="example-preview example-screen"><img class="example-light" src="/images/examples/recipes-shop-light.webp" alt="Shop example" loading="lazy"><img class="example-dark" src="/images/examples/recipes-shop-dark.webp" alt="Shop example" loading="lazy"></figure>
+<!-- preview screen trim then="shop:open()" -->
+<figure class="example-preview example-trim"><img class="example-light" src="/images/examples/recipes-shop-light.webp" alt="Shop example" loading="lazy"><img class="example-dark" src="/images/examples/recipes-shop-dark.webp" alt="Shop example" loading="lazy"></figure>
 
 ```luau [StarterPlayerScripts/Shop.client.luau]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

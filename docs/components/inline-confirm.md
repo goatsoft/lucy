@@ -10,6 +10,9 @@ for "Are you sure?" with YES and NO; NO puts the content back. Use it where a
 [Dialog](dialog.md) would hide the very thing being asked about: skipping a
 [Tour](tour.md) (it asks this way), clearing a routine, leaving a queue.
 
+<!-- preview then="confirm:ask()" -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-inline-confirm-light.webp" alt="Inline Confirm example" loading="lazy"><img class="example-dark" src="/images/examples/components-inline-confirm-dark.webp" alt="Inline Confirm example" loading="lazy"></figure>
+
 ```luau
 local confirm
 confirm = Lucy.InlineConfirm.new({

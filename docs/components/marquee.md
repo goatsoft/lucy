@@ -11,6 +11,9 @@ tickers and names on boards, where wrapping would break the layout. With
 `loop` on it goes round instead, like a ticker: a copy of the text follows the
 first one a gap behind, so it never stops or jumps back.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-marquee-light.webp" alt="Marquee example" loading="lazy"><img class="example-dark" src="/images/examples/components-marquee-dark.webp" alt="Marquee example" loading="lazy"></figure>
+
 ```luau
 local track = app.state:ref("server.dj.title")
 

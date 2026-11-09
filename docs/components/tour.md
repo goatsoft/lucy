@@ -10,6 +10,9 @@ for the player to use each one. Use it for a first-time tutorial, or to show
 off a new screen. It works with mouse, touch, keyboard and gamepad, and keeps
 the rest of the app quiet while it runs.
 
+<!-- preview solo -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-tour-light.webp" alt="Tour example" loading="lazy"><img class="example-dark" src="/images/examples/components-tour-dark.webp" alt="Tour example" loading="lazy"></figure>
+
 ```luau
 local tour = Lucy.Tour.new(app, {
     id = "first-round",

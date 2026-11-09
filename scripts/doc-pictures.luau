@@ -40,6 +40,7 @@ local STATE = {
 	player = { name = "DJ Lucy", coins = 1250, level = 12, hype = 72, combo = 8 },
 	settings = { music = 80, sfx = 60, crowd = 40, lights = true, danceSpeed = 1 },
 	booth = { bpm = 124, crossfade = 0, deck = "A" },
+	server = { dj = { title = "Neon Nights · DJ Lucy (124 BPM)" } },
 }
 
 function S.load(file)
@@ -182,9 +183,14 @@ function S.ink(root, screen)
 				-- A backdrop that covers the screen is not the example.
 				if
 					box
-					and screen
-					and (box[3] - box[1]) >= screen.X * 0.95
-					and (box[4] - box[2]) >= screen.Y * 0.95
+					and (
+						d:HasTag("ui-tour-scrim")
+						or (
+							screen
+							and (box[3] - box[1]) >= screen.X * 0.95
+							and (box[4] - box[2]) >= screen.Y * 0.95
+						)
+					)
 				then
 					box = nil
 				end
@@ -306,9 +312,15 @@ local function fixtures(lucy, slot)
 		player = { Name = "DJLucy", DisplayName = "DJ Lucy", UserId = 1 },
 		friend = nova,
 		emote = { id = "moonwalk", name = "Moonwalk", price = 300 },
-		owned = function()
-			return true
-		end,
+		owned = setmetatable({
+			{ name = "Moonwalk", style = "Retro", rarity = "Epic" },
+			{ name = "Robot", style = "Electro", rarity = "Rare" },
+			{ name = "Twirl", style = "Pop", rarity = "Common" },
+		}, {
+			__call = function()
+				return true
+			end,
+		}),
 		streamerMode = lucy.ref(false),
 		clubAssets = {},
 		discoBall = {},
@@ -453,6 +465,10 @@ local function fixtures(lucy, slot)
 			"header",
 			"footer",
 			"content",
+			"nowPlaying",
+			"levelStage",
+			"dialog",
+			"panel",
 		}
 	do
 		f[name] = slot
@@ -900,7 +916,7 @@ local function freshLucy()
 end
 
 -- Loads the examples and gets ready. Call again after Lucy changes to pick it up.
-function S.start()
+function S.start(list)
 	S.stop()
 	_G.LucyDocPictures = S
 	S._before = {}
@@ -908,7 +924,18 @@ function S.start()
 		S._before[g] = true
 	end
 	S.Lucy = freshLucy()
-	local n = S.examples("examples.json")
+	local n
+	if list then
+		S.byName = {}
+		S.order = {}
+		for _, e in list do
+			S.byName[e.name] = e
+			table.insert(S.order, e.name)
+		end
+		n = #S.order
+	else
+		n = S.examples("examples.json")
+	end
 	S.queue = table.clone(S.order)
 	S.lastSet = nil
 	return `{n} examples`

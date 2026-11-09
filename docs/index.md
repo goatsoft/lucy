@@ -74,8 +74,8 @@ Each scene owns one ScreenGui. Only one screen shows at a time; modals and
 overlays sit above it. This title screen has a "Hit the floor" button that
 switches to the game screen:
 
-<!-- preview screen -->
-<figure class="example-preview example-screen"><img class="example-light" src="/images/examples/index-light.webp" alt="Getting started example" loading="lazy"><img class="example-dark" src="/images/examples/index-dark.webp" alt="Getting started example" loading="lazy"></figure>
+<!-- preview screen trim -->
+<figure class="example-preview example-trim"><img class="example-light" src="/images/examples/index-light.webp" alt="Getting started example" loading="lazy"><img class="example-dark" src="/images/examples/index-dark.webp" alt="Getting started example" loading="lazy"></figure>
 
 ```luau
 app.scenes:register("Title", {

@@ -277,8 +277,10 @@ function crop(darkFile: string, lightFile: string, lines: string[]): string[] {
     const name = m[1] as string
     const [bx0, by0, bx1, by1, vw, vh] = m.slice(2).map(Number) as [number, number, number, number, number, number]
     const scale = dark.width / vw
-    const whole = bx0 <= 0 && by0 <= 0 && bx1 >= vw && by1 >= vh
-    const area: Rect = whole
+    const isScreen = bx0 <= 0 && by0 <= 0 && bx1 >= vw && by1 >= vh
+    const trimmed = examples().some((example) => example.name === name && example.trim)
+    const whole = isScreen && !trimmed
+    const area: Rect = isScreen
       ? [0, 0, dark.width, Math.min(dark.height, Math.round(vh * scale))]
       : [
           Math.max(0, Math.floor(bx0 * scale) - PAD),

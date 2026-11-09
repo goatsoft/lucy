@@ -17,6 +17,9 @@ columns sort together: the first pressed leads, and each one pressed after it
 breaks the ties of the ones before. A small number shows each column's place
 while more than one sorts.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-sort-button-light.webp" alt="SortButton example" loading="lazy"><img class="example-dark" src="/images/examples/components-sort-button-dark.webp" alt="SortButton example" loading="lazy"></figure>
+
 ```luau
 local RARITY = { Common = 1, Rare = 2, Epic = 3, Legendary = 4 }
 

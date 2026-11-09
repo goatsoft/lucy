@@ -14,8 +14,8 @@ every 10 combo.
 The server keeps coins, hype and combo as attributes on the player; the client
 copies them into app state, and the HUD shows app state.
 
-<!-- preview screen -->
-<figure class="example-preview example-screen"><img class="example-light" src="/images/examples/recipes-hud-light.webp" alt="HUD example" loading="lazy"><img class="example-dark" src="/images/examples/recipes-hud-dark.webp" alt="HUD example" loading="lazy"></figure>
+<!-- preview screen trim -->
+<figure class="example-preview example-trim"><img class="example-light" src="/images/examples/recipes-hud-light.webp" alt="HUD example" loading="lazy"><img class="example-dark" src="/images/examples/recipes-hud-dark.webp" alt="HUD example" loading="lazy"></figure>
 
 ```luau [StarterPlayerScripts/Hud.client.luau]
 local Players = game:GetService("Players")

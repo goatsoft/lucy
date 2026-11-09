@@ -9,16 +9,23 @@ A little animated picture that celebrates something: a reward landing, a level
 up, a prize. Put it behind (or over) the thing it celebrates. Lucy comes with
 `rays`, and you can add your own types.
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-effect-light.webp" alt="Effect example" loading="lazy"><img class="example-dark" src="/images/examples/components-effect-dark.webp" alt="Effect example" loading="lazy"></figure>
+
 ```luau
-local reward = Lucy.new("Frame")({
+local reward = Lucy.new("Frame", {
     Size = UDim2.fromOffset(220, 220),
     BackgroundTransparency = 1,
     Parent = dialog,
 })
 local burst = Lucy.Effect.new({ type = "rays", variant = "warning", Parent = reward })
-Lucy.Image.new({ image = potionIcon, size = UDim2.fromOffset(96, 96), Parent = reward })
+Lucy.Icon.new({
+    icon = "lucide-extended:trophy-filled",
+    size = "xl",
+    Parent = reward,
+})
 
--- the moment the reward lands
+-- The moment the reward lands
 burst:play()
 ```
 

@@ -14,8 +14,8 @@ character stop while any menu is open.
 Escape can't open it: Roblox opens its own menu on Escape, and a game cannot
 stop that. See [Known issues](../known-issues.md#escape-always-opens-robloxs-menu).
 
-<!-- preview screen then="app.scenes:goTo('Game') app.scenes:push('Pause')" -->
-<figure class="example-preview example-screen"><img class="example-light" src="/images/examples/recipes-pause-menu-light.webp" alt="Pause menu example" loading="lazy"><img class="example-dark" src="/images/examples/recipes-pause-menu-dark.webp" alt="Pause menu example" loading="lazy"></figure>
+<!-- preview screen trim then="app.scenes:goTo('Game') app.scenes:push('Pause')" -->
+<figure class="example-preview example-trim"><img class="example-light" src="/images/examples/recipes-pause-menu-light.webp" alt="Pause menu example" loading="lazy"><img class="example-dark" src="/images/examples/recipes-pause-menu-dark.webp" alt="Pause menu example" loading="lazy"></figure>
 
 ```luau [StarterPlayerScripts/UI.client.luau]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
