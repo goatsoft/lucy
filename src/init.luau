@@ -113,6 +113,10 @@ local Lucy = {
 	spring = Animate.spring,
 	tween = Animate.tween,
 
+	-- Images (Core/Preload): fetch pictures before they are shown
+	preload = require(Core.Preload).preload,
+	Preload = require(Core.Preload),
+
 	-- Framework
 	App = App,
 	Server = Server,

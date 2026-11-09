@@ -44,6 +44,12 @@ the [composables reference](composables/index.md).
 |---|---|---|
 | `Lucy.spring`, `tween` | Values that move smoothly to a target, and follow reduced motion | [Animation](../reactivity.md#animation) |
 
+## Images
+
+| Name | What it is | More |
+|---|---|---|
+| `Lucy.preload`, `Preload` | Fetches pictures before they are shown, in one shared queue | [Preloading](../components/image.md#preloading) |
+
 ## The App and its parts
 
 | Name | What it is | More |

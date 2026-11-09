@@ -158,9 +158,21 @@ place; only new ones are built. Filter a shop by setting a new list.
 UIGridLayout: it places its cells itself. With no Scroll Area (or other
 ScrollingFrame) around it, it builds every cell.
 
-Pictures in cells that are not built yet have not loaded either. Preload them
-with `ContentProvider:PreloadAsync` before the player opens the shop, so a cell
-shows its picture the moment it is built.
+Pictures in cells that are not built yet have not loaded either. Give the grid
+a `preload` function that returns an item's pictures, and it fetches them all in
+the background as the list arrives ([Lucy.preload](image.md#preloading)), so a
+cell shows its picture the moment it is built:
+
+```luau
+Lucy.Grid.new({
+    virtual = true,
+    items = emotes,
+    item = EmoteCard.new,
+    preload = function(emote) return { emote.icon } end,
+    minCellWidth = 140,
+    cellHeight = 180,
+})
+```
 
 ## Preview
 

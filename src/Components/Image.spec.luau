@@ -32,6 +32,32 @@ return function()
 		expect(root.Image).to.equal("rbxassetid://222")
 	end)
 
+	it("pulses a placeholder until the picture loads, none when fetched already or asked not to", function()
+		local Preload = require(script.Parent.Parent.Core.Preload)
+		local real = Preload.provider
+		Preload.provider = { PreloadAsync = function() end }
+		Preload._reset()
+		-- An id that never loads in a test
+		local waiting = Image.new({ app = app, Parent = gui, image = 987654321, rounded = "md" })
+		local box = waiting.Instance:FindFirstChild("Placeholder") :: Frame
+		expect(box).to.be.ok()
+		expect(box.Visible).to.equal(true)
+		expect(box:HasTag("ui-image-rounded-md")).to.equal(true)
+		-- Fetched through Lucy.preload: no placeholder
+		Preload.preload({ 123123123 })
+		task.wait()
+		local ready = Image.new({ app = app, Parent = gui, image = 123123123 })
+		expect((ready.Instance:FindFirstChild("Placeholder") :: Frame).Visible).to.equal(false)
+		-- Nothing to show: none either
+		local empty = Image.new({ app = app, Parent = gui, image = "" })
+		expect((empty.Instance:FindFirstChild("Placeholder") :: Frame).Visible).to.equal(false)
+		-- Asked not to
+		local plain = Image.new({ app = app, Parent = gui, image = 987654321, placeholder = false })
+		expect(plain.Instance:FindFirstChild("Placeholder")).to.equal(nil)
+		Preload.provider = real
+		Preload._reset()
+	end)
+
 	it("fits the image in four ways", function()
 		local fit = Reactive.ref("cover")
 		local image = Image.new({ app = app, Parent = gui, image = 1, fit = fit })

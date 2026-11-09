@@ -41,6 +41,7 @@ For icons that should follow the theme's colours, use [Icon](icon.md).
 | `size` | UDim2 | 64 by 64 | | Its size |
 | `aspectRatio` | number | | | Keeps width over height, whatever its size |
 | `rounded` | string | none | | Rounded corners: `none`, `sm`, `md`, `lg`, `xl` or `full` |
+| `placeholder` | boolean | `true` | | A pulsing box in its place until the picture loads; `false` leaves it out |
 
 It also takes the [props every component takes](index.md#using-a-component).
 
@@ -55,6 +56,32 @@ What each `fit` does:
 
 `Lucy.Image.url(value)` turns an asset id into a url, and leaves urls as they
 are. An id of `0` gives an empty image.
+
+## Loading
+
+While a picture loads, a placeholder pulses in its place in the theme's
+`$Muted` and fades away once the picture is there, so a slow picture looks
+deliberate rather than missing. A picture fetched already with
+[`Lucy.preload`](#preloading) shows at once, with no placeholder.
+
+## Preloading
+
+`Lucy.preload(ids, options?)` fetches pictures before they are shown: call it
+while a loading screen is up, or when a shop is about to open. Every call shares
+one queue: a picture fetched before, or waiting already, is not fetched again,
+and the queue works a few at a time so a long list never holds up the game.
+
+```luau
+local job = Lucy.preload(shopIcons)
+progressBar(job.progress)        -- 0 to 1, a getter
+if job.done() then ... end
+
+Lucy.preload(featured, { first = true })   -- ahead of what is waiting
+```
+
+Ids are asset ids, urls or instances. `Lucy.Preload.isLoaded(id)` says whether
+a picture has been fetched. A virtual [Grid](grid.md#long-lists) takes a
+`preload` function and fetches every item's pictures for you.
 
 ## Examples
 

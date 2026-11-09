@@ -31,6 +31,7 @@
 			columns = 4,              -- or minCellWidth; cellHeight is required
 			cellHeight = 160,
 			gap = "Space2",
+			preload = function(entry) return { entry.icon } end,  -- optional
 		})
 
 	The grid is as tall as every row, but only the cells in the nearest
@@ -39,7 +40,9 @@
 	so a new list moves the cells it keeps rather than rebuilding them. Without a
 	ScrollingFrame around it every cell is built. children is not used.
 	handle.cellFor(key) is a cell's frame, if built; handle.cellCount() is how
-	many are built. There is no UIGridLayout (handle.layout is nil).
+	many are built. With preload, every item's pictures are fetched in the
+	background as the list arrives (Lucy.preload), so scrolling shows them
+	at once. There is no UIGridLayout (handle.layout is nil).
 
 	State keys: visible.
 ]]
@@ -47,6 +50,7 @@
 local Component = require(script.Parent.Parent.Core.Component)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
+local Preload = require(script.Parent.Parent.Core.Preload)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
 
@@ -209,6 +213,19 @@ function Grid._virtual(h: any, g: { [string]: any }): Frame
 			return keyOf(entry, index)
 		end
 		return index
+	end
+	-- Every item's pictures, fetched in the background as the list arrives
+	local preloadOf = p.preload
+	if type(preloadOf) == "function" then
+		Reactive.watchEffect(function()
+			local ids = {}
+			for _, entry in items() do
+				for _, id in preloadOf(entry) or {} do
+					table.insert(ids, id)
+				end
+			end
+			Reactive.untrack(Preload.preload, ids)
+		end)
 	end
 	local indexById = Reactive.computed(function(): { [any]: number }
 		local out = {}

@@ -232,6 +232,34 @@ return function()
 			expect(near(kept.AbsolutePosition.Y, grid.Instance.AbsolutePosition.Y)).to.equal(true)
 		end)
 
+		it("preloads every item's pictures, not only the cells it builds", function()
+			local Preload = require(script.Parent.Parent.Core.Preload)
+			local real = Preload.provider
+			local asked: { any } = {}
+			Preload.provider = {
+				PreloadAsync = function(_, list)
+					for _, id in list do
+						table.insert(asked, id)
+					end
+				end,
+			}
+			Preload._reset()
+			local grid = make({
+				items = numbers(400),
+				columns = 4,
+				cellHeight = 50,
+				preload = function(n: number)
+					return { 5000 + n }
+				end,
+			})
+			task.wait(0.1)
+			expect(grid.cellCount() < 400).to.equal(true)
+			expect(#asked).to.equal(400)
+			expect(Preload.isLoaded(5400)).to.equal(true)
+			Preload.provider = real
+			Preload._reset()
+		end)
+
 		it("fits columns to minCellWidth", function()
 			local grid = make({ items = numbers(12), minCellWidth = 120, gap = 10, cellHeight = 40 })
 			local scale = Scroll.scaleOf(grid.Instance)
