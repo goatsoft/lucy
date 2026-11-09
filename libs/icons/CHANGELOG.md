@@ -1,5 +1,11 @@
 # @goatsoft/lucy-icons
 
+## 0.4.0
+
+### Minor Changes
+
+- 49d17c4: Draws a duotone icon's body at 0.5 opacity (the sets use about 0.15, which reads as an outline once tinted on a dark UI). Set `duotone` in `lucy-icons.json` to choose another opacity. Sheets with duotone icons change on the next build.
+
 ## 0.3.0
 
 ### Minor Changes
