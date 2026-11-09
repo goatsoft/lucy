@@ -51,6 +51,12 @@ return function()
 		expect(named.label.Text).to.equal("STYLE")
 	end)
 
+	it("pads its sides when sized to its words, not as a table's header", function()
+		expect(make(model(), "name").Instance:HasTag("ui-sort-hug")).to.equal(true)
+		local header = make(model(), "name", { size = UDim2.fromOffset(120, 28) })
+		expect(header.Instance:HasTag("ui-sort-hug")).to.equal(false)
+	end)
+
 	it("sorts its column when pressed, and shows which way", function()
 		local sort = model()
 		local button = make(sort, "rarity")

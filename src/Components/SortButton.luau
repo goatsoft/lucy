@@ -12,7 +12,7 @@
 			align = "left",         -- left | center | right
 			disabled = false,       -- on its own for a column that does not sort
 			onClick = function(button) end,  -- after it sorts
-			size = UDim2,           -- as wide as its text and ControlSm tall by default
+			size = UDim2,           -- as wide as its text (padded either side) and ControlSm tall by default
 		})
 
 	Each press goes the column's first direction, the other, then off (see
@@ -45,6 +45,13 @@ local rules: { Component.Rule } = {
 		properties = { BackgroundColor3 = "$Accent", BackgroundTransparency = 1, BorderSizePixel = 0 },
 	},
 	{ selector = ".ui-sort-button::UICorner", priority = 0, properties = { CornerRadius = "$RadiusSm" } },
+	-- Sized to its words (no size: over a grid of cards), it pads its sides, so its hover fill
+	-- clears the text; as a table's header (a size) it keeps none, lined up with its column
+	{
+		selector = ".ui-sort-button.ui-sort-hug::UIPadding",
+		priority = 0,
+		properties = { PaddingLeft = "$Space2", PaddingRight = "$Space2" },
+	},
 	{ selector = ".ui-sort-button:Hover", priority = 10, properties = { BackgroundTransparency = 0 } },
 	{
 		selector = ".ui-sort-label",
@@ -152,6 +159,7 @@ local spec: Component.Spec = {
 				["ui-sorted"] = function(): boolean
 					return direction() ~= false
 				end,
+				["ui-sort-hug"] = p.size == nil,
 				["ui-disabled"] = disabled,
 			},
 			[ACTIVATED] = function()
