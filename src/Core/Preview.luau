@@ -383,7 +383,8 @@ local function mountNow(story: Story, options: { [string]: any }?): Mounted
 		self.target = buildTarget(story, canvas)
 		local render = story.render :: (Context) -> any
 		-- The package this Preview belongs to, so stories never hard-code a require path.
-		local Lucy = (require :: any)(script.Parent.Parent)
+		local package = (script.Parent and script.Parent.Parent) or ReplicatedStorage:FindFirstChild("Lucy")
+		local Lucy = (require :: any)(package)
 		local ctx: Context =
 			{ Lucy = Lucy, app = app, target = self.target, controls = controls, story = story }
 		-- App.new made the story app current; render and its components rely on that.

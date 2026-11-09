@@ -116,6 +116,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Accordion](references/components/accordion.md): Sections the player opens and closes, one or several at a time.
 - [Alert](references/components/alert.md): A box that calls attention to a message, such as a server notice.
 - [Arrow](references/components/arrow.md): A big arrow that points at something on screen, grows in and bounces.
+- [Attribution](references/components/attribution.md): A badge showing Built with Lucy with Lucy's mascot head.
 - [Avatar](references/components/avatar.md): A player's headshot, or a monogram for a bot or an empty slot.
 - [Badge](references/components/badge.md): A small label for a status or a count.
 - [Button](references/components/button.md): A button, in six variants and five sizes.

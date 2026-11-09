@@ -14,6 +14,7 @@ Each component has its own page with its props, usage and examples:
 | [Accordion](accordion.md) | Sections the player opens and closes, one or several at a time |
 | [Alert](alert.md) | A box that calls attention to a message |
 | [Arrow](arrow.md) | A big arrow that points at something on screen, grows in and bounces |
+| [Attribution](attribution.md) | A badge displaying "Built with Lucy" with Lucy's mascot head |
 | [Avatar](avatar.md) | A player's headshot, or a monogram for a bot |
 | [Badge](badge.md) | A small label for a status or count |
 | [Button](button.md) | A button, in six variants and four sizes |

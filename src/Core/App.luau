@@ -263,7 +263,8 @@ function App.new(config: { [string]: any }?): App
 	end
 
 	-- Install optional services from components that are present (copy-in friendly).
-	local components = script.Parent.Parent:FindFirstChild("Components")
+	local parent = script.Parent
+	local components = if parent and parent.Parent then parent.Parent:FindFirstChild("Components") else nil
 	local toaster = components and components:FindFirstChild("Toaster")
 	if toaster then
 		-- A runtime lookup, so the type checker can't follow it.

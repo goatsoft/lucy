@@ -94,6 +94,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/attribution': RouteRecordInfo<
+      '/docs/components/attribution',
+      '/docs/components/attribution',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/avatar': RouteRecordInfo<
       '/docs/components/avatar',
       '/docs/components/avatar',
@@ -776,6 +783,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/arrow.md': {
       routes:
         | '/docs/components/arrow'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/attribution.md': {
+      routes:
+        | '/docs/components/attribution'
       views:
         | never
       pathParamNames:
