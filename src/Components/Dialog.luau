@@ -53,6 +53,7 @@
 local Button = require(script.Parent.Button)
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
+local Heading = require(script.Parent.Heading)
 local Overlay = require(script.Parent.Parent.Core.Overlay)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
@@ -120,22 +121,6 @@ local rules: { Component.Rule } = {
 }
 Dialog.rules = rules
 
--- A wrapped label bound to a text key; hidden while empty.
-local function label(tag: string, order: number, text: () -> string)
-	return Element.new("TextLabel", {
-		Size = UDim2.fromScale(1, 0),
-		AutomaticSize = Enum.AutomaticSize.Y,
-		TextWrapped = true,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		LayoutOrder = order,
-		Text = text,
-		Visible = function()
-			return text() ~= ""
-		end,
-		Tags = { tag },
-	})
-end
-
 function Dialog.new(props: { [string]: any }?)
 	local p: Component.Props = props or {}
 	local dismissible = p.dismissible ~= false
@@ -196,13 +181,18 @@ function Dialog.new(props: { [string]: any }?)
 			})
 			header.Parent = inner
 			Component.list({ Padding = gap, Parent = header })
-			local text = Component.box({
-				Name = "Text",
-				Size = UDim2.new(1, if showClose then -44 else 0, 0, 0),
-				AutomaticSize = Enum.AutomaticSize.Y,
-				LayoutOrder = 1,
-				Parent = header,
+			-- The title over its description (beside it on a short screen: Components/Heading)
+			local text, titleLabel, descriptionLabel = Heading.new(h.app, {
+				title = h:ref("title"),
+				description = h:ref("description"),
+				titleTag = "ui-dialog-title",
+				descriptionTag = "ui-dialog-description",
 			})
+			text.Size = UDim2.new(1, if showClose then -44 else 0, 0, 0)
+			text.LayoutOrder = 1
+			text.Parent = header
+			h.titleLabel = titleLabel
+			h.descriptionLabel = descriptionLabel
 			-- The header slot: filters, tabs or anything else that stays put over the body.
 			local headerSlot = Component.box({
 				Name = "HeaderSlot",
@@ -214,11 +204,6 @@ function Dialog.new(props: { [string]: any }?)
 			if p.header then
 				Component.adopt(headerSlot, p.header)
 			end
-			Component.list({ Padding = UDim.new(0, 6), Parent = text })
-			h.titleLabel = label("ui-dialog-title", 1, h:ref("title"))
-			h.titleLabel.Parent = text
-			h.descriptionLabel = label("ui-dialog-description", 2, h:ref("description"))
-			h.descriptionLabel.Parent = text
 
 			if showClose then
 				h.closeButton = Button.close({

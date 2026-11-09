@@ -43,6 +43,7 @@
 local Button = require(script.Parent.Button)
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
+local Heading = require(script.Parent.Heading)
 local Overlay = require(script.Parent.Parent.Core.Overlay)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
@@ -111,22 +112,6 @@ Sheet.rules = {
 	},
 } :: { Component.Rule }
 
--- A wrapped label bound to a text key; hidden while empty.
-local function label(tag: string, order: number, text: () -> string)
-	return Element.new("TextLabel", {
-		Size = UDim2.fromScale(1, 0),
-		AutomaticSize = Enum.AutomaticSize.Y,
-		TextWrapped = true,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		LayoutOrder = order,
-		Text = text,
-		Visible = function()
-			return text() ~= ""
-		end,
-		Tags = { tag },
-	})
-end
-
 local spec: Component.Spec = {
 	kind = "sheet",
 	defaults = { open = false, title = "", description = "" },
@@ -173,16 +158,16 @@ local spec: Component.Spec = {
 		})
 		handleBar.Position = UDim2.fromScale(0.5, 0)
 
-		local text = Component.box({
-			Name = "Text",
-			Size = UDim2.new(1, if showClose then -44 else 0, 0, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
+		-- The title over its description (beside it on a short screen: Components/Heading)
+		local text, titleLabel, descriptionLabel = Heading.new(h.app, {
+			title = h:ref("title"),
+			description = h:ref("description"),
+			titleTag = "ui-sheet-title",
+			descriptionTag = "ui-sheet-description",
 		})
-		Component.list({ Padding = UDim.new(0, 6), Parent = text })
-		h.titleLabel = label("ui-sheet-title", 1, h:ref("title"))
-		h.titleLabel.Parent = text
-		h.descriptionLabel = label("ui-sheet-description", 2, h:ref("description"))
-		h.descriptionLabel.Parent = text
+		text.Size = UDim2.new(1, if showClose then -44 else 0, 0, 0)
+		h.titleLabel = titleLabel
+		h.descriptionLabel = descriptionLabel
 
 		text.LayoutOrder = 1
 		-- The header slot: filters, tabs or anything else that stays put over the body.

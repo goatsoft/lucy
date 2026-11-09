@@ -197,7 +197,7 @@ end
 	  room    () -> Vector2: the room in pixels (default: the parent's AbsoluteSize)
 	  min     the smallest scale (default 0.5)
 	  watch   more signals that change the room (the panel's own size and its
-	          parent's are watched)
+	          parent's are watched, whichever parent it has)
 	Returns a handle with .scale, :refresh() and :destroy().
 ]]
 function Adaptive.fit(guiObject: GuiObject, options: { [string]: any }?)
@@ -216,6 +216,8 @@ function Adaptive.fit(guiObject: GuiObject, options: { [string]: any }?)
 	end
 
 	local handle: any = { scale = scale, connections = {} :: { RBXScriptConnection } }
+	-- Its parent's size, whichever parent it has now (it may be parented after fit is called)
+	local parentSize: RBXScriptConnection? = nil
 	function handle.refresh(_self)
 		-- Its size at scale 1: what it shows now, before this scale
 		local natural = guiObject.AbsoluteSize / math.max(scale.Scale, 0.01)
@@ -229,6 +231,10 @@ function Adaptive.fit(guiObject: GuiObject, options: { [string]: any }?)
 			connection:Disconnect()
 		end
 		handle.connections = {}
+		if parentSize then
+			parentSize:Disconnect()
+			parentSize = nil
+		end
 		scale:Destroy()
 	end
 	handle.Destroy = handle.destroy
@@ -242,10 +248,21 @@ function Adaptive.fit(guiObject: GuiObject, options: { [string]: any }?)
 		)
 	end
 	watch(guiObject:GetPropertyChangedSignal("AbsoluteSize"))
-	local parent = guiObject.Parent
-	if parent and parent:IsA("GuiBase2d") then
-		watch(parent:GetPropertyChangedSignal("AbsoluteSize"))
+	local function followParent()
+		if parentSize then
+			parentSize:Disconnect()
+			parentSize = nil
+		end
+		local parent = guiObject.Parent
+		if parent and parent:IsA("GuiBase2d") then
+			parentSize = parent:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+				handle:refresh()
+			end)
+		end
+		handle:refresh()
 	end
+	table.insert(handle.connections, guiObject:GetPropertyChangedSignal("Parent"):Connect(followParent))
+	followParent()
 	for _, signal in opts.watch or {} do
 		watch(signal)
 	end
