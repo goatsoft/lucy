@@ -92,7 +92,9 @@ An item is a value, shown as its text, or a table with `value`, and optionally:
   from them. It moves in when a button or label would be off the screen, and
   when the stack is taller than the screen (a phone held sideways) it wraps
   into curves side by side, each past the labels of the last. The first item
-  sits nearest the anchor, and up and down on a controller walk the stack.
+  sits nearest the anchor. Up and down (the D-pad, the stick or the arrow keys)
+  walk every item in order, wrapping round, even across wrapped curves; left
+  and right step to the next curve.
 
 Ring buttons show their label under them.
 
