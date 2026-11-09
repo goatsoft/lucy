@@ -6,6 +6,7 @@ description: A badge showing Built with Lucy with Lucy's mascot head.
 # Attribution
 
 A badge displaying "Built with Lucy" alongside Lucy's mascot head at normal badge height.
+For guidelines on displaying attribution in your game, see the [Attribution reference](../reference/attribution.md).
 
 ```luau
 Lucy.Attribution.new({

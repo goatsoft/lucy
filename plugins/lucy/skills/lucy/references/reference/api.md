@@ -75,7 +75,7 @@ the [composables reference](composables/index.md).
 
 ## Components
 
-`Lucy.Accordion`, `Alert`, `Arrow`, `Avatar`, `Badge`, `Button`, `Checkbox`,
+`Lucy.Accordion`, `Alert`, `Arrow`, `Attribution`, `Avatar`, `Badge`, `Button`, `Checkbox`,
 `Collapsible`, `DataGrid`, `Dialog`, `Effect`, `Grid`, `Icon`, `Image`, `InlineConfirm`,
 `Input`, `Item`, `Kbd`, `NumberField`, `Panel`, `Pressable`, `Progress`,
 `RadioGroup`, `ScrollArea`, `Select`, `Separator`, `Sheet`, `Skeleton`,
