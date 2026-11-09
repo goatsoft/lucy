@@ -1,6 +1,6 @@
 {
   "name": "@goatsoft/lucy-icons",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Packs the Iconify icons a Roblox game uses into uploaded sprite sheets for Lucy's Icon component.",
   "keywords": [
     "roblox",
