@@ -7,6 +7,7 @@
 		mode         touch | gamepad | keyboard | mouse
 		breakpoint   compact | regular | wide
 		orientation  portrait | landscape
+		height       short | tall (short: under Adaptive.shortHeight, a landscape phone)
 		default      fallback
 	The first matching key in that order wins:
 
@@ -24,6 +25,7 @@ Responsive.keys = {
 	mode = { "touch", "gamepad", "keyboard", "mouse" },
 	breakpoint = { "compact", "regular", "wide" },
 	orientation = { "portrait", "landscape" },
+	height = { "short", "tall" },
 }
 
 local KNOWN = { default = true }
@@ -65,6 +67,7 @@ function Responsive.pick(source: any, value: any): any
 		input.mode,
 		input.breakpoint and string.lower(input.breakpoint),
 		input.orientation,
+		input.height,
 	}
 	for _, key in candidates do
 		if key ~= nil and value[key] ~= nil then

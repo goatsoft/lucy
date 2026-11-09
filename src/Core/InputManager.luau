@@ -8,6 +8,7 @@
 		density      "default" | "touch" | "tv"                   drives the density sheet
 		orientation  "landscape" | "portrait"
 		breakpoint   "Compact" | "Regular" | "Wide"               see Adaptive.bands
+		height       "short" | "tall"                             see Adaptive.shortHeight
 		viewport     Vector2
 
 	Focus:
@@ -230,6 +231,7 @@ function InputManager._publish(self: InputManager)
 		density = InputManager.densityFor(device),
 		orientation = if viewport.Y > viewport.X then "portrait" else "landscape",
 		breakpoint = Adaptive.breakpointFor(viewport.X),
+		height = Adaptive.heightFor(viewport.Y),
 		viewport = viewport,
 		touch = caps.touch == true,
 		gamepad = caps.gamepad == true,

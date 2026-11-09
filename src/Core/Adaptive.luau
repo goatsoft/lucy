@@ -10,6 +10,7 @@
 		Adaptive.attach(gui, { base = Vector2.new(1280, 720), min = 0.6, max = 2 })
 		Adaptive.aspect(frame, 16 / 9)          -- UIAspectRatioConstraint
 		Adaptive.clamp(frame, minSize, maxSize) -- UISizeConstraint
+		Adaptive.fit(panel, { room = fn })      -- shrink a panel (text and all) into its room
 		Adaptive.breakpoints(gui)               -- StyleQuery "@Compact" / "@Regular" / "@Wide"
 ]]
 
@@ -27,14 +28,16 @@ Adaptive.defaults = {
 --[[
 	Per-device scaling. Layouts are authored once at 1280x720; each device class
 	gets a base that keeps text readable and touch targets usable there:
-	  mobile   phones are small, so scale against a smaller base and never shrink much
+	  mobile   phones: scale against a base a little smaller than 1280x720, so the UI shrinks to
+	           fit a phone (735x413 shows at about 0.77) while text stays readable; touch
+	           targets come from the touch density's taller controls
 	  tablet   iPad-class screens
 	  desktop  shrink a little on small windows, grow on big monitors
 	  console  TVs: never shrink, grow for the 10-foot view
 	App switches profile when InputManager reports a new device.
 ]]
 Adaptive.profiles = {
-	mobile = { base = Vector2.new(640, 360), min = 0.85, max = 1.25, mode = "fit" },
+	mobile = { base = Vector2.new(960, 540), min = 0.6, max = 1.25, mode = "fit" },
 	tablet = { base = Vector2.new(1024, 640), min = 0.85, max = 1.5, mode = "fit" },
 	desktop = { base = Vector2.new(1280, 720), min = 0.75, max = 2, mode = "fit" },
 	console = { base = Vector2.new(1280, 720), min = 1, max = 2, mode = "fit" },
@@ -66,6 +69,15 @@ function Adaptive.computeScale(viewport: Vector2, options: { [string]: any }?): 
 		scale = math.min(sx, sy)
 	end
 	return math.clamp(scale, min, max)
+end
+
+-- Under this height (pre-scale pixels) a screen is short: a landscape phone, a short window.
+-- Width bands miss it (a landscape phone is Regular wide).
+Adaptive.shortHeight = 500
+
+-- "short" or "tall" for a screen `height` pre-scale pixels high
+function Adaptive.heightFor(height: number): string
+	return if height > 0 and height < Adaptive.shortHeight then "short" else "tall"
 end
 
 function Adaptive.breakpointFor(width: number): string
@@ -166,6 +178,79 @@ function Adaptive.aspect(
 	constraint.DominantAxis = opts.dominantAxis or Enum.DominantAxis.Width
 	constraint.Parent = guiObject
 	return constraint
+end
+
+-- The scale that fits something `natural` big (pixels at scale 1) into `room`: 1 when it fits,
+-- less when it does not, never under `min`.
+function Adaptive.fitScale(natural: Vector2, room: Vector2, min: number?): number
+	if natural.X <= 0 or natural.Y <= 0 then
+		return 1
+	end
+	return math.clamp(math.min(room.X / natural.X, room.Y / natural.Y), min or 0.5, 1)
+end
+
+--[[
+	Shrinks a panel to fit the room it has, the way the app's scale fits the
+	whole UI to the screen: one UIScale ("LucyFit") on the panel, so its text,
+	icons and spacing shrink together. Never grows it past its own size.
+	options:
+	  room    () -> Vector2: the room in pixels (default: the parent's AbsoluteSize)
+	  min     the smallest scale (default 0.5)
+	  watch   more signals that change the room (the panel's own size and its
+	          parent's are watched)
+	Returns a handle with .scale, :refresh() and :destroy().
+]]
+function Adaptive.fit(guiObject: GuiObject, options: { [string]: any }?)
+	local opts: { [string]: any } = options or {}
+	local scale = Instance.new("UIScale")
+	scale.Name = "LucyFit"
+	scale.Parent = guiObject
+	local function room(): Vector2
+		if opts.room then
+			return opts.room()
+		end
+		local parent = guiObject.Parent
+		return if parent and parent:IsA("GuiBase2d")
+			then parent.AbsoluteSize
+			else Vector2.new(math.huge, math.huge)
+	end
+
+	local handle: any = { scale = scale, connections = {} :: { RBXScriptConnection } }
+	function handle.refresh(_self)
+		-- Its size at scale 1: what it shows now, before this scale
+		local natural = guiObject.AbsoluteSize / math.max(scale.Scale, 0.01)
+		local wanted = Adaptive.fitScale(natural, room(), opts.min)
+		if math.abs(wanted - scale.Scale) > 0.005 then
+			scale.Scale = wanted
+		end
+	end
+	function handle.destroy(_self)
+		for _, connection in handle.connections do
+			connection:Disconnect()
+		end
+		handle.connections = {}
+		scale:Destroy()
+	end
+	handle.Destroy = handle.destroy
+
+	local function watch(signal: RBXScriptSignal)
+		table.insert(
+			handle.connections,
+			signal:Connect(function()
+				handle:refresh()
+			end)
+		)
+	end
+	watch(guiObject:GetPropertyChangedSignal("AbsoluteSize"))
+	local parent = guiObject.Parent
+	if parent and parent:IsA("GuiBase2d") then
+		watch(parent:GetPropertyChangedSignal("AbsoluteSize"))
+	end
+	for _, signal in opts.watch or {} do
+		watch(signal)
+	end
+	handle:refresh()
+	return handle
 end
 
 -- Keep a frame between min and max pixel sizes.

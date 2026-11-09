@@ -118,14 +118,22 @@ Each kind of device scales against its own base size, and only so far:
 
 | Device | Base size | Smallest scale | Largest scale |
 |---|---|---|---|
-| Phone | 640 x 360 | 0.85 | 1.25 |
+| Phone | 960 x 540 | 0.6 | 1.25 |
 | Tablet | 1024 x 640 | 0.85 | 1.5 |
 | Desktop | 1280 x 720 | 0.75 | 2 |
 | Console | 1280 x 720 | 1 | 2 |
 
-So a 16 pixel gap is 16 layout pixels: about 14 to 20 real pixels on a phone,
-and never less than 16 on a TV. Offsets, sizes and `UISizeConstraint` limits
-all scale this way. A phone uses a smaller base so text stays readable there.
+So a 16 pixel gap is 16 layout pixels: about 12 real pixels on a phone held
+sideways (735 by 413 shows at about 0.77), and never less than 16 on a TV.
+Offsets, sizes and `UISizeConstraint` limits all scale this way. A phone's
+base is a little smaller than 1280 by 720, so the UI shrinks to fit a phone
+without getting so small its text is hard to read; touch targets come from
+the touch density's taller controls.
+
+A panel taller than the room it has (a side panel on a phone) can shrink
+itself to fit, text and icons with it: `Lucy.Adaptive.fit(panel, { room =
+function() return roomInPixels end })` puts one UIScale on the panel, never
+larger than 1.
 
 The scale is measured from each ScreenGui's own size, so a scene with safe area
 insets scales to fit the safe area.

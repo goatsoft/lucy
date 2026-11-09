@@ -149,7 +149,8 @@ Lucy.new "UIListLayout" { Padding = function() return UDim.new(0, gap()) end }
 
 Keys: device (`mobile tablet desktop console`), input mode (`touch gamepad
 keyboard mouse`), breakpoint (`compact regular wide`), orientation (`portrait
-landscape`), `default`. First match in that order wins.
+landscape`), height (`short tall`: short is under 500 pixels, a phone held
+sideways or a short window), `default`. First match in that order wins.
 
 ## Writing a component
 

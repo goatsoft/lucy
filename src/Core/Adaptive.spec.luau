@@ -83,17 +83,32 @@ return function()
 			local handle = Adaptive.attach(gui, {
 				base = Vector2.new(1280, 720),
 				getViewport = function()
-					return Vector2.new(640, 360)
+					return Vector2.new(960, 540)
 				end,
 				watch = false,
 			})
-			expect(handle.scale.Scale).to.equal(0.5)
+			expect(handle.scale.Scale).to.equal(0.75)
 			local profile = table.clone(Adaptive.profiles.mobile)
 			profile.getViewport = handle.options.getViewport
 			handle:configure(profile)
 			expect(handle.scale.Scale).to.equal(1)
 			handle:destroy()
 			gui:Destroy()
+		end)
+
+		it("shrinks a phone's UI to fit, but not past what stays readable", function()
+			local phone = Adaptive.computeScale(Vector2.new(735, 413), Adaptive.profiles.mobile)
+			expect(phone).to.be.near(0.765, 0.01)
+			local tiny = Adaptive.computeScale(Vector2.new(480, 270), Adaptive.profiles.mobile)
+			expect(tiny).to.equal(Adaptive.profiles.mobile.min)
+		end)
+
+		it("fits a panel into its room, never growing it, never past min", function()
+			expect(Adaptive.fitScale(Vector2.new(200, 400), Vector2.new(1000, 1000))).to.equal(1)
+			expect(Adaptive.fitScale(Vector2.new(200, 400), Vector2.new(1000, 300))).to.equal(0.75)
+			expect(Adaptive.fitScale(Vector2.new(200, 400), Vector2.new(50, 1000))).to.equal(0.5)
+			expect(Adaptive.fitScale(Vector2.new(200, 400), Vector2.new(50, 1000), 0.2)).to.equal(0.25)
+			expect(Adaptive.fitScale(Vector2.zero, Vector2.new(10, 10))).to.equal(1)
 		end)
 
 		it("never shrinks console UI", function()
