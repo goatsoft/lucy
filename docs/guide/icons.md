@@ -132,6 +132,7 @@ Add `lucy-icons.json` beside it:
 | `sheet` | `1024` | Sheet size in pixels |
 | `padding` | `4` | Space around each icon in the sheet |
 | `cache` | `.lucy-icons` | Downloaded icon data and sheets waiting for upload. Add it to `.gitignore` |
+| `duotone` | `0.5` | Opacity of a duotone icon's body, from 0 to 1. The sets draw it at about 0.15, which looks like an outline on a dark UI |
 | `lucy` | `true` | Draws the [icons Lucy draws](#icons-lucy-draws) into your sheet and adds their names to the module. `false` leaves them out |
 
 For uploads, create an

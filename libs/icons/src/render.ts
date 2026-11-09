@@ -38,8 +38,27 @@ export function prefixIds(body: string, prefix: string): string {
   return out
 }
 
-/** One icon as SVG, ready to place in a sheet. Undefined when the set has no such icon. */
-export function draw(set: IconifyJSON, name: string, index: number, palette: boolean): Drawn | undefined {
+/**
+ * Raises every layer fainter than `body` to `body`: a duotone icon's fill layer
+ * (opacity .15 in the sets) gets bolder, its full strength strokes stay as they are.
+ */
+export function boldBody(body: string, opacity: number): string {
+  return body.replace(/(\sopacity=")([\d.]+)"/g, (all, attr: string, value: string) =>
+    Number(value) < opacity ? `${attr}${opacity}"` : all,
+  )
+}
+
+/**
+ * One icon as SVG, ready to place in a sheet. Undefined when the set has no such icon.
+ * `duotone` is the body opacity for one colour icons (see the config's `duotone`).
+ */
+export function draw(
+  set: IconifyJSON,
+  name: string,
+  index: number,
+  palette: boolean,
+  duotone?: number,
+): Drawn | undefined {
   const icon = name.slice(name.indexOf(':') + 1)
   const data = getIconData(set, icon)
   if (!data) return undefined
@@ -49,6 +68,7 @@ export function draw(set: IconifyJSON, name: string, index: number, palette: boo
   if (!palette) {
     // Painted white, so ImageColor3 can tint it any colour.
     body = body.replaceAll('currentColor', '#ffffff')
+    if (duotone !== undefined) body = boldBody(body, duotone)
   }
   return { name, viewBox: svg.attributes.viewBox, body, tint: !palette }
 }

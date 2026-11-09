@@ -8,7 +8,7 @@ import { parseConfig } from './config.ts'
 import { columns, perSheet, slot } from './layout.ts'
 import { emptyLock, orderFor } from './lock.ts'
 import { luauModule } from './output.ts'
-import { draw, hash, prefixIds, renderPng, sheetSvg } from './render.ts'
+import { boldBody, draw, hash, prefixIds, renderPng, sheetSvg } from './render.ts'
 import { namesIn } from './scan.ts'
 import { LUCY_SLOTS } from './slots.ts'
 import { chain, installed, toolDir, type Sources } from './sets.ts'
@@ -37,6 +37,10 @@ describe('config', () => {
     assert.equal(config.lucy, true)
     assert.equal(parseConfig({ lucy: false }).lucy, false)
     assert.throws(() => parseConfig({ lucy: 'no' }), /"lucy" must be true or false/)
+    assert.equal(config.duotone, 0.5)
+    assert.equal(parseConfig({ duotone: 0.15 }).duotone, 0.15)
+    assert.throws(() => parseConfig({ duotone: 2 }), /"duotone" must be a number from 0 to 1/)
+    assert.throws(() => parseConfig({ duotone: '0.5' }), /"duotone" must be a number from 0 to 1/)
   })
   it('names uploads from a template with the sheet hash in it', () => {
     assert.equal(parseConfig({}).name, 'lucy-icons-{hash}')
@@ -85,6 +89,17 @@ describe('render', () => {
     assert.equal(draw(set, 'lucide:not-an-icon', 0, false), undefined)
     const png = renderPng(sheetSvg([{ drawn: heart, index: 0 }], layout))
     assert.deepEqual([...png.subarray(1, 4)], [...Buffer.from('PNG')])
+  })
+  it('makes a duotone body bolder, leaves strokes and palette icons alone', () => {
+    const body = '<path fill="currentColor" d="M0 0" opacity=".15"/><path stroke="currentColor" d="M1 1" opacity="0.8"/>'
+    assert.equal(boldBody(body, 0.5), body.replace('".15"', '"0.5"'))
+    const set = {
+      prefix: 'test',
+      icons: { duo: { body } },
+    }
+    assert.ok(draw(set, 'test:duo', 0, false, 0.5)?.body.includes('opacity="0.5"'))
+    assert.ok(draw(set, 'test:duo', 0, false)?.body.includes('opacity=".15"'))
+    assert.ok(draw(set, 'test:duo', 0, true, 0.5)?.body.includes('opacity=".15"'))
   })
 })
 

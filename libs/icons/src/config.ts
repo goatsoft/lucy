@@ -27,6 +27,11 @@ export interface Config {
   cache: string
   /** Write Lucy's slots (lucy:close and the rest) into the module, drawn on the game's own sheet. */
   lucy: boolean
+  /**
+   * Opacity of a duotone icon's body (its faint fill layer), 0 to 1. Sets draw
+   * it at about 0.15, which reads as an outline once a game tints it on a dark UI.
+   */
+  duotone: number
 }
 
 export const defaults: Config = {
@@ -40,6 +45,7 @@ export const defaults: Config = {
   padding: 4,
   cache: '.lucy-icons',
   lucy: true,
+  duotone: 0.5,
   name: 'lucy-icons-{hash}',
 }
 
@@ -104,6 +110,13 @@ export function parseConfig(raw: unknown): Config {
   if (lucy !== undefined) {
     if (typeof lucy !== 'boolean') throw new Error('"lucy" must be true or false')
     config.lucy = lucy
+  }
+  const duotone = input['duotone']
+  if (duotone !== undefined) {
+    if (typeof duotone !== 'number' || !(duotone >= 0 && duotone <= 1)) {
+      throw new Error('"duotone" must be a number from 0 to 1')
+    }
+    config.duotone = duotone
   }
   const name = input['name']
   if (name !== undefined) {

@@ -116,7 +116,7 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
     const set = await sources.icons(prefix, names.map(n => n.slice(prefix.length + 1)))
     for (const name of names) {
       const index = ordered.order.indexOf(name)
-      const icon = set ? draw(set, name, index, info.palette) : undefined
+      const icon = set ? draw(set, name, index, info.palette, config.duotone) : undefined
       if (icon) drawn.set(name, icon)
       else if (used.has(name)) problems.push(`unknown icon "${name}" (in ${(used.get(name) ?? []).join(', ')})`)
       else if (needed.has(name)) problems.push(`unknown icon "${name}" (it fills Lucy's slots; set "lucy": false to leave them out)`)
