@@ -16,7 +16,7 @@
 			                           -- getter, or false for nothing (a HUD button)
 			side = "auto",             -- list: auto | bottom | top | left | right
 			align = "start",           -- list: start | center | end
-			width = 220,               -- list: at least this wide (and the anchor's width)
+			width = 220,               -- list: at least this wide (and the anchor's, and the widest label's)
 			radius = nil,              -- radial: the ring's (by item count); arc: its curve's (900)
 			shape = "round",           -- radial and arc buttons: round | squircle | square
 			size = "md",               -- md | lg, like a Button's: lg rows and ring buttons are bigger
@@ -58,6 +58,7 @@
 	Menu.pick and Menu.itemBounds are the geometry it uses.
 ]]
 
+local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
 
 local Component = require(script.Parent.Parent.Core.Component)
@@ -609,6 +610,51 @@ local spec: Component.Spec = {
 		end
 		h.items = rows
 
+		-- The list is at least as wide as its widest row needs (label, icon column, key, padding),
+		-- so a label never ends in an ellipsis however large the game styles its type. Measured
+		-- with the label's styled font and size, again whenever its style changes.
+		local fitWidth = Reactive.ref(0)
+		local measuring = false
+		local function measureRows()
+			if measuring then
+				return
+			end
+			measuring = true
+			task.defer(function()
+				measuring = false
+				local widest = 0
+				for index, row in rows do
+					local label = row:FindFirstChild("Label") :: TextLabel?
+					if label and label.Text ~= "" then
+						local ok, bounds = pcall(function(): Vector2
+							local params = Instance.new("GetTextBoundsParams")
+							params.Text = label.Text
+							params.Font = (label :: any):GetStyled("FontFace")
+							params.Size = (label :: any):GetStyled("TextSize")
+							params.Width = math.huge
+							return TextService:GetTextBoundsAsync(params)
+						end)
+						if ok then
+							local hintRoom = if entries[index].hint then 56 else 0
+							widest = math.max(widest, bounds.X + indent() + hintRoom)
+						end
+					end
+				end
+				-- The row's padding (Space2 each side) and a little air, so rounding never truncates
+				local pad = Component.space(app, "Space2", 8).Offset
+				fitWidth(math.ceil(widest + pad * 2 + 8))
+			end)
+		end
+		for _, row in rows do
+			local label = row:FindFirstChild("Label")
+			if label then
+				pcall(function()
+					(label :: any).StyledPropertiesChanged:Connect(measureRows)
+				end)
+			end
+		end
+		measureRows()
+
 		local overlayRef: Reactive.Ref<Overlay.Overlay?> = Reactive.ref(nil :: Overlay.Overlay?)
 		local function isDrawer(): boolean
 			local overlay = overlayRef()
@@ -820,7 +866,9 @@ local spec: Component.Spec = {
 			anchor = p.anchor,
 			side = p.side or "auto",
 			align = p.align,
-			width = p.width or 220,
+			width = function(): number
+				return math.max(p.width or 220, fitWidth())
+			end,
 			name = "Menu",
 			tags = { "ui-menu-overlay" },
 			id = h.id,

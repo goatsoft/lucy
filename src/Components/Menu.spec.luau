@@ -293,6 +293,26 @@ return function()
 			expect(Menu.sliceSizes.lg > Menu.sliceSizes.md).to.equal(true)
 		end)
 
+		it("grows a list to fit its widest label, so no label ends in an ellipsis", function()
+			local menu = make({
+				id = "wide",
+				items = {
+					{ value = "long", label = "A menu label far too long for the usual width" },
+					{ value = "short", label = "Exit" },
+				},
+			})
+			menu:open()
+			local label = menu.items[1]:FindFirstChild("Label") :: TextLabel
+			for _ = 1, 60 do
+				if label.TextFits and menu.content.AbsoluteSize.X > 220 then
+					break
+				end
+				task.wait()
+			end
+			expect(label.TextFits).to.equal(true)
+			menu:close()
+		end)
+
 		it("rejects an unknown size", function()
 			expect(function()
 				make({ size = "xl" })

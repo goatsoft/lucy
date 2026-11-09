@@ -13,6 +13,7 @@
 			                            -- more room; auto: below if it fits, then above, then beside
 			align = "start",            -- popup: start | center | end
 			width = 240,                -- popup: at least this (and the anchor's width); panel: this
+			                            -- (a number or a getter)
 			panelSide = "right",        -- panel: left | right
 			place = nil,                -- (presentation, input) -> Placement?: places the content itself
 			modal = true,               -- false: no focus trap, presses pass through
@@ -642,7 +643,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 			view = root.AbsoluteSize / scale,
 			content = content.AbsoluteSize / scale,
 			anchor = anchorRect,
-			width = options.width,
+			width = Reactive.toValue(options.width),
 			side = Reactive.toValue(options.side),
 			align = options.align,
 			panelSide = options.panelSide,
