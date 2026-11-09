@@ -180,7 +180,6 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Accessibility](references/reference/accessibility.md): What Lucy does so players can read, reach and use your UI, the contrast it promises, the Roblox accessibility settings it follows, and Lucy.Preferences.
 - [Everything on Lucy](references/reference/api.md): Every name the Lucy module exports, what it is for, and the page that explains it.
 - [The App](references/reference/app.md): Lucy.App.new and every option it takes, the parts an App holds, and its methods.
-- [Attribution](references/reference/attribution.md): The Built with Lucy badge, its looks, and how to add attribution to your game.
 - [Composables](references/reference/composables/index.md): State over time and behaviour shared between components. Every Lucy.use* composable.
 - [useBackHandler](references/reference/composables/use-back-handler.md): Intercepts back inputs while active, calling your function.
 - [useCount](references/reference/composables/use-count.md): Counts a number smoothly up or down to a target value with easing.

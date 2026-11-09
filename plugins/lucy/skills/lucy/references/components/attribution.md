@@ -1,11 +1,23 @@
 <!-- Made by scripts/skills.ts from docs/components/attribution.md. Edit the doc, not this file. -->
 # Attribution
 
-A badge displaying "Built with Lucy" alongside Lucy's mascot head at normal badge height.
-For guidelines on displaying attribution in your game, see the [Attribution reference](../reference/attribution.md).
+The Built with Lucy badge lets you display attribution in games and UI created
+with Lucy.
+
+It features Lucy's mascot head at normal badge height (32 px) alongside the
+brand name, and adapts across dark and light surfaces.
 
 ```luau
-Lucy.Attribution.new({
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space3",
+    children = {
+        Lucy.Attribution.new({ variant = "default" }),
+        Lucy.Attribution.new({ variant = "light" }),
+        Lucy.Attribution.new({ variant = "outline" }),
+        Lucy.Attribution.new({ variant = "secondary" }),
+        Lucy.Attribution.new({ variant = "brand" }),
+    },
     Parent = parent,
 })
 ```
@@ -25,33 +37,46 @@ Lucy.Attribution.new({
 
 It also takes the [props every component takes](index.md#using-a-component).
 
-## Masthead art and grounds
+## Looks and grounds
 
-Lucy's mascot head art adapts cleanly to light and dark backgrounds:
+The badge comes in five variants to fit different grounds and scenes:
+
+| Look | Variant | Ground | Description |
+|---|---|---|---|
+| Dark | `default` | Card ground (`$Card`) | The default look. Sits on card ground with subtle borders |
+| Light | `light` | White / light ground | Pure light ground with dark ink text and ink-filled mascot linework |
+| Secondary | `secondary` | Secondary ground (`$Secondary`) | Subdued surface with subtle borders |
+| Outline | `outline` | Transparent | Border only (`$Border`), letting the scene or card behind show through |
+| Brand | `brand` | Accent surface | Highlights the badge with subtle brand tint |
+
+### Ground and linework mechanics
+
+Lucy's mascot head artwork handles light and dark backgrounds cleanly:
 
 - **Dark grounds** (`default`, `secondary`, `outline`, `brand` on dark themes): the masthead has transparent linework cutouts so the dark card or scene behind it naturally shows through as crisp linework.
 - **Light grounds** (`light` variant, or on light themes): uses the linework-restored asset with ink background fill and contour outline, ensuring eyes, headphones, and hair lines remain crisp and do not bleed into white or light cards.
 
 ## Examples
 
-### Every variant
+### In a settings or credits panel
 
 ```luau
-Lucy.Stack.new({
-    direction = "horizontal",
-    gap = "Space3",
+Lucy.Panel.new({
+    title = "About",
     children = {
-        Lucy.Attribution.new({ variant = "default" }),
-        Lucy.Attribution.new({ variant = "light" }),
-        Lucy.Attribution.new({ variant = "outline" }),
-        Lucy.Attribution.new({ variant = "secondary" }),
-        Lucy.Attribution.new({ variant = "brand" }),
+        Lucy.Text.new({ text = "Made with Lucy UI framework.", variant = "muted" }),
+        Lucy.Attribution.new({
+            variant = "outline",
+            size = "sm",
+        }),
     },
     Parent = parent,
 })
 ```
 
-### Sizes
+### Sizes and shapes
+
+The badge supports three sizes (`sm` at 24 px, `md` at 32 px, `lg` at 40 px) and two shapes (`rounded` and `square`):
 
 ```luau
 Lucy.Stack.new({
@@ -61,6 +86,7 @@ Lucy.Stack.new({
         Lucy.Attribution.new({ size = "sm" }),
         Lucy.Attribution.new({ size = "md" }),
         Lucy.Attribution.new({ size = "lg" }),
+        Lucy.Attribution.new({ shape = "square" }),
     },
     Parent = parent,
 })
@@ -68,12 +94,12 @@ Lucy.Stack.new({
 
 ### Clickable badge
 
-Passing an `onClick` callback makes the attribution badge clickable with focus and press animations:
+Passing an `onClick` callback makes the attribution badge interactive with hover and press animations, suitable for opening a credits popup or external link notice:
 
 ```luau
 Lucy.Attribution.new({
     onClick = function()
-        print("Clicked Lucy attribution")
+        app.state:set("ui.credits.open", true)
     end,
     Parent = parent,
 })
