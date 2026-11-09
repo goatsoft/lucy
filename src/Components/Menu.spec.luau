@@ -294,6 +294,9 @@ return function()
 		end)
 
 		it("grows a list to fit its widest label, so no label ends in an ellipsis", function()
+			if not Harness.laysOutLive() then
+				return -- TextFits and the placed width are measured: live layout only (Harness.laysOutLive)
+			end
 			local menu = make({
 				id = "wide",
 				items = {
