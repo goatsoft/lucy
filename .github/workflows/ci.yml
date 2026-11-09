@@ -36,10 +36,14 @@ jobs:
       - name: Copy-in installer
         run: lune run scripts/add -- --check
       - name: Types
+        # A pinned luau-lsp and its own type definitions, so a new release can't break CI
+        # unannounced; -f and retries, so a failed download stops here instead of in unzip.
+        env:
+          LUAU_LSP: 1.70.1
         run: |
           rojo sourcemap test.project.json -o sourcemap.json
-          curl -sSL -o globalTypes.d.luau https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.d.luau
-          curl -sSL -o lsp.zip https://github.com/JohnnyMorganz/luau-lsp/releases/latest/download/luau-lsp-linux-x86_64.zip
+          curl -fsSL --retry 3 --retry-all-errors -o globalTypes.d.luau "https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/$LUAU_LSP/scripts/globalTypes.d.luau"
+          curl -fsSL --retry 3 --retry-all-errors -o lsp.zip "https://github.com/JohnnyMorganz/luau-lsp/releases/download/$LUAU_LSP/luau-lsp-linux-x86_64.zip"
           unzip -oq lsp.zip
           printf '%s\n' \
             'declare function describe(name: string, fn: () -> ()): ()' \

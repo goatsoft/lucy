@@ -8,7 +8,7 @@
  * included. `--dry-run` packs and runs `npm publish --dry-run` instead, and skips the tags and
  * releases, so it can run anywhere.
  */
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -85,7 +85,23 @@ try {
     const tarball = join(work, `${pkg.name.slice(1).replace('/', '-')}-${pkg.version}.tgz`)
     // npm's registry for the scope too, so a scope mapping in someone's .npmrc can't send it elsewhere.
     const scope = pkg.name.slice(0, pkg.name.indexOf('/'))
-    run('npm', ['publish', tarball, `--${scope}:registry=https://registry.npmjs.org/`, '--access', 'public', '--provenance', ...(dryRun ? ['--dry-run'] : [])])
+    const publish = spawnSync(
+      'npm',
+      ['publish', tarball, `--${scope}:registry=https://registry.npmjs.org/`, '--access', 'public', '--provenance', ...(dryRun ? ['--dry-run'] : [])],
+      { cwd: root, encoding: 'utf8' },
+    )
+    process.stdout.write(publish.stdout ?? '')
+    process.stderr.write(publish.stderr ?? '')
+    if (publish.status !== 0) {
+      // The registry's read side can lag a publish by a minute or more, so a run right after
+      // the one that published sees a 404 above and tries again. npm refuses with E409
+      // ("previously published" / "previously staged"): the version is out, nothing to do.
+      if (/E409|previously (published|staged)/i.test(`${publish.stdout}${publish.stderr}`)) {
+        log(`${tag} is already on npm (the registry had not caught up)`)
+        continue
+      }
+      throw new Error(`npm publish failed for ${tag} (exit ${publish.status ?? publish.signal})`)
+    }
     log(`${dryRun ? 'Would publish' : 'Published'} ${tag}`)
     released.push(pkg)
   }
