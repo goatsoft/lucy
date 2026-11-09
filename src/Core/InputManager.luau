@@ -40,7 +40,9 @@
 		app.input:nudge(dx, dy, count): the nearest component around the focus
 		with a nudge method that returns true takes them (a Slider changes its
 		value), repeating while held, faster with `count`; letting go calls its
-		release method. Otherwise arrows move focus as before.
+		release method. Otherwise arrows move focus as before: the engine moves gamepad
+		selection, and keyboard arrows go where the focused object's NextSelection*
+		points (a fan menu), else through the Tab order.
 
 	Back:
 		The back keys (ButtonB and Backspace; App option backKeys) call
@@ -478,6 +480,18 @@ function InputManager.move(self: InputManager, step: number)
 	self:focus(all[nextIndex])
 end
 
+-- The object `object` names for an arrow (`direction`, from ARROWS) in its NextSelection*
+-- (a fan menu walks its own order this way); nil when it names none. The engine follows them for
+-- the D-pad; keyboard arrows follow them here.
+function InputManager.linked(_self: InputManager, object: GuiObject, direction: Vector2): GuiObject?
+	local linked = if direction.Y < 0
+		then object.NextSelectionUp
+		elseif direction.Y > 0 then object.NextSelectionDown
+		elseif direction.X < 0 then object.NextSelectionLeft
+		else object.NextSelectionRight
+	return linked
+end
+
 -- The object focus was last moved to, if any.
 function InputManager.focused(self: InputManager): GuiObject?
 	return self._focused
@@ -713,7 +727,10 @@ function InputManager._watch(self: InputManager)
 				or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)
 			self:move(if shift then -1 else 1)
 		elseif self._mode == "keyboard" and self._focused then
-			if key == Enum.KeyCode.Down or key == Enum.KeyCode.Right then
+			local linked = arrow and self:linked(self._focused, arrow)
+			if linked then
+				self:focus(linked)
+			elseif key == Enum.KeyCode.Down or key == Enum.KeyCode.Right then
 				self:move(1)
 			elseif key == Enum.KeyCode.Up or key == Enum.KeyCode.Left then
 				self:move(-1)

@@ -41,8 +41,10 @@
 	          anchor (below it from an anchor in the top half) along a gentle
 	          curve, each tilted with it, its label in a pill on the side toward
 	          the middle (toward = "left" or "right" picks the side); up and
-	          down walk it. Too tall for the screen (a phone), it wraps into
-	          curves side by side, past the labels
+	          down walk it in item order (D-pad, stick and arrow keys). Too tall
+	          for the screen (a phone), it wraps into curves side by side, past
+	          the labels, and up and down still walk every item in order, left
+	          and right step across the curves
 	Ring buttons show the item's icon (or its initials) with its label under
 	it. shape (a value or a responsive value) picks the outline of ring and fan
 	buttons: round, squircle (a rounded square) or square (slightly rounded
@@ -57,7 +59,7 @@
 	Events: "open", "close" and "select" with the value, for Lucy.useUiSound.
 	menu.items holds one list row per item, menu.slices one round button per
 	item, in order; menu.variant(), menu.shape() and menu.size() are the ones in use.
-	Menu.ring, Menu.fan, Menu.fanRows, Menu.toward, Menu.fit, Menu.around, Menu.nudge, Menu.angles,
+	Menu.ring, Menu.fan, Menu.fanRows, Menu.fanLinks, Menu.toward, Menu.fit, Menu.around, Menu.nudge, Menu.angles,
 	Menu.pick and Menu.itemBounds are the geometry it uses.
 ]]
 
@@ -152,6 +154,58 @@ function Menu.fanRows(count: number, room: number, start: number, step: number, 
 	end
 	local curves = math.ceil(count / math.max(1, fits))
 	return math.ceil(count / curves)
+end
+
+-- Where each arrow goes from each of a fan's buttons: along the fan (away from the anchor and
+-- back) in item order, wrapping round, so a fan wrapped into curves walks as if it were one;
+-- across to the button level with it on the next curve (`columnsRight`: the curves run right)
+-- or the last on a shorter curve; nowhere (itself) past the outer curves. `usable[i]` false
+-- (disabled) is passed over. `up` is the fan's, -1 when it rises. Indices into the items.
+export type FanLink = { up: number, down: number, left: number, right: number }
+function Menu.fanLinks(
+	count: number,
+	rows: number,
+	up: number,
+	columnsRight: boolean,
+	usable: { boolean }
+): { FanLink }
+	local perCurve = math.max(1, rows)
+	local function along(from: number, step: number): number
+		for offset = 1, count do
+			local index = ((from - 1 + step * offset) % count) + 1
+			if usable[index] ~= false then
+				return index
+			end
+		end
+		return from
+	end
+	local function across(from: number, side: number): number
+		local row, column = (from - 1) % perCurve, (from - 1) // perCurve
+		local first = (column + side) * perCurve + 1
+		if first < 1 or first > count then
+			return from
+		end
+		local last = math.min(count, first + perCurve - 1)
+		for index = math.min(first + row, last), first, -1 do
+			if usable[index] ~= false then
+				return index
+			end
+		end
+		return from
+	end
+	local links = {}
+	for i = 1, count do
+		local away, back = along(i, 1), along(i, -1)
+		local right, left =
+			across(i, if columnsRight then 1 else -1), across(i, if columnsRight then -1 else 1)
+		links[i] = {
+			up = if up < 0 then away else back,
+			down = if up < 0 then back else away,
+			left = left,
+			right = right,
+		}
+	end
+	return links
 end
 
 export type Pad = { left: number, right: number, top: number, bottom: number }
@@ -705,6 +759,8 @@ local spec: Component.Spec = {
 		-- The ring or arc. A fan's buttons tilt along its curve, with their labels beside them
 		-- (left or right); a ring's labels sit below. Set when it is placed.
 		local tilts = Reactive.ref({} :: { number })
+		-- Where the arrows go from each fan button (empty for a ring: the engine and the stick)
+		local links = Reactive.ref({} :: { FanLink })
 		local labelSide = Reactive.ref("below")
 		local fanSize = Reactive.ref(Vector2.zero)
 		local slices = {}
@@ -748,6 +804,23 @@ local spec: Component.Spec = {
 					return if variant() == "arc" then tilts()[index] or 0 else 0
 				end,
 				Visible = isRing,
+				-- A fan walks in item order, also across its curves (Menu.fanLinks)
+				NextSelectionUp = function(): GuiObject?
+					local link = links()[index]
+					return link and slices[link.up]
+				end,
+				NextSelectionDown = function(): GuiObject?
+					local link = links()[index]
+					return link and slices[link.down]
+				end,
+				NextSelectionLeft = function(): GuiObject?
+					local link = links()[index]
+					return link and slices[link.left]
+				end,
+				NextSelectionRight = function(): GuiObject?
+					local link = links()[index]
+					return link and slices[link.right]
+				end,
 				Interactable = usable,
 				Selectable = usable,
 				-- Its focus ring goes round the whole item, button and label (the ItemRing below)
@@ -931,6 +1004,7 @@ local spec: Component.Spec = {
 				if variant() == "radial" then
 					points(Menu.ring(count, r))
 					tilts({})
+					links({})
 					labelSide("below")
 					center = if anchor
 						then Menu.around(center, anchor.size, extent(), view, Overlay.margin)
@@ -972,6 +1046,11 @@ local spec: Component.Spec = {
 					)
 					points(fan)
 					tilts(tilt)
+					local usable = {}
+					for index, item in entries do
+						usable[index] = not item.disabled
+					end
+					links(Menu.fanLinks(count, rows, up, not labelsLeft, usable))
 					labelSide(if labelsLeft then "left" else "right")
 					local pad = {
 						left = size / 2 + (if labelsLeft then labelRoom else 0),

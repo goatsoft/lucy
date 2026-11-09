@@ -57,6 +57,36 @@ return function()
 			end
 		end)
 
+		it("walks a fan in item order, across its curves too, past disabled items", function()
+			-- one rising curve of 3: up walks away from the anchor, wrapping; left and right stay
+			local one = Menu.fanLinks(3, 3, -1, true, {})
+			expect(one[1].up).to.equal(2)
+			expect(one[3].up).to.equal(1)
+			expect(one[1].down).to.equal(3)
+			expect(one[2].left).to.equal(2)
+			expect(one[2].right).to.equal(2)
+
+			-- 7 rising in curves of 3, running right: the top of a curve goes on to the next
+			local wrapped = Menu.fanLinks(7, 3, -1, true, {})
+			expect(wrapped[3].up).to.equal(4)
+			expect(wrapped[4].down).to.equal(3)
+			expect(wrapped[2].right).to.equal(5)
+			expect(wrapped[5].left).to.equal(2)
+			-- the short last curve: level with row 3 is its last button
+			expect(wrapped[6].right).to.equal(7)
+			expect(wrapped[2].left).to.equal(2)
+
+			-- dropping, curves running left: mirrored
+			local down = Menu.fanLinks(6, 3, 1, false, {})
+			expect(down[1].down).to.equal(2)
+			expect(down[1].left).to.equal(4)
+
+			-- disabled items are passed over
+			local skip = Menu.fanLinks(4, 4, -1, true, { true, false, true, true })
+			expect(skip[1].up).to.equal(3)
+			expect(skip[3].down).to.equal(1)
+		end)
+
 		it("finds the direction toward the middle of the screen", function()
 			local view = Vector2.new(800, 600)
 			local corner = Menu.toward(Vector2.new(760, 560), view)
