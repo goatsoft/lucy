@@ -16,7 +16,7 @@ return function()
 		local label = Instance.new("TextLabel")
 		label.Text = "The shop sells new looks."
 		local options: { [string]: any } = { app = app, Parent = gui, children = { label } }
-		for key, value in props or {} do
+		for key, value in (props or {}) :: { [string]: any } do
 			options[key] = value
 		end
 		return InlineConfirm.new(options), label

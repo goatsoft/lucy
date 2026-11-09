@@ -549,7 +549,7 @@ function Composables.useCount(
 	local shown = Reactive.ref((options and options.from) or 0)
 	local moving = Reactive.ref(false)
 	local done = Signal.new()
-	local goal = Reactive.peek(shown)
+	local goal: number = Reactive.peek(shown :: any)
 	local stopDrive: (() -> ())? = nil
 	local function halt()
 		if stopDrive then
@@ -570,7 +570,7 @@ function Composables.useCount(
 	end, function(target)
 		halt()
 		goal = target
-		local from = Reactive.peek(shown)
+		local from: number = Reactive.peek(shown :: any)
 		if from == goal or seconds <= 0 then
 			shown(goal)
 			moving(false)

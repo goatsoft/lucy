@@ -37,7 +37,7 @@ return function()
 			text = id,
 			Parent = gui,
 		}
-		for key, value in props or {} do
+		for key, value in (props or {}) :: { [string]: any } do
 			options[key] = value
 		end
 		local handle = Button.new(options)
@@ -625,7 +625,8 @@ return function()
 				sizes[tour.pulse.Size.X.Offset] = true
 				task.wait(0.03)
 			end
-			expect(next(sizes, next(sizes))).to.be.ok()
+			local first = next(sizes)
+			expect((next(sizes, first))).to.be.ok()
 			tour:stop()
 		end)
 
