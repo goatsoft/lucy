@@ -56,6 +56,7 @@ end)
 | `align` | string | `"start"` | | List: `start`, `center` or `end`: how the list lines up with the anchor |
 | `width` | number | `220` | | List: at least this wide (and at least the anchor's width when above or below it) |
 | `radius` | number | by item count, `900` for a fan | | Ring: the distance from the centre to each button. Fan: the radius of its curve (larger is straighter) |
+| `toward` | string | `"auto"` | | Fan: the side its labels go, `left` or `right`; `auto` puts them toward the middle of the screen |
 | `shape` | string or responsive | `"round"` | | Ring and fan buttons: `round`, `squircle` or `square`, see [Button shapes](#button-shapes) |
 | `size` | string or responsive | `"md"` | | `md` or `lg`, like a [Button](button.md)'s: `lg` rows are as tall as a large button with larger text, and `lg` ring and fan buttons are bigger, with larger icons and labels |
 | `onSelect` | function | | | Called with `(value, handle)` when the player picks an action |
@@ -87,9 +88,11 @@ An item is a value, shown as its text, or a table with `value`, and optionally:
   anchor along a gentle curve, each tilted a little more than the last, with
   its label in a pill beside it. It rises from an anchor in the lower half of
   the screen and drops from one in the upper half; the labels sit on the side
-  toward the middle and the curve bends away from them. It moves in when a
-  button or label would be off the screen. The first item sits nearest the
-  anchor, and up and down on a controller walk the stack.
+  toward the middle (or on the side `toward` names) and the curve bends away
+  from them. It moves in when a button or label would be off the screen, and
+  when the stack is taller than the screen (a phone held sideways) it wraps
+  into curves side by side, each past the labels of the last. The first item
+  sits nearest the anchor, and up and down on a controller walk the stack.
 
 Ring buttons show their label under them.
 
@@ -174,7 +177,10 @@ away from the edges, toward the middle of the screen.
 It opens on the app's overlay layer, above everything opened before it, and
 holds keyboard and gamepad focus while open:
 
-- **Mouse and touch:** press an action. A press outside closes it.
+- **Mouse and touch:** press an action. On a ring or fan the whole action
+  takes the press, its button, its label and the gap between them. A press
+  outside closes it, and so does a press on its anchor, even where a ring or
+  fan covers it.
 - **Keyboard and D-pad:** move between actions and press Enter or A.
 - **Stick:** on a ring or fan, point the left stick at a button to select it.
 - **Back:** B, Backspace or Escape closes it without picking anything.

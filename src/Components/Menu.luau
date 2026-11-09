@@ -18,6 +18,7 @@
 			align = "start",           -- list: start | center | end
 			width = 220,               -- list: at least this wide (and the anchor's, and the widest label's)
 			radius = nil,              -- radial: the ring's (by item count); arc: its curve's (900)
+			toward = "auto",           -- arc: auto (the screen's middle) | left | right: its labels' side
 			shape = "round",           -- radial and arc buttons: round | squircle | square
 			size = "md",               -- md | lg, like a Button's: lg rows and ring buttons are bigger
 			onSelect = function(value, menu) end,
@@ -39,7 +40,9 @@
 	  arc     a fan like a dock's stack: buttons one above another from the
 	          anchor (below it from an anchor in the top half) along a gentle
 	          curve, each tilted with it, its label in a pill on the side toward
-	          the middle; up and down walk it
+	          the middle (toward = "left" or "right" picks the side); up and
+	          down walk it. Too tall for the screen (a phone), it wraps into
+	          curves side by side, past the labels
 	Ring buttons show the item's icon (or its initials) with its label under
 	it. shape (a value or a responsive value) picks the outline of ring and fan
 	buttons: round, squircle (a rounded square) or square (slightly rounded
@@ -54,7 +57,7 @@
 	Events: "open", "close" and "select" with the value, for Lucy.useUiSound.
 	menu.items holds one list row per item, menu.slices one round button per
 	item, in order; menu.variant(), menu.shape() and menu.size() are the ones in use.
-	Menu.ring, Menu.fan, Menu.toward, Menu.fit, Menu.around, Menu.nudge, Menu.angles,
+	Menu.ring, Menu.fan, Menu.fanRows, Menu.toward, Menu.fit, Menu.around, Menu.nudge, Menu.angles,
 	Menu.pick and Menu.itemBounds are the geometry it uses.
 ]]
 
@@ -76,6 +79,7 @@ local Menu = {}
 Menu.variants = { "list", "radial", "arc" }
 Menu.shapes = { "round", "squircle", "square" }
 Menu.sizes = { "md", "lg" }
+Menu.towards = { "auto", "left", "right" }
 
 -- A round button's size at each size (sliceSize is md's) and the room under it for its label
 -- (lg's text is larger, so it has captionGrow more).
@@ -113,21 +117,41 @@ end
 -- between buttons, both along the curve. `up` is -1 to rise up the screen and 1 to drop down it;
 -- `bend` is 1 to curve right and -1 to curve left. Returns each button's offset from the anchor's
 -- centre and its tilt in degrees, so each faces along the curve.
+-- With `rows` (fewer than count), the fan wraps: rows buttons a curve, each next curve
+-- `columnStep` beside the last, on the side away from the bend (where the labels are), its
+-- buttons level with the first curve's.
 function Menu.fan(
 	count: number,
 	start: number,
 	step: number,
 	radius: number,
 	up: number,
-	bend: number
+	bend: number,
+	rows: number?,
+	columnStep: number?
 ): ({ Vector2 }, { number })
+	local perCurve = math.max(1, rows or count)
 	local points, tilts = {}, {}
 	for i = 1, count do
-		local theta = (start + (i - 1) * step) / radius
-		points[i] = Vector2.new(bend * radius * (1 - math.cos(theta)), up * radius * math.sin(theta))
+		local row, column = (i - 1) % perCurve, (i - 1) // perCurve
+		local theta = (start + row * step) / radius
+		local x = bend * radius * (1 - math.cos(theta)) - bend * column * (columnStep or 0)
+		points[i] = Vector2.new(x, up * radius * math.sin(theta))
 		tilts[i] = math.deg(theta) * bend * -up
 	end
 	return points, tilts
+end
+
+-- How many buttons a fan puts on each curve: all of them when they fit in `room` (from the
+-- anchor's centre to the screen's edge the fan runs toward), else as few curves as fit, the
+-- buttons shared evenly between them.
+function Menu.fanRows(count: number, room: number, start: number, step: number, size: number): number
+	local fits = math.floor((room - start - size / 2) / step) + 1
+	if fits >= count then
+		return count
+	end
+	local curves = math.ceil(count / math.max(1, fits))
+	return math.ceil(count / curves)
 end
 
 export type Pad = { left: number, right: number, top: number, bottom: number }
@@ -811,6 +835,30 @@ local spec: Component.Spec = {
 				},
 				Parent = slice,
 			})
+			-- The whole item takes a press, as its focus ring shows it: the button, its label and the
+			-- gap between them. Clear, never selected itself (the button is what focus lands on).
+			Element.new("TextButton", {
+				Name = "Hit",
+				Text = "",
+				AutoButtonColor = false,
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Selectable = false,
+				Interactable = usable,
+				ZIndex = 3,
+				Position = function(): UDim2
+					local at = itemBounds()
+					return UDim2.fromOffset(math.floor(at.X), math.floor(at.Y))
+				end,
+				Size = function(): UDim2
+					local _, size = itemBounds()
+					return UDim2.fromOffset(math.ceil(size.X), math.ceil(size.Y))
+				end,
+				[ACTIVATED] = function()
+					h:select(item.value)
+				end,
+				Parent = slice,
+			})
 			if item.icon then
 				local icon = Icon.new({
 					app = app,
@@ -891,20 +939,40 @@ local spec: Component.Spec = {
 					-- Up from an anchor in the lower half, down from one in the upper half; labels
 					-- on the side toward the middle, the curve bending away from them.
 					local up = if center.Y > view.Y / 2 then -1 else 1
-					local labelsLeft = center.X >= view.X / 2
+					local labelsLeft = if p.toward == "left"
+						then true
+						elseif p.toward == "right" then false
+						else center.X >= view.X / 2
 					local size = sliceSize()
 					local start = (if anchor then anchor.size.Y / 2 else 0) + 12 + size / 2
-					local fan, tilt =
-						Menu.fan(count, start, size + Menu.fanGap, r, up, if labelsLeft then 1 else -1)
-					points(fan)
-					tilts(tilt)
-					labelSide(if labelsLeft then "left" else "right")
+					local step = size + Menu.fanGap
+					-- Labels measured in the menu's own units: a UIScale above scales AbsoluteSize
+					local shown = if slices[1] then slices[1].AbsoluteSize.X / size else 0
 					local labelRoom = 0
 					for index, item in entries do
-						local measured = captions[index].AbsoluteSize.X
+						local measured = captions[index].AbsoluteSize.X / (if shown > 0 then shown else 1)
 						labelRoom = math.max(labelRoom, measured, #item.text * 8 + 24)
 					end
 					labelRoom += 10
+					-- Too many for the screen's height: the fan wraps into curves side by side, the
+					-- next one past the labels of the last
+					local room = if up < 0
+						then center.Y - Overlay.margin
+						else view.Y - Overlay.margin - center.Y
+					local rows = Menu.fanRows(count, room, start, step, size)
+					local fan, tilt = Menu.fan(
+						count,
+						start,
+						step,
+						r,
+						up,
+						if labelsLeft then 1 else -1,
+						rows,
+						size + labelRoom + Menu.fanGap
+					)
+					points(fan)
+					tilts(tilt)
+					labelSide(if labelsLeft then "left" else "right")
 					local pad = {
 						left = size / 2 + (if labelsLeft then labelRoom else 0),
 						right = size / 2 + (if labelsLeft then 0 else labelRoom),
@@ -976,6 +1044,7 @@ function Menu.new(props: { [string]: any }?)
 	check("variant", Menu.variants, given.variant or "list")
 	check("shape", Menu.shapes, given.shape or "round")
 	check("size", Menu.sizes, given.size or "md")
+	check("toward", Menu.towards, given.toward or "auto")
 	given._menuEntries = normalize(given.items)
 	local handle = Component.mount(spec, given)
 	function handle.open(h)

@@ -2,6 +2,7 @@ return function()
 	local Menu = require(script.Parent.Menu)
 	local Composables = require(script.Parent.Parent.Composables)
 	local Reactive = require(script.Parent.Parent.Core.Reactive)
+	local Element = require(script.Parent.Parent.Core.Element)
 	local Harness = require(script.Parent.Parent.Testing.Harness)
 
 	local function near(a: Vector2, b: Vector2): boolean
@@ -34,6 +35,26 @@ return function()
 			-- dropping and bending left mirrors it
 			local down = Menu.fan(3, 50, 60, 1000, 1, -1)
 			expect(near(down[3], Vector2.new(-points[3].X, -points[3].Y))).to.equal(true)
+		end)
+
+		it("wraps a fan too tall for the screen into curves side by side, toward its labels", function()
+			-- all fit: one curve
+			expect(Menu.fanRows(8, 1000, 50, 82, 72)).to.equal(8)
+			-- room for 4 (50 + 3 * 82 + 36 = 332): two curves of 4
+			expect(Menu.fanRows(8, 340, 50, 82, 72)).to.equal(4)
+			-- room for 3: three curves (3, 3 and 2)
+			expect(Menu.fanRows(8, 260, 50, 82, 72)).to.equal(3)
+			-- no room at all still puts one a curve
+			expect(Menu.fanRows(3, 0, 50, 82, 72)).to.equal(1)
+
+			-- bending right, the second curve sits to the left, level with the first
+			local points, tilts = Menu.fan(6, 50, 60, 1000, -1, 1, 3, 200)
+			local one = Menu.fan(3, 50, 60, 1000, -1, 1)
+			for row = 1, 3 do
+				expect(near(points[row], one[row])).to.equal(true)
+				expect(near(points[row + 3], one[row] - Vector2.new(200, 0))).to.equal(true)
+				expect(tilts[row + 3]).to.be.near(tilts[row], 0.01)
+			end
 		end)
 
 		it("finds the direction toward the middle of the screen", function()
@@ -244,6 +265,29 @@ return function()
 			expect(ring.Selectable).to.equal(false)
 			-- It reaches past the button, toward its label
 			expect(ring.Size.X.Offset > Menu.sliceSize).to.equal(true)
+		end)
+
+		it("takes a press anywhere its focus ring shows, label and all", function()
+			local picked = nil
+			local menu = make({
+				variant = "arc",
+				onSelect = function(value)
+					picked = value
+				end,
+			})
+			menu:open()
+			local slice = menu.slices[1]
+			local hit = slice:FindFirstChild("Hit") :: TextButton
+			local ring = slice:FindFirstChild("ItemRing") :: Frame
+			expect(hit).to.be.ok()
+			expect(hit.Selectable).to.equal(false)
+			expect(hit.Size).to.equal(ring.Size)
+			expect(hit.Position).to.equal(ring.Position)
+			-- What a click on it runs (the same as Enter on keyboard)
+			local run = Element.activator(hit) :: () -> ()
+			expect(run).to.be.ok()
+			run()
+			expect(picked).to.equal(menu.props._menuEntries[1].value)
 		end)
 
 		it("follows a responsive variant as the input changes", function()
