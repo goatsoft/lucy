@@ -22,8 +22,10 @@
 		                every require resolves (CI runs this)
 
 	Nothing here is listed by hand: core is every file in src/ outside Components/,
-	a component's dependencies are the components it requires, and init.luau is
-	src/init.luau with the components that are not installed left out.
+	a component's dependencies are the components it requires, a folder in
+	Components/ comes with the components that require from it (Effect brings
+	Effects/), and init.luau is src/init.luau with the components that are not
+	installed left out.
 	registry.json only holds each component's description.
 ]]
 
@@ -118,27 +120,60 @@ local function isSpec(path: string): boolean
 	return string.match(path, "%.spec%.luau$") ~= nil
 end
 
--- Components: name -> { module, dependencies }
-type Component = { module: string, dependencies: { string } }
+-- Components: name -> { module, dependencies, folders }. A folder is one in Components/
+-- that the component requires from (Effect -> Effects); it is copied with the component.
+type Component = { module: string, dependencies: { string }, folders: { string } }
 local components: { [string]: Component } = {}
 local byModule: { [string]: string } = {}
 for _, path in files do
 	local module = string.match(path, "^Components/(%w+)%.luau$")
 	if module then
 		local name = kebab(module)
-		components[name] = { module = module, dependencies = {} }
+		components[name] = { module = module, dependencies = {}, folders = {} }
 		byModule[module] = name
 	end
 end
+-- Files in each folder of Components/: folder -> paths (relative to src).
+local folderFiles: { [string]: { string } } = {}
+for _, path in files do
+	local folder = string.match(path, "^Components/(%w+)/")
+	if folder then
+		folderFiles[folder] = folderFiles[folder] or {}
+		table.insert(folderFiles[folder], path)
+	end
+end
+
+local function depend(component: Component, name: string, module: string)
+	local dependency = byModule[module]
+	if dependency and dependency ~= name and not table.find(component.dependencies, dependency) then
+		table.insert(component.dependencies, dependency)
+	end
+end
+
 for name, component in components do
 	local text = fs.readFile(join(source, "Components", component.module .. ".luau"))
 	for module in string.gmatch(text, "require%(script%.Parent%.(%w+)%)") do
-		local dependency = byModule[module]
-		if dependency and dependency ~= name and not table.find(component.dependencies, dependency) then
-			table.insert(component.dependencies, dependency)
+		depend(component, name, module)
+	end
+	for folder in string.gmatch(text, "require%(script%.Parent%.(%w+)%.") do
+		if folderFiles[folder] and not table.find(component.folders, folder) then
+			table.insert(component.folders, folder)
+		end
+	end
+	-- What the folder's files require counts too (Components/Effects/X -> script.Parent.Parent.Y).
+	for _, folder in component.folders do
+		for _, path in folderFiles[folder] do
+			if not isSpec(path) then
+				for module in
+					string.gmatch(fs.readFile(join(source, path)), "require%(script%.Parent%.Parent%.(%w+)%)")
+				do
+					depend(component, name, module)
+				end
+			end
 		end
 	end
 	table.sort(component.dependencies)
+	table.sort(component.folders)
 end
 
 -- Core: everything outside Components/ and the index. The harness only comes with specs.
@@ -188,6 +223,17 @@ if options.check then
 	for name in descriptions do
 		if not components[name] then
 			fail(`registry.json describes "{name}", but src/Components has no such component`)
+		end
+	end
+	for folder in folderFiles do
+		local owned = false
+		for _, component in components do
+			owned = owned or table.find(component.folders, folder) ~= nil
+		end
+		if not owned then
+			fail(
+				`src/Components/{folder}/ belongs to no component: none requires from script.Parent.{folder}`
+			)
 		end
 	end
 end
@@ -265,6 +311,13 @@ for _, name in order do
 	local spec = `Components/{module}.spec.luau`
 	if options.specs and fs.isFile(join(source, spec)) then
 		copy(spec)
+	end
+	for _, folder in components[name].folders do
+		for _, path in folderFiles[folder] do
+			if options.specs or not isSpec(path) then
+				copy(path)
+			end
+		end
 	end
 end
 
