@@ -55,7 +55,6 @@
 	so nothing sits under a phone's home bar.
 ]]
 
-local GuiService = game:GetService("GuiService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
@@ -543,6 +542,8 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 	content.Parent = root
 
 	local reason: string? = nil
+	-- The object it is anchored to, while open (resolved when it is placed)
+	local anchorObject: GuiObject? = nil
 	local function close(why: string?)
 		if not Reactive.peek(open) then
 			return
@@ -621,7 +622,6 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 
 	-- Placement, from engine measurements while open.
 	local placing = false
-	local anchorObject: GuiObject? = nil
 	local function place()
 		if placing then
 			return
@@ -719,14 +719,20 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 				close("anchor")
 			end))
 		end
-		if not modal and closeOnOutside then
+		-- Presses while open. Not modal: one outside it and its anchor closes it (a press on the
+		-- anchor is the anchor's own). Modal: the scrim takes outside presses, but content placed
+		-- over its own anchor (a ring or a fan round a button) covers the anchor, so a press on
+		-- the anchor closes it here, as the anchor would. A press and AbsolutePosition share an
+		-- origin (under the top bar), so no inset is added.
+		if closeOnOutside then
 			live:give(UserInputService.InputBegan:Connect(function(input: InputObject)
 				local kind = input.UserInputType
 				if kind ~= Enum.UserInputType.MouseButton1 and kind ~= Enum.UserInputType.Touch then
 					return
 				end
-				local point = Vector2.new(input.Position.X, input.Position.Y) + GuiService:GetGuiInset()
-				if not inside(content, point) and not inside(anchorObject, point) then
+				local point = Vector2.new(input.Position.X, input.Position.Y)
+				local onAnchor = inside(anchorObject, point)
+				if if modal then onAnchor else not onAnchor and not inside(content, point) then
 					close("outside")
 				end
 			end))
