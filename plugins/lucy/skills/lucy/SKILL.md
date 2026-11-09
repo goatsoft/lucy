@@ -94,7 +94,14 @@ they are exact; this page only says where things are and what agents get wrong.
 11. **Position components** by putting them in a Stack or Grid, or set
    `Position` and `AnchorPoint` on `handle.Instance`. Unknown props are
    ignored without an error, so check each prop on the component's page.
-12. **Keep HUDs in the safe area**: `ignoreGuiInset = false` on the scene and
+12. **Put content in the component's slot, don't build beside it.** Badge,
+   Button, Toggle, SortButton, the items of Tabs, Toggle Group, Select, Radio
+   Group and Accordion, and Checkbox, Switch and Collapsible take `children`
+   (and most take `icon`): an icon-only badge, a price in a button, a count in a
+   tab. What is in the slot takes the component's colours. To colour one your
+   own way use `Lucy.Slot.foreground`, not a `TextColor3` rule on the root; see
+   [Slot](references/components/slot.md).
+13. **Keep HUDs in the safe area**: `ignoreGuiInset = false` on the scene and
    `Enum.ScreenInsets.CoreUISafeInsets` on `scene.gui`; see
    [Build screens with scenes](references/guide/scenes.md).
 
@@ -145,6 +152,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Sheet](references/components/sheet.md): A panel from the side of the screen, a drawer from the bottom on touch.
 - [Skeleton](references/components/skeleton.md): A pulsing placeholder while content loads.
 - [Slider](references/components/slider.md): Picks a number in a range by dragging or with the arrows.
+- [Slot](references/components/slot.md): What goes inside a badge, button, tab or option, and how it takes the component's colours.
 - [SortButton](references/components/sort-button.md): A column heading that sorts a list when pressed.
 - [Spinner](references/components/spinner.md): A turning ring that shows something is loading.
 - [Stack](references/components/stack.md): A row or column that lays out its children.

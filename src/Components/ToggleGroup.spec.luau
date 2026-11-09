@@ -173,12 +173,34 @@ return function()
 		expect(group.Instance.Size).to.equal(UDim2.fromOffset(0, 0))
 	end)
 
-	it("puts an item's children in place of text", function()
+	it("puts an item's children in its slot, with no text of its own", function()
 		local star = Instance.new("ImageLabel")
 		local group =
 			ToggleGroup.new({ app = app, Parent = gui, items = { { value = 1, children = { star } } } })
+		local slot = group.items[1]:FindFirstChild("Slot")
 		expect(group.items[1].Text).to.equal("")
-		expect(star.Parent).to.equal(group.items[1])
+		expect(star.Parent).to.equal(slot)
+		expect((slot :: any).Label.Visible).to.equal(false)
+	end)
+
+	it("gives an item's icon and text its colours when picked", function()
+		local group = ToggleGroup.new({
+			app = app,
+			Parent = gui,
+			variant = "line",
+			items = { { value = "a", text = "A", icon = "lucy:close" }, "b" },
+			value = "b",
+		})
+		Harness.flush()
+		local slot = group.items[1]:FindFirstChild("Slot") :: any
+		local muted = app.theme:resolve("MutedForeground")
+		expect(Harness.colorEq(Harness.styled(slot.Label, "TextColor3"), muted)).to.equal(true)
+		expect(Harness.colorEq(Harness.styled(slot.Icon, "ImageColor3"), muted)).to.equal(true)
+		group:select("a")
+		Harness.flush()
+		local on = app.theme:resolve("Foreground")
+		expect(Harness.colorEq(Harness.styled(slot.Label, "TextColor3"), on)).to.equal(true)
+		expect(Harness.colorEq(Harness.styled(slot.Icon, "ImageColor3"), on)).to.equal(true)
 	end)
 
 	it("rejects an unknown type", function()

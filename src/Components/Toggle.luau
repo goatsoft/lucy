@@ -4,17 +4,21 @@
 
 		Toggle.new({
 			text = "Bold",
+			icon = "lucide:bold",  -- optional: before the text (toggle.icon); alone with no text
 			pressed = false,
 			variant = "default",   -- default | outline | line (an underline when on, as tabs)
 			size = "md",           -- sm | md | lg
 			disabled = false,
 			visible = true,
-			children = { icon },   -- optional: shown in place of text
+			children = { icon },   -- optional: after the text in its slot (Slot: strings, handles,
+			                       -- instances, builders); alone when there is no text
 			onPressedChange = function(pressed, toggle) end,
 			Parent = toolbar,
 		})
 		toggle:toggle()
 
+	A toggle is a box with a slot (ADR 0042): with children, its text (toggle.label) and children sit
+	in a row (the Slot frame) and take its colours, hover, on and disabled included (Slot.flow).
 	State keys: text, pressed, variant, size, disabled, visible.
 	Events: "toggle" with the new value, for Lucy.useUiSound.
 
@@ -24,6 +28,8 @@
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
+local Icon = require(script.Parent.Icon)
+local Slot = require(script.Parent.Slot)
 
 local Toggle = {}
 
@@ -142,6 +148,25 @@ Toggle.rules = {
 	},
 } :: { Component.Rule }
 
+-- The slot row fills the toggle (the Indicator stays out of its layout)
+local slotRules: { Component.Rule } = {
+	{
+		selector = ".ui-toggle-slot",
+		priority = 0,
+		properties = { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), BorderSizePixel = 0 },
+	},
+}
+-- What sits in the slot takes the toggle's colours (ADR 0042)
+for _, rule in Slot.flow(Toggle.rules, " > .ui-toggle-slot > .") do
+	table.insert(slotRules, rule)
+end
+for _, rule in Slot.rules do
+	table.insert(slotRules, rule)
+end
+for _, rule in slotRules do
+	table.insert(Toggle.rules, rule)
+end
+
 function Toggle.check(variant: string, size: string)
 	if not table.find(Toggle.variants, variant) then
 		error(`[Lucy] unknown Toggle variant "{variant}" (expected {table.concat(Toggle.variants, ", ")})`, 0)
@@ -175,6 +200,45 @@ function Toggle.indicator(shown: () -> boolean): Frame
 	})
 end
 
+-- The slot (ADR 0042): an icon, the text and the children in a row that fills a toggle (or a
+-- ToggleGroup item), outside the Indicator. Returns the row, the label and the Icon (if any).
+function Toggle.slot(app: any, text: any, icon: any, children: any): (Frame, TextLabel, any)
+	local function words(): string
+		return if type(text) == "function" then text() else text
+	end
+	local row = Element.new("Frame", {
+		Name = "Slot",
+		AutomaticSize = Enum.AutomaticSize.X,
+		Tags = { "ui-toggle-slot" },
+		Element.new("UIListLayout", {
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			FillDirection = Enum.FillDirection.Horizontal,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Padding = UDim.new(0, 6),
+		}) :: any,
+	})
+	local mark = nil
+	if icon ~= nil then
+		mark = Icon.new({ app = app, icon = icon, size = "sm", name = "Icon", layoutOrder = 0 })
+		mark.Instance.Parent = row
+	end
+	local label = Element.new("TextLabel", {
+		Name = "Label",
+		Text = words,
+		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromScale(0, 1),
+		LayoutOrder = 1,
+		Visible = function(): boolean
+			return words() ~= ""
+		end,
+		Tags = { Slot.TEXT_TAG },
+	})
+	label.Parent = row
+	Slot.fill(row, children, { app = app, startOrder = 1 })
+	return row, label, mark
+end
+
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "toggle",
@@ -204,7 +268,7 @@ local spec: Component.Spec = {
 
 		local root = Element.new("TextButton", {
 			AutoButtonColor = false,
-			Text = if p.children then "" else h:ref("text"),
+			Text = if p.children ~= nil or p.icon ~= nil then "" else h:ref("text"),
 			AutomaticSize = Enum.AutomaticSize.X,
 			Visible = h:ref("visible"),
 			Interactable = enabled,
@@ -226,7 +290,11 @@ local spec: Component.Spec = {
 				return variant() == "line" and (pressed() :: any) == true
 			end) :: any,
 		})
-		Component.adopt(root, p.children)
+		if p.children ~= nil or p.icon ~= nil then
+			local row, label, icon = Toggle.slot(h.app, h:ref("text"), p.icon, p.children)
+			row.Parent = root
+			h.slot, h.label, h.icon = row, label, icon
+		end
 		return root
 	end,
 }

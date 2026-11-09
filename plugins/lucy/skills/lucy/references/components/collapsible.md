@@ -40,6 +40,7 @@ header into the content and back.
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
 | `text` | string | `""` | yes | The header text |
+| `children` | table | | | Anything after the text in the header's [slot](slot.md) (a count, a badge), before the chevron. They take the header's look and fade when disabled |
 | `content` | Instance, handle or function | | | What it shows and hides; a function is called once at mount |
 | `open` | boolean | `false` | yes | Whether it is open |
 | `variant` | string | `"default"` | yes | `default` or `details` |

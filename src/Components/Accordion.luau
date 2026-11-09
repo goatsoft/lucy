@@ -17,6 +17,8 @@
 		})
 		accordion:toggle("video")
 
+	An item is { value, text?, children?, content, disabled? }: text and children go in the
+	section header's slot (ADR 0042), content under it.
 	Each section is a Collapsible (accordion.sections[value]). With type "single"
 	opening a section closes the open one, and pressing the open one closes it, so
 	all can be closed. With "multiple" any number stay open and the value lists
@@ -104,6 +106,7 @@ local spec: Component.Spec = {
 				name = `Section{index}`,
 				layoutOrder = index,
 				text = item.text,
+				children = item.children,
 				content = item.content,
 				open = open,
 				variant = h:ref("variant"),

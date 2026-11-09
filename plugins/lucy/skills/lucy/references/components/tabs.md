@@ -46,7 +46,8 @@ Each tab is a table:
 | `value` | What the tab stands for. Required |
 | `text` | The tab's text. Defaults to the value. `label` works too |
 | `content` | The panel: an Instance, a handle, or a function that returns one |
-| `children` | Shown in the tab in place of the text, such as an icon |
+| `icon` | An [icon](icon.md) name drawn before the tab's text |
+| `children` | Anything after the text in the tab's [slot](slot.md), such as a count badge. With an icon or children and no text, the tab shows no text. They take the tab's colours |
 | `disabled` | Greys this tab out |
 
 Every panel is built when the tabs are, and kept: switching back to a tab finds

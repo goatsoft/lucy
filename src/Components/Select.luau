@@ -19,7 +19,10 @@
 		})
 		select:select("na")  select:open()  select:close()  select:toggle()
 
-	An item is a value (shown as its text) or { value, label?, disabled? }.
+	An item is a value (shown as its text) or { value, label?, icon?, children?, disabled? }.
+	An option is a row with a slot (ADR 0042): its icon, label and children (a flag, a count, a
+	badge) sit in a row and take the option's colours, faded when disabled; the label fills
+	and truncates. The trigger shows the label alone.
 
 	Types: "default" highlights the picked option; "check" draws lucy:check in
 	front of the picked one. With multiple = true (a check select) each press
@@ -38,6 +41,7 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Slot = require(script.Parent.Slot)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Icon = require(script.Parent.Icon)
@@ -162,6 +166,26 @@ Select.rules = {
 		properties = { TextTransparency = 0.5 },
 	},
 } :: { Component.Rule }
+-- An option's slot takes its words' look (ADR 0042)
+local optionRules: { Component.Rule } = {
+	{
+		selector = ".ui-select-option",
+		priority = 0,
+		properties = { TextColor3 = "$PopoverForeground", FontFace = "$FontSans", TextSize = "$TextSm" },
+	},
+	{ selector = ".ui-select-option.ui-disabled", priority = 30, properties = { TextTransparency = 0.5 } },
+}
+for _, rule in Slot.flow(optionRules, " > .ui-select-slot > .") do
+	table.insert(Select.rules, rule)
+end
+for _, rule in Slot.rules do
+	table.insert(Select.rules, rule)
+end
+table.insert(Select.rules, {
+	selector = ".ui-select-slot",
+	priority = 0,
+	properties = { BackgroundTransparency = 1, BorderSizePixel = 0 },
+})
 
 local spec: Component.Spec = {
 	kind = "select",
@@ -312,13 +336,37 @@ local spec: Component.Spec = {
 			local indent = if check then TICK else 0
 			local label = Element.new("TextLabel", {
 				Name = "Label",
-				Position = UDim2.fromOffset(indent, 0),
-				Size = UDim2.new(1, -indent, 1, 0),
+				LayoutOrder = 1,
+				Size = UDim2.fromScale(0, 1),
 				TextXAlignment = Enum.TextXAlignment.Left,
 				TextTruncate = Enum.TextTruncate.AtEnd,
 				Text = item.text,
-				Tags = { "ui-select-option-label" :: any, ["ui-disabled"] = off },
+				Visible = item.text ~= "",
+				Tags = { "ui-select-option-label" :: any, Slot.TEXT_TAG, ["ui-disabled"] = off },
 			})
+			local fill = Instance.new("UIFlexItem")
+			fill.FlexMode = Enum.UIFlexMode.Fill
+			fill.Parent = label
+			-- The slot: icon, label (filling) and children in a row past the tick
+			local slot = Element.new("Frame", {
+				Name = "Slot",
+				Position = UDim2.fromOffset(indent, 0),
+				Size = UDim2.new(1, -indent, 1, 0),
+				Tags = { "ui-select-slot" },
+				Element.new("UIListLayout", {
+					SortOrder = Enum.SortOrder.LayoutOrder,
+					FillDirection = Enum.FillDirection.Horizontal,
+					VerticalAlignment = Enum.VerticalAlignment.Center,
+					Padding = UDim.new(0, 6),
+				}) :: any,
+				label,
+			})
+			if item.icon ~= nil then
+				local mark =
+					Icon.new({ app = app, icon = item.icon, size = "sm", name = "Icon", layoutOrder = 0 })
+				mark.Instance.Parent = slot
+			end
+			Slot.fill(slot, item.children, { app = app, startOrder = 1 })
 			local root = Element.new("TextButton", {
 				Name = `Option{index}`,
 				LayoutOrder = index,
@@ -338,7 +386,7 @@ local spec: Component.Spec = {
 				[ACTIVATED] = function()
 					h:select(itemValue)
 				end,
-				label,
+				slot,
 			})
 			if check then
 				check.Instance.Parent = root

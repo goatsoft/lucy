@@ -78,6 +78,64 @@ return function()
 		end).to.throw()
 	end)
 
+	it("holds an icon, its text and children in a row (a slot)", function()
+		local Slot = require(script.Parent.Slot)
+		local extra = Instance.new("Frame")
+		local badge = Badge.new({
+			app = app,
+			Parent = gui,
+			icon = "lucy:close",
+			text = "LV 12",
+			children = { "PRO", extra },
+		})
+		local root = badge.Instance :: TextLabel
+		expect(root.Text).to.equal("")
+		expect(root:FindFirstChildOfClass("UIListLayout")).to.be.ok()
+		expect(badge.icon.Instance.Parent).to.equal(root)
+		expect(badge.label.Instance.Text).to.equal("LV 12")
+		expect(badge.label.Instance:HasTag(Slot.TEXT_TAG)).to.equal(true)
+		local words = {}
+		for _, child in root:GetChildren() do
+			if child:IsA("TextLabel") and child:HasTag(Slot.TEXT_TAG) then
+				words[child.LayoutOrder] = child.Text
+			end
+		end
+		expect(words[2]).to.equal("LV 12")
+		expect(words[3]).to.equal("PRO")
+		expect(extra.Parent).to.equal(root)
+		expect(extra.LayoutOrder).to.equal(4)
+		-- The text follows its state, and goes when it is empty
+		badge:set("text", "LV 13")
+		expect(badge.label.Instance.Text).to.equal("LV 13")
+		badge:set("text", "")
+		expect(badge.label.Instance.Visible).to.equal(false)
+	end)
+
+	it("shows an icon alone, with no default text", function()
+		local badge = Badge.new({ app = app, Parent = gui, icon = "lucy:close" })
+		expect(badge.label.Instance.Visible).to.equal(false)
+		expect(badge.icon.Instance.Visible).to.equal(true)
+	end)
+
+	it("passes its colours down to what is in it", function()
+		local found = {}
+		for _, rule in Badge.rules do
+			found[rule.selector] = rule
+		end
+		local own = found[".ui-badge-variant-outline > .ui-slot-text"]
+		local text = found[".ui-badge-variant-outline >> .ui-text"]
+		local icon = found[".ui-badge-variant-outline >> .ui-icon"]
+		expect(own and own.properties.TextColor3).to.equal("$Foreground")
+		expect(text and text.properties.TextColor3).to.equal("$Foreground")
+		expect(icon and icon.properties.ImageColor3).to.equal("$Foreground")
+		-- Over Text's and Icon's own variants
+		expect(icon.priority > 10).to.equal(true)
+		-- The badge's size reaches its own words, not a Text put in it
+		local base = found[".ui-badge > .ui-slot-text"]
+		expect(base and base.properties.TextSize).to.equal("$TextXs")
+		expect(found[".ui-badge >> .ui-text"].properties.TextSize).to.equal(nil)
+	end)
+
 	it("rejects unknown variants", function()
 		expect(function()
 			Badge.new({ app = app, variant = "gold" })

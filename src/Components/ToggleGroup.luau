@@ -20,7 +20,9 @@
 		group:select("Techno")
 
 	An item is a value (a string or number, shown as its text) or a table:
-	{ value, text?, children?, disabled? }. `children` shows in place of the text.
+	{ value, text?, icon?, children?, disabled? }. An item is a toggle with a slot (ADR 0042):
+	its icon, text and children sit in a row and take its colours (Toggle.slot); with an icon
+	or children and no text, it shows no text.
 
 	State keys: value, variant, size, disabled, visible.
 	Events: "select" with the value picked, for Lucy.useUiSound.
@@ -37,6 +39,7 @@ local ToggleGroup = {}
 export type Item = {
 	value: any,
 	text: string,
+	icon: any,
 	children: any,
 	disabled: boolean,
 	content: any,
@@ -53,7 +56,10 @@ function ToggleGroup.normalize(items: { any }?, what: string): { Item }
 		end
 		table.insert(list, {
 			value = item.value,
-			text = item.text or item.label or tostring(item.value),
+			text = item.text or item.label or (if item.children ~= nil or item.icon ~= nil
+				then ""
+				else tostring(item.value)),
+			icon = item.icon,
 			children = item.children,
 			disabled = item.disabled == true,
 			content = item.content,
@@ -128,7 +134,7 @@ local spec: Component.Spec = {
 				Name = `Item{index}`,
 				LayoutOrder = index,
 				AutoButtonColor = false,
-				Text = if item.children then "" else item.text,
+				Text = if item.children ~= nil or item.icon ~= nil then "" else item.text,
 				AutomaticSize = Enum.AutomaticSize.X,
 				Interactable = enabled,
 				Selectable = enabled,
@@ -140,7 +146,10 @@ local spec: Component.Spec = {
 					return variant() == "line" and (selected :: any)() == true
 				end) :: any,
 			})
-			Component.adopt(button, item.children)
+			if item.children ~= nil or item.icon ~= nil then
+				local row = Toggle.slot(h.app, item.text, item.icon, item.children)
+				row.Parent = button
+			end
 			buttons[index] = button
 		end
 		h.items = buttons

@@ -4,6 +4,8 @@
 
 		Checkbox.new({
 			label = "Mute music",          -- optional; the whole row is the hit area
+			children = { ... },   -- optional: after the label in its slot (Slot: strings, handles,
+			                      -- instances, builders); Foreground, faded when disabled
 			checked = false,
 			disabled = false,
 			onCheckedChange = function(checked, checkbox) end,
@@ -16,6 +18,7 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Slot = require(script.Parent.Slot)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
@@ -71,6 +74,10 @@ local rules: { Component.Rule } = {
 	{ selector = ".ui-checkbox-label.ui-disabled", priority = 30, properties = { TextTransparency = 0.5 } },
 }
 Checkbox.rules = rules
+-- What sits beside the checkbox takes its label's look (ADR 0042)
+for _, rule in Slot.beside(".ui-checkbox-root") do
+	table.insert(Checkbox.rules, rule)
+end
 
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
@@ -126,7 +133,7 @@ local spec: Component.Spec = {
 			end)
 		end
 
-		return Element.new("TextButton", {
+		local root = Element.new("TextButton", {
 			Text = "",
 			AutoButtonColor = false,
 			BackgroundTransparency = 1,
@@ -137,7 +144,7 @@ local spec: Component.Spec = {
 			Visible = visible,
 			Interactable = enabled,
 			Selectable = enabled,
-			Tags = { "ui-checkbox-root", "ui-ring-host" },
+			Tags = { "ui-checkbox-root" :: any, "ui-ring-host", ["ui-disabled"] = disabled },
 			[Element.on("Activated")] = function()
 				h:toggle()
 			end,
@@ -149,6 +156,8 @@ local spec: Component.Spec = {
 			box,
 			text,
 		})
+		Slot.fill(root, p.children, { app = h.app, startOrder = 2 })
+		return root
 	end,
 }
 

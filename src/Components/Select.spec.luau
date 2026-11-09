@@ -269,4 +269,26 @@ return function()
 		Overlay.measureSafeBottom = measure
 		assert(ok, err)
 	end)
+
+	describe("slot", function()
+		it("puts an option's icon, label and children in a row past the tick", function()
+			local extra = Instance.new("Frame")
+			local select = Select.new({
+				app = app,
+				Parent = gui,
+				type = "check",
+				items = { { value = "eu", label = "Europe", icon = "lucy:close", children = { extra } } },
+			})
+			local row = select.items[1]
+			local slot = row.root:FindFirstChild("Slot") :: any
+			expect(row.label.Parent).to.equal(slot)
+			expect(extra.Parent).to.equal(slot)
+			expect(slot.Icon.LayoutOrder < row.label.LayoutOrder).to.equal(true)
+			expect(row.label.LayoutOrder < extra.LayoutOrder).to.equal(true)
+			expect(slot.Position.X.Offset > 0).to.equal(true)
+			Harness.flush()
+			local fg = app.theme:resolve("PopoverForeground")
+			expect(Harness.colorEq(Harness.styled(slot.Icon, "ImageColor3"), fg)).to.equal(true)
+		end)
+	end)
 end

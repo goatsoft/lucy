@@ -128,4 +128,20 @@ return function()
 		app.input:activate()
 		expect(a:get("value")).to.equal("controls")
 	end)
+
+	it("puts an item's children in its section's header", function()
+		local accordion = Accordion.new({
+			app = app,
+			Parent = gui,
+			items = { { value = "a", text = "Audio", children = { "2" }, content = Instance.new("Frame") } },
+		})
+		local header = accordion.sections.a.header
+		local found = false
+		for _, child in header:GetChildren() do
+			if child:IsA("TextLabel") and child.Text == "2" then
+				found = true
+			end
+		end
+		expect(found).to.equal(true)
+	end)
 end

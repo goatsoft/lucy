@@ -40,7 +40,8 @@ An item is a value (a string or a number, shown as its text) or a table:
 |---|---|
 | `value` | What the item stands for. Required |
 | `text` | Its text. Defaults to the value. `label` works too |
-| `children` | Shown in place of the text, such as an icon |
+| `icon` | An [icon](icon.md) name drawn before the text |
+| `children` | Anything after the text in the item's [slot](slot.md), such as a count or an icon. With an icon or children and no text, the item shows no text. They take the item's colours, picked and hover included |
 | `disabled` | Greys this item out |
 
 In a single group, `value` is `false` until something is picked, and picking

@@ -8,7 +8,9 @@
 		SortButton.new({
 			sort = dances,          -- a useSort or useTable result
 			column = "rarity",      -- the column id it sorts
-			text = "Rarity",        -- the label; the column's header by default
+			text = "Rarity",        -- the label; the column's header by default ("" for none)
+			children = { ... },     -- optional: after the label in its slot (Slot: strings, handles,
+			                        -- instances, builders), before the chevron
 			align = "left",         -- left | center | right
 			disabled = false,       -- on its own for a column that does not sort
 			onClick = function(button) end,  -- after it sorts
@@ -20,6 +22,9 @@
 	direction; while more than one column sorts, a small number shows its
 	place (1 leads, 2 breaks its ties, and so on).
 
+	A sort button is a box with a slot (ADR 0042): its label and children take its colours,
+	muted until it sorts (Slot.flow).
+
 	button.label, button.icon (an Icon), button.priority (the number's label).
 	State keys: disabled, visible. Events: "activate", for Lucy.useUiSound.
 ]]
@@ -28,6 +33,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Icon = require(script.Parent.Icon)
+local Slot = require(script.Parent.Slot)
 
 local SortButton = {}
 
@@ -42,7 +48,14 @@ local rules: { Component.Rule } = {
 	{
 		selector = ".ui-sort-button",
 		priority = 0,
-		properties = { BackgroundColor3 = "$Accent", BackgroundTransparency = 1, BorderSizePixel = 0 },
+		properties = {
+			BackgroundColor3 = "$Accent",
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			TextColor3 = "$MutedForeground",
+			FontFace = "$FontSansMedium",
+			TextSize = "$TextSm",
+		},
 	},
 	{ selector = ".ui-sort-button::UICorner", priority = 0, properties = { CornerRadius = "$RadiusSm" } },
 	-- Sized to its words (no size: over a grid of cards), it pads its sides, so its hover fill
@@ -53,21 +66,7 @@ local rules: { Component.Rule } = {
 		properties = { PaddingLeft = "$Space2", PaddingRight = "$Space2" },
 	},
 	{ selector = ".ui-sort-button:Hover", priority = 10, properties = { BackgroundTransparency = 0 } },
-	{
-		selector = ".ui-sort-label",
-		priority = 0,
-		properties = {
-			BackgroundTransparency = 1,
-			TextColor3 = "$MutedForeground",
-			FontFace = "$FontSansMedium",
-			TextSize = "$TextSm",
-		},
-	},
-	{
-		selector = ".ui-sort-button.ui-sorted > .ui-sort-label",
-		priority = 10,
-		properties = { TextColor3 = "$Foreground" },
-	},
+	{ selector = ".ui-sort-button.ui-sorted", priority = 10, properties = { TextColor3 = "$Foreground" } },
 	{
 		selector = ".ui-sort-priority",
 		priority = 0,
@@ -79,7 +78,25 @@ local rules: { Component.Rule } = {
 		},
 	},
 }
-SortButton.rules = rules
+-- The label and the slot's children take the button's colours (ADR 0042); the chevron and the
+-- number stay muted, over the twins
+SortButton.rules = table.clone(rules)
+for _, rule in Slot.flow(rules) do
+	table.insert(SortButton.rules, rule)
+end
+table.insert(SortButton.rules, {
+	selector = ".ui-sort-button > .ui-sort-chevron",
+	priority = 50,
+	properties = { ImageColor3 = "$MutedForeground" },
+})
+table.insert(SortButton.rules, {
+	selector = ".ui-sort-button > .ui-sort-priority",
+	priority = 50,
+	properties = { TextColor3 = "$MutedForeground" },
+})
+for _, rule in Slot.rules do
+	table.insert(SortButton.rules, rule)
+end
 
 local spec: Component.Spec = {
 	kind = "sort-button",
@@ -105,13 +122,19 @@ local spec: Component.Spec = {
 		end
 		local height = Composables.useMetric(app, "ControlSm")
 
+		local labelText: string = if p.text ~= nil
+			then tostring(p.text)
+			elseif p.children ~= nil then ""
+			elseif header ~= nil then tostring(header)
+			else columnId
 		local label = Element.new("TextLabel", {
 			Name = "Label",
 			LayoutOrder = 1,
 			AutomaticSize = Enum.AutomaticSize.X,
 			Size = UDim2.fromScale(0, 1),
-			Text = if p.text ~= nil then p.text elseif header ~= nil then tostring(header) else columnId,
-			Tags = { "ui-sort-label" },
+			Text = labelText,
+			Visible = labelText ~= "",
+			Tags = { "ui-sort-label", Slot.TEXT_TAG },
 		})
 		local icon = Icon.new({
 			app = app,
@@ -121,14 +144,15 @@ local spec: Component.Spec = {
 			size = "sm",
 			variant = "muted",
 			name = "SortIcon",
-			layoutOrder = 2,
+			layoutOrder = 1000,
 			visible = function(): boolean
 				return direction() ~= false
 			end,
 		})
+		icon.Instance:AddTag("ui-sort-chevron")
 		local priority = Element.new("TextLabel", {
 			Name = "Priority",
-			LayoutOrder = 3,
+			LayoutOrder = 1001,
 			AutomaticSize = Enum.AutomaticSize.X,
 			Size = UDim2.fromScale(0, 1),
 			Text = function(): string
@@ -143,7 +167,7 @@ local spec: Component.Spec = {
 		h.icon = icon
 		h.priority = priority
 
-		return Element.new("TextButton", {
+		local root = Element.new("TextButton", {
 			Name = "Sort",
 			Text = "",
 			AutoButtonColor = false,
@@ -176,6 +200,9 @@ local spec: Component.Spec = {
 			icon.Instance,
 			priority,
 		})
+		-- The slot's children after the label, before the chevron
+		Slot.fill(root, p.children, { app = app, startOrder = 1 })
+		return root
 	end,
 }
 

@@ -31,7 +31,7 @@ section.
 
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
-| `items` | table | | | The sections: `{ value, text, content, disabled }` each |
+| `items` | table | | | The sections: `{ value, text, children, content, disabled }` each; `children` go in the section header's [slot](slot.md) |
 | `type` | string | `"single"` | | `single`: one open at a time; `multiple`: any number. Set at mount |
 | `value` | any | `false` | yes | `single`: the open section's value, or `false`. `multiple`: a list of values |
 | `variant` | string | `"default"` | yes | The sections' look: `default` or `details` (see [Collapsible](collapsible.md#variants)) |

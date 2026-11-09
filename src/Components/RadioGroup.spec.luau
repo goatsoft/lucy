@@ -149,4 +149,27 @@ return function()
 		app.input:activate()
 		expect(group:get("value")).to.equal("hard")
 	end)
+
+	describe("slot", function()
+		it("puts an item's children after its label, in its look", function()
+			local Icon = require(script.Parent.Icon)
+			local mark = Icon.new({ app = app, icon = "lucy:close" })
+			local group = RadioGroup.new({
+				app = app,
+				Parent = gui,
+				items = { { value = "a", label = "A", children = { mark }, disabled = true } },
+			})
+			local row = group.items[1]
+			expect(mark.Instance.Parent).to.equal(row.root)
+			expect(row.label.LayoutOrder < mark.Instance.LayoutOrder).to.equal(true)
+			Harness.flush()
+			expect(Harness.styled(mark.Instance, "ImageTransparency")).to.equal(0.5)
+		end)
+
+		it("shows no text for an item with children and no label", function()
+			local group =
+				RadioGroup.new({ app = app, Parent = gui, items = { { value = 1, children = { "*" } } } })
+			expect(group.items[1].label.Visible).to.equal(false)
+		end)
+	end)
 end

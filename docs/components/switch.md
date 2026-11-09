@@ -35,6 +35,7 @@ Lucy.Stack.new({
 |---|---|---|---|---|
 | `checked` | boolean | `false` | yes | Whether it is on |
 | `label` | string | `""` | yes | Text beside the switch |
+| `children` | table | | | Anything after the label in its [slot](slot.md), such as a "NEW" badge. They take the label's look and fade when disabled |
 | `disabled` | boolean | `false` | yes | Greys it out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `onCheckedChange` | function | | | Called with `(checked, handle)` when it changes |

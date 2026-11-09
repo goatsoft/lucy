@@ -7,13 +7,21 @@
 			variant = "default",   -- default | secondary | destructive | outline
 			shape = "rounded",     -- rounded | square (only slightly rounded, $RadiusXs, and a
 			                       -- tighter fit: a tag or a label)
+			icon = "lucide:bot",   -- optional: before the text, or alone
+			children = { ... },    -- optional: anything, in a row (Slot: strings, handles,
+			                       -- instances, builders), after the icon and the text
 		})
 
-	State keys: text, variant, shape, visible.
+	A badge is a box with a slot (ADR 0042): its icon, text and children sit in a row and take
+	its colours (Slot.flow), so a tinted badge tints all of it. With only text, the text is the
+	badge's own. State keys: text, icon, variant, shape, visible.
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
+local Icon = require(script.Parent.Icon)
+local Slot = require(script.Parent.Slot)
+local Text = require(script.Parent.Text)
 
 local Badge = {}
 
@@ -81,6 +89,15 @@ local rules: { Component.Rule } = {
 	},
 }
 Badge.rules = rules
+-- What sits in the slot takes the badge's colours (ADR 0042)
+for _, rule in Slot.flow(rules) do
+	table.insert(Badge.rules, rule)
+end
+for _, rule in Slot.rules do
+	table.insert(Badge.rules, rule)
+end
+-- The slot's words: the badge's size and weight
+Badge.ICON_SIZE = 14
 
 local function check(variant: string)
 	if not table.find(Badge.variants, variant) then
@@ -97,17 +114,20 @@ end
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "badge",
-	defaults = { text = "Badge", variant = "default", shape = "rounded", visible = true },
+	defaults = { text = "Badge", icon = "", variant = "default", shape = "rounded", visible = true },
 	rules = Badge.rules,
 	render = function(h)
 		check(h:get("variant")) -- an unknown variant or shape fails the mount
 		checkShape(h:get("shape"))
+		local p: Component.Props = h.props
 		local variant = h:ref("variant")
 		local shape = h:ref("shape")
-		return Element.new("TextLabel", {
+		-- A slot when there is more than words: the icon, the text and the children in a row
+		local slotted = p.icon ~= nil or p.children ~= nil
+		local root = Element.new("TextLabel", {
 			AutomaticSize = Enum.AutomaticSize.XY,
 			Size = UDim2.fromOffset(0, 0),
-			Text = h:ref("text"),
+			Text = if slotted then "" else h:ref("text"),
 			Visible = h:ref("visible"),
 			Tags = {
 				"ui-badge" :: any,
@@ -122,11 +142,53 @@ local spec: Component.Spec = {
 					return name == "square"
 				end,
 			},
-		})
+		}) :: TextLabel
+		if slotted then
+			Element.new("UIListLayout", {
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				FillDirection = Enum.FillDirection.Horizontal,
+				VerticalAlignment = Enum.VerticalAlignment.Center,
+				Padding = UDim.new(0, 4),
+				Parent = root,
+			})
+			local icon, text = h:ref("icon"), h:ref("text")
+			local mark = Icon.new({
+				app = h.app,
+				icon = icon,
+				size = Badge.ICON_SIZE,
+				name = "Icon",
+				layoutOrder = 1,
+				visible = function(): boolean
+					return icon() ~= ""
+				end,
+			})
+			mark.Instance.Parent = root
+			h.icon = mark
+			local words = Text.new({
+				app = h.app,
+				text = text,
+				autoWidth = true,
+				name = "Label",
+				layoutOrder = 2,
+				visible = function(): boolean
+					return text() ~= ""
+				end,
+			})
+			words.Instance:AddTag(Slot.TEXT_TAG)
+			words.Instance.Parent = root
+			h.label = words
+			Slot.fill(root, p.children, { app = h.app, startOrder = 2 })
+		end
+		return root
 	end,
 }
 
 function Badge.new(props: { [string]: any }?)
+	-- An icon or children with no text: no default text beside them
+	if props and (props.icon ~= nil or props.children ~= nil) and props.text == nil then
+		props = table.clone(props)
+		props.text = ""
+	end
 	return Component.mount(spec, props)
 end
 

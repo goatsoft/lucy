@@ -31,6 +31,21 @@ return {
 							return if #picked == 0 then "All genres" else table.concat(picked, ", ")
 						end,
 					}),
+					-- The slot: an icon and a count in each item
+					Lucy.ToggleGroup.new({
+						items = {
+							{ value = "owned", text = "Owned", icon = "lucy:check" },
+							{
+								value = "new",
+								text = "New",
+								children = { Lucy.Badge.new({ text = "3", variant = "secondary" }) },
+							},
+						},
+						value = "owned",
+						variant = c.variant,
+						size = c.size,
+						disabled = c.disabled,
+					}),
 					Lucy.ToggleGroup.new({
 						items = { 1, 2, 3, 4, 5 },
 						value = vote,

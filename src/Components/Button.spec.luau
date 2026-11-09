@@ -201,6 +201,64 @@ return function()
 		end)
 	end)
 
+	describe("slot", function()
+		it("holds children after the text and before the hint", function()
+			local Slot = require(script.Parent.Slot)
+			local extra = Instance.new("Frame")
+			local button = Button.new({
+				app = app,
+				Parent = gui,
+				text = "Unlock",
+				children = { "100 R$", extra },
+				hint = { keyboard = Enum.KeyCode.E },
+			})
+			local root = button.Instance
+			expect(root.Text).to.equal("")
+			local price: TextLabel? = nil
+			for _, child in root:GetChildren() do
+				if child:IsA("TextLabel") and child:HasTag(Slot.TEXT_TAG) and child ~= button.label then
+					price = child
+				end
+			end
+			expect(price).to.be.ok()
+			expect((price :: TextLabel).Text).to.equal("100 R$")
+			expect(button.label.LayoutOrder < (price :: TextLabel).LayoutOrder).to.equal(true)
+			expect((price :: TextLabel).LayoutOrder < extra.LayoutOrder).to.equal(true)
+			expect(extra.LayoutOrder < button.hint.Instance.LayoutOrder).to.equal(true)
+		end)
+
+		it("has no default text beside children", function()
+			local button = Button.new({ app = app, Parent = gui, children = { "GO" } })
+			expect(button.label.Visible).to.equal(false)
+		end)
+
+		it("gives what is in it the button's colours and fades it when disabled", function()
+			local Text = require(script.Parent.Text)
+			local Icon = require(script.Parent.Icon)
+			local words = Text.new({ app = app, text = "deep", variant = "muted" })
+			local holder = Instance.new("Frame")
+			words.Instance.Parent = holder
+			local mark = Icon.new({ app = app, icon = "lucy:close" })
+			local button = Button.new({
+				app = app,
+				Parent = gui,
+				text = "Buy",
+				variant = "destructive",
+				children = { holder, mark },
+			})
+			Harness.flush()
+			local colour = app.theme:resolve("DestructiveForeground")
+			expect(Harness.colorEq(Harness.styled(button.label, "TextColor3"), colour)).to.equal(true)
+			-- A Text deeper in, muted on its own, takes the button's colour
+			expect(Harness.colorEq(Harness.styled(words.Instance, "TextColor3"), colour)).to.equal(true)
+			expect(Harness.colorEq(Harness.styled(mark.Instance, "ImageColor3"), colour)).to.equal(true)
+			button:set("disabled", true)
+			Harness.flush()
+			expect(Harness.styled(words.Instance, "TextTransparency")).to.equal(0.5)
+			expect(Harness.styled(mark.Instance, "ImageTransparency")).to.equal(0.5)
+		end)
+	end)
+
 	describe("hint", function()
 		it("shows a key cap after the text", function()
 			app.input:setMode("keyboard")

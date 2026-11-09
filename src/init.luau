@@ -148,6 +148,7 @@ local Lucy = {
 	Attribution = require(Components.Attribution),
 	Avatar = require(Components.Avatar),
 	Badge = require(Components.Badge),
+	Slot = require(Components.Slot),
 	Button = require(Components.Button),
 	Checkbox = require(Components.Checkbox),
 	Collapsible = require(Components.Collapsible),

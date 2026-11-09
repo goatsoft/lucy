@@ -15,7 +15,9 @@
 		})
 		group:select("hard")
 
-	An item is a value (shown as its text) or { value, label?, disabled? }. Once
+	An item is a value (shown as its text) or { value, label?, children?, disabled? }. children
+	sit after the label in the option's slot (ADR 0042: Slot strings, handles, instances,
+	builders), in Foreground, faded when disabled; with children and no label, no text. Once
 	something is picked the player can change it but not clear it.
 
 	Each row's hit area is at least ControlSm tall and the circle grows with
@@ -26,6 +28,7 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Slot = require(script.Parent.Slot)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
@@ -77,6 +80,10 @@ RadioGroup.rules = {
 	{ selector = ".ui-radio-dot.ui-disabled", priority = 30, properties = { BackgroundTransparency = 0.5 } },
 	{ selector = ".ui-radio-label.ui-disabled", priority = 30, properties = { TextTransparency = 0.5 } },
 } :: { Component.Rule }
+-- What sits beside a radio takes its label's look (ADR 0042)
+for _, rule in Slot.beside(".ui-radio-option") do
+	table.insert(RadioGroup.rules, rule)
+end
 
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
@@ -157,6 +164,7 @@ local spec: Component.Spec = {
 				AutomaticSize = Enum.AutomaticSize.X,
 				Size = UDim2.fromScale(0, 1),
 				Text = item.text,
+				Visible = item.text ~= "",
 				Tags = { "ui-radio-label", ["ui-disabled"] = off },
 			})
 			local root = Element.new("TextButton", {
@@ -169,7 +177,7 @@ local spec: Component.Spec = {
 				Size = rowSize,
 				Interactable = enabled,
 				Selectable = enabled,
-				Tags = { "ui-radio-option", "ui-ring-host" },
+				Tags = { "ui-radio-option" :: any, "ui-ring-host", ["ui-disabled"] = off },
 				[ACTIVATED] = function()
 					h:select(itemValue)
 				end,
@@ -181,6 +189,7 @@ local spec: Component.Spec = {
 				circle,
 				label,
 			})
+			Slot.fill(root, item.children, { app = h.app, startOrder = 2 })
 			root.Parent = frame
 			rows[index] = { root = root, circle = circle, dot = dot, label = label }
 		end

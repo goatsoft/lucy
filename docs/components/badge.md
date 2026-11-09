@@ -28,7 +28,9 @@ Lucy.Stack.new({
 
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
-| `text` | string | `"Badge"` | yes | The label |
+| `text` | string | `"Badge"`, or `""` with an icon or children | yes | The label |
+| `icon` | string | | yes | An [icon](icon.md) name drawn before the text, in the badge's colour (`badge.icon`) |
+| `children` | table | | | Anything after the text in the badge's [slot](slot.md): strings, components, instances or builders. They take the badge's colours |
 | `variant` | string | `"default"` | yes | `default`, `secondary`, `destructive` or `outline` |
 | `shape` | string | `"rounded"` | yes | `rounded`, or `square`: only slightly rounded (`$RadiusXs`, 3 px) and a little tighter, for tags and labels such as a rarity |
 | `visible` | boolean | `true` | yes | Shows or hides the badge |
@@ -63,6 +65,28 @@ Lucy.Badge.new({
     Parent = queueTab,
 })
 ```
+
+A badge is a box with a [slot](slot.md): an icon, words, or anything else
+sits inside it in a row, in the badge's colours.
+
+```luau
+-- An icon alone
+Lucy.Badge.new({ icon = "lucide-extended:music-filled", variant = "secondary", Parent = row })
+
+-- An icon and a count
+Lucy.Badge.new({ icon = "lucide-extended:users-filled", text = "12", Parent = row })
+
+-- Anything: a level and a star after it
+Lucy.Badge.new({
+    text = "LV 12",
+    children = { Lucy.Icon.new({ icon = "lucide-extended:star-filled" }) },
+    Parent = row,
+})
+```
+
+To colour a badge your own way, use
+[`Slot.foreground`](slot.md#colouring-a-component), so its words and icon
+change together.
 
 ## Preview
 

@@ -4,6 +4,8 @@
 
 		Switch.new({
 			label = "Music",
+			children = { ... },   -- optional: after the label in its slot (Slot: strings, handles,
+			                      -- instances, builders); Foreground, faded when disabled
 			checked = true,
 			disabled = false,
 			onCheckedChange = function(checked, switch) end,
@@ -19,6 +21,7 @@
 local TweenService = game:GetService("TweenService")
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Slot = require(script.Parent.Slot)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Preferences = require(script.Parent.Parent.Core.Preferences)
@@ -65,6 +68,10 @@ local rules: { Component.Rule } = {
 	{ selector = ".ui-switch-label.ui-disabled", priority = 30, properties = { TextTransparency = 0.5 } },
 }
 Switch.rules = rules
+-- What sits beside the switch takes its label's look (ADR 0042)
+for _, rule in Slot.beside(".ui-switch-root") do
+	table.insert(Switch.rules, rule)
+end
 
 local SLIDE = TweenInfo.new(0.15, Enum.EasingStyle.Quad)
 
@@ -150,7 +157,7 @@ local spec: Component.Spec = {
 			end
 		end)
 
-		return Element.new("TextButton", {
+		local root = Element.new("TextButton", {
 			Text = "",
 			AutoButtonColor = false,
 			BackgroundTransparency = 1,
@@ -161,7 +168,7 @@ local spec: Component.Spec = {
 			Visible = visible,
 			Interactable = enabled,
 			Selectable = enabled,
-			Tags = { "ui-switch-root", "ui-ring-host" },
+			Tags = { "ui-switch-root" :: any, "ui-ring-host", ["ui-disabled"] = disabled },
 			[Element.on("Activated")] = function()
 				h:toggle()
 			end,
@@ -173,6 +180,8 @@ local spec: Component.Spec = {
 			track,
 			text,
 		})
+		Slot.fill(root, p.children, { app = h.app, startOrder = 2 })
+		return root
 	end,
 }
 

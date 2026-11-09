@@ -33,7 +33,8 @@ Lucy.Stack.new({
 | `size` | string | `"md"` | yes | `sm`, `md` or `lg` |
 | `disabled` | boolean | `false` | yes | Greys it out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |
-| `children` | table | | | Shown in place of the text, such as an icon |
+| `icon` | string | | | An [icon](icon.md) name drawn before the text (`toggle.icon`) |
+| `children` | table | | | Anything after the text in the toggle's [slot](slot.md), such as a count. With no text, they show alone. They take the toggle's colours, on, hover and disabled included |
 | `onPressedChange` | function | | | Called with `(pressed, handle)` when it changes |
 
 It also takes the [props every component takes](index.md#using-a-component).

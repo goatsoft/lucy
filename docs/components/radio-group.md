@@ -48,6 +48,7 @@ An option is a value (shown as its text) or a table:
 |---|---|
 | `value` | What the option stands for. Required |
 | `label` | Its text. Defaults to the value. `text` works too |
+| `children` | Anything after the label in the option's [slot](slot.md), such as a badge. They take the label's look and fade when disabled. With children and no label, the option shows no text |
 | `disabled` | Greys this option out |
 
 Once something is picked, the player can pick another option but cannot clear

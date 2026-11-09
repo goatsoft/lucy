@@ -50,7 +50,12 @@ It also takes the [props every component takes](index.md#using-a-component).
 ### Items
 
 An item is a value, shown as its text, or a table with `value`, and optionally
-`label` (or `text`; both work) and `disabled`. A disabled option shows faded and cannot be picked.
+`label` (or `text`; both work), `icon`, `children` and `disabled`. A disabled option shows faded and cannot be picked.
+
+An option is a row with a [slot](slot.md): its `icon`, label and `children`
+(a flag, a count, a badge) sit in a row past the tick, in the option's colours.
+The label fills the row and truncates; the select's button shows the label
+alone, so give an option with children a label too.
 
 ## Types
 

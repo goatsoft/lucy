@@ -186,5 +186,12 @@ Components carry tags you can match too: `ui-<component>` (such as
 and the flags `ui-disabled`, `ui-checked`, `ui-selected`, `ui-open`, `ui-focused` and
 `ui-focus-visible`.
 
+A component that holds content (a badge, a button, a tab, an option) gives
+what is in its [slot](../components/slot.md) its colours with generated rules.
+To colour one your own way, add your rule with
+[`Slot.foreground`](../components/slot.md#colouring-a-component), so the words
+and icons inside change with it: a plain `TextColor3` rule on the root only
+reaches the root's own text.
+
 Styles apply a few frames after a change. Read what an instance shows with
 `instance:GetStyled(property)`; the plain property gives the unstyled value.

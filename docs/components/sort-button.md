@@ -51,7 +51,8 @@ Lucy.Stack.new({
 |---|---|---|---|---|
 | `sort` | table | | | What it sorts: the result of [`useSort`](../reference/composables/use-sort.md) or [`useTable`](../reference/composables/use-table.md) |
 | `column` | string | | | The id of the column it sorts |
-| `text` | string | the column's `header` | | The label |
+| `text` | string | the column's `header`, or `""` with children | | The label |
+| `children` | table | | | Anything after the label in its [slot](slot.md), before the chevron. Muted until it sorts, then bright, as the label |
 | `align` | string | `"left"` | | `left`, `center` or `right` |
 | `disabled` | boolean | `false` | yes | Stops presses. On by itself for a column that does not sort |
 | `onClick` | function | | | Called with the handle after it sorts |

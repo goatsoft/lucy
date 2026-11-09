@@ -25,6 +25,25 @@ return {
 					Lucy.Badge.new({ text = "v0.1", variant = "outline" }),
 				},
 			}),
+			-- The slot: an icon alone, an icon and words, words and anything after them
+			Lucy.Stack.new({
+				direction = "horizontal",
+				gap = "Space2",
+				justify = "center",
+				children = {
+					Lucy.Badge.new({ icon = "lucide-extended:music-filled", variant = ctx.controls.variant }),
+					Lucy.Badge.new({
+						icon = "lucide-extended:users-filled",
+						text = "12",
+						variant = ctx.controls.variant,
+					}),
+					Lucy.Badge.new({
+						text = "LV 12",
+						variant = ctx.controls.variant,
+						children = { Lucy.Icon.new({ icon = "lucide-extended:star-filled", size = 14 }) },
+					}),
+				},
+			}),
 		}
 	end,
 }

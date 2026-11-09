@@ -25,6 +25,13 @@ return {
 					ctx.app.toast(`Clicked {c.text()}`)
 				end,
 			}),
+			-- The slot: an icon and a price after the text, in the button's colours
+			Lucy.Button.new({
+				text = "UNLOCK",
+				variant = c.variant,
+				disabled = c.disabled,
+				children = { Lucy.Icon.new({ icon = "lucide-extended:coins-filled" }), "199" },
+			}),
 			Lucy.Stack.new({
 				direction = "horizontal",
 				gap = "Space2",

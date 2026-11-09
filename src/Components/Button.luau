@@ -5,6 +5,8 @@
 		Button.new({
 			text = "Play",
 			icon = "lucide:play",  -- optional: drawn before the text; alone with size = "icon"
+			children = { ... },    -- optional: anything after the text, in the row (Slot: strings,
+			                       -- handles, instances, builders), before the key hint
 			variant = "default",   -- default | destructive | outline | secondary | ghost | link
 			size = "md",           -- sm | md | lg | xl | icon
 			disabled = false,
@@ -16,6 +18,8 @@
 			Parent = frame,
 		})
 
+	A button is a box with a slot (ADR 0042): its icon, text, children and hint sit in a row and
+	take its colours, hover and disabled included (Slot.flow).
 	State keys: text, icon, variant, size, disabled, visible.
 	With `icon`, button.icon is an Icon in the button's text colour and the text
 	moves into button.label; with an icon and no text, the text is empty.
@@ -33,6 +37,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Icon = require(script.Parent.Icon)
 local Kbd = require(script.Parent.Kbd)
+local Slot = require(script.Parent.Slot)
 
 local Button = {}
 
@@ -263,6 +268,14 @@ for _, rule in iconRules do
 	table.insert(Button.rules, rule)
 end
 
+-- What sits in the slot takes the button's colours, hover and disabled included (ADR 0042)
+for _, rule in Slot.flow(rules) do
+	table.insert(Button.rules, rule)
+end
+for _, rule in Slot.rules do
+	table.insert(Button.rules, rule)
+end
+
 -- The icon's size for each button size.
 Button.iconSizes = { sm = "sm", md = "sm", lg = "md", xl = "xl", icon = "md" }
 
@@ -315,7 +328,7 @@ local spec: Component.Spec = {
 		local hasIcon = p.icon ~= nil
 		local label: TextLabel? = nil
 		local layout: UIListLayout? = nil
-		if hint or hasIcon then
+		if hint or hasIcon or p.children ~= nil then
 			local text = h:ref("text")
 			label = Element.new("TextLabel", {
 				Name = "Label",
@@ -326,7 +339,7 @@ local spec: Component.Spec = {
 				Visible = function(): boolean
 					return text() ~= ""
 				end,
-				Tags = { "ui-button-label" },
+				Tags = { "ui-button-label", Slot.TEXT_TAG },
 			})
 			layout = Element.new("UIListLayout", {
 				SortOrder = Enum.SortOrder.LayoutOrder,
@@ -378,11 +391,13 @@ local spec: Component.Spec = {
 			icon.Instance.Parent = root
 			h.icon = icon
 		end
+		-- The slot's children after the text (LayoutOrder 2 on), the hint last
+		Slot.fill(root, p.children, { app = h.app, startOrder = 1 })
 		if hint then
 			-- Made in render, so it is the button's and goes with it.
 			local kbdProps = table.clone(hint)
 			kbdProps.app = h.app
-			kbdProps.layoutOrder = 2
+			kbdProps.layoutOrder = 1000
 			kbdProps.Parent = root
 			h.hint = Kbd.new(kbdProps)
 		end
@@ -391,8 +406,8 @@ local spec: Component.Spec = {
 }
 
 function Button.new(props: { [string]: any }?)
-	-- An icon button with no text shows the icon alone, not the default text.
-	if props and props.icon ~= nil and props.text == nil then
+	-- An icon or children with no text: not the default text beside them.
+	if props and (props.icon ~= nil or props.children ~= nil) and props.text == nil then
 		props = table.clone(props)
 		props.text = ""
 	end

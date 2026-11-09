@@ -36,6 +36,7 @@ Lucy.Stack.new({
 |---|---|---|---|---|
 | `text` | string | `"Button"`, or `""` with an icon | yes | The label |
 | `icon` | string | | yes | An [icon](icon.md) name drawn before the text, in the text's colour. See below |
+| `children` | table | | | Anything after the text in the button's [slot](slot.md) (a price, a second icon), before the key hint. They take the button's colours, hover and disabled included |
 | `variant` | string | `"default"` | yes | `default`, `destructive`, `outline`, `secondary`, `ghost` or `link` |
 | `size` | string | `"md"` | yes | `sm`, `md`, `lg`, `xl` (a game's HUD) or `icon` |
 | `disabled` | boolean | `false` | yes | Greys the button out and ignores clicks |
@@ -121,6 +122,27 @@ With a hint, the text sits in `button.label` and the key cap is `button.hint`
 Face buttons keep their controller colours on any button; pass
 `variant = "mono"` in the hint to draw them in the button's text colour.
 Without one, the button is a single TextButton as usual.
+
+## Slot
+
+A button is a box with a [slot](slot.md). Its icon, text, `children` and key
+hint sit in a row, and everything in it takes the button's colours:
+
+```luau
+Lucy.Button.new({
+    text = "UNLOCK",
+    children = {
+        Lucy.Icon.new({ icon = "lucide-extended:coins-filled" }),
+        "199",
+    },
+    Parent = card,
+})
+```
+
+A string becomes text in the button's font and size. A Text or Icon in the
+slot takes the button's colour over its own variant, and fades with it when
+disabled; give a full-colour picture the `ui-icon-untinted` tag to keep its
+own colours.
 
 ## Examples
 

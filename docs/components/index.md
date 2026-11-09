@@ -41,6 +41,7 @@ Each component has its own page with its props, usage and examples:
 | [Select](select.md) | A button that opens a list of options to pick one from |
 | [Separator](separator.md) | A thin line between items |
 | [Sheet](sheet.md) | A panel from the side of the screen, a drawer from the bottom on touch |
+| [Slot](slot.md) | What goes inside a badge, button, tab or option, and how it takes the component's colours |
 | [Skeleton](skeleton.md) | A pulsing placeholder while content loads |
 | [Slider](slider.md) | Picks a number in a range by dragging or with the arrows |
 | [SortButton](sort-button.md) | A column heading that sorts a list when pressed |

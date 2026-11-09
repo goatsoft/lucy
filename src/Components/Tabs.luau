@@ -19,6 +19,7 @@
 		})
 		tabs:select("moves")
 
+	A tab's `text`, `icon` and `children` go in its button's slot (ADR 0042, as ToggleGroup).
 	`content` is an Instance, a handle, or a function returning either; every
 	panel is built at mount and kept, so a tab keeps its scroll position and
 	state when the player comes back to it. Tabs fill the width and grow to fit
@@ -53,10 +54,13 @@ local spec: Component.Spec = {
 
 		local triggers = {}
 		for _, item in items do
-			table.insert(
-				triggers,
-				{ value = item.value, text = item.text, children = item.children, disabled = item.disabled }
-			)
+			table.insert(triggers, {
+				value = item.value,
+				text = item.text,
+				icon = item.icon,
+				children = item.children,
+				disabled = item.disabled,
+			})
 		end
 		local list = ToggleGroup.new({
 			app = h.app,

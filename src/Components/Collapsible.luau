@@ -4,6 +4,8 @@
 
 		Collapsible.new({
 			text = "Advanced",
+			children = { ... },         -- optional: after the text in the header's slot (Slot: strings,
+			                            -- handles, instances, builders; a badge, a count)
 			content = advancedSettings, -- an Instance, a handle, or a function returning either
 			open = false,
 			variant = "default",        -- default | details
@@ -30,6 +32,7 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Slot = require(script.Parent.Slot)
 local Animate = require(script.Parent.Parent.Core.Animate)
 local Element = require(script.Parent.Parent.Core.Element)
 local Preferences = require(script.Parent.Parent.Core.Preferences)
@@ -110,6 +113,15 @@ Collapsible.rules = {
 		properties = { BackgroundColor3 = "$Border", BorderSizePixel = 0 },
 	},
 } :: { Component.Rule }
+-- What sits in the header takes its label's look (ADR 0042); the chevron stays muted
+for _, rule in Slot.beside(".ui-collapsible-header") do
+	table.insert(Collapsible.rules, rule)
+end
+table.insert(Collapsible.rules, {
+	selector = ".ui-collapsible-header >> .ui-collapsible-chevron",
+	priority = 50,
+	properties = { ImageColor3 = "$MutedForeground" },
+})
 
 function Collapsible.check(variant: string)
 	if not table.find(Collapsible.variants, variant) then
@@ -179,14 +191,16 @@ local spec: Component.Spec = {
 			return if shown and not still then Collapsible.tween else INSTANT
 		end) :: any
 
+		local text = h:ref("text")
 		local label = Element.new("TextLabel", {
 			Name = "Label",
-			Text = h:ref("text"),
+			Text = text,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			TextWrapped = true,
 			AutomaticSize = Enum.AutomaticSize.Y,
-			LayoutOrder = function(): number
-				return if variant() == "details" then 2 else 1
+			LayoutOrder = 1,
+			Visible = function(): boolean
+				return text() ~= ""
 			end,
 			Tags = { "ui-collapsible-label" :: any, ["ui-disabled"] = disabled },
 		})
@@ -203,6 +217,7 @@ local spec: Component.Spec = {
 				return CHEVRON[variant()].icon
 			end),
 		})
+		chevron.Instance:AddTag("ui-collapsible-chevron")
 		Element.hydrate(chevron.Instance, {
 			Rotation = function(): number
 				return progress() * CHEVRON[variant()].turn
@@ -215,7 +230,7 @@ local spec: Component.Spec = {
 			BackgroundTransparency = 1,
 			AutomaticSize = Enum.AutomaticSize.XY,
 			LayoutOrder = function(): number
-				return if variant() == "details" then 1 else 2
+				return if variant() == "details" then 0 else 1000
 			end,
 			chevron.Instance,
 		})
@@ -245,6 +260,8 @@ local spec: Component.Spec = {
 			label,
 			holder,
 		})
+		-- The header's slot: after the text, before the chevron (after it in details)
+		Slot.fill(header, p.children, { app = app, startOrder = 1 })
 
 		-- The content's height, in the same units as the body's size.
 		local measured = Reactive.ref(Vector2.zero)
