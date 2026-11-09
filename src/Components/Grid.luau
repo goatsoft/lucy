@@ -15,7 +15,7 @@
 			children = { ... },       -- instances, handles or functions
 		})
 
-	columns, cellSize and gap also take responsive values:
+	columns, minCellWidth, cellHeight, cellSize and gap also take responsive values:
 		columns = { mobile = 2, tablet = 3, default = 5 }
 
 	handle.Instance is the frame; handle.layout is its UIGridLayout. With columns
@@ -82,12 +82,12 @@ local spec: Component.Spec = {
 		local columns = Composables.useResponsive(app, p.columns)
 		local fixed = Composables.useResponsive(app, p.cellSize)
 		local gapValue = Composables.useResponsive(app, p.gap)
-		local minWidth: number? = p.minCellWidth
-		local cellHeight: number? = p.cellHeight
+		local minWidth = Composables.useResponsive(app, p.minCellWidth)
+		local cellHeight = Composables.useResponsive(app, p.cellHeight)
 		local aspect: number = p.aspectRatio or 1
-		local shared = p.columns ~= nil or minWidth ~= nil
+		local shared = p.columns ~= nil or p.minCellWidth ~= nil
 		if p.virtual == true then
-			if type(cellHeight) ~= "number" or not shared then
+			if p.cellHeight == nil or not shared then
 				error("[Lucy] a virtual Grid needs columns or minCellWidth, and a cellHeight in pixels", 0)
 			end
 			if p.items == nil or type(p.item) ~= "function" then
@@ -122,13 +122,14 @@ local spec: Component.Spec = {
 			if n then
 				return math.max(1, math.floor(n))
 			end
-			return Grid.fit(width(), minWidth or 0, gap())
+			return Grid.fit(width(), minWidth() or 0, gap())
 		end
 
 		if p.virtual == true then
 			return Grid._virtual(h, {
 				count = count,
 				gap = gap,
+				cellHeight = cellHeight,
 				width = width,
 				measured = measured,
 				inset = inset,
@@ -144,8 +145,9 @@ local spec: Component.Spec = {
 			cellSize = function(): UDim2
 				local n, g = count(), gap()
 				local x = UDim.new(1 / n, -math.ceil(g * (n - 1) / n))
-				if cellHeight then
-					return UDim2.new(x, UDim.new(0, cellHeight))
+				local height: number? = cellHeight()
+				if height then
+					return UDim2.new(x, UDim.new(0, height))
 				end
 				local each = (width() - g * (n - 1)) / n
 				return UDim2.new(x, UDim.new(0, math.max(0, each / aspect)))
@@ -197,7 +199,7 @@ local spec: Component.Spec = {
 -- The virtual grid's frame: as tall as every row, holding only the cells near the view.
 function Grid._virtual(h: any, g: { [string]: any }): Frame
 	local p: Component.Props = h.props
-	local cellHeight: number = p.cellHeight
+	local cellHeight: () -> number = g.cellHeight
 	local keyOf = p.key
 	local function items(): { any }
 		return Reactive.toValue(p.items) or {}
@@ -232,7 +234,7 @@ function Grid._virtual(h: any, g: { [string]: any }): Frame
 
 	local visible = Reactive.computed(function(): { number }
 		local count = #items()
-		local n, step = g.count(), cellHeight + g.gap()
+		local n, step = g.count(), cellHeight() + g.gap()
 		local height = viewHeight()
 		local first, last = 1, count
 		if height < math.huge then
@@ -256,7 +258,7 @@ function Grid._virtual(h: any, g: { [string]: any }): Frame
 		BorderSizePixel = 0,
 		Size = function(): UDim2
 			local r = rows()
-			local height = if r > 0 then r * cellHeight + (r - 1) * g.gap() else 0
+			local height = if r > 0 then r * cellHeight() + (r - 1) * g.gap() else 0
 			return UDim2.new(1, 0, 0, height + g.inset)
 		end,
 		Visible = h:ref("visible"),
@@ -272,14 +274,14 @@ function Grid._virtual(h: any, g: { [string]: any }): Frame
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Size = function(): UDim2
-					return UDim2.fromOffset(cellWidth(), cellHeight)
+					return UDim2.fromOffset(cellWidth(), cellHeight())
 				end,
 				Position = function(): UDim2
 					local i, n, gap = at() - 1, g.count(), g.gap()
 					local column, row = i % n, i // n
 					return UDim2.fromOffset(
 						pad + column * (cellWidth() + gap),
-						pad + row * (cellHeight + gap)
+						pad + row * (cellHeight() + gap)
 					)
 				end,
 				LayoutOrder = at,

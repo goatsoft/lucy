@@ -245,5 +245,26 @@ return function()
 				)
 			).to.equal(true)
 		end)
+
+		it("follows a responsive cell height, moving its cells", function()
+			local grid = make({
+				items = numbers(8),
+				columns = 4,
+				cellHeight = { gamepad = 80, default = 50 },
+				gap = 0,
+			})
+			local scale = Scroll.scaleOf(grid.Instance)
+			-- 8 cells in 4 columns are 2 rows
+			expect(near(grid.Instance.AbsoluteSize.Y / scale, 100)).to.equal(true)
+			app.input:setMode("gamepad")
+			Harness.flush()
+			task.wait(0.1)
+			expect(near(grid.Instance.AbsoluteSize.Y / scale, 160)).to.equal(true)
+			local fifth = grid.cellFor(5)
+			expect(near(fifth.AbsoluteSize.Y / scale, 80)).to.equal(true)
+			expect(near((fifth.AbsolutePosition.Y - grid.Instance.AbsolutePosition.Y) / scale, 80)).to.equal(
+				true
+			)
+		end)
 	end)
 end

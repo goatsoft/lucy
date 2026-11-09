@@ -6,6 +6,7 @@
 			direction = "vertical",   -- vertical | horizontal
 			gap = "Space4",           -- spacing token name, pixels or a UDim
 			align = "start",          -- cross axis: start | center | end | stretch (children fill it)
+			                          -- | baseline (a row: its texts on one baseline, see Core/Baseline)
 			justify = "start",        -- main axis: start | center | end | between
 			padding = "Space4",       -- optional, same forms as gap
 			wrap = false,
@@ -13,9 +14,12 @@
 			children = { ... },       -- instances, handles or functions
 		})
 
-	direction, gap, align, justify, padding, size and automaticSize also take responsive values:
+	direction, gap, align, justify, padding, size and automaticSize also take responsive values
+	(or a getter, for a layout that follows game state):
 		direction = { mobile = "vertical", default = "horizontal" }
 		gap = { console = "Space6", touch = "Space4", default = "Space2" }
+
+	Stack.grow(child, when?) lets a child take the room left (see below).
 
 	handle.Instance is the container; parent more children into it any time.
 	State keys: visible.
@@ -23,6 +27,7 @@
 
 local Component = require(script.Parent.Parent.Core.Component)
 local Composables = require(script.Parent.Parent.Composables)
+local Baseline = require(script.Parent.Parent.Core.Baseline)
 local Element = require(script.Parent.Parent.Core.Element)
 local Responsive = require(script.Parent.Parent.Core.Responsive)
 
@@ -37,6 +42,8 @@ local V = {
 	start = Enum.VerticalAlignment.Top,
 	center = Enum.VerticalAlignment.Center,
 	["end"] = Enum.VerticalAlignment.Bottom,
+	-- Bottoms aligned, then each text lifted onto the biggest one's baseline (Core/Baseline)
+	baseline = Enum.VerticalAlignment.Bottom,
 }
 local RESPONSIVE_KEYS = { "direction", "gap", "align", "justify", "padding", "size", "automaticSize" }
 
@@ -49,7 +56,8 @@ local spec: Component.Spec = {
 		local app = h.app
 		local responsive = false
 		for _, key in RESPONSIVE_KEYS do
-			if Responsive.isResponsive(p[key]) then
+			-- A responsive table or a getter: either can change after the build
+			if Responsive.isResponsive(p[key]) or type(p[key]) == "function" then
 				responsive = true
 			end
 		end
@@ -150,12 +158,44 @@ local spec: Component.Spec = {
 			paddingChild,
 		})
 		Component.adopt(frame, p.children)
+		-- Only a stack that can be "baseline" (that value, or one that can change) follows it
+		if p.align ~= nil and (p.align == "baseline" or type(p.align) ~= "string") then
+			Baseline.follow(frame, function(): boolean
+				return align() == "baseline" and horizontal()
+			end)
+		end
 		return frame
 	end,
 }
 
 function Stack.new(props: { [string]: any }?)
 	return Component.mount(spec, props)
+end
+
+--[[
+	Lets a child take the room its stack has left along the stack's direction (the
+	preview over a shop's buy button, a list under a header). `when` is a boolean
+	or a getter (default always): while it is false the child keeps its own size.
+	Give the child a size of 0 on that axis while it grows. Returns the child.
+
+		Stack.grow(preview, function() return small() end)
+]]
+function Stack.grow(child: any, when: (boolean | () -> boolean)?): any
+	local instance: Instance = if typeof(child) == "Instance" then child else child.Instance
+	local function on(): boolean
+		if type(when) == "function" then
+			return when() == true
+		end
+		return when ~= false
+	end
+	Element.new("UIFlexItem", {
+		Name = "Grow",
+		FlexMode = function(): Enum.UIFlexMode
+			return if on() then Enum.UIFlexMode.Fill else Enum.UIFlexMode.None
+		end,
+		Parent = instance,
+	})
+	return child
 end
 
 return Stack

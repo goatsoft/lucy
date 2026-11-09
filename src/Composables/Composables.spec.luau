@@ -92,6 +92,21 @@ return function()
 				Composables.useResponsive(app, 4)
 			end).to.throw()
 		end)
+
+		it("follows a getter as it is", function()
+			local scope = Reactive.effectScope(true)
+			local wide = Reactive.ref(false)
+			local size
+			scope:run(function()
+				size = Composables.useResponsive(app, function()
+					return if wide() then 300 else 100
+				end)
+			end)
+			expect(size()).to.equal(100)
+			wide(true)
+			expect(size()).to.equal(300)
+			scope:stop()
+		end)
 	end)
 
 	describe("useFocusScope", function()

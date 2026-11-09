@@ -27,9 +27,9 @@ Lucy.Grid.new({
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
 | `columns` | number | | | Cells share the width between this many columns |
-| `minCellWidth` | number | | | Fits as many columns as it can with cells at least this wide, then shares the width |
+| `minCellWidth` | number or responsive | | | Fits as many columns as it can with cells at least this wide, then shares the width |
 | `cellSize` | UDim2 | 100 by 100 | | Fixed cells, as many on a row as fit. Used when neither of the above is given |
-| `cellHeight` | number | | | Cell height in pixels, with `columns` or `minCellWidth` |
+| `cellHeight` | number or responsive | | | Cell height in pixels, with `columns` or `minCellWidth` |
 | `aspectRatio` | number | `1` | | Width over height, when `cellHeight` is left out |
 | `gap` | spacing | `0` | | Space between cells, across and down |
 | `padding` | spacing | none | | Space around the inside edge |
@@ -55,8 +55,8 @@ children in the frame any time.
 
 ## Responsive values
 
-`columns`, `cellSize` and `gap` can change with the device or input. Pass a
-table instead of a value:
+`columns`, `minCellWidth`, `cellHeight`, `cellSize` and `gap` can change with
+the device or input. Pass a table instead of a value:
 
 ```luau
 Lucy.Grid.new({
@@ -68,8 +68,11 @@ Lucy.Grid.new({
 ```
 
 `minCellWidth` follows the grid's own width instead, so the same grid shows
-more columns in a wide window than in a narrow one. See
-[Responsive values](index.md#responsive-values) for every key you can use.
+more columns in a wide window than in a narrow one. A virtual grid with a
+responsive `cellHeight` moves its cells when the height changes; read the same
+responsive value in its `key` function to build the cells again as well (a row
+tile on a phone, a card elsewhere).
+See [Responsive values](index.md#responsive-values) for every key you can use.
 
 ## Examples
 

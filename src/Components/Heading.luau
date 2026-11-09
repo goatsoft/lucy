@@ -18,6 +18,7 @@
 	title is a Marquee in the muted style.
 ]]
 
+local Baseline = require(script.Parent.Parent.Core.Baseline)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Marquee = require(script.Parent.Marquee)
@@ -96,7 +97,7 @@ function Heading.new(app: any, props: { [string]: any }): (Frame, TextLabel, Tex
 			FillDirection = function(): Enum.FillDirection
 				return if beside() then Enum.FillDirection.Horizontal else Enum.FillDirection.Vertical
 			end,
-			-- Beside it, the description sits on the title's bottom edge, near its baseline
+			-- Beside it, the description sits on the title's baseline (bottoms aligned, then lifted)
 			VerticalAlignment = function(): Enum.VerticalAlignment
 				return if beside() then Enum.VerticalAlignment.Bottom else Enum.VerticalAlignment.Top
 			end,
@@ -108,6 +109,7 @@ function Heading.new(app: any, props: { [string]: any }): (Frame, TextLabel, Tex
 		description,
 		line.Instance,
 	}) :: Frame
+	Baseline.follow(frame, beside)
 	return frame, title, description
 end
 

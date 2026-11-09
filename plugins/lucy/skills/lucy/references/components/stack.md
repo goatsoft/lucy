@@ -24,7 +24,7 @@ Lucy.Stack.new({
 | `direction` | string | `"vertical"` | | `vertical` for a column, `horizontal` for a row |
 | `gap` | spacing | `0` | | Space between children |
 | `padding` | spacing | none | | Space around the inside edge |
-| `align` | string | `"start"` | | Across the stack: `start`, `center`, `end` or `stretch` (each child fills the stack's width in a column, its height in a row) |
+| `align` | string | `"start"` | | Across the stack: `start`, `center`, `end`, `stretch` (each child fills the stack's width in a column, its height in a row) or `baseline` (a row's texts on one baseline, see below) |
 | `justify` | string | `"start"` | | Along the stack: `start`, `center`, `end` or `between` |
 | `wrap` | boolean | `false` | | Moves children to a new line when they do not fit |
 | `size` | UDim2 | see below | | The stack's size |
@@ -45,7 +45,8 @@ row grows both ways to fit. With a `size`, it stays that size.
 ## Responsive values
 
 `direction`, `gap`, `align`, `justify`, `padding`, `size` and `automaticSize` can
-change with the device or input. Pass a table instead of a value:
+change with the device or input. Pass a table instead of a value (or a getter,
+for a layout that follows your game's state):
 
 ```luau
 Lucy.Stack.new({
@@ -57,6 +58,48 @@ Lucy.Stack.new({
 ```
 
 See [Responsive values](index.md#responsive-values) for every key you can use.
+
+## Baseline
+
+A row with `align = "baseline"` lines up its texts where the letters sit, so a
+small line beside a big title reads as one line. The children sit
+bottom-aligned, and each text is lifted onto the biggest one's baseline. A
+child's text is the child itself or its first text descendant (a Marquee), and
+hidden children do not count.
+
+```luau
+Lucy.Stack.new({
+    direction = "horizontal",
+    align = "baseline",
+    gap = "Space3",
+    children = {
+        Lucy.Text.new({ text = "THE LAB", variant = "h2", autoWidth = true }),
+        Lucy.Text.new({ text = "Dances, packs and potions", variant = "muted", autoWidth = true }),
+    },
+    Parent = header,
+})
+```
+
+Dialog and Sheet headings use it on short screens, where the description sits
+beside the title.
+
+## Grow
+
+`Lucy.Stack.grow(child, when?)` lets a child take the room its stack has left
+along the stack's direction: the preview above a shop's buy button, a list under
+a header. `when` is a boolean or a getter (always by default); while it is
+false the child keeps its own size. Give the child a size of 0 on that axis.
+
+```luau
+local preview = Lucy.new("Frame")({ Size = UDim2.fromScale(1, 0) })
+Lucy.Stack.grow(preview)
+Lucy.Stack.new({
+    size = UDim2.fromOffset(300, 400),
+    gap = "Space3",
+    children = { preview, buyButton },
+    Parent = column,
+})
+```
 
 ## Examples
 

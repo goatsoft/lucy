@@ -68,6 +68,67 @@ return function()
 		expect(stack.layout.Padding).to.equal(UDim.new(0, 16))
 	end)
 
+	it("follows a getter size", function()
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+		local tall = Reactive.ref(false)
+		local stack = Stack.new({
+			app = app,
+			Parent = gui,
+			size = function()
+				return UDim2.fromOffset(100, if tall() then 300 else 100)
+			end,
+		})
+		expect(stack.Instance.Size).to.equal(UDim2.fromOffset(100, 100))
+		tall(true)
+		expect(stack.Instance.Size).to.equal(UDim2.fromOffset(100, 300))
+	end)
+
+	it("grows a child into the room left, while asked", function()
+		local Reactive = require(script.Parent.Parent.Core.Reactive)
+		local growing = Reactive.ref(true)
+		local fixed = Instance.new("Frame")
+		fixed.Size = UDim2.new(1, 0, 0, 50)
+		local fill = Instance.new("Frame")
+		fill.Size = UDim2.fromScale(1, 0)
+		expect(Stack.grow(fill, growing)).to.equal(fill)
+		local item = fill:FindFirstChildOfClass("UIFlexItem") :: UIFlexItem
+		expect(item.FlexMode).to.equal(Enum.UIFlexMode.Fill)
+		growing(false)
+		expect(item.FlexMode).to.equal(Enum.UIFlexMode.None)
+		growing(true)
+		local stack = Stack.new({
+			app = app,
+			Parent = gui,
+			gap = 0,
+			size = UDim2.fromOffset(100, 200),
+			children = { fill, fixed },
+		})
+		if not Harness.laysOutLive() then
+			return -- the room left is laid out by the engine: live layout only (Harness.laysOutLive)
+		end
+		task.wait()
+		local scale = stack.Instance.AbsoluteSize.Y / 200
+		expect(math.abs(fill.AbsoluteSize.Y / scale - 150) < 1).to.equal(true)
+	end)
+
+	it("puts a row's texts on one baseline with align baseline", function()
+		local Baseline = require(script.Parent.Parent.Core.Baseline)
+		local big, small = Instance.new("TextLabel"), Instance.new("TextLabel")
+		big.TextSize, small.TextSize = 40, 18
+		local stack = Stack.new({
+			app = app,
+			Parent = gui,
+			direction = "horizontal",
+			align = "baseline",
+			children = { big, small },
+		})
+		expect(stack.layout.VerticalAlignment).to.equal(Enum.VerticalAlignment.Bottom)
+		local padding = small:FindFirstChild(Baseline.paddingName) :: UIPadding
+		expect(padding).to.be.ok()
+		expect(padding.PaddingBottom.Offset).to.equal(math.round(Baseline.descent * 22))
+		expect(big:FindFirstChild(Baseline.paddingName)).to.equal(nil)
+	end)
+
 	it("stretches children across a column with align stretch", function()
 		local stack = Stack.new({ app = app, Parent = gui, align = "stretch" })
 		expect(stack.layout.HorizontalFlex).to.equal(Enum.UIFlexAlignment.Fill)
