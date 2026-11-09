@@ -13,7 +13,7 @@
     "@fontsource-variable/nunito": "^5.3.0",
     "@goatsoft/aurora": "^0.3.1",
     "@goatsoft/aurora-vue": "^0.3.1",
-    "@goatsoft/gruff": "^0.1.0",
+    "@goatsoft/gruff": "^0.1.1",
     "@vueuse/core": "^15.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
