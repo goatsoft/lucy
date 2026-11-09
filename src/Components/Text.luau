@@ -6,7 +6,11 @@
 
 	variant: h1 | h2 | h3 | h4 | p | lead | large | small | muted | label
 	align:   left | center | right
-	autoWidth = true sizes to the text instead of filling the parent's width.
+	autoWidth = true sizes to the text instead of filling the parent's width (a responsive
+	value too: { short = true, default = false }).
+	reserve = "0:00" holds the width of the widest text of that shape (each digit tried as every
+	digit), in the label's styled font and size, so a timer or count never moves what is around
+	it as it changes. Align it (right, say) to say which side the number keeps to.
 
 	Shortcuts for two text animations (each is a composable any label can use on its own):
 	reveal = 30 types the text out, 30 characters a second (true: Text.REVEAL_RATE), again from
@@ -26,6 +30,8 @@ local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Format = require(script.Parent.Parent.Utils.Format)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
+
+local TextService = game:GetService("TextService")
 
 local Text = {}
 
@@ -79,6 +85,19 @@ local function check(variant: string)
 	end
 end
 
+-- The widest `sample` can be with any digits in its digits' places: each digit 0 to 9 put in
+-- all of them, measured by `width` (text -> pixels).
+function Text.widestDigits(sample: string, width: (string) -> number): number
+	local widest = width(sample)
+	if not string.find(sample, "%d") then
+		return widest
+	end
+	for digit = 0, 9 do
+		widest = math.max(widest, width((string.gsub(sample, "%d", tostring(digit)))))
+	end
+	return widest
+end
+
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "text",
@@ -96,6 +115,7 @@ local spec: Component.Spec = {
 		local p: Component.Props = h.props
 		check(h:get("variant")) -- an unknown variant fails the mount
 		local variant, align = h:ref("variant"), h:ref("align")
+		local autoWidth = Composables.useResponsive(h.app, p.autoWidth)
 		local rate = if p.reveal == true
 			then Text.REVEAL_RATE
 			elseif type(p.reveal) == "number" then p.reveal
@@ -137,10 +157,24 @@ local spec: Component.Spec = {
 				return format(math.floor(n + 0.5))
 			end
 		end
-		return Element.new("TextLabel", {
-			Size = if p.autoWidth then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0),
-			AutomaticSize = if p.autoWidth then Enum.AutomaticSize.XY else Enum.AutomaticSize.Y,
-			TextWrapped = not p.autoWidth,
+		-- reserve: the held width, once measured (0 until then: it sizes as autoWidth)
+		local reserved = Reactive.ref(0)
+		local label = Element.new("TextLabel", {
+			Size = function(): UDim2
+				if reserved() > 0 then
+					return UDim2.fromOffset(reserved(), 0)
+				end
+				return if autoWidth() or p.reserve then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0)
+			end,
+			AutomaticSize = function(): Enum.AutomaticSize
+				if reserved() > 0 then
+					return Enum.AutomaticSize.Y
+				end
+				return if autoWidth() or p.reserve then Enum.AutomaticSize.XY else Enum.AutomaticSize.Y
+			end,
+			TextWrapped = function(): boolean
+				return not (autoWidth() or p.reserve)
+			end,
 			RichText = p.richText == true,
 			Text = display,
 			MaxVisibleGraphemes = visible,
@@ -156,7 +190,37 @@ local spec: Component.Spec = {
 					return "ui-text-variant-" .. name
 				end,
 			},
-		})
+		}) :: TextLabel
+		if type(p.reserve) == "string" then
+			local sample: string = p.reserve
+			local measuring = false
+			local function measure()
+				if measuring then
+					return
+				end
+				measuring = true
+				task.defer(function()
+					measuring = false
+					local ok, widest = pcall(Text.widestDigits, sample, function(text: string): number
+						local params = Instance.new("GetTextBoundsParams")
+						params.Text = text
+						params.Font = (label :: any):GetStyled("FontFace")
+						params.Size = (label :: any):GetStyled("TextSize")
+						params.Width = math.huge
+						return TextService:GetTextBoundsAsync(params).X
+					end)
+					if ok and widest > 0 then
+						-- a little air, so rounding never clips the last digit
+						reserved(math.ceil(widest) + 2)
+					end
+				end)
+			end
+			pcall(function()
+				(label :: any).StyledPropertiesChanged:Connect(measure)
+			end)
+			measure()
+		end
+		return label
 	end,
 }
 

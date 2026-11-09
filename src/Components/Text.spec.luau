@@ -68,6 +68,35 @@ return function()
 		).to.equal(true)
 	end)
 
+	describe("reserve", function()
+		it("holds the widest the text's digits can be", function()
+			-- a font where 1 is thin and 8 is wide
+			local function width(text: string): number
+				local total = 0
+				for _, char in string.split(text, "") do
+					total += if char == "1" then 4 elseif char == "8" then 12 elseif char == ":" then 3 else 10
+				end
+				return total
+			end
+			expect(Text.widestDigits("1:11", width)).to.equal(39)
+			expect(Text.widestDigits("GO", width)).to.equal(20)
+		end)
+
+		it("keeps its width as the text changes", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local text = Text.new({ text = "1", reserve = "00", variant = "h1" })
+			text.Instance.Parent = gui
+			task.wait(0.3)
+			local held = text.Instance.AbsoluteSize.X
+			expect(held > 0).to.equal(true)
+			text:set("text", "88")
+			task.wait(0.1)
+			expect(text.Instance.AbsoluteSize.X).to.equal(held)
+		end)
+	end)
+
 	describe("reveal", function()
 		local Animate = require(script.Parent.Parent.Core.Animate)
 		local Reactive = require(script.Parent.Parent.Core.Reactive)

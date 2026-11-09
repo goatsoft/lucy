@@ -25,7 +25,8 @@ Lucy.Stack.new({
 | `variant` | string | `"p"` | yes | The style, see below |
 | `align` | string | `"left"` | yes | `left`, `center` or `right` |
 | `visible` | boolean | `true` | yes | Shows or hides it |
-| `autoWidth` | boolean | `false` | | Sizes to the text instead of filling the width, and stops wrapping |
+| `autoWidth` | boolean or responsive | `false` | | Sizes to the text instead of filling the width, and stops wrapping |
+| `reserve` | string | | | Holds the width of the widest text of this shape, so a timer or count never moves what is around it: `"0:00"` holds the widest time with any digits. Measured in the text's own font and size. Align it to say which side the number keeps to |
 | `richText` | boolean | `false` | | Turns on Roblox rich text tags such as `<b>` |
 | `reveal` | number or `true` | | | Types the text out, this many characters a second (`true`: 40), and again from the start whenever the text changes |
 | `revealing` | boolean | `false` | yes, read only | Whether it is typing out now |

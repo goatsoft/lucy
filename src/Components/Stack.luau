@@ -13,7 +13,7 @@
 			children = { ... },       -- instances, handles or functions
 		})
 
-	direction, gap, align, justify and padding also take responsive values:
+	direction, gap, align, justify, padding, size and automaticSize also take responsive values:
 		direction = { mobile = "vertical", default = "horizontal" }
 		gap = { console = "Space6", touch = "Space4", default = "Space2" }
 
@@ -38,7 +38,7 @@ local V = {
 	center = Enum.VerticalAlignment.Center,
 	["end"] = Enum.VerticalAlignment.Bottom,
 }
-local RESPONSIVE_KEYS = { "direction", "gap", "align", "justify", "padding", "size" }
+local RESPONSIVE_KEYS = { "direction", "gap", "align", "justify", "padding", "size", "automaticSize" }
 
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
@@ -59,6 +59,7 @@ local spec: Component.Spec = {
 		local justify = Composables.useResponsive(app, p.justify)
 		local padding = Composables.useResponsive(app, p.padding)
 		local size = Composables.useResponsive(app, p.size)
+		local automaticSize = Composables.useResponsive(app, p.automaticSize)
 		-- A layout value: bound when anything is responsive, otherwise resolved once.
 		local function layout(fn: () -> any): any
 			return if responsive then fn else fn()
@@ -136,7 +137,7 @@ local spec: Component.Spec = {
 				return size() or (if horizontal() then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0))
 			end),
 			AutomaticSize = layout(function()
-				return p.automaticSize
+				return automaticSize()
 					or (
 						if size()
 							then Enum.AutomaticSize.None

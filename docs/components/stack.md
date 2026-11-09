@@ -51,8 +51,8 @@ row grows both ways to fit. With a `size`, it stays that size.
 
 ## Responsive values
 
-`direction`, `gap`, `align`, `justify`, `padding` and `size` can change with the
-device or input. Pass a table instead of a value:
+`direction`, `gap`, `align`, `justify`, `padding`, `size` and `automaticSize` can
+change with the device or input. Pass a table instead of a value:
 
 <!-- preview -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-stack-2-light.webp" alt="Stack example" loading="lazy"><img class="example-dark" src="/images/examples/components-stack-2-dark.webp" alt="Stack example" loading="lazy"></figure>

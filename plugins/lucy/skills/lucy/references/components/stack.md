@@ -44,8 +44,8 @@ row grows both ways to fit. With a `size`, it stays that size.
 
 ## Responsive values
 
-`direction`, `gap`, `align`, `justify`, `padding` and `size` can change with the
-device or input. Pass a table instead of a value:
+`direction`, `gap`, `align`, `justify`, `padding`, `size` and `automaticSize` can
+change with the device or input. Pass a table instead of a value:
 
 ```luau
 Lucy.Stack.new({
