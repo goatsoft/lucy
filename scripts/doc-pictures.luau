@@ -3,28 +3,26 @@
 	(docs/development.md "Example pictures"). The LucyTests place syncs this as
 	ReplicatedStorage.LucyDocPictures (test.project.json).
 
-	1. `node scripts/doc-previews.ts serve` serves the marked examples and turns the
-	   pixels sent back into WebP pictures.
-	2. In Studio's edit data model:
+	`node scripts/doc-previews.ts render` drives it through Studio's MCP server (the Lucy MCP's
+	Studio client), with no HTTP: it hands start() the examples, then for each screenful calls
+	next("dark"), captures the viewport, calls again("light"), captures again, and crops the
+	pictures from the two captures with the box lines.
 
 		local R = require(game.ReplicatedStorage.LucyDocPictures)
-		R.start()                         -- loads the examples, copies Lucy, registers the docs icons
+		R.start(examples)                 -- the examples (doc-previews.ts list), a fresh Lucy,
+		                                  -- the docs icons
 		R.only({ "components-button" })   -- optional: just these
-		R.run()                           -- every example, dark then light, captured and sent
+		R.next("dark")                    -- draws the next screenful; its box lines, or "done"
+		R.again("light")                  -- the same examples in the other theme, same places
 		R.stop()                          -- takes away everything the renderer made
 
-	run() is next("dark"), capture("dark", lines), again("light"), capture("light",
-	lines) until next() returns "done"; the steps can be called one by one. Each box
-	line reads `name x0,y0,x1,y1 vp=W,H`, in viewport pixels.
+	Each box line reads `name x0,y0,x1,y1 vp=W,H`, in viewport pixels.
 
 	Examples run with stand-ins for names they only borrow (tracks, a settings panel)
 	and for a client (Players.LocalPlayer, remotes that answer nothing), so no real
 	server script ever runs.
 ]]
 --!nocheck
-local AssetService = game:GetService("AssetService")
-local CaptureService = game:GetService("CaptureService")
-local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui = game:GetService("StarterGui")
 
@@ -32,7 +30,6 @@ local S = {}
 S.SLOT = 560
 S.GAP = 56
 S.MARGIN = 28
-S.URL = "http://127.0.0.1:38991/"
 -- Around what an example drew, in capture pixels.
 S.PAD = 40
 
@@ -42,17 +39,6 @@ local STATE = {
 	booth = { bpm = 124, crossfade = 0, deck = "A" },
 	server = { dj = { title = "Neon Nights · DJ Lucy (124 BPM)" } },
 }
-
-function S.load(file)
-	local was = HttpService.HttpEnabled
-	HttpService.HttpEnabled = true
-	local ok, body = pcall(function()
-		return HttpService:GetAsync(S.URL .. file .. "?t=" .. os.clock(), true)
-	end)
-	HttpService.HttpEnabled = was
-	assert(ok, body)
-	return HttpService:JSONDecode(body)
-end
 
 function S.clear()
 	for _, undo in S.undo or {} do
@@ -661,8 +647,9 @@ function S.probe(code, theme)
 	return { err = err, own = own and fmt(own), over = over and fmt(over) }
 end
 
-function S.probeRange(i0, i1)
-	S.list = S.list or S.load("blocks.json")
+-- Probes blocks i0 to i1 of `blocks` (doc-previews.ts blocks).
+function S.probeRange(blocks, i0, i1)
+	S.list = blocks
 	local out = {}
 	for i = i0, math.min(i1, #S.list) do
 		local b = S.list[i]
@@ -793,16 +780,6 @@ function S.screen(item, theme)
 	return string.format("%s 0,0,%d,%d vp=%d,%d", item.name, screen.X, screen.Y, screen.X, screen.Y)
 end
 
-function S.examples(file)
-	S.byName = {}
-	S.order = {}
-	for _, e in S.load(file) do
-		S.byName[e.name] = e
-		table.insert(S.order, e.name)
-	end
-	return #S.order
-end
-
 -- One example by name, the way its marker asks.
 function S.one(name, theme)
 	local e = S.byName[name]
@@ -810,89 +787,6 @@ function S.one(name, theme)
 		return S.screen(e, theme)
 	end
 	return S.solo(e, theme)
-end
-
--- What the viewport shows now, as an EditableImage (Studio captures at its own
--- pixel density, twice the viewport on a Retina screen).
-local function screenshot(): EditableImage
-	local id
-	CaptureService:CaptureScreenshot(function(contentId)
-		id = contentId
-	end)
-	local started = os.clock()
-	while not id and os.clock() - started < 5 do
-		task.wait(0.05)
-	end
-	assert(id, "the screen capture never came")
-	return AssetService:CreateEditableImageAsync(Content.fromUri(id))
-end
-
--- Captures the viewport and sends each example's area (its box, padded) to the
--- server, which writes the pair once both themes are in.
-function S.capture(theme: string, lines: string): string
-	local image = screenshot()
-	local size = image.Size
-	local out = {}
-	local was = HttpService.HttpEnabled
-	HttpService.HttpEnabled = true
-	local ok, err = pcall(function()
-		for _, line in string.split(lines, "\n") do
-			local name, a, b, c, d, e, f =
-				line:match("^(%S+) ([%d.]+),([%d.]+),([%d.]+),([%d.]+) vp=(%d+),(%d+)")
-			if name then
-				local x0, y0, x1, y1 =
-					tonumber(a) :: number, tonumber(b) :: number, tonumber(c) :: number, tonumber(d) :: number
-				local vw, vh = tonumber(e) :: number, tonumber(f) :: number
-				local scale = size.X / vw
-				local whole = x0 <= 0 and y0 <= 0 and x1 >= vw and y1 >= vh
-				local ax0, ay0, ax1, ay1 = 0, 0, size.X, size.Y
-				if not whole then
-					ax0 = math.max(0, math.floor(x0 * scale) - S.PAD)
-					ay0 = math.max(0, math.floor(y0 * scale) - S.PAD)
-					ax1 = math.min(size.X, math.ceil(x1 * scale) + S.PAD)
-					ay1 = math.min(size.Y, math.ceil(y1 * scale) + S.PAD)
-				end
-				local w, h = ax1 - ax0, ay1 - ay0
-				-- Roblox posts at most 1 MB, so the rows go in strips.
-				local strip = math.max(1, math.floor(900 * 1024 / (w * 4)))
-				local reply = ""
-				for y = 0, h - 1, strip do
-					local rows = math.min(strip, h - y)
-					local pixels = image:ReadPixelsBuffer(Vector2.new(ax0, ay0 + y), Vector2.new(w, rows))
-					local url =
-						`{S.URL}pixels?name={name}&theme={theme}&w={w}&h={h}&y={y}&whole={whole and 1 or 0}`
-					reply = HttpService:PostAsync(
-						url,
-						buffer.tostring(pixels),
-						Enum.HttpContentType.TextPlain,
-						true
-					)
-				end
-				table.insert(out, reply)
-			end
-		end
-	end)
-	HttpService.HttpEnabled = was
-	image:Destroy()
-	assert(ok, err)
-	return table.concat(out, "\n")
-end
-
--- Every queued example, dark then light, captured and sent. Progress goes to S.log.
-function S.run(): string
-	S.log = {}
-	while true do
-		local dark = S.next("dark")
-		if dark == "done" then
-			break
-		end
-		task.wait(0.2)
-		table.insert(S.log, S.capture("dark", dark))
-		local light = S.again("light")
-		task.wait(0.2)
-		table.insert(S.log, S.capture("light", light))
-	end
-	return table.concat(S.log, "\n")
 end
 
 -- A private copy of Lucy, with the docs icon sheet registered, so the place's own
@@ -915,7 +809,7 @@ local function freshLucy()
 	return Lucy
 end
 
--- Loads the examples and gets ready. Call again after Lucy changes to pick it up.
+-- Takes the examples and gets ready. Call again after Lucy changes to pick it up.
 function S.start(list)
 	S.stop()
 	_G.LucyDocPictures = S
@@ -924,18 +818,14 @@ function S.start(list)
 		S._before[g] = true
 	end
 	S.Lucy = freshLucy()
-	local n
-	if list then
-		S.byName = {}
-		S.order = {}
-		for _, e in list do
-			S.byName[e.name] = e
-			table.insert(S.order, e.name)
-		end
-		n = #S.order
-	else
-		n = S.examples("examples.json")
+	assert(type(list) == "table", "start(examples): pass the examples (doc-previews.ts list)")
+	S.byName = {}
+	S.order = {}
+	for _, e in list do
+		S.byName[e.name] = e
+		table.insert(S.order, e.name)
 	end
+	local n = #S.order
 	S.queue = table.clone(S.order)
 	S.lastSet = nil
 	return `{n} examples`

@@ -24,12 +24,14 @@
  *
  *   node scripts/doc-previews.ts list     print the marked examples as JSON
  *   node scripts/doc-previews.ts blocks   print every luau block, marked or not
- *   node scripts/doc-previews.ts serve    serve the marked examples to Studio's renderer
- *                                         (scripts/doc-pictures.luau) on 127.0.0.1:38991,
- *                                         and turn the pixels it sends back into pictures
+ *   node scripts/doc-previews.ts render [name ...]
+ *                                         draw the marked examples (or just these) in the
+ *                                         LucyTests Studio, capture them and write the
+ *                                         pictures; no HTTP: Studio's MCP server runs the
+ *                                         renderer (scripts/doc-pictures.luau) and captures
  *   node scripts/doc-previews.ts crop <dark capture> <light capture>
- *                                         the same from two screen captures, with the
- *                                         renderer's box lines on stdin
+ *                                         the same from two captures made another way, with
+ *                                         the renderer's box lines on stdin
  *   node scripts/doc-previews.ts write    put each picture pair under its marker
  *   node scripts/doc-previews.ts --check  change nothing; fail when a page is out of date
  *
@@ -38,10 +40,9 @@
  */
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { createServer } from 'node:http'
+import { connectStudio } from '../libs/mcp/src/studio.ts'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { gunzipSync } from 'node:zlib'
 
 const ROOT = join(import.meta.dirname, '..')
 const DOCS = join(ROOT, 'docs')
@@ -177,7 +178,6 @@ function rewrite(page: Page, text: string, missing: string[]): string {
   return out + text.slice(at)
 }
 
-const PORT = 38991
 // Around what an example drew, in capture pixels.
 const PAD = 40
 // How far a pixel may be from the background before it counts as drawn.
@@ -293,78 +293,58 @@ function crop(darkFile: string, lightFile: string, lines: string[]): string[] {
   return report
 }
 
-// Pixels the renderer sent, by picture name, until both themes are in, and rows
-// of an image still coming in.
-const waiting = new Map<string, { [theme: string]: Image }>()
-const arriving = new Map<string, { image: Image; rows: number }>()
+// Draws the examples in the LucyTests Studio and writes their pictures, through Studio's MCP
+// server (the Lucy MCP's Studio client): no HTTP from Studio. Each screenful is drawn dark, then
+// light at the same places, each captured, and the pairs cropped from the two captures.
+async function render(names: string[]) {
+  const all = examples().map(({ markerEnd: _, ...rest }) => rest)
+  const picked = names.length ? all.filter((example) => names.includes(example.name)) : all
+  const unknown = names.filter((name) => !all.some((example) => example.name === name))
+  if (unknown.length) throw new Error(`no marked example named ${unknown.join(', ')}`)
+  const json = JSON.stringify(picked)
+  if (json.includes(']==]')) throw new Error('an example holds the text ]==], which ends the Luau string')
 
-// The renderer posts each example's area as raw RGBA rows (gzipped), in strips
-// under Roblox's 1 MB limit:
-// POST /pixels?name=components-button&theme=dark&w=848&h=130&y=0&whole=0
-function receive(query: URLSearchParams, body: Buffer): string {
-  const name = query.get('name') ?? ''
-  const theme = query.get('theme') ?? ''
-  const width = Number(query.get('w'))
-  const height = Number(query.get('h'))
-  const y = Number(query.get('y') ?? 0)
-  if (!/^[a-z0-9-]+$/.test(name) || (theme !== 'dark' && theme !== 'light')) throw new Error('bad picture name or theme')
-  const rows = body.length / (width * 4)
-  if (!Number.isInteger(rows) || y < 0 || y + rows > height) throw new Error(`${name}: rows do not fit ${width}x${height}`)
-  const key = `${name}/${theme}`
-  const part = arriving.get(key) ?? { image: { width, height, data: Buffer.alloc(width * height * 3) }, rows: 0 }
-  arriving.set(key, part)
-  for (let i = 0, j = y * width * 3; i < body.length; i += 4, j += 3) {
-    part.image.data[j] = body[i]!
-    part.image.data[j + 1] = body[i + 1]!
-    part.image.data[j + 2] = body[i + 2]!
+  const studio = connectStudio()
+  try {
+    const target = (await studio.list()).find((s) => s.name.includes('LucyTests'))
+    if (!target) throw new Error('open the LucyTests place in Studio, in edit mode, with Studio as MCP server on')
+    const luau = (code: string) => studio.run(target.id, 'Edit', code)
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 1000))
+    const dir = mkdtempSync(join(tmpdir(), 'lucy-captures-'))
+    console.log(await luau(`
+local list = game:GetService("HttpService"):JSONDecode([==[${json}]==])
+local R = require(game.ReplicatedStorage.LucyDocPictures:Clone())
+_G.LucyDocPicturesRun = R
+return R.start(list)
+`))
+    try {
+      for (let screen = 1; ; screen++) {
+        const lines = await luau('return _G.LucyDocPicturesRun.next("dark")')
+        if (lines.trim() === 'done') break
+        await settle()
+        const dark = await studio.capture(target.id)
+        await luau('return _G.LucyDocPicturesRun.again("light")')
+        await settle()
+        const light = await studio.capture(target.id)
+        const darkFile = join(dir, `${screen}-dark.${dark.mimeType.endsWith('png') ? 'png' : 'jpg'}`)
+        const lightFile = join(dir, `${screen}-light.${light.mimeType.endsWith('png') ? 'png' : 'jpg'}`)
+        writeFileSync(darkFile, Buffer.from(dark.data, 'base64'))
+        writeFileSync(lightFile, Buffer.from(light.data, 'base64'))
+        const drawn = lines.split('\n').filter((line) => !line.endsWith(' LATER') && !/ ERR /.test(line))
+        for (const line of lines.split('\n').filter((line) => / ERR /.test(line))) console.error(line)
+        for (const line of crop(darkFile, lightFile, drawn)) console.log(line)
+      }
+    } finally {
+      console.log(await luau('local R = _G.LucyDocPicturesRun if R then R.stop() end _G.LucyDocPicturesRun = nil return "stopped"'))
+    }
+  } finally {
+    studio.close()
   }
-  part.rows += rows
-  if (part.rows < height) return `${name}: ${theme} rows ${part.rows} of ${height}`
-  arriving.delete(key)
-  const pair = waiting.get(name) ?? {}
-  pair[theme] = part.image
-  waiting.set(name, pair)
-  const { dark, light } = pair
-  if (!dark || !light) return `${name}: ${theme} in, waiting for the other theme`
-  waiting.delete(name)
-  const w = Math.min(dark.width, light.width)
-  const h = Math.min(dark.height, light.height)
-  // A trimmed screen is cut to what it drew, like any other example.
-  const trimmed = examples().some((example) => example.name === name && example.trim)
-  const line = writePair(name, dark, light, [0, 0, w, h], query.get('whole') === '1' && !trimmed)
-  console.log(line)
-  return line
 }
 
 const mode = process.argv[2]
-if (mode === 'serve') {
-  createServer((request, response) => {
-    const url = new URL(request.url ?? '/', `http://127.0.0.1:${PORT}`)
-    if (request.method === 'POST' && url.pathname === '/pixels') {
-      const chunks: Buffer[] = []
-      request.on('data', (chunk: Buffer) => chunks.push(chunk))
-      request.on('end', () => {
-        try {
-          let body = Buffer.concat(chunks)
-          if (request.headers['content-encoding'] === 'gzip') body = gunzipSync(body)
-          response.writeHead(200).end(receive(url.searchParams, body))
-        } catch (err) {
-          response.writeHead(400).end((err as Error).message)
-        }
-      })
-      return
-    }
-    if (url.pathname !== '/examples.json') {
-      response.writeHead(404).end()
-      return
-    }
-    try {
-      const body = JSON.stringify(examples().map(({ markerEnd: _, ...rest }) => rest))
-      response.writeHead(200, { 'content-type': 'application/json' }).end(body)
-    } catch (err) {
-      response.writeHead(500).end((err as Error).message)
-    }
-  }).listen(PORT, '127.0.0.1', () => console.log(`serving the marked examples on http://127.0.0.1:${PORT}/examples.json`))
+if (mode === 'render') {
+  await render(process.argv.slice(3))
 } else if (mode === 'crop') {
   const [darkFile, lightFile] = process.argv.slice(3)
   if (!darkFile || !lightFile) {

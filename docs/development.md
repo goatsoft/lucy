@@ -226,37 +226,27 @@ renderer is `scripts/doc-pictures.luau`, which the LucyTests place syncs as
 `ReplicatedStorage.LucyDocPictures`. Cropping needs `cwebp` and `dwebp`
 (libwebp, `brew install webp`).
 
-1. `node scripts/doc-previews.ts serve` serves the marked examples to Studio
-   on `127.0.0.1:38991`, and writes the pictures Studio sends back. Leave it
-   running.
-2. In Studio's edit mode, with the LucyTests place open:
-
-   ```luau
-   local R = require(game.ReplicatedStorage.LucyDocPictures)
-   R.start()
-   R.run()
-   R.stop()
-   ```
-
-   `start()` loads the examples, makes its own copy of Lucy and registers the
-   docs icons. `run()` draws the examples a screenful at a time, in the dark
-   theme then the light one, captures Studio's viewport and sends each
-   example's part to the server, which writes `<name>-dark.webp` and
-   `<name>-light.webp` to `apps/site/public/images/examples`. Light and dark
-   get the same frame, cut to what either theme drew. `stop()` takes away
-   everything the renderer made. HTTP is turned on only while it talks to the
-   server.
-
-   To redraw a few pictures, call
-   `R.only({ "components-button", "components-avatar" })` before `run()`.
+1. Open the LucyTests place in Studio, in edit mode, with Studio as an MCP
+   server (**Assistant**, **...**, **Manage MCP Servers**, **Enable Studio as
+   MCP server**), the same setting the Lucy MCP needs.
+2. `node scripts/doc-previews.ts render` draws every marked example, or
+   `render components-button components-avatar` just those. It works through
+   Studio's MCP server with the Lucy MCP's Studio client, so Studio makes no
+   HTTP requests and the place needs no saving or permissions. A screenful at a
+   time, it draws the examples in the dark theme, captures Studio's viewport,
+   draws them again in the light theme at the same places, captures again, and
+   writes `<name>-dark.webp` and `<name>-light.webp` to
+   `apps/site/public/images/examples`. Light and dark get the same frame, cut to
+   what either theme drew. When it is done, everything the renderer made is
+   taken away.
 3. `node scripts/doc-previews.ts write` puts each picture pair under its
    marker. `--check` fails when a marked example has no pictures.
 
-The pictures are as big as Studio captures them: twice the viewport on a
-Retina screen. Make them all on the same kind of screen so they match.
+The pictures are as big as Studio captures them. Make them all on the same
+kind of screen so they match.
 `node scripts/doc-previews.ts crop <dark capture> <light capture>` does the
 same cutting from two screenshots taken another way, with the box lines from
-`R.next` and `R.again` on its input.
+the renderer's `next` and `again` on its input.
 
 Examples run with stand-ins for names they only borrow from earlier on their
 page, and for a client (`Players.LocalPlayer`, remotes that answer nothing), so
