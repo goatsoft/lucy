@@ -55,6 +55,13 @@ return function()
 				expect(near(points[row + 3], one[row] - Vector2.new(200, 0))).to.equal(true)
 				expect(tilts[row + 3]).to.be.near(tilts[row], 0.01)
 			end
+
+			-- a step a curve: each curve only as far past the last as that one's labels need
+			local stepped = Menu.fan(9, 50, 60, 1000, -1, 1, 3, { 120, 300 })
+			for row = 1, 3 do
+				expect(near(stepped[row + 3], one[row] - Vector2.new(120, 0))).to.equal(true)
+				expect(near(stepped[row + 6], one[row] - Vector2.new(420, 0))).to.equal(true)
+			end
 		end)
 
 		it("walks a fan in item order, across its curves too, past disabled items", function()

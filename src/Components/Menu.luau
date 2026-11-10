@@ -124,7 +124,8 @@ end
 -- centre and its tilt in degrees, so each faces along the curve.
 -- With `rows` (fewer than count), the fan wraps: rows buttons a curve, each next curve
 -- `columnStep` beside the last, on the side away from the bend (where the labels are), its
--- buttons level with the first curve's.
+-- buttons level with the first curve's. `columnStep` can be a list, one step a curve: the
+-- room past each curve's own labels, so a short-labelled curve keeps the next one close.
 function Menu.fan(
 	count: number,
 	start: number,
@@ -133,14 +134,24 @@ function Menu.fan(
 	up: number,
 	bend: number,
 	rows: number?,
-	columnStep: number?
+	columnStep: (number | { number })?
 ): ({ Vector2 }, { number })
 	local perCurve = math.max(1, rows or count)
+	local function beside(column: number): number
+		if type(columnStep) == "table" then
+			local sum = 0
+			for c = 1, column do
+				sum += columnStep[c] or 0
+			end
+			return sum
+		end
+		return column * (columnStep or 0)
+	end
 	local points, tilts = {}, {}
 	for i = 1, count do
 		local row, column = (i - 1) % perCurve, (i - 1) // perCurve
 		local theta = (start + row * step) / radius
-		local x = bend * radius * (1 - math.cos(theta)) - bend * column * (columnStep or 0)
+		local x = bend * radius * (1 - math.cos(theta)) - bend * beside(column)
 		points[i] = Vector2.new(x, up * radius * math.sin(theta))
 		tilts[i] = math.deg(theta) * bend * -up
 	end
@@ -1025,28 +1036,27 @@ local spec: Component.Spec = {
 					local step = size + Menu.fanGap
 					-- Labels measured in the menu's own units: a UIScale above scales AbsoluteSize
 					local shown = if slices[1] then slices[1].AbsoluteSize.X / size else 0
-					local labelRoom = 0
-					for index, item in entries do
-						local measured = captions[index].AbsoluteSize.X / (if shown > 0 then shown else 1)
-						labelRoom = math.max(labelRoom, measured, #item.text * 8 + 24)
-					end
-					labelRoom += 10
 					-- Too many for the screen's height: the fan wraps into curves side by side, the
-					-- next one past the labels of the last
+					-- next one past the labels of the last (its own labels, not the whole menu's)
 					local room = if up < 0
 						then center.Y - Overlay.margin
 						else view.Y - Overlay.margin - center.Y
 					local rows = Menu.fanRows(count, room, start, step, size)
-					local fan, tilt = Menu.fan(
-						count,
-						start,
-						step,
-						r,
-						up,
-						if labelsLeft then 1 else -1,
-						rows,
-						size + labelRoom + Menu.fanCurveGap
-					)
+					local curveRoom: { number } = {}
+					for index, item in entries do
+						local curve = (index - 1) // math.max(1, rows) + 1
+						local measured = captions[index].AbsoluteSize.X / (if shown > 0 then shown else 1)
+						curveRoom[curve] = math.max(curveRoom[curve] or 0, measured, #item.text * 8 + 24)
+					end
+					local steps: { number } = {}
+					for curve, width in curveRoom do
+						curveRoom[curve] = width + 10
+						steps[curve] = size + curveRoom[curve] + Menu.fanCurveGap
+					end
+					-- The outer labels: the last curve's
+					local labelRoom = curveRoom[#curveRoom] or 10
+					local fan, tilt =
+						Menu.fan(count, start, step, r, up, if labelsLeft then 1 else -1, rows, steps)
 					points(fan)
 					tilts(tilt)
 					local usable = {}
