@@ -4,6 +4,7 @@ return {
 	width = 460,
 	controls = {
 		size = { options = { "sm", "md", "lg" }, default = "md" },
+		avatarShape = { "circle", "square" },
 		listed = false,
 		loading = false,
 		empty = false,
@@ -26,6 +27,7 @@ return {
 		return {
 			Lucy.Leaderboard.new({
 				size = c.size,
+				avatarShape = c.avatarShape(),
 				rows = function()
 					return if c.empty() then {} else rows
 				end,

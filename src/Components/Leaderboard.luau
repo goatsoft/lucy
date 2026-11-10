@@ -17,6 +17,7 @@
 			podium = true,             -- false: every row the same, as a plain list
 			avatars = "top",           -- headshots on the podium and the player's row; true on
 			                           -- every row, false on none (no userId: a monogram)
+			avatarShape = "circle",    -- circle | square (rounded corners)
 			loading = false,           -- skeleton rows in place of the list
 			placeholders = 5,          -- how many skeleton rows
 			empty = "No one yet",      -- shown with no rows
@@ -56,6 +57,7 @@ local Leaderboard = {}
 Leaderboard.sizes = { "sm", "md", "lg" }
 Leaderboard.MEDALS = { "gold", "silver", "bronze" }
 Leaderboard.tiers = { "first", "podium", "own", "rest" }
+Leaderboard.avatarShapes = { "circle", "square" }
 
 -- Per tier and board size: the headshot (an Avatar size, or false), the type and medal icon sizes,
 -- and the row's padding (pixels)
@@ -252,6 +254,16 @@ local spec: Component.Spec = {
 			return Reactive.toValue(p.medals) ~= false
 		end
 		local podium = p.podium ~= false
+		local avatarShape = p.avatarShape or "circle"
+		if not table.find(Leaderboard.avatarShapes, avatarShape) then
+			error(
+				`[Lucy] unknown Leaderboard avatarShape "{avatarShape}" (expected {table.concat(
+					Leaderboard.avatarShapes,
+					", "
+				)})`,
+				0
+			)
+		end
 		local avatars = if p.avatars == nil then "top" else p.avatars
 		local format = p.format
 		local function valueText(value: any): string
@@ -384,6 +396,7 @@ local spec: Component.Spec = {
 					visible = function()
 						return faceSize() ~= nil
 					end,
+					square = avatarShape == "square",
 				})
 				else nil
 			if face then

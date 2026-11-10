@@ -249,6 +249,26 @@ return function()
 		expect(board.tierOf(14)).to.equal("podium")
 	end)
 
+	it("shows round headshots by default, or square ones", function()
+		local round = Leaderboard.new({ app = app, Parent = gui, rows = ROWS })
+		expect(round.avatarFor(11):HasTag("ui-avatar-square")).to.equal(false)
+		local square = Leaderboard.new({
+			app = app,
+			Parent = gui,
+			rows = ROWS,
+			own = { userId = 99, name = "Me", value = 50, rank = 37 },
+			avatarShape = "square",
+		})
+		expect(square.avatarFor(11):HasTag("ui-avatar-square")).to.equal(true)
+		expect(square.ownAvatar:HasTag("ui-avatar-square")).to.equal(true)
+	end)
+
+	it("rejects an unknown avatar shape", function()
+		expect(function()
+			Leaderboard.new({ app = app, Parent = gui, rows = ROWS, avatarShape = "hexagon" })
+		end).to.throw()
+	end)
+
 	it("rejects an unknown size", function()
 		expect(function()
 			Leaderboard.new({ app = app, Parent = gui, rows = ROWS, size = "huge" })
