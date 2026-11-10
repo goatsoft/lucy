@@ -53,19 +53,19 @@ Lucy.Badge.new({
 })
 ```
 
-How many a player holds, over the corner of the item's picture, with `overlay`
-(a see-through fill from the theme's `$OverlayFill`, so it reads on any picture):
+How many of a dance a player owns, on the corner of its picture. `overlay` is a
+see-through fill, so the number reads on any picture:
+
 
 ```luau
-local picture = Lucy.Image.new({ image = potionRender, size = UDim2.fromOffset(56, 56), Parent = row })
-local count = Lucy.Badge.new({
-    text = function() return tostring(held()) end,
-    variant = "overlay",
-    visible = function() return held() > 0 end,
-    Parent = picture.Instance,
+local picture = Lucy.Image.new({
+    image = "rbxthumb://type=AvatarHeadShot&id=1&w=150&h=150",
+    size = UDim2.fromOffset(80, 80),
+    Parent = parent,
 })
-count.Instance.AnchorPoint = Vector2.new(1, 1)
-count.Instance.Position = UDim2.new(1, 2, 1, 6)
+local owned = Lucy.Badge.new({ text = "3", variant = "overlay", Parent = picture.Instance })
+owned.Instance.AnchorPoint = Vector2.new(1, 1)
+owned.Instance.Position = UDim2.new(1, -4, 1, -4)
 ```
 
 A badge is a box with a [slot](slot.md): an icon, words, or anything else

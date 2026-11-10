@@ -33,6 +33,7 @@ Lucy.Tabs.new({
 | `size` | string | `"md"` | yes | The tab bar's size: `sm`, `md` or `lg` |
 | `gap` | spacing | `"Space2"` | | Space between the tab bar and the panels |
 | `shoulderButtons` | boolean | `true` | | LB and RB switch tabs while focus is inside |
+| `scroll` | boolean | `true` | | A tab bar too long for its room scrolls sideways. `false` makes the bar as wide as its tabs |
 | `disabled` | boolean | `false` | yes | Greys every tab out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `onValueChange` | function | | | Called with `(value, handle)` when it changes |
@@ -66,6 +67,11 @@ the ends. If focus was in the old panel, it moves to the first thing the player
 can select in the new one, otherwise to the new tab. With tabs inside tabs, the
 inner ones switch.
 
+A tab bar too long for its room scrolls sideways, its edges fading where there
+are more tabs. On touch the player drags it. With a controller or the keyboard,
+moving along the tabs scrolls the bar with them, and the picked tab is always
+brought into view, however it was picked.
+
 `handle.list` is the tab bar and `handle.panels` maps each tab's value to its
 panel frame.
 
@@ -89,6 +95,24 @@ Lucy.Tabs.new({
     },
     Parent = shop,
 })
+```
+
+Every crew member's set list, more than fit across a phone. The bar scrolls:
+
+
+```luau
+local crew = { "DJ Lucy", "Nova", "Beatrix", "Kai", "Juno", "Remy", "Pixel Pulse", "The Glowsticks" }
+local items = {}
+for _, name in crew do
+    table.insert(items, {
+        value = name,
+        text = name,
+        content = function() return Lucy.Text.new({ text = `{name}'s set list`, variant = "muted" }) end,
+    })
+end
+
+local box = Lucy.new("Frame")({ Size = UDim2.fromOffset(360, 120), BackgroundTransparency = 1, Parent = parent })
+Lucy.Tabs.new({ variant = "line", items = items, value = "Kai", Parent = box })
 ```
 
 Open the shop on a tab kept in app state:

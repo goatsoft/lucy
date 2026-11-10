@@ -35,6 +35,7 @@ Lucy.ToggleGroup.new({
 | `size` | string | `"md"` | yes | `sm`, `md` or `lg` |
 | `orientation` | string | `"horizontal"` | | `horizontal` for a row, `vertical` for a column |
 | `gap` | spacing | `"Space1"` | | Space between items |
+| `scroll` | boolean | `false` | | A row too long for its room scrolls sideways and keeps the picked item in view. [Tabs](tabs.md) turn it on |
 | `disabled` | boolean | `false` | yes | Greys every item out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `onValueChange` | function | | | Called with `(value, handle)` when it changes |
