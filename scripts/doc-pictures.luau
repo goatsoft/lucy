@@ -20,7 +20,8 @@
 
 	Examples run with stand-ins for names they only borrow (tracks, a settings panel)
 	and for a client (Players.LocalPlayer, remotes that answer nothing), so no real
-	server script ever runs.
+	server script ever runs. An App made with `server = true` talks to a stand-in server
+	that answers the requests in S.ANSWERS (boards.get) with the Club Lucy crew.
 ]]
 --!nocheck
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -214,6 +215,16 @@ local function watchedLucy(made)
 						app.state:set(k, v)
 					end
 				end
+			end
+			if options and options.server and app.server == nil then
+				-- The stand-in server: calls answer from S.ANSWERS, sends go nowhere
+				app.server = {
+					send = function() end,
+					call = function(_, name, ...)
+						local answer = S.ANSWERS[name]
+						return if answer then answer(...) else nil
+					end,
+				}
 			end
 			return app -- the picture's theme wins over options.theme
 		end,
@@ -592,6 +603,29 @@ function S.game()
 	})
 	return S._game
 end
+
+-- What the stand-in server answers, by request name. Anything else answers nil.
+local CREW = { "Nova", "Kai", "Juno", "Beatrix", "Remy" }
+S.ANSWERS = {
+	["boards.get"] = function(board, period)
+		local top = if board == "hype" then 9840 else 42
+		local step = if board == "hype" then 1100 else 6
+		if period == "week" then
+			top, step = math.floor(top / 3), math.max(1, math.floor(step / 3))
+		end
+		local rows = {}
+		for rank, name in CREW do
+			-- No user ids: name tiles, as the other pictures have
+			rows[rank] = { name = name, value = top - (rank - 1) * step, rank = rank }
+		end
+		return {
+			board = board,
+			period = period or "all",
+			rows = rows,
+			me = { name = "DJ Lucy", value = math.floor(top / 8), rank = 37 },
+		}
+	end,
+}
 
 -- ReplicatedStorage.Packages.Lucy, as games require it, handing out the watched Lucy.
 function S.packages()

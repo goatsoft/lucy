@@ -81,23 +81,25 @@ Lucy.Dialog.new({
 }):open()
 ```
 
-The rows usually come from the server. Show pulsing rows until they do:
+The rows usually come from the server. [useRequest](../reference/composables/use-request.md)
+asks for them and the rows pulse until they come.
+[Lucy.Boards](../reference/boards.md) answers on the server:
 
 ```luau
-local scores = Lucy.ref(nil)
-task.spawn(function()
-    scores(app.server:call("hype.top"))
-end)
+local hype = Lucy.useRequest(app, "boards.get", { "hype", "all" })
 
 Lucy.Leaderboard.new({
-    rows = function() return scores() and scores().rows or {} end,
-    own = function() return scores() and scores().me end,
-    loading = function() return scores() == nil end,
+    rows = function() return if hype.data() then hype.data().rows else {} end,
+    own = function() return hype.data() and hype.data().me end,
+    loading = function() return hype.data() == nil and hype.error() == nil end,
     unranked = "100+",
     height = 300,
     Parent = hypeDialog,
 })
 ```
+
+The [Leaderboards recipe](../recipes/leaderboards.md) has the whole thing: the
+boards on the server, a dialog with a tab per board, and a wall.
 
 Square headshots, for a board that sits in a grid of square tiles:
 

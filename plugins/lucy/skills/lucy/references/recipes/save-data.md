@@ -142,6 +142,9 @@ end)
 
 Put this above `return Profiles`.
 
+For boards with tabs, this week's list and each dancer's own rank, see the
+[Leaderboards recipe](leaderboards.md).
+
 ## On the client
 
 Anything that shows coins reads the profile:

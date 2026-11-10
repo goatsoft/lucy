@@ -205,7 +205,10 @@ above its `luau` block. The marker can take options:
   dialog, a sheet, a toast or anything else that covers the screen.
 - `<!-- preview screen -->`: a whole client script (a recipe, the homepage
   example), shown full screen. It runs in edit mode too: the renderer stands in
-  for `Players.LocalPlayer` and for remotes, which answer nothing.
+  for `Players.LocalPlayer` and for remotes, which answer nothing. An App made
+  with `server = true` gets a stand-in server: `app.server:call` answers from
+  `S.ANSWERS` in `scripts/doc-pictures.luau` (`boards.get` gives the crew's
+  rows), and anything else gets `nil`.
 - `<!-- preview screen trim -->`: the same, but the picture is cut to what the
   script drew, as for other examples, and the frame fits the picture. Use it
   when the script draws one panel in the middle of the screen, as the homepage

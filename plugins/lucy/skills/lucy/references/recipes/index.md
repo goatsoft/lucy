@@ -18,3 +18,6 @@ and change. They use only what the guides explain, and link to them as they go.
   and a hotkey
 - [Save player data](save-data.md): coins and a best combo loaded when a dancer
   joins and saved as they change, and a Top dancers board
+- [Leaderboards](leaderboards.md): Best combo and Hype boards, all time and this
+  week, in a dialog with a tab per board and your own rank, and a top 5 on the
+  wall
