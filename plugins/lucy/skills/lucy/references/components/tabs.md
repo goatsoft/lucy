@@ -99,7 +99,6 @@ Lucy.Tabs.new({
 
 Every crew member's set list, more than fit across a phone. The bar scrolls:
 
-
 ```luau
 local crew = { "DJ Lucy", "Nova", "Beatrix", "Kai", "Juno", "Remy", "Pixel Pulse", "The Glowsticks" }
 local items = {}

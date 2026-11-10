@@ -5,15 +5,14 @@ Players ranked best first, laid out as a podium. 1st is big, 2nd and 3rd sit
 under it a little smaller, and everyone after them is a line of text. Your
 own row is lit; when you are not on the board, it is pinned at the bottom.
 
-
 ```luau
 Lucy.Leaderboard.new({
     rows = {
         { name = "Nova", value = 9840 },
-        { name = "DJ Lucy", value = 9125 },
-        { name = "Kai", value = 8410 },
-        { name = "Juno", value = 7360 },
-        { name = "Beatrix", value = 6220 },
+        { name = "Kai", value = 9125 },
+        { name = "Juno", value = 8410 },
+        { name = "Beatrix", value = 7360 },
+        { name = "Remy", value = 6220 },
     },
     own = { name = app.state:get("player.name"), value = 1250, rank = 37 },
     medals = { "lucide-extended:crown-filled", "lucide-extended:crown-filled", "lucide-extended:crown-filled" },
@@ -60,7 +59,6 @@ The handle has `board.list`, `board.pinned`, `board.scroller` (with `height`),
 The hype board in a dialog. It asks the server when it opens, pulses while it
 waits, and stays the same height whether two dancers are on it or twenty:
 
-
 ```luau
 local scores = Lucy.ref(nil)
 
@@ -89,7 +87,6 @@ Lucy.Dialog.new({
 ```
 
 Nobody on the board yet:
-
 
 ```luau
 Lucy.Leaderboard.new({

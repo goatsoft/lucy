@@ -70,7 +70,6 @@ How many of a dance a player owns, on the corner of its picture. `overlay` is a
 see-through fill, so the number reads on any picture:
 
 <!-- preview -->
-
 ```luau
 local picture = Lucy.Image.new({
     image = "rbxthumb://type=AvatarHeadShot&id=1&w=150&h=150",

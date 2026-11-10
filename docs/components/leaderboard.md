@@ -10,15 +10,14 @@ under it a little smaller, and everyone after them is a line of text. Your
 own row is lit; when you are not on the board, it is pinned at the bottom.
 
 <!-- preview -->
-
 ```luau
 Lucy.Leaderboard.new({
     rows = {
         { name = "Nova", value = 9840 },
-        { name = "DJ Lucy", value = 9125 },
-        { name = "Kai", value = 8410 },
-        { name = "Juno", value = 7360 },
-        { name = "Beatrix", value = 6220 },
+        { name = "Kai", value = 9125 },
+        { name = "Juno", value = 8410 },
+        { name = "Beatrix", value = 7360 },
+        { name = "Remy", value = 6220 },
     },
     own = { name = app.state:get("player.name"), value = 1250, rank = 37 },
     medals = { "lucide-extended:crown-filled", "lucide-extended:crown-filled", "lucide-extended:crown-filled" },
@@ -66,7 +65,6 @@ The hype board in a dialog. It asks the server when it opens, pulses while it
 waits, and stays the same height whether two dancers are on it or twenty:
 
 <!-- preview solo -->
-
 ```luau
 local scores = Lucy.ref(nil)
 
@@ -97,7 +95,6 @@ Lucy.Dialog.new({
 Nobody on the board yet:
 
 <!-- preview -->
-
 ```luau
 Lucy.Leaderboard.new({
     rows = {},

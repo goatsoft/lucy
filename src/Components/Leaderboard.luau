@@ -37,6 +37,8 @@
 	board.rowFor(id), board.tierOf(id), board.rankLabelFor(id), board.medalFor(id),
 	board.avatarFor(id), board.nameLabelFor(id), board.valueLabelFor(id), board.rowCount(),
 	board.ownRankLabel, board.ownAvatar, board.ownNameLabel, board.ownValueLabel.
+	A row is its headshot, rank, name and value in a line, with a thin separator under it (none
+	under the last or the pinned row); the player's row has a quiet fill, no outline.
 
 	State keys: size, visible.
 ]]
@@ -91,11 +93,12 @@ local TIER: { [string]: Tier } = {
 }
 Leaderboard.TIER = TIER
 
--- The rank column (pixels), wide enough for the medal and #100+ on the biggest tier; every row
--- keeps it so the names line up
-local RANK_WIDTH = { sm = 48, md = 60, lg = 80 }
-local MEDAL_RANK_WIDTH = { sm = 72, md = 96, lg = 128 }
--- The headshot column for the podium, own and rest rows (2nd's size): their names line up too
+-- The rank column (pixels), wide enough for the medal and #100+; every row keeps it so the names
+-- line up
+local RANK_WIDTH = { sm = 44, md = 56, lg = 72 }
+local MEDAL_RANK_WIDTH = { sm = 64, md = 84, lg = 112 }
+-- The headshot column is 1st's headshot wide on every row, each headshot centred in it, so the
+-- ranks and names line up under 1st's
 local LIST_FACE = { sm = "sm", md = "md", lg = "lg" }
 local GAP = { sm = 8, md = 12, lg = 16 }
 local SKELETON_HEIGHT = { sm = 32, md = 40, lg = 56 }
@@ -113,36 +116,17 @@ local rules: { Component.Rule } = {
 		priority = BASE,
 		properties = { CornerRadius = "$RadiusLg" },
 	},
-	-- 1st stands on a card of its own, edged in gold
-	{
-		selector = ".ui-leaderboard-tier-first",
-		priority = FIRST,
-		properties = { BackgroundColor3 = "$Muted", BackgroundTransparency = 0.4 },
-	},
-	{
-		selector = ".ui-leaderboard-tier-first.ui-leaderboard-medal-gold::UIStroke",
-		priority = FIRST,
-		properties = {
-			Color = "$MedalGold",
-			Thickness = "$StrokeThin",
-			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
-		},
-	},
+	-- The player's row: a quiet fill, no outline
 	{
 		selector = ".ui-leaderboard-row-own",
 		priority = OWN,
 		properties = { BackgroundTransparency = 0 },
 	},
+	-- A thin line between rows
 	{
-		selector = ".ui-leaderboard-row-own::UIStroke",
-		priority = OWN,
-		properties = {
-			Color = "$Ring",
-			Thickness = "$StrokeThin",
-			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
-		},
+		selector = ".ui-leaderboard-separator",
+		priority = BASE,
+		properties = { BackgroundColor3 = "$Border" },
 	},
 	-- The lit row is the avatar's own colour, so its circle stands on the background's
 	{
@@ -292,7 +276,8 @@ local spec: Component.Spec = {
 			rankText: () -> string,
 			entry: () -> any?,
 			lit: () -> boolean,
-			pinned: boolean
+			pinned: boolean,
+			last: () -> boolean
 		)
 			local function tier(): string
 				if pinned then
@@ -353,18 +338,18 @@ local spec: Component.Spec = {
 			})
 			local rankCell = Element.new("Frame", {
 				Name = "RankCell",
-				LayoutOrder = 1,
+				LayoutOrder = 2,
 				BackgroundTransparency = 1,
 				Size = function()
 					local widths = if medalIcons() then MEDAL_RANK_WIDTH else RANK_WIDTH
 					return UDim2.fromOffset(widths[sizeNow()], 0)
 				end,
 				AutomaticSize = Enum.AutomaticSize.Y,
-				-- Right aligned: the numbers stack, the medal before them on the podium
+				-- The medal, then the number, straight after the headshot
 				Element.new("UIListLayout", {
 					SortOrder = Enum.SortOrder.LayoutOrder,
 					FillDirection = Enum.FillDirection.Horizontal,
-					HorizontalAlignment = Enum.HorizontalAlignment.Right,
+					HorizontalAlignment = Enum.HorizontalAlignment.Left,
 					VerticalAlignment = Enum.VerticalAlignment.Center,
 					Padding = UDim.new(0, 4),
 				}),
@@ -403,20 +388,20 @@ local spec: Component.Spec = {
 				else nil
 			if face then
 				Element.hydrate(face.Instance, {
-					AnchorPoint = Vector2.new(0, 0.5),
-					Position = UDim2.fromScale(0, 0.5),
+					AnchorPoint = Vector2.new(0.5, 0.5),
+					Position = UDim2.fromScale(0.5, 0.5),
 					Tags = { ["ui-leaderboard-avatar-own"] = lit },
 				})
 			end
 			local faceCell = if face
 				then Element.new("Frame", {
 					Name = "AvatarCell",
-					LayoutOrder = 2,
+					LayoutOrder = 1,
 					BackgroundTransparency = 1,
 					Size = function()
 						local s = faceSize()
-						local column = if tier() == "first" and s then s else LIST_FACE[sizeNow()]
-						local w = Avatar.sizes[column]
+						local first = TIER.first.avatar[sizeNow()]
+						local w = Avatar.sizes[if first then first else LIST_FACE[sizeNow()]]
 						return UDim2.fromOffset(w, if s then Avatar.sizes[s] else 0)
 					end,
 					face.Instance,
@@ -452,18 +437,13 @@ local spec: Component.Spec = {
 			local function pad(): UDim
 				return UDim.new(0, spec_().pad[sizeNow()])
 			end
-			local root = Element.new("Frame", {
-				Name = name,
+			-- The row's cells in a line: headshot, rank, name, value
+			local line = Element.new("Frame", {
+				Name = "Line",
+				LayoutOrder = 1,
+				BackgroundTransparency = 1,
 				Size = UDim2.fromScale(1, 0),
 				AutomaticSize = Enum.AutomaticSize.Y,
-				Tags = {
-					"ui-leaderboard-row" :: any,
-					function()
-						return `ui-leaderboard-tier-{tier()}`
-					end,
-					medalTag,
-					["ui-leaderboard-row-own"] = lit,
-				},
 				Element.new("UIPadding", {
 					PaddingLeft = UDim.new(0, 8),
 					PaddingRight = UDim.new(0, 12),
@@ -478,10 +458,37 @@ local spec: Component.Spec = {
 						return UDim.new(0, GAP[sizeNow()])
 					end,
 				}),
-				rankCell,
 				faceCell :: any,
+				rankCell,
 				nameLabel,
 				valueLabel,
+			})
+			-- Under each listed row but the last, and under none when pinned
+			local separator = Element.new("Frame", {
+				Name = "Separator",
+				LayoutOrder = 2,
+				BorderSizePixel = 0,
+				Size = UDim2.new(1, 0, 0, 1),
+				Visible = function()
+					return not pinned and not last()
+				end,
+				Tags = { "ui-leaderboard-separator" },
+			})
+			local root = Element.new("Frame", {
+				Name = name,
+				Size = UDim2.fromScale(1, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				Tags = {
+					"ui-leaderboard-row" :: any,
+					function()
+						return `ui-leaderboard-tier-{tier()}`
+					end,
+					medalTag,
+					["ui-leaderboard-row-own"] = lit,
+				},
+				Element.new("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder }),
+				line,
+				separator,
 			})
 			return {
 				row = root,
@@ -539,7 +546,7 @@ local spec: Component.Spec = {
 		end
 
 		local function spacing(): UDim
-			return UDim.new(0, math.floor(GAP[sizeNow()] / 3))
+			return UDim.new(0, 0)
 		end
 		local list = Element.new("Frame", {
 			Name = "List",
@@ -575,7 +582,10 @@ local spec: Component.Spec = {
 					function()
 						return isOwn(entry())
 					end,
-					false
+					false,
+					function()
+						return at() == #rows()
+					end
 				)
 				Element.hydrate(built.row, {
 					LayoutOrder = function()
@@ -621,7 +631,10 @@ local spec: Component.Spec = {
 			function()
 				return true
 			end,
-			true
+			true,
+			function()
+				return true
+			end
 		)
 		h.ownRankLabel, h.ownNameLabel, h.ownValueLabel, h.ownAvatar =
 			ownBuilt.rank, ownBuilt.name, ownBuilt.value, ownBuilt.avatar
