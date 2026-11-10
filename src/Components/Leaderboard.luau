@@ -19,13 +19,17 @@
 			size = "md",               -- sm | md | lg
 			avatars = "top",           -- headshots on the top three and the player's row; true on
 			                           -- every row, false on none (no userId: a monogram)
+			height = 420,              -- pixels (or a ref or getter): the rows scroll in this much
+			                           -- room and the pinned row stays under them, so the board keeps
+			                           -- one size while it loads, empties and fills
 		})
 
 	The value is a number (formatted) or text. Rows are keyed by userId (or name), so new data
 	updates rows in place and moves them. Colours come from style rules: $MedalGold,
 	$MedalSilver, $MedalBronze for the top three, $Accent and $Ring for the player's row.
 
-	Parts: board.list, board.pinned (the own row's frame, with a separator above),
+	Parts: board.list, board.pinned (the own row's frame, with a separator above), board.scroller
+	(the ScrollArea round the rows, with height),
 	board.skeletons, board.emptyLabel, board.rowFor(id), board.rankLabelFor(id),
 	board.medalFor(id), board.avatarFor(id), board.nameLabelFor(id), board.valueLabelFor(id),
 	board.rowCount(), board.ownRankLabel, board.ownAvatar, board.ownNameLabel, board.ownValueLabel.
@@ -40,6 +44,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Icon = require(script.Parent.Icon)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
+local ScrollArea = require(script.Parent.ScrollArea)
 local Skeleton = require(script.Parent.Skeleton)
 
 local Leaderboard = {}
@@ -615,21 +620,45 @@ local spec: Component.Spec = {
 		})
 		h.emptyLabel = emptyLabel
 
+		local function spacing(): UDim
+			return UDim.new(0, math.floor(GAP[sizeNow()] / 2))
+		end
+		local rowsHolder = Element.new("Frame", {
+			Name = "Rows",
+			LayoutOrder = 1,
+			BackgroundTransparency = 1,
+			Size = UDim2.fromScale(1, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			Element.new("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = spacing }),
+			skeletons,
+			list,
+			emptyLabel,
+		})
+		-- A fixed height: the rows scroll, the pinned row stays under them
+		local rowsPart: any = rowsHolder
+		if p.height ~= nil then
+			local scroller = ScrollArea.new({
+				app = app,
+				name = "Scroll",
+				layoutOrder = 1,
+				size = function(): UDim2
+					return UDim2.new(1, 0, 0, Reactive.toValue(p.height) or 0)
+				end,
+				children = { rowsHolder },
+			})
+			h.scroller = scroller
+			rowsPart = scroller.Instance
+		end
+		Element.hydrate(pinned, { LayoutOrder = 2 })
+
 		return Element.new("Frame", {
 			Size = UDim2.fromScale(1, 0),
 			AutomaticSize = Enum.AutomaticSize.Y,
 			BackgroundTransparency = 1,
 			Visible = h:ref("visible"),
 			Tags = { "ui-leaderboard" },
-			Element.new("UIListLayout", {
-				SortOrder = Enum.SortOrder.LayoutOrder,
-				Padding = function()
-					return UDim.new(0, math.floor(GAP[sizeNow()] / 2))
-				end,
-			}),
-			skeletons,
-			list,
-			emptyLabel,
+			Element.new("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = spacing }),
+			rowsPart,
 			pinned,
 		})
 	end,

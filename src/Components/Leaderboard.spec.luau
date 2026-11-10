@@ -188,6 +188,24 @@ return function()
 		expect(board.rowFor(11):HasTag("ui-leaderboard-medal-gold")).to.equal(false)
 	end)
 
+	it("keeps one height: the rows scroll and the pinned row stays under them", function()
+		local loading = Reactive.ref(true)
+		local board = Leaderboard.new({
+			app = app,
+			Parent = gui,
+			rows = ROWS,
+			own = { userId = 99, name = "Me", value = 50, rank = 37 },
+			loading = loading,
+			height = 200,
+		})
+		expect(board.scroller).to.be.ok()
+		expect(board.scroller.Instance.Size.Y.Offset).to.equal(200)
+		expect(board.pinned:IsDescendantOf(board.scroller.Instance)).to.equal(false)
+		expect(board.list:IsDescendantOf(board.scroller.Instance)).to.equal(true)
+		loading(false)
+		expect(board.scroller.Instance.Size.Y.Offset).to.equal(200)
+	end)
+
 	it("rejects an unknown size", function()
 		expect(function()
 			Leaderboard.new({ app = app, Parent = gui, rows = ROWS, size = "huge" })

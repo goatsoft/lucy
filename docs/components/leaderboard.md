@@ -38,6 +38,7 @@ Lucy.Leaderboard.new({
 | `placeholders` | number | `5` | | How many pulsing rows |
 | `empty` | string | `nil` | | Shown when there are no rows |
 | `avatars` | `"top"`, boolean | `"top"` | | Headshots on the top three and the player's row; `true` on every row, `false` on none (no `userId`: a monogram) |
+| `height` | number, ref or getter | `nil` | | Pixels for the rows, which scroll in it; the pinned row stays under them, so the board keeps one size while it loads, empties and fills |
 | `size` | string | `"md"` | yes | `sm`, `md` or `lg` (a board in the world, say) |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
