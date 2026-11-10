@@ -11,7 +11,8 @@
 			unranked = "100+",         -- the pinned rank when own.rank is nil
 			format = function(value) return `{value} PTS` end, -- default: 14,850
 			medals = { "set:queen", "set:crown", "set:crown" }, -- icons for 1st to 3rd, beside
-			                           -- #1, #2, #3; false for no medal colours at all
+			                           -- #1, #2, #3; false for no medal colours at all (a ref
+			                           -- or getter too: one board with medals, the next without)
 			loading = false,           -- skeleton rows in place of the list
 			placeholders = 5,          -- how many skeleton rows
 			empty = "No one yet",      -- shown with no rows
@@ -212,8 +213,13 @@ local spec: Component.Spec = {
 		local function loading(): boolean
 			return Reactive.toValue(p.loading) == true
 		end
-		local medalIcons: { string }? = if type(p.medals) == "table" then p.medals else nil
-		local useMedals = p.medals ~= false
+		local function medalIcons(): { string }?
+			local m = Reactive.toValue(p.medals)
+			return if type(m) == "table" then m else nil
+		end
+		local function useMedals(): boolean
+			return Reactive.toValue(p.medals) ~= false
+		end
 		local avatars = if p.avatars == nil then "top" else p.avatars
 		local function shows(rank: number?, lit: boolean): boolean
 			if avatars == true then
@@ -233,7 +239,7 @@ local spec: Component.Spec = {
 			return tostring(value)
 		end
 		local function medalOf(rank: number?): string?
-			return if useMedals and rank then Leaderboard.MEDALS[rank] else nil
+			return if useMedals() and rank then Leaderboard.MEDALS[rank] else nil
 		end
 		local function sizeTag(): string
 			return `ui-leaderboard-size-{sizeNow()}`
@@ -253,7 +259,8 @@ local spec: Component.Spec = {
 			end
 			local function medalIcon(): string
 				local r = rank()
-				return if medalIcons and r and medalIcons[r] then medalIcons[r] else ""
+				local icons = medalIcons()
+				return if icons and r and icons[r] then icons[r] else ""
 			end
 			local rankLabel = Element.new("TextLabel", {
 				Name = "Rank",
@@ -395,7 +402,7 @@ local spec: Component.Spec = {
 			Element.hydrate(rankCell, {
 				Size = function()
 					local height = textHeight().Y.Offset
-					local widths = if medalIcons then MEDAL_RANK_WIDTH else RANK_WIDTH
+					local widths = if medalIcons() then MEDAL_RANK_WIDTH else RANK_WIDTH
 					return UDim2.fromOffset(widths[sizeNow()], height)
 				end,
 			})

@@ -33,7 +33,7 @@ Lucy.Leaderboard.new({
 | `own` | table, ref or getter | `nil` | | The player's entry. Their row is lit when listed, else pinned under the list |
 | `unranked` | string | `"-"` | | The pinned rank when `own.rank` is not known (`"100+"`, say) |
 | `format` | function | commas | | Turns a value into its text. Text values are shown as they are |
-| `medals` | table or `false` | `nil` | | Icons for 1st, 2nd and 3rd, beside the number. `false` leaves out the medal colours too |
+| `medals` | table, `false`, ref or getter | `nil` | | Icons for 1st, 2nd and 3rd, beside the number. `false` leaves out the medal colours too |
 | `loading` | boolean, ref or getter | `false` | | Pulsing rows in place of the list |
 | `placeholders` | number | `5` | | How many pulsing rows |
 | `empty` | string | `nil` | | Shown when there are no rows |
