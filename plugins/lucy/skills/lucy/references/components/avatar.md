@@ -28,6 +28,7 @@ Lucy.Stack.new({
 | `size` | string or number | `"md"` | yes | `sm` (32 pixels), `md` (40), `lg` (56) or `xl` (80, a featured player: who is up next, a profile), or a number of pixels, such as `120` for the winner on a podium |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `square` | boolean | `false` | | Rounded corners instead of a circle |
+| `background` | boolean | `true` | | `false` leaves nothing behind the face: only the picture, clipped to its shape |
 
 It also takes the [props every component takes](index.md#using-a-component).
 
@@ -61,6 +62,23 @@ Lucy.Item.new({
     description = `@{friend.Name}`,
     media = Lucy.Avatar.new({ userId = friend.UserId, name = friend.DisplayName }),
     Parent = crewList,
+})
+```
+
+The winners on a podium: big square faces with nothing behind them, each
+headshot clipped to its corners:
+
+```luau
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space4",
+    align = "end",
+    children = {
+        Lucy.Avatar.new({ userId = 156, name = "Nova", size = 96, square = true, background = false }),
+        Lucy.Avatar.new({ userId = 1, name = "Kai", size = 128, square = true, background = false }),
+        Lucy.Avatar.new({ userId = 261, name = "Juno", size = 84, square = true, background = false }),
+    },
+    Parent = parent,
 })
 ```
 

@@ -7,6 +7,7 @@
 			name = player.DisplayName, -- the monogram's initials
 			size = "md",              -- sm | md | lg | xl, or a number of pixels
 			square = false,           -- rounded corners instead of a circle
+			background = true,        -- false: nothing behind the face, only the picture, clipped
 			Parent = row,
 		})
 
@@ -33,6 +34,8 @@ local rules: { Component.Rule } = {
 		priority = 0,
 		properties = { BackgroundColor3 = "$Muted", BorderSizePixel = 0 },
 	},
+	-- background = false: only the picture, clipped to the shape, nothing behind it
+	{ selector = ".ui-avatar-bare", priority = 10, properties = { BackgroundTransparency = 1 } },
 	{ selector = ".ui-avatar::UICorner", priority = 0, properties = { CornerRadius = "$RadiusFull" } },
 	{ selector = ".ui-avatar-square::UICorner", priority = 10, properties = { CornerRadius = "$RadiusMd" } },
 	{
@@ -125,6 +128,7 @@ local spec: Component.Spec = {
 		local p: Component.Props = h.props
 		checkSize(h:get("size"))
 		local square = p.square == true
+		local bare = p.background == false
 		local userId, name, size = h:ref("userId"), h:ref("name"), h:ref("size")
 		local function url(): string
 			return Avatar.headshot(userId())
@@ -168,6 +172,7 @@ local spec: Component.Spec = {
 			Tags = {
 				"ui-avatar" :: any,
 				if square then "ui-avatar-square" else "ui-avatar-round",
+				if bare then "ui-avatar-bare" else "ui-avatar-filled",
 				function()
 					return "ui-avatar-size-" .. stepOf(size())
 				end,
