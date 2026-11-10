@@ -5,7 +5,7 @@
 		Avatar.new({
 			userId = player.UserId,   -- 0 or below shows the monogram
 			name = player.DisplayName, -- the monogram's initials
-			size = "md",              -- sm | md | lg
+			size = "md",              -- sm | md | lg | xl
 			square = false,           -- rounded corners instead of a circle
 			Parent = row,
 		})
@@ -20,9 +20,9 @@ local Element = require(script.Parent.Parent.Core.Element)
 
 local Avatar = {}
 
-Avatar.sizes = { sm = 32, md = 40, lg = 56 }
+Avatar.sizes = { sm = 32, md = 40, lg = 56, xl = 80 }
 
-local TEXT = { sm = "$TextXs", md = "$TextSm", lg = "$TextBase" }
+local TEXT = { sm = "$TextXs", md = "$TextSm", lg = "$TextBase", xl = "$TextLg" }
 
 local rules: { Component.Rule } = {
 	{
@@ -89,7 +89,7 @@ end
 local function checkSize(size: string): number
 	local px = Avatar.sizes[size]
 	if px == nil then
-		error(`[Lucy] unknown Avatar size "{size}" (expected sm, md or lg)`, 0)
+		error(`[Lucy] unknown Avatar size "{size}" (expected sm, md, lg or xl)`, 0)
 	end
 	return px
 end
