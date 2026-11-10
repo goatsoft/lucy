@@ -12,6 +12,8 @@
 			size = "md",           -- sm | md | lg
 			orientation = "horizontal", -- horizontal | vertical
 			gap = "Space1",
+			scroll = false,        -- a row too long for its room scrolls sideways, its edges
+			                       -- fading; the picked item is brought into view (Tabs: on)
 			disabled = false,
 			visible = true,
 			onValueChange = function(value, group) end,
@@ -24,6 +26,11 @@
 	its icon, text and children sit in a row and take its colours (Toggle.slot); with an icon
 	or children and no text, it shows no text.
 
+	With scroll, the row sits in a ScrollArea (group.scroller) as wide as its room and as tall as
+	its items. A player drags it on touch; a controller's D-pad and the keyboard's arrows move
+	through the items and the area follows the selection; picking an item any way (a press,
+	LB / RB in Tabs, game code) scrolls it into view.
+
 	State keys: value, variant, size, disabled, visible.
 	Events: "select" with the value picked, for Lucy.useUiSound.
 	group.items holds the item buttons, in order.
@@ -32,6 +39,8 @@
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
+local Scroll = require(script.Parent.Parent.Core.Scroll)
+local ScrollArea = require(script.Parent.ScrollArea)
 local Toggle = require(script.Parent.Toggle)
 
 local ToggleGroup = {}
@@ -170,7 +179,51 @@ local spec: Component.Spec = {
 		for _, button in buttons do
 			button.Parent = frame
 		end
-		return frame
+		if not p.scroll or direction ~= Enum.FillDirection.Horizontal then
+			return frame
+		end
+
+		-- A row too long for its room: it scrolls sideways, as tall as its items
+		local height = Reactive.ref(0)
+		local area = ScrollArea.new({
+			app = h.app,
+			direction = "horizontal",
+			scrollbar = "scroll",
+			visible = h:ref("visible"),
+			size = function(): UDim2
+				return UDim2.new(1, 0, 0, height())
+			end,
+			children = { frame },
+		})
+		h.scroller = area
+		local scroller = area.frame :: ScrollingFrame
+		-- Side effects of the engine's layout: the row's height, in the area's own units
+		local function measure()
+			local scale = Scroll.scaleOf(scroller)
+			height(math.ceil(frame.AbsoluteSize.Y / (if scale > 0 then scale else 1)))
+		end
+		measure()
+		local connection = frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(measure)
+		Reactive.onCleanup(function()
+			connection:Disconnect()
+		end)
+		-- The picked item comes into view, however it was picked
+		local function reveal()
+			if multiple then
+				return
+			end
+			local picked = Reactive.untrack(value)
+			for index, item in items do
+				if item.value == picked then
+					Scroll.reveal(buttons[index])
+				end
+			end
+		end
+		Reactive.watch(value, function()
+			task.defer(reveal)
+		end)
+		task.defer(reveal)
+		return area.Instance
 	end,
 }
 

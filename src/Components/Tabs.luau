@@ -14,6 +14,8 @@
 			disabled = false,
 			visible = true,
 			shoulderButtons = true, -- LB / RB switch tabs while focus is inside
+			scroll = true,         -- a tab bar too long for its room scrolls sideways (drag on
+			                       -- touch; the picked tab is brought into view)
 			onValueChange = function(value, tabs) end,
 			Parent = panel,
 		})
@@ -70,6 +72,8 @@ local spec: Component.Spec = {
 			variant = h:ref("variant"),
 			size = h:ref("size"),
 			disabled = h:ref("disabled"),
+			-- A long tab bar scrolls sideways, the picked tab kept in view
+			scroll = p.scroll ~= false,
 			layoutOrder = 1,
 			name = "List",
 		})

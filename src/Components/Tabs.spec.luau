@@ -72,11 +72,20 @@ return function()
 		expect((tabs.list.items[1]:FindFirstChild("Indicator") :: Frame).Visible).to.equal(false)
 	end)
 
-	it("fits its tab bar to the tabs", function()
+	it("fits its row of tabs to the tabs, in a bar that scrolls past its room", function()
 		local _, _, items = panels()
 		local tabs = Tabs.new({ app = app, Parent = gui, items = items, size = "sm" })
-		expect(tabs.list.Instance.AutomaticSize).to.equal(Enum.AutomaticSize.XY)
+		expect(tabs.list.scroller).to.be.ok()
+		local row = tabs.list.items[1].Parent :: Frame
+		expect(row.AutomaticSize).to.equal(Enum.AutomaticSize.XY)
 		expect(tabs.list.items[1]:HasTag("ui-toggle-size-sm")).to.equal(true)
+	end)
+
+	it("fits its tab bar to the tabs with scroll = false", function()
+		local _, _, items = panels()
+		local tabs = Tabs.new({ app = app, Parent = gui, items = items, scroll = false })
+		expect(tabs.list.scroller).to.equal(nil)
+		expect(tabs.list.Instance.AutomaticSize).to.equal(Enum.AutomaticSize.XY)
 	end)
 
 	it("switches panels when a tab is picked, and never clears", function()

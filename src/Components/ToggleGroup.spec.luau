@@ -203,6 +203,73 @@ return function()
 		expect(Harness.colorEq(Harness.styled(slot.Icon, "ImageColor3"), on)).to.equal(true)
 	end)
 
+	describe("scroll", function()
+		local LONG =
+			{ "House", "Techno", "Dubstep", "Anthem", "Pop", "Hip hop", "Rave", "Disco", "Funk", "Garage" }
+
+		local function narrow(): Frame
+			local box = Instance.new("Frame")
+			box.Size = UDim2.fromOffset(240, 200)
+			box.Parent = gui
+			return box
+		end
+
+		it("scrolls sideways in a row too long for its room, with its items in the scroller", function()
+			if not Harness.laysOutLive() then
+				return -- its height follows its items: live layout only
+			end
+			local group = ToggleGroup.new({ app = app, Parent = narrow(), items = LONG, scroll = true })
+			Harness.flush()
+			expect(group.scroller).to.be.ok()
+			local frame = group.scroller.frame :: ScrollingFrame
+			expect(frame.ScrollingDirection).to.equal(Enum.ScrollingDirection.X)
+			expect(group.items[1]:IsDescendantOf(frame)).to.equal(true)
+			-- As wide as its room, as tall as its items
+			expect(group.Instance.AbsoluteSize.X <= 241).to.equal(true)
+			expect(math.abs(group.Instance.AbsoluteSize.Y - group.items[1].AbsoluteSize.Y) <= 2).to.equal(
+				true
+			)
+		end)
+
+		it("brings the picked item into view", function()
+			if not Harness.laysOutLive() then
+				return -- scrolling follows layout: live layout only
+			end
+			local value = Reactive.ref("House")
+			local group = ToggleGroup.new({
+				app = app,
+				Parent = narrow(),
+				items = LONG,
+				value = value,
+				scroll = true,
+				required = true,
+			})
+			Harness.flush()
+			local frame = group.scroller.frame :: ScrollingFrame
+			value("Garage")
+			Harness.flush()
+			local last = group.items[#group.items]
+			local left = last.AbsolutePosition.X
+			local right = left + last.AbsoluteSize.X
+			local viewLeft = frame.AbsolutePosition.X
+			expect(frame.CanvasPosition.X > 0).to.equal(true)
+			expect(left >= viewLeft - 1 and right <= viewLeft + frame.AbsoluteWindowSize.X + 1).to.equal(true)
+		end)
+
+		it("leaves a column, or a group without scroll, as it was", function()
+			local column = ToggleGroup.new({
+				app = app,
+				Parent = gui,
+				items = LONG,
+				scroll = true,
+				orientation = "vertical",
+			})
+			expect(column.scroller).to.equal(nil)
+			local plain = ToggleGroup.new({ app = app, Parent = gui, items = LONG })
+			expect(plain.scroller).to.equal(nil)
+		end)
+	end)
+
 	it("rejects an unknown type", function()
 		expect(function()
 			ToggleGroup.new({ app = app, Parent = gui, items = GENRES, type = "some" })
