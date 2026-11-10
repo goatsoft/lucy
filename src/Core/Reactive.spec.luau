@@ -552,6 +552,36 @@ return function()
 			count(3)
 			expect(table.concat(log, ",")).to.equal("run1,clean1,run2,clean2")
 		end)
+
+		it("keeps what the callback made when a getter re-runs to an equal value", function()
+			local flag = ref(nil :: boolean?)
+			local tick = ref(0)
+			local made, cleaned = 0, 0
+			local runs = 0
+			local stop = watch(function()
+				return if flag() then 5 else 4
+			end, function()
+				made += 1
+				watchEffect(function()
+					tick()
+					runs += 1
+				end)
+				Reactive.onCleanup(function()
+					cleaned += 1
+				end)
+			end, { immediate = true })
+			flag(false) -- the getter runs again, still 4: the callback is skipped
+			expect(cleaned).to.equal(0)
+			tick(1)
+			expect(runs).to.equal(2)
+			flag(true) -- 5: the old run is stopped, the callback runs again
+			expect(made).to.equal(2)
+			expect(cleaned).to.equal(1)
+			stop()
+			expect(cleaned).to.equal(2)
+			tick(2)
+			expect(runs).to.equal(3)
+		end)
 	end)
 
 	describe("effectScope", function()

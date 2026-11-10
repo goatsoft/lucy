@@ -497,10 +497,13 @@ function Reactive.watch(
 	if type(source) == "function" and not deep then
 		-- The common case, one effect and no hidden computed: it may re-run with an
 		-- equal value (a getter whose inputs changed), which is skipped here, so the
-		-- callback's cleanups are kept apart from the effect's own.
+		-- callback's cleanups are kept apart from the effect's own. So is what the callback
+		-- makes (effects, scopes, components): it runs in a scope of its own, stopped only
+		-- when the callback runs again or the watch stops, never by a skipped re-run.
 		local immediate = opts.immediate == true
 		local initialized, old = false, nil
 		local cleanups: { () -> () }? = nil
+		local runScope: any = nil
 		local function onCleanup(cleanup: () -> ())
 			if cleanups then
 				table.insert(cleanups, cleanup)
@@ -519,6 +522,22 @@ function Reactive.watch(
 					end
 				end
 			end
+			local scope = runScope
+			runScope = nil
+			if scope then
+				dispose(scope)
+			end
+		end
+		local function runCallback(new: any, previous: any)
+			local scope = newNode("scope")
+			runScope = scope
+			local previousOwner = owner
+			owner = scope
+			local ok: boolean, err: any = pcall(Reactive._untracked, callback, new, previous, onCleanup)
+			owner = previousOwner
+			if not ok then
+				error(err, 0)
+			end
 		end
 		local stopEffect = Reactive.watchEffect(function()
 			local new = source()
@@ -526,7 +545,7 @@ function Reactive.watch(
 				initialized = true
 				old = new
 				if immediate then
-					Reactive._untracked(callback, new, nil, onCleanup)
+					runCallback(new, nil)
 				end
 				return
 			end
@@ -536,7 +555,7 @@ function Reactive.watch(
 			local previous = old
 			old = new
 			runCleanups()
-			Reactive._untracked(callback, new, previous, onCleanup) -- no allocation per change
+			runCallback(new, previous)
 		end)
 		Reactive.onCleanup(runCleanups) -- the owner stopping ends the watch too
 		return function()
