@@ -15,6 +15,7 @@
     "dialog": "Modal dialog and alert dialog",
     "effect": "Animated celebrations behind a reward or level up: rays, and your own types",
     "grid": "Rows of equal cells",
+    "heading": "A title over a description, wrapping or side by side on short screens",
     "icon": "Small picture in the theme's colours, by name or asset id",
     "image": "Picture from an asset id or a thumbnail",
     "inline-confirm": "Asks to confirm in place, with YES and NO",
