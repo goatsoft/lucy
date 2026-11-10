@@ -120,6 +120,19 @@ return function()
 		expect(tabs.panels.songs.Visible).to.equal(true)
 	end)
 
+	it("is just the tab bar when no tab has content, with no room under it", function()
+		local tabs = Tabs.new({
+			app = app,
+			Parent = gui,
+			items = { { value = "combo", text = "Best combo" }, { value = "hype", text = "Hype" } },
+		})
+		local holder = tabs.Instance:FindFirstChild("Panels") :: Frame
+		expect(holder.Visible).to.equal(false)
+		local _, _, items = panels()
+		local withContent = Tabs.new({ app = app, Parent = gui, items = items })
+		expect((withContent.Instance:FindFirstChild("Panels") :: Frame).Visible).to.equal(true)
+	end)
+
 	it("builds a panel from a function", function()
 		local tabs = Tabs.new({
 			app = app,

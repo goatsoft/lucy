@@ -53,7 +53,7 @@ Each tab is a table:
 |---|---|
 | `value` | What the tab stands for. Required |
 | `text` | The tab's text. Defaults to the value. `label` works too |
-| `content` | The panel: an Instance, a handle, or a function that returns one |
+| `content` | The panel: an Instance, a handle, or a function that returns one. Leave it out of every tab for a bar on its own, picking what one shared view shows (a leaderboard's board) |
 | `icon` | An [icon](icon.md) name drawn before the tab's text |
 | `children` | Anything after the text in the tab's [slot](slot.md), such as a count badge. With an icon or children and no text, the tab shows no text. They take the tab's colours |
 | `disabled` | Greys this tab out |

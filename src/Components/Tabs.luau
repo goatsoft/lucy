@@ -80,9 +80,15 @@ local spec: Component.Spec = {
 		h.list = list
 
 		local panels: { [any]: Frame } = {}
+		-- With no content in any tab it is just the bar (a picker over one shared view)
+		local anyContent = false
+		for _, item in items do
+			anyContent = anyContent or item.content ~= nil
+		end
 		local holder = Element.new("Frame", {
 			Name = "Panels",
 			LayoutOrder = 2,
+			Visible = anyContent,
 			BackgroundTransparency = 1,
 			Size = UDim2.fromScale(1, 0),
 			AutomaticSize = Enum.AutomaticSize.Y,
