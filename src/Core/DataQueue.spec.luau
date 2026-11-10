@@ -129,6 +129,9 @@ return function()
 			autoRun = false,
 			bindToClose = false,
 			warn = function() end,
+			-- The specs run in Studio; most want the live store names
+			inStudio = opts.inStudio == true,
+			studio = opts.studio,
 		})
 	end
 
@@ -356,6 +359,45 @@ return function()
 			scores:set("a", 1)
 			expect(queue:flush(1)).to.equal(false)
 			expect(queue:pending()).to.equal(1)
+		end)
+	end)
+
+	describe("Studio", function()
+		it("keeps Studio's saves in stores of its own", function()
+			make({ inStudio = true })
+			expect(queue.prefix).to.equal("Studio_")
+			local scores = queue:store("Scores")
+			local hype = queue:ordered("Hype")
+			scores:set("u1", 7)
+			hype:set("u1", 3)
+			queue:step()
+			expect(service.data.Studio_Scores.u1).to.equal(7)
+			expect(service.data.Studio_Hype.u1).to.equal(3)
+			expect(service.data.Scores).to.equal(nil)
+			expect(service.data.Hype).to.equal(nil)
+		end)
+
+		it("takes a start of the game's own", function()
+			make({ inStudio = true, studio = "Test_" })
+			queue:store("Scores"):set("u1", 7)
+			queue:step()
+			expect(service.data.Test_Scores.u1).to.equal(7)
+		end)
+
+		it("uses the live stores with studio = false", function()
+			make({ inStudio = true, studio = false })
+			expect(queue.prefix).to.equal("")
+			queue:store("Scores"):set("u1", 7)
+			queue:step()
+			expect(service.data.Scores.u1).to.equal(7)
+		end)
+
+		it("uses the live stores live", function()
+			make()
+			expect(queue.prefix).to.equal("")
+			queue:store("Scores"):set("u1", 7)
+			queue:step()
+			expect(service.data.Scores.u1).to.equal(7)
 		end)
 	end)
 

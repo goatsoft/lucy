@@ -37,6 +37,7 @@ return function()
 			autoRun = false,
 			bindToClose = false,
 			warn = function() end,
+			inStudio = false,
 		})
 		now = MONDAY
 		local opts = {
@@ -52,7 +53,7 @@ return function()
 				return if userId == 99 then "DJ Lucy" else nil
 			end,
 		}
-		for key, value in options or {} do
+		for key, value in (options or {}) :: { [string]: any } do
 			opts[key] = value
 		end
 		boards = Boards.new(opts)

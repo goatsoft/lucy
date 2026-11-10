@@ -105,6 +105,23 @@ end)
 `flush` returns `true` when nothing is left. `queue:pending()` counts the writes
 still waiting.
 
+## Studio
+
+In Studio every store gets a name of its own: `queue:store("Profiles")` is
+`Studio_Profiles` there and `Profiles` live. Testing never touches the live
+game's data, so a test purchase, a test score or a reset profile stays in
+Studio. The queue says so once when it starts, and `queue.prefix` is
+`"Studio_"` in Studio and `""` live.
+
+```luau
+Lucy.DataQueue.new()                      -- Studio_Profiles in Studio
+Lucy.DataQueue.new({ studio = "Test_" })  -- Test_Profiles in Studio
+Lucy.DataQueue.new({ studio = false })    -- Profiles in Studio too: the live data
+```
+
+The Studio stores start empty, so your first Play in Studio is as a new
+player.
+
 ## Offline
 
 When the place cannot reach DataStores (it is not published, or API access is
@@ -122,10 +139,11 @@ session: `set`, `get` and `top` still work. `queue.offline` tells you.
 | `closeTimeout` | `5` in Studio, `25` live | Seconds `BindToClose` waits |
 | `interval` | `0.25` | Seconds between the queue's steps |
 | `bindToClose` | `true` | `false` to leave `BindToClose` to you |
+| `studio` | `"Studio_"` | What store names start with in Studio, or `false` for the live stores |
 
 Specs can pass `service` (a fake DataStoreService), `clock`, `wait`, `spawn`,
-`warn` and `autoRun = false` (step with `queue:step()`), so every step is
-deterministic.
+`warn`, `inStudio` (whether to act as Studio) and `autoRun = false` (step with
+`queue:step()`), so every step is deterministic.
 
 ## What it does not do
 

@@ -38,6 +38,12 @@
 		The queue binds BindToClose and flushes, waiting at most closeTimeout seconds
 		(5 in Studio, 25 live).
 
+	Studio:
+		In Studio every store's name starts "Studio_", so testing never reads or writes the
+		live game's data (a test purchase, a test score, a wiped profile). `studio` sets the
+		start; `studio = false` uses the live stores from Studio too. queue.prefix is what
+		the names start with ("" live).
+
 	Offline:
 		When DataStores cannot be reached (an unpublished place, API access off) the
 		handles keep everything in memory, and the queue says so once (queue.offline).
@@ -49,6 +55,9 @@
 		retryDelay     seconds before the first retry, doubling after (1)
 		closeTimeout   seconds BindToClose waits (5 in Studio, 25 live)
 		interval       seconds between steps when it runs itself (0.25)
+		studio         what Studio's store names start with ("Studio_"), or false for the live
+		               stores
+		inStudio       whether this is Studio (RunService:IsStudio(); specs)
 		bindToClose    false to leave BindToClose alone (specs)
 		autoRun        false to step only on queue:step() (specs)
 		service        a DataStoreService (specs pass a fake)
@@ -70,6 +79,8 @@ export type Options = {
 	retryDelay: number?,
 	closeTimeout: number?,
 	interval: number?,
+	studio: (string | false)?,
+	inStudio: boolean?,
 	bindToClose: boolean?,
 	autoRun: boolean?,
 	service: any?,
@@ -94,6 +105,7 @@ type Page = { list: { Entry }, at: number, refreshing: boolean, loading: boolean
 type Handle = {
 	queue: any,
 	name: string,
+	storeName: string,
 	ordered: boolean,
 	store: any,
 	writes: { [string]: Write },
@@ -120,7 +132,8 @@ end
 
 function DataQueue.new(options: Options?): any
 	local opts: Options = options or {}
-	local studio = RunService:IsStudio()
+	local studio = if opts.inStudio ~= nil then opts.inStudio else RunService:IsStudio()
+	local prefix = if not studio or opts.studio == false then "" else (opts.studio or "Studio_") :: string
 	local self = setmetatable({
 		service = opts.service or DataStoreService,
 		ttl = opts.ttl or 60,
@@ -135,6 +148,7 @@ function DataQueue.new(options: Options?): any
 		warn = (opts.warn or warn) :: (...any) -> (),
 		onError = nil :: ((info: { [string]: any }) -> ())?,
 		offline = false,
+		prefix = prefix,
 		handles = {} :: { Handle },
 		_budget = {} :: { [any]: number },
 		_connection = nil :: RBXScriptConnection?,
@@ -148,6 +162,8 @@ function DataQueue.new(options: Options?): any
 	if not ok then
 		self.offline = true
 		self.warn("[Lucy] DataQueue: DataStores cannot be reached here; saving in memory for this session")
+	elseif prefix ~= "" then
+		print(`[Lucy] DataQueue: Studio saves to its own stores ({prefix}...); the live data is untouched`)
 	end
 
 	if opts.autoRun ~= false then
@@ -174,22 +190,25 @@ end
 
 local function makeHandle(queue: any, name: string, scope: string?, ordered: boolean): any
 	local store = nil
+	-- Studio's own store ("Studio_Profiles"), or the live one
+	local storeName = queue.prefix .. name
 	if not queue.offline then
 		local ok, result = pcall(function()
 			if ordered then
-				return queue.service:GetOrderedDataStore(name, scope)
+				return queue.service:GetOrderedDataStore(storeName, scope)
 			end
-			return queue.service:GetDataStore(name, scope)
+			return queue.service:GetDataStore(storeName, scope)
 		end)
 		if ok then
 			store = result
 		else
-			queue.warn(`[Lucy] DataQueue: cannot open "{name}": {result}`)
+			queue.warn(`[Lucy] DataQueue: cannot open "{storeName}": {result}`)
 		end
 	end
 	local handle = setmetatable({
 		queue = queue,
 		name = name,
+		storeName = storeName,
 		ordered = ordered,
 		store = store,
 		writes = {},
