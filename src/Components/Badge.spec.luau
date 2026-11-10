@@ -56,6 +56,39 @@ return function()
 		).to.equal(true)
 	end)
 
+	it("styles the overlay variant: a see-through fill from the theme, over a picture", function()
+		local badge = Badge.new({ app = app, Parent = gui, text = "3", variant = "overlay" })
+		Harness.flush()
+		expect(badge.Instance:HasTag("ui-badge-variant-overlay")).to.equal(true)
+		expect(
+			Harness.colorEq(
+				Harness.styled(badge.Instance, "BackgroundColor3"),
+				app.theme:resolve("OverlayFill")
+			)
+		).to.equal(true)
+		local see = Harness.styled(badge.Instance, "BackgroundTransparency")
+		expect(see > 0 and see < 1).to.equal(true)
+		local found = {}
+		for _, rule in Badge.rules do
+			found[rule.selector] = rule
+		end
+		local own = found[".ui-badge-variant-overlay > .ui-slot-text"]
+		expect(own and own.properties.TextColor3).to.equal("$OverlayFillForeground")
+	end)
+
+	it("has an overlay fill in both themes: light words on dark, dark words on light", function()
+		local Tokens = require(script.Parent.Parent.Core.Tokens)
+		local themes = Tokens.themesFor("zinc")
+		local light, dark = themes.light, themes.dark
+		for _, theme in { light, dark } do
+			expect(theme.OverlayFill).to.be.ok()
+			expect(theme.OverlayFillForeground).to.be.ok()
+			expect(theme.OverlayFillTransparency).to.be.ok()
+		end
+		expect(dark.OverlayFill).to.equal("$Black")
+		expect(light.OverlayFill).to.equal("$White")
+	end)
+
 	it("is rounded by default and only slightly rounded when square", function()
 		local round = Badge.new({ app = app, Parent = gui, text = "NEW" })
 		local square = Badge.new({ app = app, Parent = gui, text = "RARE", shape = "square" })

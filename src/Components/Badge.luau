@@ -4,7 +4,8 @@
 
 		Badge.new({
 			text = "New",
-			variant = "default",   -- default | secondary | destructive | outline
+			variant = "default",   -- default | secondary | destructive | outline | overlay (a
+			                       -- see-through fill over a picture: a count on an item)
 			shape = "rounded",     -- rounded | square (only slightly rounded, $RadiusXs, and a
 			                       -- tighter fit: a tag or a label)
 			icon = "lucide:bot",   -- optional: before the text, or alone
@@ -25,7 +26,7 @@ local Text = require(script.Parent.Text)
 
 local Badge = {}
 
-Badge.variants = { "default", "secondary", "destructive", "outline" }
+Badge.variants = { "default", "secondary", "destructive", "outline", "overlay" }
 Badge.shapes = { "rounded", "square" }
 
 local rules: { Component.Rule } = {
@@ -85,6 +86,17 @@ local rules: { Component.Rule } = {
 			Thickness = "$StrokeThin",
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
+		},
+	},
+	-- Over a picture (a count on an item's render): a see-through fill, dark with white words in
+	-- the dark theme and light with dark words in the light one
+	{
+		selector = ".ui-badge-variant-overlay",
+		priority = 10,
+		properties = {
+			BackgroundColor3 = "$OverlayFill",
+			BackgroundTransparency = "$OverlayFillTransparency",
+			TextColor3 = "$OverlayFillForeground",
 		},
 	},
 }

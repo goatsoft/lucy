@@ -199,6 +199,10 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Ring = p(400, "$Blue500"),
 		Overlay = "$Black",
 		OverlayTransparency = 0.5,
+		-- A see-through fill over a picture (Badge's overlay variant: a count on an item), and its words
+		OverlayFill = "$White",
+		OverlayFillForeground = c(950),
+		OverlayFillTransparency = 0.15,
 		Success = "$Green600",
 		SuccessForeground = Tokens.onColor("$Success"),
 		Warning = "$Amber500",
@@ -247,6 +251,10 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		Ring = p(300, "$Blue400"),
 		Overlay = "$Black",
 		OverlayTransparency = 0.3,
+		-- A see-through fill over a picture (Badge's overlay variant: a count on an item), and its words
+		OverlayFill = "$Black",
+		OverlayFillForeground = "$White",
+		OverlayFillTransparency = 0.35,
 		Success = "$Green500",
 		SuccessForeground = Tokens.onColor("$Success"),
 		Warning = "$Amber400",

@@ -3,7 +3,7 @@ return {
 	description = "Small status labels.",
 	controls = {
 		text = "New",
-		variant = { "default", "secondary", "destructive", "outline" },
+		variant = { "default", "secondary", "destructive", "outline", "overlay" },
 		shape = { "rounded", "square" },
 	},
 	render = function(ctx)

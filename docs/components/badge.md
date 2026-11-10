@@ -31,7 +31,7 @@ Lucy.Stack.new({
 | `text` | string | `"Badge"`, or `""` with an icon or children | yes | The label |
 | `icon` | string | | yes | An [icon](icon.md) name drawn before the text, in the badge's colour (`badge.icon`) |
 | `children` | table | | | Anything after the text in the badge's [slot](slot.md): strings, components, instances or builders. They take the badge's colours |
-| `variant` | string | `"default"` | yes | `default`, `secondary`, `destructive` or `outline` |
+| `variant` | string | `"default"` | yes | `default`, `secondary`, `destructive`, `outline` or `overlay` (a see-through fill for a count over a picture: dark with white words in the dark theme, light with dark words in the light one) |
 | `shape` | string | `"rounded"` | yes | `rounded`, or `square`: only slightly rounded (`$RadiusXs`, 3 px) and a little tighter, for tags and labels such as a rarity |
 | `visible` | boolean | `true` | yes | Shows or hides the badge |
 
@@ -64,6 +64,21 @@ Lucy.Badge.new({
     visible = function() return requests() > 0 end,
     Parent = queueTab,
 })
+```
+
+How many a player holds, over the corner of the item's picture, with `overlay`
+(a see-through fill from the theme's `$OverlayFill`, so it reads on any picture):
+
+```luau
+local picture = Lucy.Image.new({ image = potionRender, size = UDim2.fromOffset(56, 56), Parent = row })
+local count = Lucy.Badge.new({
+    text = function() return tostring(held()) end,
+    variant = "overlay",
+    visible = function() return held() > 0 end,
+    Parent = picture.Instance,
+})
+count.Instance.AnchorPoint = Vector2.new(1, 1)
+count.Instance.Position = UDim2.new(1, 2, 1, 6)
 ```
 
 A badge is a box with a [slot](slot.md): an icon, words, or anything else
