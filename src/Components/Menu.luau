@@ -97,6 +97,9 @@ Menu.itemRingPad = 6
 -- A fan's curve: the radius of the circle its buttons follow, and the room between them.
 Menu.fanRadius = 900
 Menu.fanGap = 10
+-- Between a wrapped fan's curves, past the last one's labels: a focused item's ring clears the
+-- next curve's buttons by about one ring's width (Menu.itemRingPad and its stroke), tilt included.
+Menu.fanCurveGap = 34
 -- How far the stick must be pushed before it points at an item.
 Menu.deadzone = 0.5
 
@@ -1042,7 +1045,7 @@ local spec: Component.Spec = {
 						up,
 						if labelsLeft then 1 else -1,
 						rows,
-						size + labelRoom + Menu.fanGap
+						size + labelRoom + Menu.fanCurveGap
 					)
 					points(fan)
 					tilts(tilt)
