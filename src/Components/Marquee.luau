@@ -53,6 +53,21 @@ local function check(variant: string)
 	end
 end
 
+-- How much the UIScales above an instance shrink or grow it on screen, all together (its
+-- offsets times this are its pixels)
+function Marquee.scaleOf(instance: Instance): number
+	local scale = 1
+	local node: Instance? = instance
+	while node do
+		local ui = node:FindFirstChildWhichIsA("UIScale")
+		if ui and ui.Scale > 0 then
+			scale *= ui.Scale
+		end
+		node = node.Parent
+	end
+	return scale
+end
+
 -- Where the strip is `t` seconds into a cycle: hold, move to the end, hold, move back.
 function Marquee.offsetAt(t: number, overflow: number, speed: number, pause: number): number
 	local travel = overflow / speed
@@ -182,8 +197,11 @@ local spec: Component.Spec = {
 			end
 			local t = if loop then loopClock else 0
 			local heartbeat = RunService.Heartbeat:Connect(function(dt: number)
-				local width = strip.AbsoluteSize.X
-				local overflow = width - frame.AbsoluteSize.X
+				-- Sizes on screen, in the offsets the strip moves by: a UIScale above (Lucy's own
+				-- on a phone) makes an offset smaller on screen, so divide it back out
+				local scale = Marquee.scaleOf(frame)
+				local width = strip.AbsoluteSize.X / scale
+				local overflow = width - frame.AbsoluteSize.X / scale
 				if overflow <= 1 then
 					t = 0
 					h.scrolling = false

@@ -60,8 +60,23 @@ return function()
 		local marquee = Marquee.new({ app = app, Parent = box, text = LONG, pause = 0.05, speed = 4000 })
 		Harness.flush()
 		task.wait(0.3)
-		local overflow = marquee.strip.AbsoluteSize.X - marquee.Instance.AbsoluteSize.X
+		local scale = Marquee.scaleOf(marquee.Instance)
+		local overflow = (marquee.strip.AbsoluteSize.X - marquee.Instance.AbsoluteSize.X) / scale
 		expect(-offset(marquee) <= overflow + 1).to.equal(true)
+	end)
+
+	it("reaches the end of the text when the screen is scaled", function()
+		-- A UIScale above it (Lucy's own on a phone) shrinks what an offset moves on screen
+		local scale = Instance.new("UIScale")
+		scale.Scale = 0.5
+		scale.Parent = box
+		local marquee = Marquee.new({ app = app, Parent = box, text = LONG, pause = 0.4, speed = 100000 })
+		Harness.flush()
+		task.wait(0.6) -- held at the end
+		local strip, frame = marquee.strip, marquee.Instance
+		local stripEnd = strip.AbsolutePosition.X + strip.AbsoluteSize.X
+		local frameEnd = frame.AbsolutePosition.X + frame.AbsoluteSize.X
+		expect(math.abs(stripEnd - frameEnd) <= 1.5).to.equal(true)
 	end)
 
 	it("stays still when the player asks for reduced motion", function()
@@ -103,7 +118,7 @@ return function()
 		local copy = marquee.repeatStrip
 		expect(copy.Text).to.equal(LONG)
 		expect(copy.Visible).to.equal(true)
-		local width = marquee.strip.AbsoluteSize.X
+		local width = marquee.strip.AbsoluteSize.X / Marquee.scaleOf(marquee.Instance)
 		-- Never further than one text and its gap: the copy is then where the strip began
 		expect(-offset(marquee) >= 0 and -offset(marquee) <= width + 40).to.equal(true)
 		expect(math.abs(copy.Position.X.Offset - (offset(marquee) + width + 40)) <= 1).to.equal(true)

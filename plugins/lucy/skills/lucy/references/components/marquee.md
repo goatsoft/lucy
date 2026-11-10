@@ -43,6 +43,10 @@ so give it a parent with a width, such as a [Stack](stack.md) column.
 
 It also takes the [props every component takes](index.md#using-a-component).
 
+It scrolls all the way to the end of its text in a scaled UI too (a `UIScale`
+above it, as Lucy's own on a phone): `Lucy.Marquee.scaleOf(instance)` gives how
+much the UIScales above an instance scale it, all together.
+
 `handle.strip` is the moving TextLabel, for your own rules: tag it and style it
 with tokens. `handle.scrolling` says whether it is moving right now. With `loop`,
 `handle.repeatStrip` is the copy; it takes its text size, color and font from
