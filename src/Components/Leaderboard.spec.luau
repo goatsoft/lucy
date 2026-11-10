@@ -206,6 +206,49 @@ return function()
 		expect(board.scroller.Instance.Size.Y.Offset).to.equal(200)
 	end)
 
+	it("lays out a podium: 1st, then 2nd and 3rd, then the rest as text", function()
+		local board = Leaderboard.new({ app = app, Parent = gui, rows = ROWS })
+		expect(board.tierOf(11)).to.equal("first")
+		expect(board.tierOf(12)).to.equal("podium")
+		expect(board.tierOf(13)).to.equal("podium")
+		expect(board.tierOf(14)).to.equal("rest")
+		expect(board.rowFor(11):HasTag("ui-leaderboard-tier-first")).to.equal(true)
+		-- 1st's name is bigger than 2nd's, and 2nd's than the rest
+		local Leaderboard_ = require(script.Parent.Leaderboard)
+		local first = Leaderboard_.TIER.first.text.md
+		local second = Leaderboard_.TIER.podium.text.md
+		expect(board.nameLabelFor(11):HasTag(`ui-leaderboard-type-{first}`)).to.equal(true)
+		expect(board.nameLabelFor(12):HasTag(`ui-leaderboard-type-{second}`)).to.equal(true)
+		expect(board.nameLabelFor(11):HasTag("ui-leaderboard-display")).to.equal(true)
+		expect(board.nameLabelFor(12):HasTag("ui-leaderboard-display")).to.equal(false)
+	end)
+
+	it("gives the player's own row its own tier, listed past the podium or pinned", function()
+		local listed = Leaderboard.new({
+			app = app,
+			Parent = gui,
+			rows = ROWS,
+			own = { userId = 14, name = "Jax", value = 120, rank = 4 },
+		})
+		expect(listed.tierOf(14)).to.equal("own")
+		local pinned = Leaderboard.new({
+			app = app,
+			Parent = gui,
+			rows = ROWS,
+			own = { userId = 99, name = "Me", value = 50, rank = 37 },
+		})
+		local Leaderboard_ = require(script.Parent.Leaderboard)
+		expect(pinned.ownNameLabel:HasTag(`ui-leaderboard-type-{Leaderboard_.TIER.own.text.md}`)).to.equal(
+			true
+		)
+	end)
+
+	it("can be a plain list with no podium", function()
+		local board = Leaderboard.new({ app = app, Parent = gui, rows = ROWS, podium = false })
+		expect(board.tierOf(11)).to.equal("podium")
+		expect(board.tierOf(14)).to.equal("podium")
+	end)
+
 	it("rejects an unknown size", function()
 		expect(function()
 			Leaderboard.new({ app = app, Parent = gui, rows = ROWS, size = "huge" })

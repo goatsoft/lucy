@@ -139,7 +139,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Input](references/components/input.md): A text field, on one line or several.
 - [Item](references/components/item.md): A row in a list, with media, a title, a description and actions.
 - [Kbd](references/components/kbd.md): The key to press, for the player's keyboard or controller.
-- [Leaderboard](references/components/leaderboard.md): Ranked players with medals for the top three and the player's own row pinned.
+- [Leaderboard](references/components/leaderboard.md): Players ranked as a podium, with your own place pinned at the bottom.
 - [Marquee](references/components/marquee.md): One line of text that scrolls back and forth, or round like a ticker, when it is too long to fit.
 - [Menu](references/components/menu.md): Actions that open as a list, a ring or a fan and close once one is picked.
 - [Number Field](references/components/number-field.md): A number with minus and plus buttons, typed or stepped.

@@ -1,7 +1,7 @@
 return {
 	group = "Components",
-	description = "A club's top dancers: medals for the top three, your row lit, or pinned when you are not listed.",
-	width = 420,
+	description = "Club Lucy's hype board: 1st up top, 2nd and 3rd under it, the rest by name, and you pinned at the bottom.",
+	width = 460,
 	controls = {
 		size = { options = { "sm", "md", "lg" }, default = "md" },
 		listed = false,
@@ -11,10 +11,17 @@ return {
 	render = function(ctx)
 		local Lucy = ctx.Lucy
 		local c = ctx.controls
-		local names = { "Nova", "Blaze", "Echo", "Pixel", "Rogue", "Sky", "Vex", "Zed" }
+		local crew = {
+			{ name = "Nova", hype = 9840 },
+			{ name = "DJ Lucy", hype = 9125 },
+			{ name = "Kai", hype = 8410 },
+			{ name = "Juno", hype = 7360 },
+			{ name = "Beatrix", hype = 6220 },
+			{ name = "Remy", hype = 5480 },
+		}
 		local rows = {}
-		for i, name in names do
-			table.insert(rows, { userId = -i, name = name, value = math.floor(16000 / i) })
+		for i, dancer in crew do
+			table.insert(rows, { userId = -i, name = dancer.name, value = dancer.hype })
 		end
 		return {
 			Lucy.Leaderboard.new({
@@ -24,14 +31,20 @@ return {
 				end,
 				own = function()
 					return if c.listed()
-						then { userId = -4, name = "Pixel", value = 4000, rank = 4 }
-						else { userId = -99, name = "You", value = 320, rank = 37 }
+						then { userId = -4, name = "Juno", value = 7360, rank = 4 }
+						else { userId = -99, name = "You", value = 1250, rank = 37 }
 				end,
 				loading = c.loading,
+				medals = {
+					"lucide-extended:crown-filled",
+					"lucide-extended:crown-filled",
+					"lucide-extended:crown-filled",
+				},
 				format = function(value: number)
-					return `{Lucy.Leaderboard.formatNumber(value)} PTS`
+					return `{Lucy.Leaderboard.formatNumber(value)} hype`
 				end,
-				empty = "No one has danced yet. Be the first.",
+				empty = "No hype yet. Get on the Dance Floor.",
+				height = 360,
 			}),
 		}
 	end,

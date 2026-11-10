@@ -1,26 +1,28 @@
 ---
 title: Leaderboard
-description: Ranked players with medals for the top three and the player's own row pinned.
+description: Players ranked as a podium, with your own place pinned at the bottom.
 ---
 
 # Leaderboard
 
-Players ranked best first: #1, #2, #3 and on, each with their name and score.
-The top three wear gold, silver and bronze, with the game's medal icons beside
-their number if it gives them, and they and the player get their headshots; the
-other rows keep to names, so the podium stands out. The player's own row is lit;
-when they are not in the list, their row is pinned under it with their rank. While the scores load,
-pulsing rows stand in for the list.
+Players ranked best first, laid out as a podium. 1st is big, 2nd and 3rd sit
+under it a little smaller, and everyone after them is a line of text. Your
+own row is lit; when you are not on the board, it is pinned at the bottom.
+
+<!-- preview -->
 
 ```luau
 Lucy.Leaderboard.new({
-    rows = topScores, -- { { userId, name, value } }, best first
-    own = { userId = player.UserId, name = player.DisplayName, value = 320, rank = 37 },
-    format = function(value)
-        return `{Lucy.Leaderboard.formatNumber(value)} PTS`
-    end,
-    medals = { "lucide-extended:chess-queen-duotone", "lucide-extended:crown-duotone", "lucide-extended:crown-duotone" },
-    empty = "No one has danced yet. Be the first.",
+    rows = {
+        { name = "Nova", value = 9840 },
+        { name = "DJ Lucy", value = 9125 },
+        { name = "Kai", value = 8410 },
+        { name = "Juno", value = 7360 },
+        { name = "Beatrix", value = 6220 },
+    },
+    own = { name = app.state:get("player.name"), value = 1250, rank = 37 },
+    medals = { "lucide-extended:crown-filled", "lucide-extended:crown-filled", "lucide-extended:crown-filled" },
+    format = function(hype) return `{Lucy.Leaderboard.formatNumber(hype)} hype` end,
     Parent = parent,
 })
 ```
@@ -29,56 +31,78 @@ Lucy.Leaderboard.new({
 
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
-| `rows` | table, ref or getter | `{}` | | The entries, best first: `{ userId, name, value, rank? }`. `rank` defaults to the row's place |
-| `own` | table, ref or getter | `nil` | | The player's entry. Their row is lit when listed, else pinned under the list |
-| `unranked` | string, ref or getter | `"-"` | | The pinned rank when `own.rank` is not known (`"100+"`, say) |
-| `format` | function | commas | | Turns a value into its text. Text values are shown as they are |
-| `medals` | table, `false`, ref or getter | `nil` | | Icons for 1st, 2nd and 3rd, beside the number. `false` leaves out the medal colours too |
-| `loading` | boolean, ref or getter | `false` | | Pulsing rows in place of the list |
+| `rows` | array, ref or getter | `{}` | | The players, best first: `{ userId, name, value, rank }`. `rank` is the row's place when left out |
+| `own` | table, ref or getter | | | The player's own entry. Lit when it is on the board, pinned at the bottom when it is not |
+| `unranked` | string, ref or getter | `"-"` | | The pinned row's rank when `own.rank` is `nil`, such as `"100+"` |
+| `format` | function | `14,850` | | Turns a value into text |
+| `medals` | table, `false`, ref or getter | | | Icons for 1st, 2nd and 3rd, before the number. `false` takes away the gold, silver and bronze too |
+| `podium` | boolean | `true` | | `false` makes every row the same size |
+| `avatars` | `"top"` or boolean | `"top"` | | Headshots on the podium and your row. `true` on every row, `false` on none |
+| `loading` | boolean, ref or getter | `false` | | Pulsing rows while the scores load |
 | `placeholders` | number | `5` | | How many pulsing rows |
-| `empty` | string | `nil` | | Shown when there are no rows |
-| `avatars` | `"top"`, boolean | `"top"` | | Headshots on the top three and the player's row; `true` on every row, `false` on none (no `userId`: a monogram) |
-| `height` | number, ref or getter | `nil` | | Pixels for the rows, which scroll in it; the pinned row stays under them, so the board keeps one size while it loads, empties and fills |
-| `size` | string | `"md"` | yes | `sm`, `md` or `lg` (a board in the world, say) |
+| `empty` | string | | | Shown when nobody is on the board |
+| `height` | number, ref or getter | | | The rows scroll in this many pixels, and your row stays under them. The board keeps its size while it loads and fills |
+| `size` | string | `"md"` | yes | `sm`, `md` or `lg`, for the whole board |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
 It also takes the [props every component takes](index.md#using-a-component).
 
-Rows are keyed by `userId` (or `name`), so new scores update rows in place and
-move them rather than building them again.
+A player with no `userId` gets a monogram, like a bot in [Avatar](avatar.md).
+Rows are matched by `userId`, or `name` when there is none, so new scores move
+rows instead of rebuilding them.
 
-The colours come from the theme: `$MedalGold`, `$MedalSilver` and
-`$MedalBronze` for the top three, `$Accent` and `$Ring` for the player's row.
-Set the medal tokens in your theme to match your game.
-
-Its parts are on the handle: `board.list`, `board.pinned`, `board.skeletons`,
-`board.emptyLabel`, and per row `board.rowFor(id)`, `board.rankLabelFor(id)`,
-`board.medalFor(id)`, `board.avatarFor(id)`, `board.nameLabelFor(id)` and
-`board.valueLabelFor(id)`. A row without a headshot keeps its room across, so
-the names line up, and is shorter.
+1st, 2nd and 3rd are coloured with `$MedalGold`, `$MedalSilver` and
+`$MedalBronze`. Set them in your theme to match your game.
 `Lucy.Leaderboard.formatNumber(14850)` gives `"14,850"`.
+
+The handle has `board.list`, `board.pinned`, `board.scroller` (with `height`),
+`board.skeletons`, `board.emptyLabel`, and for each row `board.rowFor(id)`,
+`board.tierOf(id)`, `board.rankLabelFor(id)`, `board.medalFor(id)`,
+`board.avatarFor(id)`, `board.nameLabelFor(id)` and `board.valueLabelFor(id)`.
 
 ## Examples
 
-A board that loads from the server, ALL TIME or THIS WEEK:
+The hype board in a dialog. It asks the server when it opens, pulses while it
+waits, and stays the same height whether two dancers are on it or twenty:
+
+<!-- preview solo -->
 
 ```luau
-local period = Lucy.ref("all")
-local answer = Lucy.ref(nil)
+local scores = Lucy.ref(nil)
 
-Lucy.watch(period, function(p)
-    answer(nil)
-    task.spawn(function()
-        answer(app.server:call("leaderboards.get", "score", p))
-    end)
-end, { immediate = true })
+Lucy.Dialog.new({
+    id = "hype-board",
+    title = "Hype",
+    size = "lg",
+    children = {
+        Lucy.Leaderboard.new({
+            rows = function() return scores() and scores().rows or {} end,
+            own = function() return scores() and scores().me end,
+            loading = function() return scores() == nil end,
+            unranked = "100+",
+            height = 320,
+        }),
+    },
+    onOpenChange = function(open)
+        if open then
+            scores(nil)
+            task.spawn(function()
+                scores(app.server:call("hype.top"))
+            end)
+        end
+    end,
+}):open()
+```
 
+Nobody on the board yet:
+
+<!-- preview -->
+
+```luau
 Lucy.Leaderboard.new({
-    rows = function() return answer() and answer().rows or {} end,
-    own = function() return answer() and answer().me end,
-    loading = function() return answer() == nil end,
-    unranked = "100+",
-    Parent = dialogBody,
+    rows = {},
+    empty = "No hype yet. Get on the Dance Floor.",
+    Parent = parent,
 })
 ```
 
