@@ -5,7 +5,7 @@
 		Avatar.new({
 			userId = player.UserId,   -- 0 or below shows the monogram
 			name = player.DisplayName, -- the monogram's initials
-			size = "md",              -- sm | md | lg | xl
+			size = "md",              -- sm | md | lg | xl, or a number of pixels
 			square = false,           -- rounded corners instead of a circle
 			Parent = row,
 		})
@@ -22,7 +22,10 @@ local Avatar = {}
 
 Avatar.sizes = { sm = 32, md = 40, lg = 56, xl = 80 }
 
-local TEXT = { sm = "$TextXs", md = "$TextSm", lg = "$TextBase", xl = "$TextLg" }
+-- The initials' size for each avatar size; 2xl is for a size in pixels past 104
+local TEXT = { sm = "$TextXs", md = "$TextSm", lg = "$TextBase", xl = "$TextLg", ["2xl"] = "$TextXl" }
+-- A size in pixels takes the initials of the largest named size it reaches
+local STEPS: { { any } } = { { "2xl", 104 }, { "xl", 80 }, { "lg", 56 }, { "md", 40 } }
 
 local rules: { Component.Rule } = {
 	{
@@ -86,12 +89,31 @@ function Avatar.initials(name: string?): string
 	return if out == "" then "?" else out
 end
 
-local function checkSize(size: string): number
+local function checkSize(size: any): number
+	if type(size) == "number" then
+		if size <= 0 then
+			error(`[Lucy] an Avatar size in pixels must be above 0 (got {size})`, 0)
+		end
+		return size
+	end
 	local px = Avatar.sizes[size]
 	if px == nil then
-		error(`[Lucy] unknown Avatar size "{size}" (expected sm, md, lg or xl)`, 0)
+		error(`[Lucy] unknown Avatar size "{size}" (expected sm, md, lg, xl or a number of pixels)`, 0)
 	end
 	return px
+end
+
+-- The named step a size goes by: itself, or for pixels the largest it reaches
+local function stepOf(size: any): string
+	if type(size) ~= "number" then
+		return size
+	end
+	for _, step in STEPS do
+		if size >= (step[2] :: number) then
+			return step[1] :: string
+		end
+	end
+	return "sm"
 end
 
 -- Built once and shared by every mount (h.props holds each mount's props).
@@ -131,7 +153,7 @@ local spec: Component.Spec = {
 			Tags = {
 				"ui-avatar-monogram" :: any,
 				function()
-					return "ui-avatar-monogram-" .. size()
+					return "ui-avatar-monogram-" .. stepOf(size())
 				end,
 			},
 		})
@@ -147,7 +169,7 @@ local spec: Component.Spec = {
 				"ui-avatar" :: any,
 				if square then "ui-avatar-square" else "ui-avatar-round",
 				function()
-					return "ui-avatar-size-" .. size()
+					return "ui-avatar-size-" .. stepOf(size())
 				end,
 			},
 			image,

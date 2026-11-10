@@ -32,7 +32,7 @@ Lucy.Stack.new({
 |---|---|---|---|---|
 | `userId` | number | `0` | yes | The player's user id. `0` or below shows the monogram |
 | `name` | string | `""` | yes | The name the monogram's letters come from |
-| `size` | string | `"md"` | yes | `sm` (32 pixels), `md` (40), `lg` (56) or `xl` (80, a featured player: who is up next, a profile) |
+| `size` | string or number | `"md"` | yes | `sm` (32 pixels), `md` (40), `lg` (56) or `xl` (80, a featured player: who is up next, a profile), or a number of pixels, such as `120` for the winner on a podium |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `square` | boolean | `false` | | Rounded corners instead of a circle |
 
