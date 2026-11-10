@@ -69,6 +69,7 @@ Without a `primary`, the `p` values fall back to the base colour shades shown.
 | `SuccessForeground`, `WarningForeground`, `InfoForeground` | text on a status colour | on colour | on colour |
 | `DestructiveSubtle`, `SuccessSubtle`, `WarningSubtle`, `InfoSubtle` | a pale wash of the colour, for alerts | colour at 10% over Card | colour at 16% over Card |
 | `DestructiveSubtleForeground` and the rest | text on a wash | on colour, in the full colour's hue | on colour, in the full colour's hue |
+| `MedalGold`, `MedalSilver`, `MedalBronze` | first, second and third place (Leaderboard) | Amber-500, Slate-400, Orange-700 | Yellow-400, Slate-300, Orange-400 |
 
 **On colour** means text in the fill's own colour: its hue taken to its darkest
 (like red-950 on red) or lightest (like red-200), whichever has more contrast

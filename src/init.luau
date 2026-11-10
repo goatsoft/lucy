@@ -162,6 +162,7 @@ local Lucy = {
 	Input = require(Components.Input),
 	Item = require(Components.Item),
 	Kbd = require(Components.Kbd),
+	Leaderboard = require(Components.Leaderboard),
 	Marquee = require(Components.Marquee),
 	Menu = require(Components.Menu),
 	NumberField = require(Components.NumberField),

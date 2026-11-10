@@ -22,6 +22,7 @@
     "input": "Text field on one line",
     "item": "List row with media, title, description and actions",
     "kbd": "The key to press for the player's keyboard or controller",
+    "leaderboard": "Ranked players with medals for the top three and the player's own row pinned",
     "marquee": "One line of text that scrolls when it is too long to fit",
     "menu": "Actions that open as a list, a ring or a fan, close once one is picked",
     "number-field": "A number with minus and plus buttons, typed or stepped",

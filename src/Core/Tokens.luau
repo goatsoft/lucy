@@ -214,6 +214,10 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		WarningSubtleForeground = Tokens.onColor("$WarningSubtle", { tint = "$Warning" }),
 		InfoSubtle = Tokens.over("$Info", "$Card", 0.1),
 		InfoSubtleForeground = Tokens.onColor("$InfoSubtle", { tint = "$Info" }),
+		-- First, second and third place (Leaderboard): gold, silver and bronze.
+		MedalGold = "$Amber500",
+		MedalSilver = "$Slate400",
+		MedalBronze = "$Orange700",
 	}
 
 	local dark = {
@@ -258,6 +262,10 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		WarningSubtleForeground = Tokens.onColor("$WarningSubtle", { tint = "$Warning" }),
 		InfoSubtle = Tokens.over("$Info", "$Card", 0.16),
 		InfoSubtleForeground = Tokens.onColor("$InfoSubtle", { tint = "$Info" }),
+		-- First, second and third place (Leaderboard): gold, silver and bronze.
+		MedalGold = "$Yellow400",
+		MedalSilver = "$Slate300",
+		MedalBronze = "$Orange400",
 	}
 
 	return { light = light, dark = dark }
