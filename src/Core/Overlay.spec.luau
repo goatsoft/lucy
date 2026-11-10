@@ -50,6 +50,36 @@ return function()
 			return { position = Vector2.new(x, y), size = Vector2.new(w, h) }
 		end
 
+		it("keeps a centred overlay clear of the top bar", function()
+			local at = Overlay.place("center", { view = view, content = Vector2.new(300, 200), top = 58 })
+			expect(at.position).to.equal(UDim2.new(0.5, 0, 0.5, 29))
+			expect(at.maxHeight).to.equal(600 - 58 - Overlay.centerMargin * 2)
+			local plain = Overlay.place("center", { view = view, content = Vector2.new(300, 200) })
+			expect(plain.position).to.equal(UDim2.fromScale(0.5, 0.5))
+		end)
+
+		it("keeps a panel and a drawer clear of the top bar", function()
+			local panel = Overlay.place("panel", { view = view, content = Vector2.new(300, 200), top = 58 })
+			expect(panel.position.Y.Offset).to.equal(58)
+			expect(panel.top).to.equal(58)
+			expect(panel.maxHeight).to.equal(600 - 58)
+			local tall = Vector2.new(800, 100)
+			local drawer = Overlay.place("drawer", { view = tall, content = Vector2.new(0, 90), top = 58 })
+			expect(drawer.maxHeight <= 100 - 58).to.equal(true)
+		end)
+
+		it("puts a popup above its anchor only as far as the top bar", function()
+			local at = Overlay.place("popup", {
+				view = view,
+				anchor = anchor(100, 300, 160, 32),
+				content = Vector2.new(160, 200),
+				side = "top",
+				top = 58,
+			})
+			expect(at.side).to.equal("top")
+			expect(at.maxHeight).to.equal(300 - 4 - 8 - 58)
+		end)
+
 		it("puts a popup under its anchor, at least as wide, aligned to its start", function()
 			local at = Overlay.place("popup", {
 				view = view,

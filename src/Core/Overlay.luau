@@ -108,6 +108,8 @@ export type PlaceInput = {
 	side: string?,
 	align: string?,
 	panelSide: string?,
+	-- How much of the view's top is under Roblox's top bar (its buttons); nothing goes there
+	top: number?,
 }
 
 export type Placement = {
@@ -117,6 +119,8 @@ export type Placement = {
 	width: number?,
 	widthScale: number?,
 	fullHeight: boolean?,
+	-- With fullHeight: room left at the top (the top bar)
+	top: number?,
 	side: string?,
 }
 
@@ -132,38 +136,41 @@ function Overlay.resolve(presentation: string?, prefer: string?, mode: string?):
 	return prefer or "popup"
 end
 
-local function centered(view: Vector2): Placement
+-- Centred in the view under the top bar
+local function centered(view: Vector2, top: number): Placement
 	return {
 		anchorPoint = Vector2.new(0.5, 0.5),
-		position = UDim2.fromScale(0.5, 0.5),
-		maxHeight = math.max(0, view.Y - Overlay.centerMargin * 2),
+		position = UDim2.new(0.5, 0, 0.5, math.floor(top / 2)),
+		maxHeight = math.max(0, view.Y - top - Overlay.centerMargin * 2),
 	}
 end
 
 -- Where the content goes, in the overlay's own (unscaled) coordinates. Pure.
 function Overlay.place(presentation: string, input: PlaceInput): Placement
 	local view = input.view
+	local inset = math.max(0, input.top or 0)
 	if presentation == "drawer" then
 		return {
 			anchorPoint = Vector2.new(0, 1),
 			position = UDim2.fromScale(0, 1),
 			widthScale = 1,
-			maxHeight = math.floor(view.Y * Overlay.drawerShare),
+			maxHeight = math.max(0, math.floor(math.min(view.Y * Overlay.drawerShare, view.Y - inset))),
 		}
 	elseif presentation == "panel" then
 		local left = input.panelSide == "left"
 		return {
 			anchorPoint = Vector2.new(if left then 0 else 1, 0),
-			position = UDim2.fromScale(if left then 0 else 1, 0),
+			position = UDim2.new(if left then 0 else 1, 0, 0, inset),
 			width = math.floor(math.min(input.width or Overlay.panelWidth, view.X * Overlay.panelShare)),
 			fullHeight = true,
-			maxHeight = view.Y,
+			top = inset,
+			maxHeight = math.max(0, view.Y - inset),
 		}
 	end
 
 	local anchor = input.anchor
 	if presentation ~= "popup" or anchor == nil then
-		return centered(view)
+		return centered(view, inset)
 	end
 
 	local m, gap = Overlay.margin, Overlay.gap
@@ -172,7 +179,7 @@ function Overlay.place(presentation: string, input: PlaceInput): Placement
 	local leftEdge = anchor.position.X
 	local rightEdge = leftEdge + anchor.size.X
 	local below = view.Y - bottom - gap - m
-	local above = top - gap - m
+	local above = top - gap - m - inset
 	local toRight = view.X - rightEdge - gap - m
 	local toLeft = leftEdge - gap - m
 	local want = input.content.Y
@@ -218,13 +225,13 @@ function Overlay.place(presentation: string, input: PlaceInput): Placement
 		else
 			y = top
 		end
-		y = math.clamp(y, m, math.max(m, view.Y - height - m))
+		y = math.clamp(y, m + inset, math.max(m + inset, view.Y - height - m))
 		local x = if side == "right" then rightEdge + gap else leftEdge - gap
 		return {
 			anchorPoint = Vector2.new(if side == "right" then 0 else 1, 0),
 			position = UDim2.fromOffset(math.floor(x + 0.5), math.floor(y + 0.5)),
 			width = width,
-			maxHeight = math.max(0, math.floor(view.Y - m * 2)),
+			maxHeight = math.max(0, math.floor(view.Y - inset - m * 2)),
 			side = side,
 		}
 	end
@@ -647,6 +654,9 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 			side = Reactive.toValue(options.side),
 			align = options.align,
 			panelSide = options.panelSide,
+			-- Absolute 0 is under Roblox's top bar: a root that starts above it (IgnoreGuiInset)
+			-- has that much under the bar's buttons
+			top = math.max(0, -origin.Y) / scale,
 		}
 		local at = (options.place and options.place(presentation(), input))
 			or Overlay.place(presentation(), input)
@@ -660,7 +670,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 			then UDim.new(0, at.width)
 			elseif at.widthScale then UDim.new(at.widthScale, 0)
 			else natural.X
-		local y = if at.fullHeight then UDim.new(1, 0) else natural.Y
+		local y = if at.fullHeight then UDim.new(1, -(at.top or 0)) else natural.Y
 		content.Size = UDim2.new(x, y)
 		maxHeight(at.maxHeight)
 		placing = false
