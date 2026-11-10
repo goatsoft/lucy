@@ -25,10 +25,10 @@ return function()
 		local first = board.rowFor(11)
 		expect(first).to.be.ok()
 		expect(first.LayoutOrder).to.equal(1)
-		expect(board.rankLabelFor(11).Text).to.equal("1")
+		expect(board.rankLabelFor(11).Text).to.equal("#1")
 		expect(board.nameLabelFor(11).Text).to.equal("Sasha")
 		expect(board.valueLabelFor(11).Text).to.equal("14,850")
-		expect(board.rankLabelFor(14).Text).to.equal("4")
+		expect(board.rankLabelFor(14).Text).to.equal("#4")
 		expect(board.rowFor(14).LayoutOrder).to.equal(4)
 	end)
 
@@ -44,7 +44,7 @@ return function()
 		expect(board.valueLabelFor(12).Text).to.equal("12400 PTS")
 	end)
 
-	it("tints the top three in the medal colours and shows a medal icon in place of the number", function()
+	it("tints the top three in the medal colours and shows a medal icon beside the number", function()
 		local board = Leaderboard.new({
 			app = app,
 			Parent = gui,
@@ -56,7 +56,7 @@ return function()
 		expect(board.rowFor(13):HasTag("ui-leaderboard-medal-bronze")).to.equal(true)
 		expect(board.rowFor(14):HasTag("ui-leaderboard-medal-gold")).to.equal(false)
 		expect(board.medalFor(11).Visible).to.equal(true)
-		expect(board.rankLabelFor(11).Visible).to.equal(false)
+		expect(board.rankLabelFor(11).Visible).to.equal(true)
 		expect(board.medalFor(14).Visible).to.equal(false)
 		expect(board.rankLabelFor(14).Visible).to.equal(true)
 	end)
@@ -92,7 +92,7 @@ return function()
 			own = { userId = 99, name = "Me", value = 50, rank = 37 },
 		})
 		expect(board.pinned.Visible).to.equal(true)
-		expect(board.ownRankLabel.Text).to.equal("37")
+		expect(board.ownRankLabel.Text).to.equal("#37")
 		expect(board.ownNameLabel.Text).to.equal("Me")
 		expect(board.ownValueLabel.Text).to.equal("50")
 	end)
@@ -114,7 +114,7 @@ return function()
 		local row = board.rowFor(1)
 		rows({ { userId = 2, name = "B", value = 9 }, { userId = 1, name = "A", value = 6 } })
 		expect(board.rowFor(1)).to.equal(row)
-		expect(board.rankLabelFor(1).Text).to.equal("2")
+		expect(board.rankLabelFor(1).Text).to.equal("#2")
 		expect(board.valueLabelFor(1).Text).to.equal("6")
 		expect(board.rowCount()).to.equal(2)
 	end)
@@ -134,6 +134,36 @@ return function()
 		local board = Leaderboard.new({ app = app, Parent = gui, rows = {}, empty = "No one yet" })
 		expect(board.emptyLabel.Visible).to.equal(true)
 		expect(board.emptyLabel.Text).to.equal("No one yet")
+	end)
+
+	it("shows headshots on the top three and the player's own row only, by default", function()
+		local board = Leaderboard.new({
+			app = app,
+			Parent = gui,
+			rows = ROWS,
+			own = { userId = 99, name = "Me", value = 50, rank = 37 },
+		})
+		expect(board.avatarFor(11).Visible).to.equal(true)
+		expect(board.avatarFor(13).Visible).to.equal(true)
+		expect(board.avatarFor(14).Visible).to.equal(false)
+		expect(board.ownAvatar.Visible).to.equal(true)
+	end)
+
+	it("shows a listed player's own headshot below the top three", function()
+		local board = Leaderboard.new({
+			app = app,
+			Parent = gui,
+			rows = ROWS,
+			own = { userId = 14, name = "Jax", value = 120, rank = 4 },
+		})
+		expect(board.avatarFor(14).Visible).to.equal(true)
+	end)
+
+	it("can show every headshot, or none", function()
+		local all = Leaderboard.new({ app = app, Parent = gui, rows = ROWS, avatars = true })
+		expect(all.avatarFor(14).Visible).to.equal(true)
+		local none = Leaderboard.new({ app = app, Parent = gui, rows = ROWS, avatars = false })
+		expect(none.avatarFor(11)).to.equal(nil)
 	end)
 
 	it("rejects an unknown size", function()

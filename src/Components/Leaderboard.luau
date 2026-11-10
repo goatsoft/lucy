@@ -10,13 +10,14 @@
 			own = mine,                -- the player's entry (or nil): lit when listed, else pinned
 			unranked = "100+",         -- the pinned rank when own.rank is nil
 			format = function(value) return `{value} PTS` end, -- default: 14,850
-			medals = { "set:queen", "set:crown", "set:crown" }, -- icons for 1st to 3rd, in place
-			                           -- of the number; false for no medal colours at all
+			medals = { "set:queen", "set:crown", "set:crown" }, -- icons for 1st to 3rd, beside
+			                           -- #1, #2, #3; false for no medal colours at all
 			loading = false,           -- skeleton rows in place of the list
 			placeholders = 5,          -- how many skeleton rows
 			empty = "No one yet",      -- shown with no rows
 			size = "md",               -- sm | md | lg
-			avatars = true,            -- the headshots (players with no userId get a monogram)
+			avatars = "top",           -- headshots on the top three and the player's row; true on
+			                           -- every row, false on none (no userId: a monogram)
 		})
 
 	The value is a number (formatted) or text. Rows are keyed by userId (or name), so new data
@@ -25,8 +26,10 @@
 
 	Parts: board.list, board.pinned (the own row's frame, with a separator above),
 	board.skeletons, board.emptyLabel, board.rowFor(id), board.rankLabelFor(id),
-	board.medalFor(id), board.nameLabelFor(id), board.valueLabelFor(id), board.rowCount(),
-	board.ownRankLabel, board.ownNameLabel, board.ownValueLabel.
+	board.medalFor(id), board.avatarFor(id), board.nameLabelFor(id), board.valueLabelFor(id),
+	board.rowCount(), board.ownRankLabel, board.ownAvatar, board.ownNameLabel, board.ownValueLabel.
+	Ranks read #1, #2, #3. A row without a headshot keeps its room across, so the names line up,
+	and is shorter.
 
 	State keys: size, visible.
 ]]
@@ -44,11 +47,15 @@ Leaderboard.sizes = { "sm", "md", "lg" }
 Leaderboard.MEDALS = { "gold", "silver", "bronze" }
 
 -- Per size: the rank column's width (pixels), the avatar's size, the gap and row padding tokens
-local RANK_WIDTH = { sm = 32, md = 40, lg = 56 }
+local RANK_WIDTH = { sm = 40, md = 48, lg = 64 }
+-- With a medal icon beside the number
+local MEDAL_RANK_WIDTH = { sm = 60, md = 76, lg = 104 }
 local AVATAR = { sm = "sm", md = "md", lg = "lg" }
 local ICON = { sm = "sm", md = "md", lg = "lg" }
 local GAP = { sm = 8, md = 12, lg = 16 }
 local SKELETON_HEIGHT = { sm = 40, md = 52, lg = 72 }
+-- A row with no headshot is as tall as its text
+local TEXT_ROW = { sm = 24, md = 28, lg = 40 }
 
 local BASE, SIZE, OWN, MEDAL = 0, 10, 20, 50
 
@@ -90,7 +97,7 @@ local rules: { Component.Rule } = {
 	},
 	-- The lit row is the avatar's own colour, so its circle stands on the background's
 	{
-		selector = ".ui-leaderboard-row-own > .ui-avatar",
+		selector = ".ui-leaderboard-avatar-own",
 		priority = OWN,
 		properties = { BackgroundColor3 = "$Background" },
 	},
@@ -207,7 +214,13 @@ local spec: Component.Spec = {
 		end
 		local medalIcons: { string }? = if type(p.medals) == "table" then p.medals else nil
 		local useMedals = p.medals ~= false
-		local avatars = p.avatars ~= false
+		local avatars = if p.avatars == nil then "top" else p.avatars
+		local function shows(rank: number?, lit: boolean): boolean
+			if avatars == true then
+				return true
+			end
+			return avatars == "top" and (lit or (rank ~= nil and rank <= 3))
+		end
 		local format = p.format
 		local function valueText(value: any): string
 			if value == nil then
@@ -244,13 +257,11 @@ local spec: Component.Spec = {
 			end
 			local rankLabel = Element.new("TextLabel", {
 				Name = "Rank",
-				Size = UDim2.fromScale(1, 1),
-				TextXAlignment = Enum.TextXAlignment.Center,
-				TextScaled = false,
+				LayoutOrder = 2,
+				Size = UDim2.fromScale(0, 1),
+				AutomaticSize = Enum.AutomaticSize.X,
+				TextXAlignment = Enum.TextXAlignment.Left,
 				Text = rankText,
-				Visible = function()
-					return medalIcon() == ""
-				end,
 				Tags = {
 					"ui-leaderboard-rank",
 					"ui-leaderboard-tint",
@@ -270,20 +281,27 @@ local spec: Component.Spec = {
 					return medalIcon() ~= ""
 				end,
 			})
-			medal.Instance.AnchorPoint = Vector2.new(0.5, 0.5)
-			medal.Instance.Position = UDim2.fromScale(0.5, 0.5)
-			Element.hydrate(medal.Instance, { Tags = { "ui-leaderboard-medal-icon", medalTag } })
+			Element.hydrate(
+				medal.Instance,
+				{ LayoutOrder = 1, Tags = { "ui-leaderboard-medal-icon", medalTag } }
+			)
 			local rankCell = Element.new("Frame", {
 				Name = "RankCell",
 				LayoutOrder = 1,
 				BackgroundTransparency = 1,
-				Size = function()
-					return UDim2.new(0, RANK_WIDTH[sizeNow()], 1, 0)
-				end,
-				rankLabel,
+				Element.new("UIListLayout", {
+					SortOrder = Enum.SortOrder.LayoutOrder,
+					FillDirection = Enum.FillDirection.Horizontal,
+					VerticalAlignment = Enum.VerticalAlignment.Center,
+					Padding = UDim.new(0, 4),
+				}),
 				medal.Instance,
+				rankLabel,
 			})
-			local face = if avatars
+			local function faceShown(): boolean
+				return shows(rank(), lit())
+			end
+			local face = if avatars ~= false
 				then Avatar.new({
 					app = app,
 					name = function()
@@ -297,7 +315,23 @@ local spec: Component.Spec = {
 					size = function()
 						return AVATAR[sizeNow()]
 					end,
-					layoutOrder = 2,
+					visible = faceShown,
+				})
+				else nil
+			if face then
+				Element.hydrate(face.Instance, { Tags = { ["ui-leaderboard-avatar-own"] = lit } })
+			end
+			-- The headshot's room, kept when it is hidden so the names line up
+			local faceCell = if face
+				then Element.new("Frame", {
+					Name = "AvatarCell",
+					LayoutOrder = 2,
+					BackgroundTransparency = 1,
+					Size = function()
+						local px = Avatar.sizes[AVATAR[sizeNow()]]
+						return UDim2.fromOffset(px, if faceShown() then px else TEXT_ROW[sizeNow()])
+					end,
+					face.Instance,
 				})
 				else nil
 			local nameLabel = Element.new("TextLabel", {
@@ -345,23 +379,27 @@ local spec: Component.Spec = {
 					end,
 				}),
 				rankCell,
-				if face then face.Instance else nil :: any,
+				faceCell :: any,
 				nameLabel,
 				valueLabel,
 			})
-			-- The text cells are as tall as the avatar (or the text, with none)
+			-- The text cells are as tall as the headshot, or the text in a row without one
 			local function textHeight(): UDim2
-				return UDim2.new(0, 0, 0, if avatars then Avatar.sizes[AVATAR[sizeNow()]] else 28)
+				local px = if face and faceShown()
+					then Avatar.sizes[AVATAR[sizeNow()]]
+					else TEXT_ROW[sizeNow()]
+				return UDim2.new(0, 0, 0, px)
 			end
 			Element.hydrate(nameLabel, { Size = textHeight })
 			Element.hydrate(valueLabel, { Size = textHeight })
 			Element.hydrate(rankCell, {
 				Size = function()
 					local height = textHeight().Y.Offset
-					return UDim2.fromOffset(RANK_WIDTH[sizeNow()], height)
+					local widths = if medalIcons then MEDAL_RANK_WIDTH else RANK_WIDTH
+					return UDim2.fromOffset(widths[sizeNow()], height)
 				end,
 			})
-			return root, rankLabel, medal.Instance, nameLabel, valueLabel
+			return root, rankLabel, medal.Instance, nameLabel, valueLabel, if face then face.Instance else nil
 		end
 
 		-- The list ----------------------------------------------------------------------------
@@ -377,7 +415,16 @@ local spec: Component.Spec = {
 			return mine ~= nil and row ~= nil and idOf(row, 0) == idOf(mine, 0)
 		end
 
-		local parts: { [any]: { row: GuiObject, rank: TextLabel, medal: GuiObject, name: TextLabel, value: TextLabel } } =
+		local parts: {
+			[any]: {
+				row: GuiObject,
+				rank: TextLabel,
+				medal: GuiObject,
+				name: TextLabel,
+				value: TextLabel,
+				avatar: GuiObject?,
+			},
+		} =
 			{}
 		local count = 0
 		h.rowFor = function(id: any): GuiObject?
@@ -388,6 +435,9 @@ local spec: Component.Spec = {
 		end
 		h.medalFor = function(id: any): GuiObject?
 			return parts[id] and parts[id].medal
+		end
+		h.avatarFor = function(id: any): GuiObject?
+			return parts[id] and parts[id].avatar
 		end
 		h.nameLabelFor = function(id: any): TextLabel?
 			return parts[id] and parts[id].name
@@ -422,12 +472,12 @@ local spec: Component.Spec = {
 					local e, i = entry(), at()
 					return if e then (e.rank or i) else nil
 				end
-				local root, rankLabel, medal, nameLabel, valueLabel = buildRow(
+				local root, rankLabel, medal, nameLabel, valueLabel, avatar = buildRow(
 					"Row",
 					rank,
 					function()
 						local r = rank()
-						return if r then tostring(r) else ""
+						return if r then `#{r}` else ""
 					end,
 					entry,
 					function()
@@ -439,8 +489,14 @@ local spec: Component.Spec = {
 						return at() or 0
 					end,
 				})
-				parts[id] =
-					{ row = root, rank = rankLabel, medal = medal, name = nameLabel, value = valueLabel }
+				parts[id] = {
+					row = root,
+					rank = rankLabel,
+					medal = medal,
+					name = nameLabel,
+					value = valueLabel,
+					avatar = avatar,
+				}
 				count += 1
 				Reactive.onCleanup(function()
 					if parts[id] and parts[id].row == root then
@@ -462,7 +518,7 @@ local spec: Component.Spec = {
 			local mine = own()
 			return mine ~= nil and indexById()[idOf(mine, 0)] ~= nil
 		end
-		local ownRow, ownRank, _, ownName, ownValue = buildRow(
+		local ownRow, ownRank, _, ownName, ownValue, ownAvatar = buildRow(
 			"Own",
 			function()
 				local mine = own()
@@ -471,7 +527,7 @@ local spec: Component.Spec = {
 			function()
 				local mine = own()
 				if mine and mine.rank then
-					return tostring(mine.rank)
+					return `#{mine.rank}`
 				end
 				return p.unranked or "-"
 			end,
@@ -480,7 +536,7 @@ local spec: Component.Spec = {
 				return true
 			end
 		)
-		h.ownRankLabel, h.ownNameLabel, h.ownValueLabel = ownRank, ownName, ownValue
+		h.ownRankLabel, h.ownNameLabel, h.ownValueLabel, h.ownAvatar = ownRank, ownName, ownValue, ownAvatar
 		local pinned = Element.new("Frame", {
 			Name = "Pinned",
 			LayoutOrder = 3,

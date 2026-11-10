@@ -1,10 +1,11 @@
 <!-- Made by scripts/skills.ts from docs/components/leaderboard.md. Edit the doc, not this file. -->
 # Leaderboard
 
-Players ranked best first, each with their place, headshot, name and score. The
-top three wear gold, silver and bronze, and can show the game's medal icons in
-place of their number. The player's own row is lit; when they are not in the
-list, their row is pinned under it with their rank. While the scores load,
+Players ranked best first: #1, #2, #3 and on, each with their name and score.
+The top three wear gold, silver and bronze, with the game's medal icons beside
+their number if it gives them, and they and the player get their headshots; the
+other rows keep to names, so the podium stands out. The player's own row is lit;
+when they are not in the list, their row is pinned under it with their rank. While the scores load,
 pulsing rows stand in for the list.
 
 ```luau
@@ -28,11 +29,11 @@ Lucy.Leaderboard.new({
 | `own` | table, ref or getter | `nil` | | The player's entry. Their row is lit when listed, else pinned under the list |
 | `unranked` | string | `"-"` | | The pinned rank when `own.rank` is not known (`"100+"`, say) |
 | `format` | function | commas | | Turns a value into its text. Text values are shown as they are |
-| `medals` | table or `false` | `nil` | | Icons for 1st, 2nd and 3rd in place of the number. `false` leaves out the medal colours too |
+| `medals` | table or `false` | `nil` | | Icons for 1st, 2nd and 3rd, beside the number. `false` leaves out the medal colours too |
 | `loading` | boolean, ref or getter | `false` | | Pulsing rows in place of the list |
 | `placeholders` | number | `5` | | How many pulsing rows |
 | `empty` | string | `nil` | | Shown when there are no rows |
-| `avatars` | boolean | `true` | | The headshots (an entry with no `userId` shows a monogram) |
+| `avatars` | `"top"`, boolean | `"top"` | | Headshots on the top three and the player's row; `true` on every row, `false` on none (no `userId`: a monogram) |
 | `size` | string | `"md"` | yes | `sm`, `md` or `lg` (a board in the world, say) |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
@@ -47,7 +48,9 @@ Set the medal tokens in your theme to match your game.
 
 Its parts are on the handle: `board.list`, `board.pinned`, `board.skeletons`,
 `board.emptyLabel`, and per row `board.rowFor(id)`, `board.rankLabelFor(id)`,
-`board.medalFor(id)`, `board.nameLabelFor(id)` and `board.valueLabelFor(id)`.
+`board.medalFor(id)`, `board.avatarFor(id)`, `board.nameLabelFor(id)` and
+`board.valueLabelFor(id)`. A row without a headshot keeps its room across, so
+the names line up, and is shorter.
 `Lucy.Leaderboard.formatNumber(14850)` gives `"14,850"`.
 
 ## Examples
