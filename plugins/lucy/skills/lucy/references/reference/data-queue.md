@@ -81,6 +81,9 @@ once from the page it keeps for 60 seconds, refreshing it in the background when
 it is stale, so a board can call it as often as it redraws. Writes this server
 made since the page was read are merged in, so a new score shows straight away.
 
+For boards with a week that starts again on Monday, each player's own rank and
+names, use [Lucy.Boards](boards.md), which keeps them through the queue.
+
 ## When the server closes
 
 The queue binds `BindToClose` and writes everything pending, waiting at most 5

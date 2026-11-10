@@ -30,7 +30,7 @@ check a name exists before you use it, and find the page that explains it.
 
 `Lucy.useDensity`, `useMetric`, `useResponsive`, `useBackHandler`,
 `useFocusScope`, `useUiSound`, `useTable`, `useWhile`, `useCountdown`, `useDrag`,
-`useReveal` and `useCount`. See
+`useReveal`, `useCount` and `useRequest`. See
 the [composables reference](composables/index.md).
 
 ## Animation
@@ -61,6 +61,7 @@ the [composables reference](composables/index.md).
 |---|---|---|
 | `Lucy.Server` | The server's store, sent to each player's App at `server.*`, and requests from them: `Lucy.Server.new(options)` | [The server](server.md) |
 | `Lucy.DataQueue` | DataStore requests paced to the engine's limits, with cached reads and a flush on close: `Lucy.DataQueue.new(options)` | [The data queue](data-queue.md) |
+| `Lucy.Boards` | Leaderboards on the server: all time, this week and today, each player's rank, names, the request and published rows: `Lucy.Boards.new(options)` | [Boards](boards.md) |
 
 ## Themes and colour
 

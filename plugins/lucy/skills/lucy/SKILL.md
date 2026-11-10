@@ -189,6 +189,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Accessibility](references/reference/accessibility.md): What Lucy does so players can read, reach and use your UI, the contrast it promises, the Roblox accessibility settings it follows, and Lucy.Preferences.
 - [Everything on Lucy](references/reference/api.md): Every name the Lucy module exports, what it is for, and the page that explains it.
 - [The App](references/reference/app.md): Lucy.App.new and every option it takes, the parts an App holds, and its methods.
+- [Boards](references/reference/boards.md): Lucy.Boards keeps a game's leaderboards on the server, all time, this week and today, with each player's own rank, their names, the request a client asks with, and rows published for everyone. Every method and option.
 - [Composables](references/reference/composables/index.md): State over time and behaviour shared between components. Every Lucy.use* composable.
 - [useBackHandler](references/reference/composables/use-back-handler.md): Intercepts back inputs while active, calling your function.
 - [useCount](references/reference/composables/use-count.md): Counts a number smoothly up or down to a target value with easing.
@@ -197,6 +198,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [useDrag](references/reference/composables/use-drag.md): Follows a mouse or touch drag starting from a target GUI element.
 - [useFocusScope](references/reference/composables/use-focus-scope.md): Traps keyboard and gamepad focus inside a container while active.
 - [useMetric](references/reference/composables/use-metric.md): Computes a control size token in pixels following density.
+- [useRequest](references/reference/composables/use-request.md): Asks the server with app.server:call and keeps the answer, the loading flag and any error as state, asking again when its arguments change.
 - [useResponsive](references/reference/composables/use-responsive.md): Returns a getter for a responsive value keyed by device, input mode, breakpoint or orientation.
 - [useReveal](references/reference/composables/use-reveal.md): Types text out character by character for dialogue and narrative lines.
 - [useSort](references/reference/composables/use-sort.md): Multi-column sorting engine for any arbitrary list of items.
@@ -213,6 +215,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Game folder structure](references/recipes/folder-structure.md): A suggested layout for your game folder, and where each part of a Lucy game goes: one App, utils, features, composables, components, world UI, panels and scenes on the client; services and requests on the server.
 - [HUD](references/recipes/hud.md): A dance floor heads-up display with a combo badge, coins that pop when they change, a hype meter that fills with the crowd, and a toast for combo milestones.
 - [Recipes](references/recipes/index.md): Where each part of a game goes, then whole pieces from Club Lucy you can copy into a game and change: a HUD, a pause menu, audio settings that save, an emote shop and saved player data.
+- [Leaderboards](references/recipes/leaderboards.md): Best combo and Hype boards kept in DataStores, all time and this week, a Leaderboards dialog with a tab per board and the dancer's own rank, and a top 5 every player sees.
 - [Pause menu](references/recipes/pause-menu.md): A pause menu that opens on B or Backspace and from a button, with a dimmed backdrop, options on top, a confirm before leaving, and gameplay keys off while it is open.
 - [Save player data](references/recipes/save-data.md): Each dancer's coins and best combo loaded into the server's store when they join and saved as they change, with a Top dancers board that every player sees.
 - [Settings menu that saves](references/recipes/settings.md): Music, sound effects and crowd volume sliders and a theme picker bound to app state, loaded when the player joins and saved when they leave.

@@ -108,6 +108,7 @@ local Lucy = {
 	useDrag = Composables.useDrag,
 	useReveal = Composables.useReveal,
 	useCount = Composables.useCount,
+	useRequest = Composables.useRequest,
 
 	-- Animation (Core/Animate)
 	spring = Animate.spring,
@@ -121,6 +122,7 @@ local Lucy = {
 	App = App,
 	Server = Server,
 	DataQueue = DataQueue,
+	Boards = require(Core.Boards),
 	AppState = AppState,
 	Theme = Theme,
 	Tokens = require(Core.Tokens),

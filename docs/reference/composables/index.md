@@ -31,6 +31,7 @@ To write your own composables, see [Share logic with composables](../../guide/co
 | [`useDrag`](use-drag.md) | Tracks pointer or touch drag gestures starting from a target element |
 | [`useReveal`](use-reveal.md) | Types text out character by character for dialogue and notifications |
 | [`useCount`](use-count.md) | Counts a number smoothly up or down with easing |
+| [`useRequest`](use-request.md) | Asks the server and keeps the answer, asking again when its arguments change |
 
 ## Lifetime and ownership
 
