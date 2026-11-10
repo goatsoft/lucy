@@ -158,6 +158,25 @@ end
 
 local SUFFIX = ".story"
 
+-- Each story's loaded copy, by its module (the copy from the last load)
+local copies: { [ModuleScript]: ModuleScript } = {}
+
+-- Loads a story from a fresh copy of its module, so an edit shows without restarting Studio (a
+-- required module is cached). The copy stands beside the story, so its script.Parent finds what
+-- the story's does; it is never saved (not Archivable) and the next load replaces it.
+local function load(module: ModuleScript): (boolean, any)
+	local old = copies[module]
+	if old then
+		old:Destroy()
+	end
+	local copy = module:Clone()
+	copy.Name = module.Name .. "~"
+	copy.Archivable = false
+	copy.Parent = module.Parent
+	copies[module] = copy
+	return pcall(require, copy)
+end
+
 -- Every "<Name>.story" ModuleScript under root, sorted by group then title. A module
 -- that fails to load is still listed, with `loadError` set, so the browser can show it.
 function Preview.find(root: Instance?): { Story }
@@ -165,7 +184,7 @@ function Preview.find(root: Instance?): { Story }
 	for _, module in (root or ReplicatedStorage):GetDescendants() do
 		if module:IsA("ModuleScript") and string.sub(module.Name, -#SUFFIX) == SUFFIX then
 			local id = string.sub(module.Name, 1, -#SUFFIX - 1)
-			local ok, result = pcall(require, module)
+			local ok, result = load(module)
 			local story: Story
 			if ok and type(result) == "table" then
 				story = table.clone(result)

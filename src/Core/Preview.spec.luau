@@ -293,5 +293,33 @@ return function()
 			expect(stories[1].title).to.equal("Thing")
 			expect(stories[1].group).to.equal("Tests")
 		end)
+
+		it("loads a story fresh each time, so an edit shows, and leaves no copy to save", function()
+			local root = Instance.new("Folder")
+			local module = Instance.new("ModuleScript")
+			module.Name = "Fresh.story"
+			module.Parent = root
+			local ok = pcall(function()
+				module.Source = "return { title = 'First', render = function() end }"
+			end)
+			if not ok then
+				root:Destroy()
+				return
+			end
+			expect(Preview.find(root)[1].title).to.equal("First")
+			module.Source = "return { title = 'Second', render = function() end }"
+			local stories = Preview.find(root)
+			expect(#stories).to.equal(1)
+			expect(stories[1].title).to.equal("Second")
+			local copies = 0
+			for _, child in root:GetChildren() do
+				if child ~= module then
+					copies += 1
+					expect(child.Archivable).to.equal(false)
+				end
+			end
+			expect(copies).to.equal(1)
+			root:Destroy()
+		end)
 	end)
 end
