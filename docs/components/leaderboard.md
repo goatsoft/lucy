@@ -43,7 +43,7 @@ Lucy.Leaderboard.new({
 | `loading` | boolean, ref or getter | `false` | | Pulsing rows while the scores load |
 | `placeholders` | number | `5` | | How many pulsing rows |
 | `empty` | string | | | Shown when nobody is on the board |
-| `height` | number, ref or getter | | | The rows scroll in this many pixels, and your row stays under them. The board keeps its size while it loads and fills |
+| `height` | number, ref or getter | | | The whole board is this many pixels tall, your row included. The rows scroll in what your row leaves, so the board keeps its size while it loads and fills |
 | `size` | string | `"md"` | yes | `sm`, `md` or `lg`, for the whole board |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 

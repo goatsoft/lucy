@@ -199,11 +199,33 @@ return function()
 			height = 200,
 		})
 		expect(board.scroller).to.be.ok()
-		expect(board.scroller.Instance.Size.Y.Offset).to.equal(200)
+		expect(board.Instance.Size.Y.Offset).to.equal(200)
+		expect(board.Instance.AutomaticSize).to.equal(Enum.AutomaticSize.None)
 		expect(board.pinned:IsDescendantOf(board.scroller.Instance)).to.equal(false)
 		expect(board.list:IsDescendantOf(board.scroller.Instance)).to.equal(true)
 		loading(false)
-		expect(board.scroller.Instance.Size.Y.Offset).to.equal(200)
+		expect(board.Instance.Size.Y.Offset).to.equal(200)
+	end)
+
+	it("fits the pinned row inside the height, so the board doesn't grow when it shows", function()
+		if not Harness.laysOutLive() then
+			return -- the rows take what the pinned row leaves: live layout only
+		end
+		local own = Reactive.ref({ userId = 14, name = "Jax", value = 120, rank = 4 } :: any)
+		local board = Leaderboard.new({ app = app, Parent = gui, rows = ROWS, own = own, height = 200 })
+		Harness.flush()
+		local full = board.scroller.Instance.AbsoluteSize.Y
+		local before = board.Instance.AbsoluteSize.Y
+		expect(board.pinned.Visible).to.equal(false)
+		own({ userId = 99, name = "Me", value = 50, rank = 37 })
+		Harness.flush()
+		expect(board.pinned.Visible).to.equal(true)
+		expect(board.Instance.AbsoluteSize.Y).to.equal(before)
+		local rows = board.scroller.Instance.AbsoluteSize.Y
+		expect(rows < full).to.equal(true)
+		local bottom = board.pinned.AbsolutePosition.Y + board.pinned.AbsoluteSize.Y
+		local boardBottom = board.Instance.AbsolutePosition.Y + board.Instance.AbsoluteSize.Y
+		expect(math.abs(bottom - boardBottom) <= 1).to.equal(true)
 	end)
 
 	it("lays out a podium: 1st, then 2nd and 3rd, then the rest as text", function()

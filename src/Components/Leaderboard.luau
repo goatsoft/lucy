@@ -22,8 +22,8 @@
 			placeholders = 5,          -- how many skeleton rows
 			empty = "No one yet",      -- shown with no rows
 			size = "md",               -- sm | md | lg: the whole board's scale
-			height = 420,              -- pixels (or a ref or getter): the rows scroll in this much
-			                           -- room and the pinned row stays under them, so the board keeps
+			height = 420,              -- pixels (or a ref or getter): the whole board's height. The
+			                           -- rows scroll in what the pinned row leaves, so the board keeps
 			                           -- one size while it loads, empties and fills
 		})
 
@@ -733,25 +733,32 @@ local spec: Component.Spec = {
 			list,
 			emptyLabel,
 		})
-		-- A fixed height: the rows scroll, the pinned row stays under them
+		-- A fixed height for the whole board: the rows scroll in what the pinned row leaves
+		local fixed = p.height ~= nil
 		local rowsPart: any = rowsHolder
-		if p.height ~= nil then
+		if fixed then
 			local scroller = ScrollArea.new({
 				app = app,
 				name = "Scroll",
 				layoutOrder = 1,
-				size = function(): UDim2
-					return UDim2.new(1, 0, 0, Reactive.toValue(p.height) or 0)
-				end,
+				size = UDim2.fromScale(1, 0),
 				children = { rowsHolder },
+			})
+			Element.hydrate(scroller.Instance, {
+				Element.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill }),
 			})
 			h.scroller = scroller
 			rowsPart = scroller.Instance
 		end
 
 		return Element.new("Frame", {
-			Size = UDim2.fromScale(1, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
+			Size = function(): UDim2
+				if fixed then
+					return UDim2.new(1, 0, 0, Reactive.toValue(p.height) or 0)
+				end
+				return UDim2.fromScale(1, 0)
+			end,
+			AutomaticSize = if fixed then Enum.AutomaticSize.None else Enum.AutomaticSize.Y,
 			BackgroundTransparency = 1,
 			Visible = h:ref("visible"),
 			Tags = { "ui-leaderboard" },
