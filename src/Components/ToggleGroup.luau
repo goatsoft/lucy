@@ -197,10 +197,15 @@ local spec: Component.Spec = {
 		})
 		h.scroller = area
 		local scroller = area.frame :: ScrollingFrame
-		-- Side effects of the engine's layout: the row's height, in the area's own units
+		-- Side effects of the engine's layout: the row's height, in the area's own units, plus the
+		-- room the scroll bar keeps under it, so nothing at the row's bottom (a line tab's
+		-- underline) is cut
 		local function measure()
 			local scale = Scroll.scaleOf(scroller)
-			height(math.ceil(frame.AbsoluteSize.Y / (if scale > 0 then scale else 1)))
+			height(
+				math.ceil(frame.AbsoluteSize.Y / (if scale > 0 then scale else 1))
+					+ scroller.ScrollBarThickness
+			)
 		end
 		measure()
 		local connection = frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(measure)

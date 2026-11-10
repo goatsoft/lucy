@@ -224,11 +224,11 @@ return function()
 			local frame = group.scroller.frame :: ScrollingFrame
 			expect(frame.ScrollingDirection).to.equal(Enum.ScrollingDirection.X)
 			expect(group.items[1]:IsDescendantOf(frame)).to.equal(true)
-			-- As wide as its room, as tall as its items
+			-- As wide as its room; the whole row, its bottom edge included, inside the window
 			expect(group.Instance.AbsoluteSize.X <= 241).to.equal(true)
-			expect(math.abs(group.Instance.AbsoluteSize.Y - group.items[1].AbsoluteSize.Y) <= 2).to.equal(
-				true
-			)
+			local item = group.items[1]
+			local windowBottom = frame.AbsolutePosition.Y + frame.AbsoluteWindowSize.Y
+			expect(item.AbsolutePosition.Y + item.AbsoluteSize.Y <= windowBottom + 1).to.equal(true)
 		end)
 
 		it("brings the picked item into view", function()
