@@ -256,6 +256,29 @@ return function()
 			expect(left >= viewLeft - 1 and right <= viewLeft + frame.AbsoluteWindowSize.X + 1).to.equal(true)
 		end)
 
+		it("shows the picked item once it is laid out, when it was made off screen", function()
+			if not Harness.laysOutLive() then
+				return -- scrolling follows layout: live layout only
+			end
+			-- Made with no parent, as in a dialog that is not open yet
+			local group = ToggleGroup.new({
+				app = app,
+				items = LONG,
+				value = "Garage",
+				scroll = true,
+				required = true,
+			})
+			Harness.flush()
+			group.Instance.Parent = narrow()
+			Harness.flush()
+			local frame = group.scroller.frame :: ScrollingFrame
+			local last = group.items[#group.items]
+			local left = last.AbsolutePosition.X
+			local right = left + last.AbsoluteSize.X
+			local viewLeft = frame.AbsolutePosition.X
+			expect(left >= viewLeft - 1 and right <= viewLeft + frame.AbsoluteWindowSize.X + 1).to.equal(true)
+		end)
+
 		it("leaves a column, or a group without scroll, as it was", function()
 			local column = ToggleGroup.new({
 				app = app,

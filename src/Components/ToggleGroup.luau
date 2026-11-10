@@ -228,6 +228,14 @@ local spec: Component.Spec = {
 			task.defer(reveal)
 		end)
 		task.defer(reveal)
+		-- And again when its window changes size: a bar made before it was on screen (a closed
+		-- dialog) has nothing to scroll until it is laid out, and a phone can turn
+		local resized = scroller:GetPropertyChangedSignal("AbsoluteWindowSize"):Connect(function()
+			task.defer(reveal)
+		end)
+		Reactive.onCleanup(function()
+			resized:Disconnect()
+		end)
 		return area.Instance
 	end,
 }
