@@ -107,6 +107,8 @@ Lucy.Tabs.new({
 Every crew member's set list, more than fit across a phone. The bar scrolls:
 
 <!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-tabs-2-light.webp" alt="Tabs example" loading="lazy"><img class="example-dark" src="/images/examples/components-tabs-2-dark.webp" alt="Tabs example" loading="lazy"></figure>
+
 ```luau
 local crew = { "DJ Lucy", "Nova", "Beatrix", "Kai", "Juno", "Remy", "Pixel Pulse", "The Glowsticks" }
 local items = {}
@@ -125,7 +127,7 @@ Lucy.Tabs.new({ variant = "line", items = items, value = "Kai", Parent = box })
 Open the shop on a tab kept in app state:
 
 <!-- preview -->
-<figure class="example-preview"><img class="example-light" src="/images/examples/components-tabs-2-light.webp" alt="Tabs example" loading="lazy"><img class="example-dark" src="/images/examples/components-tabs-2-dark.webp" alt="Tabs example" loading="lazy"></figure>
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-tabs-3-light.webp" alt="Tabs example" loading="lazy"><img class="example-dark" src="/images/examples/components-tabs-3-dark.webp" alt="Tabs example" loading="lazy"></figure>
 
 ```luau
 local section = app.state:ref("shop.section")

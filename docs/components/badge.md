@@ -66,17 +66,15 @@ Lucy.Badge.new({
 })
 ```
 
-How many of a dance a player owns, on the corner of its picture. `overlay` is a
+How many of a dance a player owns, on the corner of its tile. `overlay` is a
 see-through fill, so the number reads on any picture:
 
 <!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-badge-4-light.webp" alt="Badge example" loading="lazy"><img class="example-dark" src="/images/examples/components-badge-4-dark.webp" alt="Badge example" loading="lazy"></figure>
+
 ```luau
-local picture = Lucy.Image.new({
-    image = "rbxthumb://type=AvatarHeadShot&id=1&w=150&h=150",
-    size = UDim2.fromOffset(80, 80),
-    Parent = parent,
-})
-local owned = Lucy.Badge.new({ text = "3", variant = "overlay", Parent = picture.Instance })
+local tile = Lucy.Avatar.new({ name = "Moonwalk", size = "xl", square = true, Parent = parent })
+local owned = Lucy.Badge.new({ text = "3", variant = "overlay", Parent = tile.Instance })
 owned.Instance.AnchorPoint = Vector2.new(1, 1)
 owned.Instance.Position = UDim2.new(1, -4, 1, -4)
 ```

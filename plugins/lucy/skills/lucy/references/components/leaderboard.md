@@ -32,6 +32,7 @@ Lucy.Leaderboard.new({
 | `medals` | table, `false`, ref or getter | | | Icons for 1st, 2nd and 3rd, before the number. `false` takes away the gold, silver and bronze too |
 | `podium` | boolean | `true` | | `false` makes every row the same size |
 | `avatars` | `"top"` or boolean | `"top"` | | Headshots on the podium and your row. `true` on every row, `false` on none |
+| `avatarShape` | string | `"circle"` | | `circle`, or `square` for rounded corners |
 | `loading` | boolean, ref or getter | `false` | | Pulsing rows while the scores load |
 | `placeholders` | number | `5` | | How many pulsing rows |
 | `empty` | string | | | Shown when nobody is on the board |
@@ -56,34 +57,62 @@ The handle has `board.list`, `board.pinned`, `board.scroller` (with `height`),
 
 ## Examples
 
-The hype board in a dialog. It asks the server when it opens, pulses while it
-waits, and stays the same height whether two dancers are on it or twenty:
+The hype board in a dialog. With `height`, the dialog keeps its size whether
+two dancers are on the board or twenty, and while the scores load (`loading`):
 
 ```luau
-local scores = Lucy.ref(nil)
-
 Lucy.Dialog.new({
     id = "hype-board",
     title = "Hype",
     size = "lg",
     children = {
         Lucy.Leaderboard.new({
-            rows = function() return scores() and scores().rows or {} end,
-            own = function() return scores() and scores().me end,
-            loading = function() return scores() == nil end,
-            unranked = "100+",
-            height = 320,
+            rows = {
+                { name = "Nova", value = 9840 },
+                { name = "Kai", value = 9125 },
+                { name = "Juno", value = 8410 },
+                { name = "Beatrix", value = 7360 },
+            },
+            own = { name = app.state:get("player.name"), value = 1250, rank = 37 },
+            format = function(hype) return `{Lucy.Leaderboard.formatNumber(hype)} hype` end,
+            height = 300,
         }),
     },
-    onOpenChange = function(open)
-        if open then
-            scores(nil)
-            task.spawn(function()
-                scores(app.server:call("hype.top"))
-            end)
-        end
-    end,
 }):open()
+```
+
+The rows usually come from the server. Show pulsing rows until they do:
+
+```luau
+local scores = Lucy.ref(nil)
+task.spawn(function()
+    scores(app.server:call("hype.top"))
+end)
+
+Lucy.Leaderboard.new({
+    rows = function() return scores() and scores().rows or {} end,
+    own = function() return scores() and scores().me end,
+    loading = function() return scores() == nil end,
+    unranked = "100+",
+    height = 300,
+    Parent = hypeDialog,
+})
+```
+
+Square headshots, for a board that sits in a grid of square tiles:
+
+```luau
+Lucy.Leaderboard.new({
+    rows = {
+        { name = "Nova", value = 42 },
+        { name = "Kai", value = 37 },
+        { name = "Juno", value = 31 },
+        { name = "Remy", value = 18 },
+    },
+    avatarShape = "square",
+    format = function(wins) return `{wins} wins` end,
+    Parent = parent,
+})
 ```
 
 Nobody on the board yet:
