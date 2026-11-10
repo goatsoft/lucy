@@ -254,7 +254,7 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		-- A see-through fill over a picture (Badge's overlay variant: a count on an item), and its words
 		OverlayFill = "$Black",
 		OverlayFillForeground = "$White",
-		OverlayFillTransparency = 0.35,
+		OverlayFillTransparency = 0.15,
 		Success = "$Green500",
 		SuccessForeground = Tokens.onColor("$Success"),
 		Warning = "$Amber400",
