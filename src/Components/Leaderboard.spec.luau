@@ -108,6 +108,19 @@ return function()
 		expect(board.ownRankLabel.Text).to.equal("100+")
 	end)
 
+	it("follows a reactive unranked text", function()
+		local text = Reactive.ref("100+")
+		local board = Leaderboard.new({
+			app = app,
+			Parent = gui,
+			rows = ROWS,
+			own = { userId = 99, name = "Me", value = 0 },
+			unranked = text,
+		})
+		text("-")
+		expect(board.ownRankLabel.Text).to.equal("-")
+	end)
+
 	it("follows reactive rows, updating a row in place", function()
 		local rows = Reactive.ref({ { userId = 1, name = "A", value = 5 } })
 		local board = Leaderboard.new({ app = app, Parent = gui, rows = rows })

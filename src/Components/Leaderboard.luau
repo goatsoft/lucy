@@ -8,7 +8,7 @@
 			rows = entries,            -- { { userId, name, value, rank? } }, best first; an array,
 			                           -- a ref or a getter. rank defaults to the row's place
 			own = mine,                -- the player's entry (or nil): lit when listed, else pinned
-			unranked = "100+",         -- the pinned rank when own.rank is nil
+			unranked = "100+",         -- the pinned rank when own.rank is nil (or a ref or getter)
 			format = function(value) return `{value} PTS` end, -- default: 14,850
 			medals = { "set:queen", "set:crown", "set:crown" }, -- icons for 1st to 3rd, beside
 			                           -- #1, #2, #3; false for no medal colours at all (a ref
@@ -536,7 +536,7 @@ local spec: Component.Spec = {
 				if mine and mine.rank then
 					return `#{mine.rank}`
 				end
-				return p.unranked or "-"
+				return Reactive.toValue(p.unranked) or "-"
 			end,
 			own,
 			function()
