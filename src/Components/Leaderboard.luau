@@ -605,11 +605,13 @@ local spec: Component.Spec = {
 			Name = "Empty",
 			LayoutOrder = 2,
 			Size = UDim2.new(1, 0, 0, 48),
+			AutomaticSize = Enum.AutomaticSize.Y,
 			Text = p.empty or "",
 			Visible = function()
 				return p.empty ~= nil and not loading() and #rows() == 0
 			end,
-			Tags = { "ui-leaderboard-empty" },
+			TextWrapped = true,
+			Tags = { "ui-leaderboard-empty", "ui-leaderboard-text", sizeTag },
 		})
 		h.emptyLabel = emptyLabel
 
