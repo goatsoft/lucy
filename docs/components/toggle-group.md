@@ -51,6 +51,7 @@ An item is a value (a string or a number, shown as its text) or a table:
 | `icon` | An [icon](icon.md) name drawn before the text |
 | `children` | Anything after the text in the item's [slot](slot.md), such as a count or an icon. With an icon or children and no text, the item shows no text. They take the item's colours, picked and hover included |
 | `disabled` | Greys this item out |
+| `visible` | Shows or hides this item: `true`, `false`, a ref or a getter. A hidden item leaves the row and can't be picked. Defaults to `true` |
 
 In a single group, `value` is `false` until something is picked, and picking
 the picked item again clears it unless `required` is set. In a multiple group,
@@ -105,6 +106,28 @@ Lucy.ToggleGroup.new({
         Remotes.RateSet:FireServer(stars)
     end,
     Parent = ratePanel,
+})
+```
+
+A VIP ROOM tab that shows up once the player has the pass. The group stays the
+same group: the tab just appears, and goes again if the pass does:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-toggle-group-4-light.webp" alt="Toggle Group example" loading="lazy"><img class="example-dark" src="/images/examples/components-toggle-group-4-dark.webp" alt="Toggle Group example" loading="lazy"></figure>
+
+```luau
+local hasPass = Lucy.ref(true)
+
+Lucy.ToggleGroup.new({
+    items = {
+        { value = "tonight", text = "TONIGHT" },
+        { value = "week", text = "THIS WEEK" },
+        { value = "vip", text = "VIP ROOM", visible = hasPass },
+    },
+    value = "tonight",
+    required = true,
+    variant = "line",
+    Parent = parent,
 })
 ```
 

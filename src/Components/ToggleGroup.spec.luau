@@ -155,6 +155,28 @@ return function()
 		expect(group.items[1].Interactable).to.equal(false)
 	end)
 
+	it("shows an item only while its visible is true, and the player can't pick it hidden", function()
+		local tipped = Reactive.ref(false)
+		local group = ToggleGroup.new({
+			app = app,
+			Parent = gui,
+			items = { "Score", { value = "tips", text = "Supporters", visible = tipped } },
+			value = "Score",
+		})
+		local item = group.items[2]
+		expect(#group.items).to.equal(2)
+		expect(item.Visible).to.equal(false)
+		expect(item.Selectable).to.equal(false)
+		group:select("tips")
+		expect(group:get("value")).to.equal("Score")
+		tipped(true)
+		expect(group.items[2]).to.equal(item) -- the same button: the group is not made again
+		expect(item.Visible).to.equal(true)
+		expect(item.Selectable).to.equal(true)
+		group:select("tips")
+		expect(group:get("value")).to.equal("tips")
+	end)
+
 	it("lays out as a row by default, or a column", function()
 		local row = ToggleGroup.new({ app = app, Parent = gui, items = GENRES })
 		expect(row.Instance:FindFirstChildOfClass("UIListLayout").FillDirection).to.equal(

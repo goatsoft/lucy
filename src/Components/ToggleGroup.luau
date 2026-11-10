@@ -22,9 +22,11 @@
 		group:select("Techno")
 
 	An item is a value (a string or number, shown as its text) or a table:
-	{ value, text?, icon?, children?, disabled? }. An item is a toggle with a slot (ADR 0042):
-	its icon, text and children sit in a row and take its colours (Toggle.slot); with an icon
-	or children and no text, it shows no text.
+	{ value, text?, icon?, children?, disabled?, visible? }. An item is a toggle with a slot
+	(ADR 0042): its icon, text and children sit in a row and take its colours (Toggle.slot);
+	with an icon or children and no text, it shows no text. `visible` (a boolean, ref or
+	getter) shows or hides the item as it changes: a hidden item leaves the row and can't be
+	picked, so a group can offer an item only some of the time without being made again.
 
 	With scroll, the row sits in a ScrollArea (group.scroller) as wide as its room and as tall as
 	its items. A player drags it on touch; a controller's D-pad and the keyboard's arrows move
@@ -51,6 +53,7 @@ export type Item = {
 	icon: any,
 	children: any,
 	disabled: boolean,
+	visible: any, -- a boolean, ref or getter
 	content: any,
 }
 
@@ -71,6 +74,7 @@ function ToggleGroup.normalize(items: { any }?, what: string): { Item }
 			icon = item.icon,
 			children = item.children,
 			disabled = item.disabled == true,
+			visible = if item.visible == nil then true else item.visible,
 			content = item.content,
 		})
 	end
@@ -133,8 +137,11 @@ local spec: Component.Spec = {
 				else function(): boolean
 					return value() == itemValue
 				end
+			local function shown(): boolean
+				return Reactive.toValue(item.visible) ~= false
+			end
 			local function off(): boolean
-				return item.disabled or disabled()
+				return item.disabled or disabled() or not shown()
 			end
 			local function enabled(): boolean
 				return not off()
@@ -145,6 +152,7 @@ local spec: Component.Spec = {
 				AutoButtonColor = false,
 				Text = if item.children ~= nil or item.icon ~= nil then "" else item.text,
 				AutomaticSize = Enum.AutomaticSize.X,
+				Visible = shown,
 				Interactable = enabled,
 				Selectable = enabled,
 				Tags = { "ui-toggle" :: any, tags, ["ui-selected"] = selected, ["ui-disabled"] = off },
@@ -264,7 +272,7 @@ function ToggleGroup.new(props: { [string]: any }?)
 				break
 			end
 		end
-		if not entry or entry.disabled then
+		if not entry or entry.disabled or Reactive.toValue(entry.visible) == false then
 			return
 		end
 		if multiple then

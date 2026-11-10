@@ -1,11 +1,12 @@
 return {
 	group = "Components",
-	description = "Genre chips (pick several) and a 1 to 5 vote (pick one).",
+	description = "Genre chips (pick several), items with a slot (VIP shows while `vip` is on) and a 1 to 5 vote (pick one).",
 	width = 480,
 	controls = {
 		variant = { "default", "outline", "line" },
 		size = { options = { "sm", "md", "lg" }, default = "md" },
 		disabled = false,
+		vip = true,
 	},
 	render = function(ctx)
 		local Lucy = ctx.Lucy
@@ -39,6 +40,13 @@ return {
 								value = "new",
 								text = "New",
 								children = { Lucy.Badge.new({ text = "3", variant = "secondary" }) },
+							},
+							-- Shown only while the control is on: the group is not made again
+							{
+								value = "vip",
+								text = "VIP",
+								icon = "lucide-extended:star-filled",
+								visible = c.vip,
 							},
 						},
 						value = "owned",

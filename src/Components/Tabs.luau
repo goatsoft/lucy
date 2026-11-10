@@ -62,6 +62,7 @@ local spec: Component.Spec = {
 				icon = item.icon,
 				children = item.children,
 				disabled = item.disabled,
+				visible = item.visible,
 			})
 		end
 		local list = ToggleGroup.new({

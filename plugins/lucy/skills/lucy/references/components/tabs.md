@@ -50,6 +50,7 @@ Each tab is a table:
 | `icon` | An [icon](icon.md) name drawn before the tab's text |
 | `children` | Anything after the text in the tab's [slot](slot.md), such as a count badge. With an icon or children and no text, the tab shows no text. They take the tab's colours |
 | `disabled` | Greys this tab out |
+| `visible` | Shows or hides this tab: `true`, `false`, a ref or a getter. A hidden tab leaves the bar and can't be picked. Defaults to `true` |
 
 Every panel is built when the tabs are, and kept: switching back to a tab finds
 it as the player left it, scrolled to the same place. Tabs fill the width and
