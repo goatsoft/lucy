@@ -259,6 +259,46 @@ return function()
 			expect(menu:get("open")).to.equal(true)
 		end)
 
+		it("follows an item's label, icon and disabled when they are refs or getters", function()
+			local inShow = Reactive.ref(false)
+			local picked = {}
+			local menu = make({
+				variant = "arc",
+				items = {
+					{
+						value = "show",
+						label = function()
+							return if inShow() then "Leave show" else "Join show"
+						end,
+						icon = function()
+							return if inShow() then "lucy:minus" else "lucy:plus"
+						end,
+					},
+					{ value = "practice", label = "Practice", disabled = inShow },
+				},
+				onSelect = function(value)
+					table.insert(picked, value)
+				end,
+			})
+			local slice, caption = menu.slices[1], nil
+			for _, d in slice:GetDescendants() do
+				if d:IsA("TextLabel") and d:HasTag("ui-menu-caption") then
+					caption = d
+				end
+			end
+			expect(caption.Text).to.equal("Join show")
+			inShow(true)
+			expect(menu.slices[1]).to.equal(slice) -- the same menu, not made again
+			expect(caption.Text).to.equal("Leave show")
+			expect(menu.slices[2]:HasTag("ui-disabled")).to.equal(true)
+			menu:open()
+			menu:select("practice")
+			expect(#picked).to.equal(0)
+			inShow(false)
+			menu:select("practice")
+			expect(picked[1]).to.equal("practice")
+		end)
+
 		it("is a list popup with mouse and a drawer on touch", function()
 			local menu = make()
 			menu:open()

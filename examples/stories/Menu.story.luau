@@ -7,6 +7,8 @@ return {
 		input = { "mouse", "gamepad", "touch" },
 		variant = { "by input", "list", "radial", "arc" },
 		shape = { "round", "squircle", "square" },
+		-- The first item follows it (Join / Leave show) and Items fades out while in the show
+		inShow = false,
 	},
 	render = function(ctx)
 		local Lucy = ctx.Lucy
@@ -16,11 +18,19 @@ return {
 		end, { immediate = true })
 
 		local ITEMS = {
-			{ value = "join", label = "Join show", icon = "lucy:plus" },
+			{
+				value = "join",
+				label = function()
+					return if ctx.controls.inShow() then "Leave show" else "Join show"
+				end,
+				icon = function()
+					return if ctx.controls.inShow() then "lucy:minus" else "lucy:plus"
+				end,
+			},
 			{ value = "dj", label = "DJ request" },
 			{ value = "lab", label = "The Lab" },
 			{ value = "dances", label = "Dances" },
-			{ value = "items", label = "Items", disabled = true },
+			{ value = "items", label = "Items", disabled = ctx.controls.inShow },
 			{ value = "exit", label = "Exit", icon = "lucy:close" },
 		}
 

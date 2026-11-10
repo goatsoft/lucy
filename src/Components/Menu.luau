@@ -345,7 +345,8 @@ local function check(what: string, allowed: { string }, value: any)
 	end
 end
 
-type Entry = { value: any, text: string, icon: string?, hint: string?, disabled: boolean }
+-- text, icon and disabled may be refs or getters: a menu made once follows them
+type Entry = { value: any, text: any, icon: any, hint: string?, disabled: any }
 
 local function normalize(items: { any }?): { Entry }
 	local list: { Entry } = {}
@@ -360,10 +361,18 @@ local function normalize(items: { any }?): { Entry }
 			text = item.label or item.text or tostring(item.value),
 			icon = item.icon,
 			hint = item.hint,
-			disabled = item.disabled == true,
+			disabled = if type(item.disabled) == "function" then item.disabled else item.disabled == true,
 		})
 	end
 	return list
+end
+
+-- An item's label and whether it is disabled now (either may be a ref or getter).
+local function textOf(item: Entry): string
+	return tostring(Reactive.toValue(item.text) or "")
+end
+local function offOf(item: Entry): boolean
+	return Reactive.toValue(item.disabled) == true
 end
 
 -- Up to two initials, for a round button with no icon.
@@ -643,10 +652,10 @@ local spec: Component.Spec = {
 		end
 		for index, item in entries do
 			local function off(): boolean
-				return item.disabled
+				return offOf(item)
 			end
 			local function usable(): boolean
-				return isList() and not item.disabled
+				return isList() and not offOf(item)
 			end
 			local hintRoom = if item.hint then 56 else 0
 			local row = Element.new("TextButton", {
@@ -674,7 +683,9 @@ local spec: Component.Spec = {
 					end,
 					TextXAlignment = Enum.TextXAlignment.Left,
 					TextTruncate = Enum.TextTruncate.AtEnd,
-					Text = item.text,
+					Text = function(): string
+						return textOf(item)
+					end,
 					Tags = { "ui-menu-item-label" :: any, ["ui-disabled"] = off },
 				}),
 			})
@@ -796,10 +807,10 @@ local spec: Component.Spec = {
 		})
 		for index, item in entries do
 			local function off(): boolean
-				return item.disabled
+				return offOf(item)
 			end
 			local function usable(): boolean
-				return isRing() and not item.disabled
+				return isRing() and not offOf(item)
 			end
 			local slice = Element.new("TextButton", {
 				Name = `Slice{index}`,
@@ -881,7 +892,9 @@ local spec: Component.Spec = {
 				AutomaticSize = function(): Enum.AutomaticSize
 					return if beside() then Enum.AutomaticSize.XY else Enum.AutomaticSize.X
 				end,
-				Text = item.text,
+				Text = function(): string
+					return textOf(item)
+				end,
 				Tags = { "ui-menu-caption" :: any, ["ui-disabled"] = off, ["ui-menu-caption-pill"] = beside },
 				Parent = slice,
 			})
@@ -962,7 +975,9 @@ local spec: Component.Spec = {
 				Element.new("TextLabel", {
 					Name = "Mark",
 					Size = UDim2.fromScale(1, 1),
-					Text = initials(item.text),
+					Text = function(): string
+						return initials(textOf(item))
+					end,
 					Tags = { "ui-menu-slice-mark" :: any },
 					Parent = slice,
 				})
@@ -1046,7 +1061,7 @@ local spec: Component.Spec = {
 					for index, item in entries do
 						local curve = (index - 1) // math.max(1, rows) + 1
 						local measured = captions[index].AbsoluteSize.X / (if shown > 0 then shown else 1)
-						curveRoom[curve] = math.max(curveRoom[curve] or 0, measured, #item.text * 8 + 24)
+						curveRoom[curve] = math.max(curveRoom[curve] or 0, measured, #textOf(item) * 8 + 24)
 					end
 					local steps: { number } = {}
 					for curve, width in curveRoom do
@@ -1061,7 +1076,7 @@ local spec: Component.Spec = {
 					tilts(tilt)
 					local usable = {}
 					for index, item in entries do
-						usable[index] = not item.disabled
+						usable[index] = not offOf(item)
 					end
 					links(Menu.fanLinks(count, rows, up, not labelsLeft, usable))
 					labelSide(if labelsLeft then "left" else "right")
@@ -1088,7 +1103,7 @@ local spec: Component.Spec = {
 			defaultFocus = function()
 				local set = if isList() then rows else slices
 				for index, item in entries do
-					if not item.disabled then
+					if not offOf(item) then
 						return set[index]
 					end
 				end
@@ -1110,7 +1125,7 @@ local spec: Component.Spec = {
 				end
 				local index =
 					Menu.pick(Vector2.new(input.Position.X, -input.Position.Y), Menu.angles(points()))
-				if index and not entries[index].disabled and app.input then
+				if index and not offOf(entries[index]) and app.input then
 					app.input:focus(slices[index])
 				end
 			end)
@@ -1156,7 +1171,7 @@ function Menu.new(props: { [string]: any }?)
 		end
 		for _, item in h.props._menuEntries do
 			if item.value == value then
-				if item.disabled then
+				if offOf(item) then
 					return
 				end
 				h:emit("select", value)

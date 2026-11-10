@@ -75,6 +75,9 @@ An item is a value, shown as its text, or a table with `value`, and optionally:
   beside the item, so a player learns the shortcut.
 - `disabled`: shown faded, and cannot be picked.
 
+`label`, `icon` and `disabled` can also be a ref or a getter, so a menu made
+once keeps up with the game (see [Items that change](#items-that-change)).
+
 ## Variants
 
 - **`list`:** a list next to its anchor, like a dropdown. On touch it is a
@@ -156,6 +159,42 @@ Lucy.Menu.new({
         { value = "dj", label = "DJ request" },
         { value = "lab", label = "The Lab" },
         { value = "dances", label = "Dances" },
+        { value = "exit", label = "Exit", icon = "lucy:close" },
+    },
+    Parent = parent,
+})
+```
+
+## Items that change
+
+An item's `label`, `icon` and `disabled` can be a ref or a getter. The item
+follows it, so a menu made once keeps up with the game, with no need to make
+it again.
+Here JOIN SHOW turns into LEAVE SHOW once the player is in, and PRACTICE
+fades out until they leave:
+
+<!-- preview solo -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-menu-4-light.webp" alt="Menu example" loading="lazy"><img class="example-dark" src="/images/examples/components-menu-4-dark.webp" alt="Menu example" loading="lazy"></figure>
+
+```luau
+local inShow = Lucy.ref(true)
+
+Lucy.Menu.new({
+    open = true,
+    variant = "arc",
+    shape = "squircle",
+    items = {
+        {
+            value = "show",
+            label = function()
+                return if inShow() then "Leave show" else "Join show"
+            end,
+            icon = function()
+                return if inShow() then "lucy:minus" else "lucy:plus"
+            end,
+        },
+        { value = "practice", label = "Practice", disabled = inShow },
+        { value = "dj", label = "DJ request" },
         { value = "exit", label = "Exit", icon = "lucy:close" },
     },
     Parent = parent,
