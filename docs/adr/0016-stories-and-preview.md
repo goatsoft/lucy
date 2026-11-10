@@ -63,3 +63,12 @@ Two Roblox facts shape the design:
   in `examples/` keeps the package rule simple.
 - **Controls as plain values passed to `render` again on change.** Re-rendering
   defeats fine-grained updates and loses focus and animation state.
+
+## Update (2026-11-10)
+
+`Preview.find` loads each story from a fresh copy of its module, placed beside
+it so the story's `script.Parent` finds what the original's does. Studio caches
+a required module, so an edited story used to keep showing its first version
+until Studio restarted. The copy is not Archivable (never saved) and the next
+load replaces it. A story that requires helpers of its own should take fresh
+copies of them too.
