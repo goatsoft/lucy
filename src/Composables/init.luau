@@ -635,11 +635,13 @@ end
 		every    seconds: asks again this often while enabled, keeping the data
 		keep     true to keep the last answer while the next arguments load
 ]]
+type RequestOptions = { enabled: Reactive.MaybeRef<boolean>?, every: number?, keep: boolean? }
+
 function Composables.useRequest(
 	app: any,
 	name: string,
 	args: any?,
-	options: { enabled: Reactive.MaybeRef<boolean>?, every: number?, keep: boolean? }?
+	options: RequestOptions?
 ): {
 	data: Reactive.Computed<any>,
 	loading: Reactive.Computed<boolean>,
@@ -647,7 +649,7 @@ function Composables.useRequest(
 	refresh: () -> (),
 }
 	requireOwner("useRequest")
-	local opts = options or {}
+	local opts: RequestOptions = options or {}
 	local answer = Reactive.ref(nil :: any)
 	local busy = Reactive.ref(false)
 	local failed = Reactive.ref(nil :: string?)

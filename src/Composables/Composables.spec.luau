@@ -669,7 +669,8 @@ return function()
 	describe("useRequest", function()
 		-- A server whose calls wait until the spec answers them, in any order.
 		local function fakeServer()
-			local server = { calls = {} :: { { name: string, args: { any }, thread: thread } } }
+			local server =
+				{ calls = {} :: { { name: string, args: { n: number, [number]: any }, thread: thread } } }
 			function server.call(_self: any, name: string, ...: any): any
 				local call = { name = name, args = table.pack(...), thread = coroutine.running() }
 				table.insert(server.calls, call)

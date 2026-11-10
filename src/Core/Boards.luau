@@ -294,7 +294,7 @@ end
 -- ("shared.boards.<id>", or ".<id>.<period>" for another period), every (60).
 function Boards.publish(self: any, id: string, options: { [string]: any }?)
 	assert(self.server, "[Lucy] Boards: publish needs the server (options.server)")
-	local opts = options or {}
+	local opts: { [string]: any } = options or {}
 	local _, period = self:_def(id, opts.period or "all")
 	local item = {
 		id = id,
