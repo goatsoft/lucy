@@ -39,7 +39,11 @@ return function()
 
 		it("takes positions and derived colours", function()
 			local sequence = Tokens.compute(
-				Tokens.gradient({ { 0, Color3.new(1, 1, 1) }, { 0.7, Tokens.mix("$A", "$A", 0) }, { 1, "$A" } }),
+				Tokens.gradient({
+					{ 0, Color3.new(1, 1, 1) },
+					{ 0.7, Tokens.mix("$A", "$A", 0) },
+					{ 1, "$A" },
+				}),
 				function()
 					return Color3.new(0, 1, 0)
 				end
@@ -108,5 +112,67 @@ return function()
 		Harness.flush()
 		gradient:destroy()
 		expect(CollectionService:HasTag(frame, "ui-gradient-host")).to.equal(false)
+	end)
+
+	describe("reading a gradient where it shows", function()
+		local red, blue = Color3.new(1, 0, 0), Color3.new(0, 0, 1)
+		local function host(rotation: number): (Frame, UIGradient)
+			local frame = Instance.new("Frame")
+			frame.Position = UDim2.fromOffset(20, 40)
+			frame.Size = UDim2.fromOffset(200, 100)
+			frame.Parent = gui
+			local gradient = Instance.new("UIGradient")
+			gradient.Color = ColorSequence.new(red, blue)
+			gradient.Rotation = rotation
+			gradient.Parent = frame
+			return frame, gradient
+		end
+
+		it("blends a sequence between its keypoints", function()
+			local middle = Gradient.at(ColorSequence.new(red, blue), 0.5)
+			expect(Harness.colorEq(middle, Color3.new(0.5, 0, 0.5))).to.equal(true)
+			expect(Harness.colorEq(Gradient.at(ColorSequence.new(red, blue), -1), red)).to.equal(true)
+		end)
+
+		it("finds the gradient on a frame, and none once it is off", function()
+			local frame, gradient = host(90)
+			expect(Gradient.on(frame)).to.equal(gradient)
+			gradient.Enabled = false
+			expect(Gradient.on(frame)).to.equal(nil)
+		end)
+
+		it("places a screen point along the gradient's angle", function()
+			local frame, gradient = host(90)
+			Harness.flush()
+			-- In screen pixels (the test gui may be scaled)
+			local origin, size = frame.AbsolutePosition, frame.AbsoluteSize
+			expect(Gradient.along(gradient, frame, origin)).to.be.near(0, 0.01)
+			expect(Gradient.along(gradient, frame, origin + Vector2.new(0, size.Y / 2))).to.be.near(0.5, 0.01)
+			gradient.Rotation = 0
+			expect(Gradient.along(gradient, frame, origin + Vector2.new(size.X * 0.75, 0))).to.be.near(
+				0.75,
+				0.01
+			)
+			gradient.Rotation = 270
+			expect(Gradient.along(gradient, frame, origin)).to.be.near(1, 0.01)
+		end)
+
+		it("gives the colours between two points, tinted by the fill", function()
+			local frame, gradient = host(90)
+			Harness.flush()
+			local origin, size = frame.AbsolutePosition, frame.AbsoluteSize
+			local run = Gradient.between(
+				gradient,
+				frame,
+				origin,
+				origin + Vector2.new(0, size.Y),
+				Color3.new(1, 1, 1)
+			)
+			local points = run.Keypoints
+			expect(Harness.colorEq(points[1].Value, red)).to.equal(true)
+			expect(Harness.colorEq(points[#points].Value, blue)).to.equal(true)
+			local tinted = Gradient.between(gradient, frame, origin, origin, Color3.new(0.5, 0.5, 0.5))
+			expect(Harness.colorEq(tinted.Keypoints[1].Value, Color3.new(0.5, 0, 0))).to.equal(true)
+		end)
 	end)
 end

@@ -319,6 +319,35 @@ return function()
 			local color = area.fades.top.BackgroundColor3
 			expect(Harness.colorEq(color, app.theme:resolve("Card"))).to.equal(true)
 		end)
+
+		it("takes a gradient's colours where each fade sits, and lets go when it goes", function()
+			local red, blue = Color3.new(1, 0, 0), Color3.new(0, 0, 1)
+			local surface = Instance.new("Frame")
+			surface.Size = UDim2.fromOffset(240, 200)
+			surface.BackgroundColor3 = Color3.new(1, 1, 1)
+			surface.Parent = gui
+			local gradient = Instance.new("UIGradient")
+			gradient.Color = ColorSequence.new(red, blue)
+			gradient.Rotation = 90
+			gradient.Parent = surface
+			local area = ScrollArea.new({ app = app, Parent = surface, children = { block(800) } })
+			area.frame.CanvasPosition = Vector2.new(0, 200)
+			Harness.flush()
+			local top, bottom = area.fades.top, area.fades.bottom
+			local function ramp(fade: Frame): { ColorSequenceKeypoint }
+				return (fade:FindFirstChildOfClass("UIGradient") :: UIGradient).Color.Keypoints
+			end
+			-- Each fade's outer end is the gradient's colour at that edge
+			expect(Harness.colorEq(top.BackgroundColor3, Color3.new(1, 1, 1))).to.equal(true)
+			expect(Harness.colorEq(ramp(top)[1].Value, red)).to.equal(true)
+			expect(Harness.colorEq(ramp(bottom)[1].Value, blue)).to.equal(true)
+			gradient:Destroy()
+			surface.BackgroundColor3 = Color3.fromRGB(40, 90, 160)
+			Harness.flush()
+			expect(Harness.colorEq(top.BackgroundColor3, Color3.fromRGB(40, 90, 160))).to.equal(true)
+			expect(#ramp(top)).to.equal(2)
+			expect(Harness.colorEq(ramp(top)[1].Value, Color3.new(1, 1, 1))).to.equal(true)
+		end)
 	end)
 
 	describe("content fade", function()

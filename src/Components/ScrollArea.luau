@@ -46,7 +46,10 @@
 	ScrollingFrame, pinned over its window, so they hold still while it scrolls. The fade takes the colour and
 	transparency of the nearest ancestor with a visible background (a Panel's
 	card, a Select's popover, a game's own frame), else $Background, and follows
-	it through theme and transparency changes. handle.fades holds them by side
+	it through theme and transparency changes. On a surface with a gradient (a
+	Lucy.Gradient, or any UIGradient) each fade takes the gradient's colours over
+	the strip it covers (Gradient.between), so it melts into the gradient where it
+	sits rather than showing a band of one colour. handle.fades holds them by side
 	(top, bottom, left, right); fade = false leaves them out.
 
 	fade = "content" fades the content itself instead: the window sits in a
@@ -63,6 +66,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
+local Gradient = require(script.Parent.Gradient)
 
 local ScrollArea = {}
 
@@ -432,22 +436,66 @@ local spec: Component.Spec = {
 		h.frame = frame
 
 		-- Colour fades follow the surface they sit on: its styled colour and
-		-- transparency, read again whenever an ancestor's look or the ancestry changes.
+		-- transparency, and its gradient over the strip each fade covers, read again
+		-- whenever an ancestor's look, a gradient, the ancestry or a fade's place changes.
 		if next(fades) then
 			local fallback = h.app.theme:resolve("Background")
+			local plain = ColorSequence.new(Color3.new(1, 1, 1))
 			local watching: { RBXScriptConnection } = {}
+			-- A fade's run, outer edge to inner, in screen points (along its UIGradient)
+			local function run(side: string, fade: Frame): (Vector2, Vector2)
+				local at, size = fade.AbsolutePosition, fade.AbsoluteSize
+				local middle = at + size / 2
+				if side == "top" then
+					return Vector2.new(middle.X, at.Y), Vector2.new(middle.X, at.Y + size.Y)
+				elseif side == "bottom" then
+					return Vector2.new(middle.X, at.Y + size.Y), Vector2.new(middle.X, at.Y)
+				elseif side == "left" then
+					return Vector2.new(at.X, middle.Y), Vector2.new(at.X + size.X, middle.Y)
+				end
+				return Vector2.new(at.X + size.X, middle.Y), Vector2.new(at.X, middle.Y)
+			end
 			local function apply()
 				local surface = ScrollArea.surfaceOf(frame)
 				local color: Color3 = if surface then surface:GetStyled("BackgroundColor3") else fallback
 				local transparency: number = if surface
 					then surface:GetStyled("BackgroundTransparency")
 					else 0
-				for _, fade in fades do
-					fade.BackgroundColor3 = color
+				local gradient = if surface then Gradient.on(surface) else nil
+				for side, fade in fades do
+					local ramp = fade:FindFirstChildOfClass("UIGradient") :: UIGradient
+					if gradient and surface then
+						local from, to = run(side, fade)
+						fade.BackgroundColor3 = Color3.new(1, 1, 1)
+						ramp.Color = Gradient.between(gradient, surface, from, to, color)
+					else
+						fade.BackgroundColor3 = color
+						ramp.Color = plain
+					end
 					fade.BackgroundTransparency = transparency
 				end
 			end
-			local function rewatch()
+			-- Where a fade sits on the gradient changes as it moves or resizes
+			for _, fade in fades do
+				local moved = fade:GetPropertyChangedSignal("AbsolutePosition"):Connect(apply)
+				local resized = fade:GetPropertyChangedSignal("AbsoluteSize"):Connect(apply)
+				Reactive.onCleanup(function()
+					moved:Disconnect()
+					resized:Disconnect()
+				end)
+			end
+			local rewatch: () -> ()
+			local function later(child: Instance)
+				if not child:IsA("UIGradient") then
+					return
+				end
+				task.defer(function()
+					if not h.destroyed then
+						rewatch()
+					end
+				end)
+			end
+			rewatch = function()
 				for _, connection in watching do
 					connection:Disconnect()
 				end
@@ -455,6 +503,15 @@ local spec: Component.Spec = {
 				local node = frame.Parent
 				while node and not node:IsA("LayerCollector") do
 					if node:IsA("GuiObject") then
+						-- A gradient put on or taken off, or one changing (its colours, angle, on/off)
+						table.insert(watching, node.ChildAdded:Connect(later))
+						table.insert(watching, node.ChildRemoved:Connect(later))
+						for _, child in node:GetChildren() do
+							if child:IsA("UIGradient") then
+								table.insert(watching, child.Changed:Connect(apply))
+								table.insert(watching, child.StyledPropertiesChanged:Connect(apply))
+							end
+						end
 						table.insert(watching, node.StyledPropertiesChanged:Connect(apply))
 						table.insert(
 							watching,
