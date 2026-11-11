@@ -12,6 +12,7 @@
 			Lucy.useFocusScope(h.app, open, { root = content })
 			Lucy.useUiSound(h.app, { activate = playClick })     -- the game's own sounds
 			local gap = Lucy.useResponsive(h.app, { touch = 16, default = 8 })
+			local room = Lucy.useSize(body)                      -- room().Y: its height in the scene's units
 			local board = Lucy.useTable({ data = players, columns = columns })
 			local dances = Lucy.useSort({ data = list, columns = columns, multi = true })  -- dances.items()
 			Lucy.useWhile(open, function() return signal:Connect(onFire) end)  -- only while open
@@ -31,6 +32,7 @@ local Animate = require(script.Parent.Core.Animate)
 local Component = require(script.Parent.Core.Component)
 local Reactive = require(script.Parent.Core.Reactive)
 local Responsive = require(script.Parent.Core.Responsive)
+local Scroll = require(script.Parent.Core.Scroll)
 local Signal = require(script.Parent.Core.Signal)
 local SortModel = require(script.Parent.Core.SortModel)
 local TableModel = require(script.Parent.Core.TableModel)
@@ -122,6 +124,49 @@ function Composables.useResponsive(app: any, value: any): () -> any
 	return Reactive.computed(function(): any
 		return Responsive.pick(state:_tracked(segments) or {}, value)
 	end)
+end
+
+--[[
+	The size of a GUI object in the units you lay it out in: its AbsoluteSize
+	without the UIScales on it and above it (Lucy scales every scene to the
+	device), so it compares with the offsets you write. A getter that follows the
+	object as it resizes and as the scene rescales; Vector2.zero while there is no
+	object or it is not laid out yet. `target` may be a ref or a getter.
+
+	For a size that depends on room only known once laid out (cards as tall as
+	the body under a header), bind to it instead of measuring by hand.
+]]
+function Composables.useSize(target: Reactive.MaybeRef<GuiObject?>): () -> Vector2
+	requireOwner("useSize")
+	local size = Reactive.ref(Vector2.zero)
+	local last = Vector2.zero
+	local function set(value: Vector2)
+		if value ~= last then
+			last = value
+			size(value)
+		end
+	end
+	Reactive.watchEffect(function(onCleanup)
+		local gui: GuiObject? = Reactive.toValue(target) :: any
+		if not gui then
+			set(Vector2.zero)
+			return
+		end
+		local function measure()
+			local scale = math.max(Scroll.scaleOf(gui), 0.001)
+			set(gui.AbsoluteSize / scale)
+		end
+		local resized = gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(measure)
+		local moved = gui.AncestryChanged:Connect(measure)
+		onCleanup(function()
+			resized:Disconnect()
+			moved:Disconnect()
+		end)
+		Reactive.untrack(measure)
+	end)
+	return function(): Vector2
+		return size()
+	end
 end
 
 -- Puts `handler` on the back stack (the back keys) while `active` is true.

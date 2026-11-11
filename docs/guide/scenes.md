@@ -65,11 +65,12 @@ app.scenes:register("Title", {
 | `onBack(scene)` | B or Backspace on a screen, when nothing is open on top |
 | `keepAlive` | `true` (the default) keeps the UI when the scene hides; `false` destroys it and builds it again next time |
 | `ignoreGuiInset` | `true` (the default) draws under Roblox's top bar; see [Safe area](#safe-area) |
+| `safeArea` | `true` also makes `scene.safe`, a frame clear of the top bar and the notch, for a full-screen panel over a backdrop; see [Safe area](#safe-area) |
 
 `scene` is a table you can keep your own parts on, like `scene.play` above. It
-also has `scene.gui`, `scene.app`, `scene.params` and `scene.maid`, and Lucy uses
-`scene.name`, `scene.layer` and `scene.popScope`, so don't use those seven names
-for your own parts.
+also has `scene.gui`, `scene.app`, `scene.params`, `scene.maid` and, with
+`safeArea`, `scene.safe`, and Lucy uses `scene.name`, `scene.layer` and
+`scene.popScope`, so don't use those eight names for your own parts.
 `scene.maid:give(thing)` cleans up `thing` when the scene is destroyed: an
 Instance, a connection, a function to call, or anything with a `Destroy` or
 `destroy` method.
@@ -179,7 +180,36 @@ app.scenes:register("Hud", {
 ```
 
 `Enum.ScreenInsets.DeviceSafeInsets` keeps clear of the notch and rounded
-corners only. Lucy also scales every scene for the device; see
+corners only.
+
+A menu that covers the screen wants both: a backdrop over everything, and a
+panel clear of the top bar. Give the scene `safeArea = true`, put the backdrop
+in `scene.gui` and the panel in `scene.safe`. Lucy keeps `scene.safe` the size
+of what is clear, in the scene's own units, as the screen turns or the bar
+changes, so the panel is sized with plain scale and offsets. It draws above what
+you put straight in `scene.gui` (its `ZIndex` is 2):
+
+```luau
+app.scenes:register("ClubPass", {
+    layer = "modal",
+    safeArea = true,
+    build = function(scene)
+        Lucy.new "Frame" { Size = UDim2.fromScale(1, 1), Tags = { "pass-backdrop" }, Parent = scene.gui }
+        Lucy.new "Frame" {
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            Position = UDim2.fromScale(0.5, 0.5),
+            Size = UDim2.new(1, -24, 1, -24),
+            Tags = { "pass-panel" },
+            Parent = scene.safe,
+        }
+    end,
+})
+```
+
+To size something from the room it ends up with, such as cards as tall as
+what is left under a header, bind to
+[`Lucy.useSize`](../reference/composables/use-size.md) rather than measuring
+`AbsoluteSize` yourself. Lucy also scales every scene for the device; see
 [Scaling](../architecture.md#scaling).
 
 Drawers (a [Sheet](../components/sheet.md) or [Select](../components/select.md)

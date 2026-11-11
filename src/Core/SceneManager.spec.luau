@@ -175,6 +175,37 @@ return function()
 		end)
 	end)
 
+	describe("safeArea", function()
+		it("gives the scene a frame clear of the top bar, in the scene's own units", function()
+			local safe
+			scenes:register("Board", {
+				layer = "modal",
+				safeArea = true,
+				build = function(scene)
+					safe = scene.safe
+				end,
+			})
+			scenes:push("Board")
+			task.wait()
+			expect(safe).to.be.ok()
+			local gui = safe.Parent :: ScreenGui
+			expect(gui).to.equal(scenes:get("Board").gui)
+			-- Inside the screen, and as wide as it (Studio has no side cut-outs)
+			expect(safe.AbsolutePosition.Y >= gui.AbsolutePosition.Y).to.equal(true)
+			expect(
+				safe.AbsolutePosition.Y + safe.AbsoluteSize.Y
+					<= gui.AbsolutePosition.Y + gui.AbsoluteSize.Y + 1
+			).to.equal(true)
+			expect(math.abs(safe.AbsoluteSize.X - gui.AbsoluteSize.X) <= 2).to.equal(true)
+			scenes:pop()
+		end)
+
+		it("leaves scenes that do not ask without one", function()
+			scenes:goTo("Title")
+			expect(scenes:get("Title").safe).to.equal(nil)
+		end)
+	end)
+
 	describe("stack and overlays", function()
 		it("pushes modals above the current screen and keeps it visible", function()
 			scenes:goTo("Game")

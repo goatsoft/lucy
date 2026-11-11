@@ -16,6 +16,8 @@
 		app.scenes:register("Title", {
 			layer = "screen",            -- "screen" | "overlay" | "modal"
 			keepAlive = true,            -- false destroys the gui on exit
+			safeArea = true,             -- also make scene.safe: the part of the screen clear of
+			                             -- Roblox's top bar and the device's cut-outs
 			build = function(scene) ... parent things to scene.gui ... end,
 			enter = function(scene, params) end,
 			exit = function(scene) end,
@@ -39,6 +41,7 @@
 
 local Maid = require(script.Parent.Maid)
 local Reactive = require(script.Parent.Reactive)
+local Scroll = require(script.Parent.Scroll)
 local Signal = require(script.Parent.Signal)
 
 local SceneManager = {}
@@ -58,6 +61,7 @@ export type Scene = {
 	name: string,
 	layer: string,
 	gui: ScreenGui,
+	safe: Frame?,
 	app: any,
 	maid: Maid.Maid,
 	params: any,
@@ -182,6 +186,65 @@ function SceneManager.hide(self: SceneManager, name: string)
 	self.app.state:set(`scenes.visible.{name}`, nil)
 end
 
+--[[
+	The part of the screen clear of Roblox's top bar and the device's cut-outs
+	(Enum.ScreenInsets.CoreUISafeInsets), as a Frame in `gui` sized in the gui's
+	own units, so a panel in it keeps clear while the gui itself (a backdrop)
+	still covers the whole screen. It draws above the gui's other children (ZIndex 2). A hidden probe gui with those insets is
+	measured as the screen, the bar or the scale changes.
+]]
+function SceneManager.safeArea(gui: ScreenGui, maid: Maid.Maid): Frame
+	local safe = Instance.new("Frame")
+	safe.Name = "Safe"
+	safe.BackgroundTransparency = 1
+	-- Above what the scene puts straight in its gui (a backdrop, made after this frame)
+	safe.ZIndex = 2
+	safe.Size = UDim2.fromScale(1, 1)
+	safe.Parent = gui
+
+	local probe = Instance.new("ScreenGui")
+	probe.Name = `{gui.Name}_SafeArea`
+	probe.ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets
+	probe.ResetOnSpawn = false
+	probe.Archivable = false
+	probe.Parent = gui.Parent
+	maid:give(probe)
+
+	local function fit()
+		if probe.Parent ~= gui.Parent then
+			probe.Parent = gui.Parent
+		end
+		local scale = math.max(Scroll.scaleOf(gui), 0.001)
+		if probe.AbsoluteSize.X <= 0 or probe.AbsoluteSize.Y <= 0 or gui.AbsoluteSize.Y <= 0 then
+			safe.Position = UDim2.fromOffset(0, 0)
+			safe.Size = UDim2.fromScale(1, 1)
+			return
+		end
+		local at = (probe.AbsolutePosition - gui.AbsolutePosition) / scale
+		local size = probe.AbsoluteSize / scale
+		safe.Position = UDim2.fromOffset(math.floor(at.X), math.ceil(at.Y))
+		safe.Size = UDim2.fromOffset(math.floor(size.X), math.floor(size.Y))
+	end
+	for _, object in { gui, probe } do
+		maid:give(object:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit))
+		maid:give(object:GetPropertyChangedSignal("AbsolutePosition"):Connect(fit))
+	end
+	maid:give(gui:GetPropertyChangedSignal("Parent"):Connect(fit))
+	-- Lucy's scale for the device (Adaptive) changes without the gui's size changing
+	local function followScale(child: Instance)
+		if child:IsA("UIScale") then
+			maid:give(child:GetPropertyChangedSignal("Scale"):Connect(fit))
+			fit()
+		end
+	end
+	for _, child in gui:GetChildren() do
+		followScale(child)
+	end
+	maid:give(gui.ChildAdded:Connect(followScale))
+	fit()
+	return safe
+end
+
 function SceneManager._build(self: SceneManager, name: string): Scene
 	local def = self._defs[name]
 	local existing = self._scenes[name]
@@ -213,6 +276,9 @@ function SceneManager._build(self: SceneManager, name: string): Scene
 		blocker.ZIndex = 0
 		blocker.Selectable = false
 		blocker.Parent = gui
+	end
+	if def.safeArea then
+		scene.safe = SceneManager.safeArea(gui, scene.maid)
 	end
 	self._scenes[name] = scene
 	if def.build then

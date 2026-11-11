@@ -241,6 +241,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [useRequest](references/reference/composables/use-request.md): Asks the server with app.server:call and keeps the answer, the loading flag and any error as state, asking again when its arguments change.
 - [useResponsive](references/reference/composables/use-responsive.md): Returns a getter for a responsive value keyed by device, input mode, breakpoint or orientation.
 - [useReveal](references/reference/composables/use-reveal.md): Types text out character by character for dialogue and narrative lines.
+- [useSize](references/reference/composables/use-size.md): Follows an object's size in the units you lay it out in, for layout that depends on the room it gets.
 - [useSort](references/reference/composables/use-sort.md): Multi-column sorting engine for any arbitrary list of items.
 - [useTable](references/reference/composables/use-table.md): Manages sorting for tabular data and column definitions.
 - [useUiSound](references/reference/composables/use-ui-sound.md): Registers sound callbacks for UI component events like clicks, toggles and opens.

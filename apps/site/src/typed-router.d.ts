@@ -682,6 +682,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/composables/use-size': RouteRecordInfo<
+      '/docs/reference/composables/use-size',
+      '/docs/reference/composables/use-size',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/composables/use-sort': RouteRecordInfo<
       '/docs/reference/composables/use-sort',
       '/docs/reference/composables/use-sort',
@@ -1511,6 +1518,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/composables/use-reveal.md': {
       routes:
         | '/docs/reference/composables/use-reveal'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-size.md': {
+      routes:
+        | '/docs/reference/composables/use-size'
       views:
         | never
       pathParamNames:
