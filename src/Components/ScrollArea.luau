@@ -10,6 +10,7 @@
 			scrollbar = "hover",      -- hover | auto | always | scroll | glimpse
 			hideDelay = 0.6,          -- seconds the bar stays after scrolling (scroll, hover, glimpse)
 			fade = true,              -- true | false | "content" (see below)
+			fadeSize = 16,            -- optional: how far a fade reaches in, px (ScrollArea.fadeSize)
 			children = { ... },       -- instances, handles or functions
 			visible = true,
 			Parent = frame,
@@ -318,8 +319,9 @@ local spec: Component.Spec = {
 		local position = Reactive.ref(Vector2.zero)
 		local fades: { [string]: Frame } = {}
 		h.fades = fades
+		local fadeSize: number = p.fadeSize or ScrollArea.fadeSize
 		if fadeMode == true then
-			local reach = ScrollArea.fadeSize
+			local reach = fadeSize
 			local overlap = ScrollArea.fadeOverlap
 			-- Opaque over the overlap (the outer end), then fading in over the reach
 			local opaque = overlap / (reach + overlap)
@@ -506,7 +508,7 @@ local spec: Component.Spec = {
 			if length <= 0 then
 				return NumberSequence.new(0)
 			end
-			local reach = math.min(ScrollArea.fadeSize * Scroll.scaleOf(content) / length, 0.45)
+			local reach = math.min(fadeSize * Scroll.scaleOf(content) / length, 0.45)
 			local before = if vertical then at.Y > 0.5 else at.X > 0.5
 			local after = if vertical then at.Y + w.Y < c.Y - 0.5 else at.X + w.X < c.X - 0.5
 			local points = { NumberSequenceKeypoint.new(0, if before then 1 else 0) }

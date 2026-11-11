@@ -257,6 +257,24 @@ return function()
 			expect(row.fades.top).to.equal(nil)
 		end)
 
+		it("reaches as far in as fadeSize says", function()
+			-- (the colour fades; fade = "content" takes the same reach into its gradient)
+			local wide = Instance.new("Frame")
+			wide.Size = UDim2.new(0, 600, 1, 0)
+			local row = ScrollArea.new({
+				app = app,
+				Parent = gui,
+				size = UDim2.fromOffset(200, 60),
+				direction = "horizontal",
+				fadeSize = 40,
+				children = { wide },
+			})
+			Harness.flush()
+			local right = row.fades.right
+			local reach = ScrollArea.fadeOverlap + 40
+			expect(math.abs(right.AbsoluteSize.X - reach) < 1).to.equal(true)
+		end)
+
 		it("blends into the background", function()
 			local area = ScrollArea.new({ app = app, Parent = gui, children = { block(40) } })
 			Harness.flush()
