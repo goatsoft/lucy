@@ -301,6 +301,32 @@ return function()
 			expect(left >= viewLeft - 1 and right <= viewLeft + frame.AbsoluteWindowSize.X + 1).to.equal(true)
 		end)
 
+		it("scrolls its own row, never a scroll area it sits in", function()
+			if not Harness.laysOutLive() then
+				return -- scrolling follows layout: live layout only
+			end
+			local page = Instance.new("ScrollingFrame")
+			page.Size = UDim2.fromOffset(240, 120)
+			page.CanvasSize = UDim2.fromOffset(0, 1200)
+			page.Parent = gui
+			local value = Reactive.ref("House")
+			local group = ToggleGroup.new({
+				app = app,
+				Parent = page,
+				items = LONG,
+				value = value,
+				scroll = true,
+				required = true,
+			})
+			Harness.flush()
+			-- The page is scrolled past the row; picking an item scrolls the row alone
+			page.CanvasPosition = Vector2.new(0, 400)
+			value("Garage")
+			Harness.flush()
+			expect((group.scroller.frame :: ScrollingFrame).CanvasPosition.X > 0).to.equal(true)
+			expect(page.CanvasPosition.Y).to.equal(400)
+		end)
+
 		it("leaves a column, or a group without scroll, as it was", function()
 			local column = ToggleGroup.new({
 				app = app,

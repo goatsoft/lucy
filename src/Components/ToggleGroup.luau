@@ -220,7 +220,8 @@ local spec: Component.Spec = {
 		Reactive.onCleanup(function()
 			connection:Disconnect()
 		end)
-		-- The picked item comes into view, however it was picked
+		-- The picked item comes into view, however it was picked: in the row's own scroller only,
+		-- so a page the row sits in stays where the player scrolled it
 		local function reveal()
 			if multiple then
 				return
@@ -228,7 +229,7 @@ local spec: Component.Spec = {
 			local picked = Reactive.untrack(value)
 			for index, item in items do
 				if item.value == picked then
-					Scroll.reveal(buttons[index])
+					Scroll.reveal(buttons[index], nil, scroller)
 				end
 			end
 		end
@@ -237,8 +238,15 @@ local spec: Component.Spec = {
 		end)
 		task.defer(reveal)
 		-- And again when its window changes size: a bar made before it was on screen (a closed
-		-- dialog) has nothing to scroll until it is laid out, and a phone can turn
+		-- dialog) has nothing to scroll until it is laid out, and a phone can turn. Not for the
+		-- fraction of a pixel a scaled window wobbles by as a page around it scrolls.
+		local window = scroller.AbsoluteWindowSize
 		local resized = scroller:GetPropertyChangedSignal("AbsoluteWindowSize"):Connect(function()
+			local now = scroller.AbsoluteWindowSize
+			if math.abs(now.X - window.X) < 0.5 and math.abs(now.Y - window.Y) < 0.5 then
+				return
+			end
+			window = now
 			task.defer(reveal)
 		end)
 		Reactive.onCleanup(function()

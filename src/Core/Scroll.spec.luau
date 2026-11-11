@@ -80,6 +80,27 @@ return function()
 			expect(bottom <= frame.AbsoluteWindowSize.Y).to.equal(true)
 		end)
 
+		it("scrolls only the ScrollingFrame it is given, never one around it", function()
+			local outer = Instance.new("ScrollingFrame")
+			outer.Size = UDim2.fromOffset(300, 100)
+			outer.CanvasSize = UDim2.fromOffset(0, 1000)
+			outer.Parent = gui
+			local inner = Instance.new("ScrollingFrame")
+			inner.Size = UDim2.fromOffset(200, 60)
+			inner.Position = UDim2.fromOffset(0, 500)
+			inner.CanvasSize = UDim2.fromOffset(1000, 0)
+			inner.Parent = outer
+			local item = Instance.new("Frame")
+			item.Size = UDim2.fromOffset(50, 40)
+			item.Position = UDim2.fromOffset(600, 0)
+			item.Parent = inner
+			Harness.flush()
+			Scroll.reveal(item, nil, inner)
+			Harness.flush()
+			expect(inner.CanvasPosition.X > 0).to.equal(true)
+			expect(outer.CanvasPosition.Y).to.equal(0)
+		end)
+
 		it("does nothing outside a ScrollingFrame", function()
 			local item = Instance.new("Frame")
 			item.Parent = gui

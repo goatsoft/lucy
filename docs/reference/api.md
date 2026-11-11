@@ -83,7 +83,7 @@ the [composables reference](composables/index.md).
 |---|---|---|
 | `Lucy.Responsive` | Pick a value by device, input, breakpoint or orientation: `Responsive.pick(app, { mobile = 2, default = 5 })` | [Components](../components/index.md) |
 | `Lucy.Adaptive` | Scales each ScreenGui for the device | [Scaling](../architecture.md#scaling) |
-| `Lucy.Scroll` | `Scroll.reveal(object)` scrolls every ScrollingFrame above `object` so it shows | [Utils](utils.md#lucyscroll) |
+| `Lucy.Scroll` | `Scroll.reveal(object, margin?, only?)` scrolls every ScrollingFrame above `object` (or only `only`) so it shows | [Utils](utils.md#lucyscroll) |
 
 ## Components
 

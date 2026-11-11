@@ -3,7 +3,10 @@
 	Scroll: helpers for ScrollingFrames.
 
 		Scroll.offsetFor(position, view, top, bottom, margin) -- pure, see below
-		Scroll.reveal(object, margin?)  -- scrolls every ScrollingFrame above object to show it
+		Scroll.reveal(object, margin?, only?)
+		                                -- scrolls every ScrollingFrame above object to show it,
+		                                -- or only the one given (a row's own scroller, so the
+		                                -- page it sits in stays where the player put it)
 		Scroll.scaleOf(object)          -- the product of the UIScales above object
 
 	The engine scrolls to the gamepad selection by itself, but focus moved by Lucy
@@ -55,11 +58,11 @@ function Scroll.scaleOf(object: Instance): number
 	return scale
 end
 
-function Scroll.reveal(object: GuiObject, margin: number?)
+function Scroll.reveal(object: GuiObject, margin: number?, only: ScrollingFrame?)
 	local m = margin or DEFAULT_MARGIN
 	local node: Instance? = object.Parent
 	while node do
-		if node:IsA("ScrollingFrame") then
+		if node:IsA("ScrollingFrame") and (only == nil or node == only) then
 			local frame = node :: ScrollingFrame
 			local canvas = frame.CanvasPosition
 			local window = frame.AbsoluteWindowSize
