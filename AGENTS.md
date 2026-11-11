@@ -45,7 +45,7 @@ Rules:
     docs changed.
   - `pnpm site:build` rewrites `apps/site/src/typed-router.d.ts` when a docs page is added:
     commit it with the page.
-  - After JB pushes, check the run: `gh run list --limit 3` shows Release and Pages green.
+  - After a push, check the run: `gh run list --limit 3` shows Release and Pages green.
 - Commit messages are semantic: `type(scope): summary`, lower case, no full stop,
   in the imperative ("fix(select): close on back"). Types: `feat` (something new
   for games), `fix` (a bug), `docs`, `refactor`, `perf`, `test`, `build`, `ci`,
