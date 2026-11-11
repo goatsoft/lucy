@@ -51,6 +51,39 @@ return function()
 		expect(left.content.Size.X.Offset).to.equal(300)
 	end)
 
+	it("fills a panel to its footer, with no gap, however long the body is", function()
+		local function rows(count: number): { Frame }
+			local list = {}
+			for i = 1, count do
+				local row = Instance.new("Frame")
+				row.Name = `Row{i}`
+				row.Size = UDim2.new(1, 0, 0, 40)
+				list[i] = row
+			end
+			return list
+		end
+		for _, count in { 2, 60 } do
+			local sheet = Sheet.new({
+				app = app,
+				open = true,
+				children = rows(count),
+				footer = { button("Clear") },
+			})
+			task.wait(0.2)
+			local body, footer = sheet.body.Instance, sheet.footer
+			local inner = footer.Parent :: Frame
+			-- The footer at the bottom of the panel (inside its padding)
+			local bottom = inner.AbsolutePosition.Y + inner.AbsoluteSize.Y
+			local footerBottom = footer.AbsolutePosition.Y + footer.AbsoluteSize.Y
+			expect(bottom - footerBottom < 40).to.equal(true)
+			expect(footerBottom <= bottom + 1).to.equal(true)
+			-- The body runs to the footer: only the layout's gap between them
+			local between = footer.AbsolutePosition.Y - (body.AbsolutePosition.Y + body.AbsoluteSize.Y)
+			expect(between < 24).to.equal(true)
+			sheet:destroy()
+		end
+	end)
+
 	it("is a bottom drawer on touch", function()
 		app.input:setMode("touch")
 		local sheet = Sheet.new({ app = app, open = true })

@@ -266,7 +266,9 @@ local spec: Component.Spec = {
 		local hasFooter = #actionHandles > 0 or p.footer ~= nil
 		footer.Visible = hasFooter
 
-		-- The body may use what the overlay offers, less the header, footer, padding and gaps.
+		-- In a drawer the body may use what the overlay offers, less the header, footer, padding
+		-- and gaps. In a panel it fills what the header and footer leave (below), so the footer
+		-- sits at the bottom with no gap, however the panel is placed under the top bar.
 		local content: Frame
 		local function bodyCap(): number
 			local overlay = overlayRef()
@@ -299,18 +301,13 @@ local spec: Component.Spec = {
 		})
 		-- Several children stack, as in a Dialog's body.
 		Component.list({ Padding = UDim.new(0, gap), Parent = body.content })
-
-		-- In a panel the footer sits at the bottom; this takes the space between.
-		local spacer = Element.new("Frame", {
-			Name = "Spacer",
-			Size = UDim2.fromScale(1, 0),
-			LayoutOrder = 4,
-			Visible = function()
-				return not isDrawer()
+		-- In a panel the body takes all the height between the header and the footer
+		local fill = Element.new("UIFlexItem", {
+			FlexMode = function(): Enum.UIFlexMode
+				return if isDrawer() then Enum.UIFlexMode.None else Enum.UIFlexMode.Fill
 			end,
-			Tags = { "ui-sheet-part" },
-			Element.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill }),
 		})
+		fill.Parent = body.Instance
 
 		-- Room for a phone's home bar under a drawer; the background still runs to the edge.
 		local safeArea = Element.new("Frame", {
@@ -328,14 +325,16 @@ local spec: Component.Spec = {
 		})
 
 		-- Padding and layout live on an inner frame, so the close button can sit in
-		-- the content's own corner. In a panel it is full height, so the footer
-		-- reaches the bottom; in a drawer it fits its children.
+		-- the content's own corner. In a panel it is the panel's height (the body fills
+		-- what is left, so the footer reaches the bottom); in a drawer it fits its children.
 		local inner = Element.new("Frame", {
 			Name = "Inner",
 			Size = function(): UDim2
 				return if isDrawer() then UDim2.fromScale(1, 0) else UDim2.fromScale(1, 1)
 			end,
-			AutomaticSize = Enum.AutomaticSize.Y,
+			AutomaticSize = function(): Enum.AutomaticSize
+				return if isDrawer() then Enum.AutomaticSize.Y else Enum.AutomaticSize.None
+			end,
 			Tags = { "ui-sheet-inner", "ui-sheet-part" },
 			Element.new("UIListLayout", {
 				SortOrder = Enum.SortOrder.LayoutOrder,
@@ -344,7 +343,6 @@ local spec: Component.Spec = {
 			handleRow,
 			header,
 			body.Instance,
-			spacer,
 			footer,
 			safeArea,
 		})
