@@ -237,6 +237,16 @@ return function()
 			expect(second.Instance.NextSelectionUp).to.equal(first.Instance)
 		end)
 
+		it("finds the tiles around it outside the focus scope (a sheet that traps nothing)", function()
+			local first, _, _, _, second = tiles()
+			local elsewhere = Instance.new("Frame")
+			elsewhere.Parent = gui
+			local pop = app.input:pushScope({ root = elsewhere })
+			app.input:focus(first.Instance)
+			expect(first.Instance.NextSelectionDown).to.equal(second.Instance)
+			pop()
+		end)
+
 		it("steps back out onto the tile with back (B)", function()
 			local first, wear = tiles()
 			first:enter()

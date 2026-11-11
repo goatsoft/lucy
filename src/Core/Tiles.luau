@@ -81,7 +81,21 @@ function Tiles.toward(input: any, from: GuiObject, direction: Vector2): GuiObjec
 	local at = centre(from)
 	local half = from.AbsoluteSize / 2
 	local best, bestScore = nil, math.huge
+	-- The focus scope's roots, when the tile is in them; else its own gui (a sheet that traps
+	-- nothing sits in the modal portal, outside the screen's scope)
+	local roots = {}
 	for _, root in input:_scopeRoots() do
+		if from:IsDescendantOf(root) then
+			table.insert(roots, root)
+		end
+	end
+	if #roots == 0 then
+		local gui = from:FindFirstAncestorWhichIsA("LayerCollector")
+		if gui then
+			table.insert(roots, gui)
+		end
+	end
+	for _, root in roots do
 		for _, other in input:selectables(root) do
 			if other ~= from and not other:IsDescendantOf(from) then
 				local offset = centre(other) - at
