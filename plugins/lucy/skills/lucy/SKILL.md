@@ -117,6 +117,9 @@ they are exact; this page only says where things are and what agents get wrong.
    - A panel that keeps focus inside it: a Dialog or Sheet, or
      `Lucy.useFocusScope`. Back on B: `Lucy.useBackHandler`.
    - Where focus starts: `defaultFocus` on the scene, sheet or dialog.
+   - What has focus now, for a binding: `app.input:focusRef()` (a tracked
+     getter), never your own `SelectedObject` listener. Focus on something
+     hidden is let go by Lucy; don't poll for it.
    - Arrows that change a value (a slider, a stepper): a component with a
      `nudge` method, as Slider and Number Field have.
    If none of these fits, the gap belongs in Lucy: add it there (with a spec

@@ -18,6 +18,14 @@
 		navigating with keyboard or gamepad, like CSS :focus-visible. It also
 		scrolls any ScrollingFrame above it to show it (Core/Scroll).
 
+	Following focus:
+		app.input:focusRef() is a getter bindings can read: what has focus now (an
+		instance, or nil), tracked, so a computed or a getter prop follows it. Games read
+		it instead of following GuiService.SelectedObject themselves. Focus on something
+		that is hidden (its panel closed under it) is let go a moment later
+		(dropHidden, checked a few times a second while navigating), so the gamepad is
+		never left on nothing.
+
 	Tiles:
 		A tile (an Item with focus = "tile", Core/Tiles) is one stop until the player steps
 		into it: focus that lands inside a closed tile goes to the tile, and selectables()
@@ -64,11 +72,13 @@
 
 local GuiService = game:GetService("GuiService")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local Adaptive = require(script.Parent.Adaptive)
 local Element = require(script.Parent.Element)
 local Maid = require(script.Parent.Maid)
+local Reactive = require(script.Parent.Reactive)
 local Scroll = require(script.Parent.Scroll)
 local Tiles = require(script.Parent.Tiles)
 
@@ -221,6 +231,7 @@ function InputManager.new(app: any, options: { [string]: any }?): InputManager
 		_stick = Vector2.zero,
 		_backKeys = (opts.backKeys or InputManager.backKeys) :: { Enum.KeyCode },
 		_lastFocused = nil :: GuiObject?,
+		_focusRef = Reactive.ref(nil :: GuiObject?),
 	}, InputManager)
 	self:_publish()
 
@@ -294,6 +305,7 @@ function InputManager.markFocus(self: InputManager, object: GuiObject?)
 		previous:RemoveTag("ui-focus-visible")
 	end
 	self._focused = object
+	self._focusRef(object)
 	if object then
 		self._lastFocused = object
 	end
@@ -305,6 +317,14 @@ function InputManager.markFocus(self: InputManager, object: GuiObject?)
 	-- Tiles: a closed one takes focus that lands inside it, an open one closes when focus leaves
 	if object ~= previous then
 		Tiles.landed(self, object, previous)
+	end
+end
+
+-- What has focus, for bindings: a tracked getter (read only)
+function InputManager.focusRef(self: InputManager): () -> GuiObject?
+	local ref = self._focusRef
+	return function(): GuiObject?
+		return ref()
 	end
 end
 
@@ -378,6 +398,14 @@ local function isShown(object: GuiObject): boolean
 		node = node.Parent
 	end
 	return true
+end
+
+-- Lets go of focus on something no longer shown (its panel closed under it)
+function InputManager.dropHidden(self: InputManager)
+	local focused = self._focused
+	if focused and (not focused.Parent or not isShown(focused)) then
+		self:focus(nil)
+	end
 end
 
 -- `target` (an object, a handle or a function returning either) if it can take
@@ -690,6 +718,19 @@ function InputManager._watch(self: InputManager)
 
 	maid:give(GuiService:GetPropertyChangedSignal("SelectedObject"):Connect(function()
 		self:markFocus(GuiService.SelectedObject)
+	end))
+
+	-- A panel closed under the focus: let go of it a moment later (a few checks a second)
+	local untilCheck = 0
+	maid:give(RunService.Heartbeat:Connect(function(dt: number)
+		untilCheck -= dt
+		if untilCheck > 0 then
+			return
+		end
+		untilCheck = 0.2
+		if self._focused and self:isNavigating() then
+			self:dropHidden()
+		end
 	end))
 
 	maid:give(GuiService.MenuClosed:Connect(function()

@@ -122,6 +122,42 @@ return function()
 			expect(button:HasTag("ui-focus-visible")).to.equal(false)
 		end)
 
+		it("tells bindings what has focus, through focusRef", function()
+			local Reactive = require(script.Parent.Reactive)
+			local gui = Harness.mount(app)
+			local button = Instance.new("TextButton")
+			button.Parent = gui
+			local focused = app.input:focusRef()
+			expect(focused()).to.equal(nil)
+			-- A computed that reads it follows it
+			local onButton = Reactive.computed(function()
+				return focused() == button
+			end)
+			expect(onButton()).to.equal(false)
+			app.input:setMode("gamepad")
+			app.input:focus(button)
+			expect(focused()).to.equal(button)
+			expect(onButton()).to.equal(true)
+			app.input:focus(nil)
+			expect(focused()).to.equal(nil)
+			expect(onButton()).to.equal(false)
+		end)
+
+		it("lets go of focus on something hidden", function()
+			local gui = Harness.mount(app)
+			local panel = Instance.new("Frame")
+			panel.Parent = gui
+			local button = Instance.new("TextButton")
+			button.Parent = panel
+			app.input:setMode("gamepad")
+			app.input:focus(button)
+			app.input:dropHidden()
+			expect(app.input:focused()).to.equal(button)
+			panel.Visible = false
+			app.input:dropHidden()
+			expect(app.input:focused()).to.equal(nil)
+		end)
+
 		it("keeps a stack of focus scopes", function()
 			local a, b = Instance.new("Frame"), Instance.new("Frame")
 			local popA = app.input:pushScope({ root = a })

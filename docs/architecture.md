@@ -159,6 +159,20 @@ that returns true takes them (a Slider changes its value), repeating faster whil
 held, and hears `release()` when let go. Otherwise arrows move focus. Focus that
 Lucy moves (Tab, arrows) scrolls into view.
 
+To follow what has focus, read `app.input:focusRef()`: a getter that a computed
+or a getter prop tracks, holding the focused instance or nil. Don't follow
+`GuiService.SelectedObject` in a game. When the focused control is hidden (its
+panel closed under it), focus is let go a moment later, so the gamepad is never
+left on nothing.
+
+```luau
+local focused = app.input:focusRef()
+local inCard = Lucy.computed(function()
+    local object = focused()
+    return object ~= nil and object:IsDescendantOf(card)
+end)
+```
+
 A tile (an Item with `focus = "tile"`) is one stop until the player steps into
 it. Each time focus moves, the input manager hands it to the tiles: focus that
 lands inside a closed tile goes to the tile, an open tile closes when focus
