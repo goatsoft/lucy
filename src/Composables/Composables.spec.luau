@@ -229,6 +229,17 @@ return function()
 	end)
 
 	describe("useSize", function()
+		-- Layout lands a frame or more later (more under load): wait for it, up to a second
+		local function settle(check: () -> boolean)
+			local waited = 0
+			while not check() and waited < 1 do
+				waited += task.wait()
+			end
+		end
+		local function near(a: number, b: number): boolean
+			return math.abs(a - b) <= 0.5
+		end
+
 		it("follows the object's size in the units it is laid out in, without the scales above it", function()
 			local gui = Instance.new("ScreenGui")
 			gui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
@@ -242,14 +253,21 @@ return function()
 			local size = scope:run(function()
 				return Composables.useSize(frame)
 			end)
-			task.wait()
+			settle(function()
+				return near(size().X, 100)
+			end)
 			expect(size().X).to.be.near(100, 0.5)
 			expect(size().Y).to.be.near(40, 0.5)
 			frame.Size = UDim2.fromOffset(60, 30)
-			task.wait()
+			settle(function()
+				return near(size().X, 60)
+			end)
 			expect(size().X).to.be.near(60, 0.5)
+			-- A new scale changes the pixels, not the size in layout units
 			scale.Scale = 0.5
-			task.wait()
+			settle(function()
+				return near(frame.AbsoluteSize.Y, 15)
+			end)
 			expect(size().Y).to.be.near(30, 0.5)
 			scope:stop()
 			gui:Destroy()
@@ -267,8 +285,10 @@ return function()
 			local frame = Instance.new("Frame")
 			frame.Size = UDim2.fromOffset(80, 20)
 			frame.Parent = gui
-			task.wait()
 			target(frame)
+			settle(function()
+				return near(size().X, 80)
+			end)
 			expect(size().X).to.be.near(80, 0.5)
 			scope:stop()
 			gui:Destroy()
