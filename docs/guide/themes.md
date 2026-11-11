@@ -86,6 +86,8 @@ local app = Lucy.App.new({ themes = themes, theme = "midnight" })
   (`Tokens.over("$White", "$Background", 0.1)` is white at 10% over the
   background). Blends are worked out per theme, so `PrimaryHover` follows your new
   `Primary` and `Background` without changing it.
+- A gradient is a token too: `Tokens.gradient({ "$Card", "$Background" })`.
+  Name it `Gradient<Name>` and draw it with [Gradient](../components/gradient.md).
 
 ## Change fonts, corners and spacing
 

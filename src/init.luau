@@ -159,6 +159,7 @@ local Lucy = {
 	DataGrid = require(Components.DataGrid),
 	Dialog = require(Components.Dialog),
 	Effect = require(Components.Effect),
+	Gradient = require(Components.Gradient),
 	Grid = require(Components.Grid),
 	Icon = require(Components.Icon),
 	Image = require(Components.Image),

@@ -12,6 +12,7 @@
 	                                       (e.g. a white/10% border, a primary/90 hover)
 	              Tokens.mix(a, b, t)      perceptual Oklab mix, t = 0 gives a, 1 gives b
 	              Tokens.oklch(L, C, H)    a literal OKLCH colour
+	              Tokens.gradient(stops)   a ColorSequence, for Lucy.Gradient (see below)
 	            Every theme must define the same keys (Universal Styling requires it).
 
 	densities   control heights and the type scale per device class:
@@ -64,6 +65,15 @@ end
 function Tokens.onColor(fill: string, options: { min: number?, tint: string? }?)
 	local o: { min: number?, tint: string? } = options or {}
 	return { kind = "onColor", background = fill, min = o.min, tint = o.tint }
+end
+
+-- A gradient, named in a theme like any colour (Gradient<Name>) and drawn by Lucy.Gradient.
+-- stops: colours from first to last, evenly spaced, or { position, colour } pairs from 0 to 1.
+-- A colour is a "$Token", a Color3 or a derived colour (Tokens.mix, Tokens.over, ...).
+--   GradientSurface = Tokens.gradient({ "$Card", "$Background" })
+--   GradientClub = Tokens.gradient({ { 0, "$Purple900" }, { 0.6, "$Slate950" }, { 1, "$Slate950" } })
+function Tokens.gradient(stops: { any })
+	return { kind = "gradient", stops = stops }
 end
 
 function Tokens.oklch(L: number, C: number, H: number): Color3
@@ -222,6 +232,10 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		MedalGold = "$Amber500",
 		MedalSilver = "$Slate400",
 		MedalBronze = "$Orange700",
+		-- Gradients (Lucy.Gradient): a surface that deepens down to the background, and the
+		-- primary colour lit at the top
+		GradientSurface = Tokens.gradient({ "$Card", Tokens.mix("$Card", "$Muted", 0.6) }),
+		GradientPrimary = Tokens.gradient({ Tokens.mix("$Primary", "$White", 0.2), "$Primary" }),
 	}
 
 	local dark = {
@@ -274,6 +288,10 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		MedalGold = "$Yellow400",
 		MedalSilver = "$Slate300",
 		MedalBronze = "$Orange400",
+		-- Gradients (Lucy.Gradient): a surface that deepens down to the background, and the
+		-- primary colour lit at the top
+		GradientSurface = Tokens.gradient({ "$Card", "$Background" }),
+		GradientPrimary = Tokens.gradient({ Tokens.mix("$Primary", "$White", 0.2), "$Primary" }),
 	}
 
 	return { light = light, dark = dark }
@@ -311,6 +329,29 @@ function Tokens.compute(derived: { [string]: any }, resolve: (string) -> any): a
 			error("[Lucy] readable needs three colours", 0)
 		end
 		return Oklab.readable(background, a, b, derived.min)
+	end
+	if kind == "gradient" then
+		local stops = derived.stops
+		local count = #stops
+		if count < 2 then
+			error("[Lucy] a gradient needs two colours or more", 0)
+		end
+		local keys = table.create(count)
+		for i, stop in stops do
+			local position, value = (i - 1) / (count - 1), stop
+			if type(stop) == "table" and stop.kind == nil then
+				position, value = stop[1], stop[2]
+			end
+			local colour = if isAlias(value)
+				then resolve(value)
+				elseif type(value) == "table" then Tokens.compute(value, resolve)
+				else value
+			if typeof(colour) ~= "Color3" then
+				error(`[Lucy] a gradient's stops are colours, got {typeof(colour)}`, 0)
+			end
+			keys[i] = ColorSequenceKeypoint.new(math.clamp(position, 0, 1), colour)
+		end
+		return ColorSequence.new(keys)
 	end
 	if kind == "onColor" then
 		local fill = if isAlias(derived.background) then resolve(derived.background) else derived.background
