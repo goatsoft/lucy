@@ -1,6 +1,6 @@
 # 0044: Tiles, one gamepad stop per row
 
-- Status: proposed (JB asked for it, 2026-11-12)
+- Status: accepted (JB, 2026-11-12)
 - Date: 2026-11-12
 
 ## Context
