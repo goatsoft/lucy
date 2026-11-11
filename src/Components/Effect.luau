@@ -4,7 +4,7 @@
 	behind or over it. One component with the plumbing, and effect types that only draw (ADR 0039).
 
 		Effect.new({
-			type = "rays",            -- a registered type (built in: rays)
+			type = "rays",            -- a registered type (built in: rays, outline)
 			variant = "primary",      -- primary | warning | success | foreground
 			size = UDim2.fromScale(1, 1),
 			visible = true,
@@ -16,7 +16,8 @@
 	The picture fills a square stage, as big as the smaller side of its box and centred in it.
 	It plays its opening each time it is shown; a looping type keeps moving after it while
 	visible. Nothing runs while hidden, and it stops on destroy. With reduced motion
-	(Core/Preferences) the picture is simply there, still.
+	(Core/Preferences) the picture is simply there, still; `still = true` asks for that on one
+	effect (a decoration that should not move).
 
 	State keys: variant, visible. handle.stage is the square stage, handle.content the type's
 	picture, handle.running whether it is animating; a type may expose its parts on the handle.
@@ -24,6 +25,7 @@
 	A type: Effect.register(name, {
 		intro = 0.8,           -- seconds the opening takes
 		loop = true,           -- keeps running after the opening (ctx.elapsed advances)
+		fill = true,           -- the picture takes the whole box (default: a centred square)
 		defaults = { ... },    -- the type's options
 		rules = { ... },       -- its looks, by $Token
 		render = function(ctx) return instance end,
@@ -55,6 +57,7 @@ export type Context = {
 export type Definition = {
 	intro: number,
 	loop: boolean?,
+	fill: boolean?,
 	defaults: { [string]: any }?,
 	rules: { Component.Rule }?,
 	render: (ctx: Context) -> Instance,
@@ -143,8 +146,9 @@ local spec: Component.Spec = {
 			Position = UDim2.fromScale(0.5, 0.5),
 			Size = UDim2.fromScale(1, 1),
 			BackgroundTransparency = 1,
-			Element.new("UIAspectRatioConstraint", { AspectRatio = 1 }),
 			content,
+			-- A square, unless the type fills its box (an outline follows the box's shape)
+			if definition.fill then nil else Element.new("UIAspectRatioConstraint", { AspectRatio = 1 }),
 		})
 		h.stage = stage
 
@@ -161,7 +165,8 @@ local spec: Component.Spec = {
 		local function start()
 			halt()
 			intro(0)
-			if Preferences.reducedMotion() then
+			-- still = true: the picture with its opening done and nothing moving, as with reduced motion
+			if p.still == true or Preferences.reducedMotion() then
 				intro(length) -- simply there, still
 				return
 			end
@@ -223,6 +228,7 @@ end
 
 -- Built-in types
 Effect.register("rays", require(script.Parent.Effects.Rays))
+Effect.register("outline", require(script.Parent.Effects.Outline))
 
 -- The shared textures (white, shape in the alpha) for effect types to draw with: streak, glow
 Effect.textures = require(script.Parent.Effects.Textures)

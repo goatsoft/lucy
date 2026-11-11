@@ -7,7 +7,7 @@ description: An animated celebration behind a reward or a level up, in types you
 
 A little animated picture that celebrates something: a reward landing, a level
 up, a prize. Put it behind (or over) the thing it celebrates. Lucy comes with
-`rays`, and you can add your own types.
+`rays` and `outline`, and you can add your own types.
 
 <!-- preview -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-effect-light.webp" alt="Effect example" loading="lazy"><img class="example-dark" src="/images/examples/components-effect-dark.webp" alt="Effect example" loading="lazy"></figure>
@@ -39,10 +39,11 @@ reduced motion, the picture is simply there, still.
 
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
-| `type` | string | | | Which effect: `rays`, or a type you registered |
+| `type` | string | | | Which effect: `rays`, `outline`, or a type you registered |
 | `variant` | string | `"primary"` | yes | The colours: `primary`, `warning`, `success` or `foreground` |
 | `size` | UDim2 | the parent's size | | The effect's box |
 | `visible` | boolean | `true` | yes | Shows or hides it; showing it plays the opening again |
+| `still` | boolean | `false` | | Draws the picture with its opening done and nothing moving, for a decoration that should not animate |
 
 Each type takes its own options as props too. It also takes the
 [props every component takes](index.md#using-a-component).
@@ -83,6 +84,43 @@ and `handle.pulse` (the UIScale it swells by). Each ray carries
 (from 1 at the back) and `ui-effect-rays-front` on the front layer; the glow
 carries `ui-effect-rays-core`, and its centre `ui-effect-rays-hot`, for your own
 styling.
+
+## Outline
+
+Light that follows the shape of what it is behind: a button, a card, a plate. A
+soft glow sits round the whole edge, a steady rim runs along it, and a bright
+stretch of light runs round and round the rim. It fades in, then keeps running,
+and the glow breathes a little. Use it to call the player to one thing: a reward
+to claim, the better of two offers.
+
+<!-- preview -->
+```luau
+local box = Lucy.new("Frame", {
+    Size = UDim2.fromOffset(220, 48),
+    BackgroundTransparency = 1,
+    Parent = parent,
+})
+Lucy.Button.new({ text = "Claim reward", size = UDim2.fromScale(1, 1), Parent = box })
+Lucy.Effect.new({ type = "outline", variant = "warning", radius = 8, Parent = box })
+```
+
+Unlike rays, the outline fills its whole box, whatever its shape, so give it
+the box of the thing it lights. The light is drawn just outside the box's edge:
+leave it a few pixels of room, and set `radius` to the corner radius of the
+thing it lights.
+
+| Option | Type | Default | What it does |
+|---|---|---|---|
+| `radius` | number | `8` | The corner radius, in pixels |
+| `thickness` | number | `2` | The rim, in pixels |
+| `speed` | number | `140` | Degrees a second the light runs (`0`: no running light) |
+| `glow` | boolean | `true` | The soft glow round the edge |
+| `pulse` | boolean | `true` | The glow breathes |
+
+The parts are on the handle: `handle.glow`, `handle.rim` and `handle.light`
+(the three frames) and `handle.sweep` (the UIGradient that turns). They carry
+`ui-effect-outline-glow`, `ui-effect-outline-rim` and `ui-effect-outline-light`,
+and each `ui-effect-outline-<variant>`, for your own styling.
 
 ## Your own types
 
