@@ -151,8 +151,9 @@ function Tiles.landed(input: any, object: GuiObject?, previous: GuiObject?)
 		local first = (actions and input:selectables(actions)[1]) or input:selectables(object)[1]
 		object.NextSelectionLeft = first
 		object.NextSelectionRight = first
-		object.NextSelectionUp = Tiles.toward(input, object, Vector2.new(0, -1))
-		object.NextSelectionDown = Tiles.toward(input, object, Vector2.new(0, 1))
+		-- nil (no stop that way) clears the engine's link; the definitions type these as never nil
+		object.NextSelectionUp = Tiles.toward(input, object, Vector2.new(0, -1)) :: any
+		object.NextSelectionDown = Tiles.toward(input, object, Vector2.new(0, 1)) :: any
 	end
 end
 

@@ -283,8 +283,8 @@ local spec: Component.Spec = {
 				end,
 				["ui-selected"] = h:ref("selected"),
 				["ui-disabled"] = disabled,
-				[Tiles.TAG] = tile,
-				[Tiles.OPEN] = entered,
+				[Tiles.TAG :: any] = tile,
+				[Tiles.OPEN :: any] = entered,
 			},
 			Element.new("UIListLayout", {
 				SortOrder = Enum.SortOrder.LayoutOrder,

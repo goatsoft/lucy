@@ -101,6 +101,7 @@ export type InputManager = typeof(setmetatable(
 		_stick: Vector2,
 		_backKeys: { Enum.KeyCode },
 		_lastFocused: GuiObject?,
+		_focusRef: Reactive.Ref<GuiObject?>,
 	},
 	InputManager
 ))

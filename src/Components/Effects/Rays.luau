@@ -88,6 +88,7 @@ end
 return {
 	intro = FAN_STAGGER + LAYER_STAGGER + FAN_SECONDS,
 	loop = true,
+	fill = false, -- a centred square
 	defaults = { count = 12, layers = 3, spin = 18, width = 0.28, core = true, pulse = true },
 	rules = rules,
 	render = function(ctx: any): Instance
