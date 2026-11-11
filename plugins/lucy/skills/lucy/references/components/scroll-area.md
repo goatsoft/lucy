@@ -32,6 +32,7 @@ Lucy.ScrollArea.new({
 | `scrollbar` | string | `"hover"` | | When the scroll bar shows, see [Scroll bar](#scroll-bar) |
 | `hideDelay` | number | `0.6` | | Seconds the bar stays after scrolling stops |
 | `fade` | boolean or string | `true` | | Fade the edges there is more to scroll past: `true`, `false` or `"content"`, see [Edge fades](#edge-fades) |
+| `fadeSize` | number | `16` (`ScrollArea.fadeSize`) | | How far an edge fade reaches into the area, in pixels |
 | `children` | table | | | Instances, handles or functions to put in it |
 | `visible` | boolean | `true` | yes | Shows or hides the area |
 

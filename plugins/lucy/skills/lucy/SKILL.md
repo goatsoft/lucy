@@ -104,6 +104,23 @@ they are exact; this page only says where things are and what agents get wrong.
 13. **Keep HUDs in the safe area**: `ignoreGuiInset = false` on the scene and
    `Enum.ScreenInsets.CoreUISafeInsets` on `scene.gui`; see
    [Build screens with scenes](references/guide/scenes.md).
+14. **Never hand-write focus or gamepad navigation.** Lucy owns it: no
+   `NextSelectionUp/Down/Left/Right`, no `GuiService.SelectedObject`
+   listeners, no `SelectionGroup`, no tables of "lines" or "rows" to step
+   through, no custom back handling for B. Use what Lucy has:
+   - A list whose rows hold several controls (an inventory with WEAR and
+     colours, a shop row with BUY and PREVIEW): `Lucy.Item.new({ focus =
+     "tile", actions = {...}, children = {...} })`. Each row is one stop, A
+     steps in, B steps out. Extra controls go in `children` (under the text),
+     inside the row, not in a frame beside it. See
+     [Item: one stop per row](references/components/item.md#one-stop-per-row).
+   - A panel that keeps focus inside it: a Dialog or Sheet, or
+     `Lucy.useFocusScope`. Back on B: `Lucy.useBackHandler`.
+   - Where focus starts: `defaultFocus` on the scene, sheet or dialog.
+   - Arrows that change a value (a slider, a stepper): a component with a
+     `nudge` method, as Slider and Number Field have.
+   If none of these fits, the gap belongs in Lucy: add it there (with a spec
+   and docs) rather than working round it in the game.
 
 ## Check your work
 
@@ -116,6 +133,8 @@ they are exact; this page only says where things are and what agents get wrong.
   [Devtools](references/reference/devtools.md).
 - Styles apply a few frames after a change; read styled values with
   `instance:GetStyled("BackgroundColor3")`, not the plain property.
+- Walk every list with the keys or a gamepad (the `lucy-debug` skill shows
+  how): each row should be one stop, and nothing should be out of reach.
 
 ## Components
 

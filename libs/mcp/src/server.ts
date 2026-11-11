@@ -13,7 +13,9 @@ const INSTRUCTIONS = `Lucy's tools look at and drive a running Lucy UI in Roblox
 Start with \`tree\` to see the components and their ids, then \`press\`, \`focus\` and \`set\` to act as a player would,
 and \`state\` to check what changed. Add \`screenshot: true\` to see the result.
 The game's UI is reachable while it runs in Play (start it with Studio's start_stop_play); tools then run on the client by themselves.
-In edit mode, \`preview\` shows a single story to look at and press.`
+In edit mode, \`preview\` shows a single story to look at and press.
+Gamepad navigation is Lucy's: a row made a tile (an Item with focus = "tile") is one stop, \`press\` on it steps in (its state shows entered) and B steps out.
+Don't fix navigation in a game with NextSelection properties or SelectedObject listeners; if Lucy lacks something, it belongs in Lucy.`
 
 export interface ServerInfo {
   name: string

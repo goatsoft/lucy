@@ -159,6 +159,15 @@ that returns true takes them (a Slider changes its value), repeating faster whil
 held, and hears `release()` when let go. Otherwise arrows move focus. Focus that
 Lucy moves (Tab, arrows) scrolls into view.
 
+A tile (an Item with `focus = "tile"`) is one stop until the player steps into
+it. Each time focus moves, the input manager hands it to the tiles: focus that
+lands inside a closed tile goes to the tile, an open tile closes when focus
+leaves it, and a closed tile's `NextSelection` links point left and right into it
+and up and down at the nearest stops around it. `selectables` skips what is in a
+closed tile, so Tab, arrows and `defaultFocus` see the tile only. Stepping in
+makes the tile a `SelectionGroup` that stops at its edges, a focus scope and a
+back handler, so the gamepad, the keys and B all stay with it.
+
 Enter calls `app.input:activate()`. A focused component with `click` or `toggle`
 gets that call. A focused part with an `[Lucy.on "Activated"]` handler (a
 Select row, a radio option, a sortable header, your own buttons built with

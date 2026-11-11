@@ -57,6 +57,10 @@ Everything that can be pressed can be reached without a mouse or touch:
   (`app.selectionRing`).
 - A modal or menu keeps focus inside it until it closes, then gives it back to
   where it was.
+- A row made a tile ([Item](../components/item.md#one-stop-per-row) with
+  `focus = "tile"`) is one stop: up and down go from row to row, A or left or
+  right steps in, the D-pad then stays on the row's controls, and B steps back
+  out.
 - Each screen starts focus on its `defaultFocus`, or on the first thing that can
   take focus. See [Scenes](../guide/scenes.md).
 

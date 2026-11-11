@@ -41,6 +41,10 @@ Give it `onClick` and the whole row can be clicked, tapped or selected with a
 gamepad, like a [Pressable](pressable.md). Without it the row is plain, and
 only its actions take input.
 
+Give it `focus = "tile"` and a gamepad or the keys treat the whole row as one
+stop: up and down go from row to row, A steps into the row, and B steps back
+out. See [One stop per row](#one-stop-per-row).
+
 ## Props
 
 | Prop | Type | Default | State key | What it does |
@@ -54,7 +58,10 @@ only its actions take input.
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `media` | Instance or handle | | | What goes before the text: an icon, a cover or an [Avatar](avatar.md) |
 | `actions` | table | | | Instances or handles after the text, in a row |
-| `onClick` | function | | | Makes the whole row clickable; called with the handle |
+| `children` | slot | | | What goes under the text: a row of colours, a progress bar. A [Slot](slot.md): strings, handles, instances or builders |
+| `focus` | string | `"controls"` | | `controls` (a gamepad stops on each control in the row) or `tile` (the row is one stop, its controls wait inside it) |
+| `entered` | boolean | `false` | yes | A tile the player has stepped into. Set by `enter` and `leave` |
+| `onClick` | function | | | Makes the whole row clickable; called with the handle. On a tile, a click or tap calls it and A steps in |
 
 It also takes the [props every component takes](index.md#using-a-component).
 
@@ -63,12 +70,19 @@ whatever width is left between the media and the actions, and wraps.
 
 ## Methods and events
 
-Only when the row has `onClick`:
+Only when the row has `onClick`, or is a tile:
 
 | Name | What it does |
 |---|---|
 | `item.Activated` | A signal that fires on every click |
 | `item:click()` | Runs a click from code, as if the player clicked |
+
+Only on a tile:
+
+| Name | What it does |
+|---|---|
+| `item:enter(control?)` | Steps in, onto `control` or the row's first control |
+| `item:leave()` | Steps back out, focus on the row |
 
 Its parts are on the handle too: `item.media`, `item.content`, `item.title`,
 `item.description` and `item.actions`.
@@ -119,6 +133,63 @@ Lucy.Item.new({
 ```
 
 Put a long list in a [Scroll Area](scroll-area.md).
+
+## One stop per row
+
+A row with several controls, such as a shirt with WEAR and a button for each
+colour, is hard to move through with a gamepad: the D-pad stops on every button
+and the list jumps around. Make each row a tile instead. Its colours go in
+`children`, under the text, so the row's ring goes round them:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-item-4-light.webp" alt="Item example" loading="lazy"><img class="example-dark" src="/images/examples/components-item-4-dark.webp" alt="Item example" loading="lazy"></figure>
+
+```luau
+local function shirt(name, colours)
+    local buttons = {}
+    for _, colour in colours do
+        table.insert(buttons, Lucy.Button.new({ text = colour, size = "sm", variant = "outline" }))
+    end
+    return Lucy.Item.new({
+        title = name,
+        description = "In your collection",
+        media = Lucy.Icon.new({ icon = "lucide-extended:sparkles-filled", size = "lg" }),
+        actions = { Lucy.Button.new({ text = "Wear", size = "sm", variant = "secondary" }) },
+        children = {
+            Lucy.Stack.new({ direction = "horizontal", gap = "Space2", wrap = true, children = buttons }),
+        },
+        focus = "tile",
+        variant = "outline",
+    })
+end
+
+Lucy.Stack.new({
+    gap = "Space2",
+    size = UDim2.fromOffset(420, 0),
+    automaticSize = Enum.AutomaticSize.Y,
+    children = {
+        shirt("Club tee", { "White", "Cyan", "Pink" }),
+        shirt("Glow jacket", { "Lime", "Violet" }),
+    },
+    Parent = parent,
+})
+```
+
+On a gamepad or the keys:
+
+- Up and down go from row to row, and a [Scroll Area](scroll-area.md) around
+  the list scrolls to follow. Nothing inside a row stops them.
+- A, Enter, or left or right on a row steps into it, onto its first control.
+- Inside, the D-pad and keys move only between the row's controls, and A
+  presses one.
+- B or Backspace steps back out onto the row. Moving focus anywhere else does
+  too.
+
+The mouse and touch are left alone: a click on Wear wears the shirt straight
+away. A row the player is inside gets a ring in the theme's `Ring` colour.
+
+No code is needed in the game for any of this: don't point `NextSelection`
+properties or follow `GuiService.SelectedObject` to make rows work.
 
 ## Preview
 

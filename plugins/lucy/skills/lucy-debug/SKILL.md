@@ -63,6 +63,26 @@ after, and the screenshot.
 - `screen_capture` images are larger than the viewport, so positions in a
   screenshot are not screen positions.
 
+## Checking gamepad navigation
+
+`focus` (the MCP tool, or `Devtools.focus(id)`) lands focus where a gamepad
+would and reports what is focused and what it sits in. To walk a list:
+
+- Focus a row. A tile (`Item` with `focus = "tile"`) is one stop: focusing a
+  control inside a closed tile lands on the tile (the focused id is the row's).
+- `press` the tile (A) to step in: its `entered` state turns true and focus
+  moves onto its first control. `focus` another control in it to move inside.
+- Back (B) steps out: `user_keyboard_input` with Backspace, or check
+  `entered` turns false after the game's back.
+- The links the D-pad follows are the focused object's `NextSelectionUp`,
+  `Down`, `Left` and `Right`, which Lucy points; read them with `execute_luau`
+  on the Client from `GuiService.SelectedObject` if a move goes the wrong way.
+
+If a game sets `NextSelection` properties or listens to
+`GuiService.SelectedObject` itself to make a list work, that is a gap Lucy
+should fill (see rule 14 in the `lucy` skill), not something to patch in the
+game.
+
 ## Ids
 
 Find ids in `Devtools.tree()`. Components without an `id` get one like

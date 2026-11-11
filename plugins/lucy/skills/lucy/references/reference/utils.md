@@ -65,16 +65,20 @@ You can also use it directly in scenes and menus to scroll to specific items.
 ### Scroll.reveal
 
 Scrolls every `ScrollingFrame` ancestor above `object` until the object is fully
-visible inside each frame's viewport:
+visible inside each frame's viewport, or only the one you name:
 
 ```luau
-Lucy.Scroll.reveal(object, margin?)
+Lucy.Scroll.reveal(object, margin?, only?)
 ```
 
 | Argument | Type | Default | What it is |
 |---|---|---|---|
 | `object` | `GuiObject` | required | The target element to reveal |
 | `margin` | `number?` | `8` | Extra padding in pixels around the element |
+| `only` | `ScrollingFrame?` | every ancestor | Scroll just this frame and leave the ones around it alone |
+
+Pass `only` when a row scrolls inside a page: a tab bar shows its picked tab in
+its own scroller, and the page the bar sits in stays where the player scrolled it.
 
 `CanvasPosition`, `AbsolutePosition` and `AbsoluteWindowSize` are in screen
 pixels (after `UIScale`), so `reveal` works accurately across all screen densities

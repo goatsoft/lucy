@@ -82,6 +82,16 @@ the thumbstick and D-pad on a gamepad, Backspace or B to go back. Every control
 you can click should be reachable, and back should always lead somewhere. See
 [Build screens with scenes](scenes.md).
 
+## Make each row one stop
+
+In a list where each row has several buttons (an inventory with Wear and a
+button per colour, a shop with Buy and Preview), the D-pad stops on every
+button and the list is slow to get through. Make each row a tile with
+`focus = "tile"` on its [Item](../components/item.md#one-stop-per-row): up
+and down then go row by row, A steps into a row and B steps back out. Lucy does
+the navigation: never set `NextSelection` properties or follow
+`GuiService.SelectedObject` yourself to get this.
+
 ## Let controls size themselves
 
 Players can make text larger in the Roblox menu, and Roblox then draws all text
