@@ -23,8 +23,8 @@
 		instance, or nil), tracked, so a computed or a getter prop follows it. Games read
 		it instead of following GuiService.SelectedObject themselves. Focus on something
 		that is hidden (its panel closed under it) is let go a moment later
-		(dropHidden, checked a few times a second while navigating), so the gamepad is
-		never left on nothing.
+		(dropHidden, checked a few times a second), so the gamepad is never left on
+		nothing and a hidden selection never holds the keys.
 
 	Tiles:
 		A tile (an Item with focus = "tile", Core/Tiles) is one stop until the player steps
@@ -720,7 +720,9 @@ function InputManager._watch(self: InputManager)
 		self:markFocus(GuiService.SelectedObject)
 	end))
 
-	-- A panel closed under the focus: let go of it a moment later (a few checks a second)
+	-- A panel closed under the focus: let go of it a moment later (a few checks a second). In
+	-- any input mode: a hidden selection still keeps the keys for UI navigation, so the character
+	-- would stand still
 	local untilCheck = 0
 	maid:give(RunService.Heartbeat:Connect(function(dt: number)
 		untilCheck -= dt
@@ -728,7 +730,7 @@ function InputManager._watch(self: InputManager)
 			return
 		end
 		untilCheck = 0.2
-		if self._focused and self:isNavigating() then
+		if self._focused then
 			self:dropHidden()
 		end
 	end))
