@@ -324,6 +324,39 @@ function Composables.useFocusZone(app: any, root: Reactive.MaybeRef<GuiObject?>,
 end
 
 --[[
+	Holds the gamepad's selection on `target` while `active` is true, so the D-pad and the left
+	stick reach its nudge (InputManager.nudge) instead of moving the selection away: a grabbed
+	clip the arrows slide, a value being changed. While active, each of target's
+	NextSelection* points at target itself (the engine keeps the selection where it is; a
+	SelectionBehavior of Stop holds only at a SelectionGroup's edge); after, they are cleared.
+
+		Lucy.useHoldArrows(clip, grabbed)    -- target: a GuiObject, ref or getter
+
+	Games call this rather than setting NextSelection* themselves.
+]]
+local ARROW_LINKS = { "NextSelectionLeft", "NextSelectionRight", "NextSelectionUp", "NextSelectionDown" }
+
+function Composables.useHoldArrows(target: Reactive.MaybeRef<GuiObject?>, active: Reactive.MaybeRef<boolean>)
+	requireOwner("useHoldArrows")
+	Reactive.watchEffect(function(onCleanup)
+		local gui: GuiObject? = Reactive.toValue(target) :: any
+		if not gui or not Reactive.toValue(active) then
+			return
+		end
+		for _, link in ARROW_LINKS do
+			(gui :: any)[link] = gui
+		end
+		onCleanup(function()
+			for _, link in ARROW_LINKS do
+				if (gui :: any)[link] == gui then
+					(gui :: any)[link] = nil
+				end
+			end
+		end)
+	end)
+end
+
+--[[
 	Maps the moments components report (activate, toggle, select, open, close) to
 	the game's own functions, for components made inside this owner. Lucy plays no
 	audio. The closest map that names an event wins and `false` silences it; a map

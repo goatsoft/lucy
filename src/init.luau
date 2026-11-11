@@ -100,6 +100,7 @@ local Lucy = {
 	useBackHandler = Composables.useBackHandler,
 	useFocusScope = Composables.useFocusScope,
 	useFocusZone = Composables.useFocusZone,
+	useHoldArrows = Composables.useHoldArrows,
 	useResponsive = Composables.useResponsive,
 	useUiSound = Composables.useUiSound,
 	useTable = Composables.useTable,

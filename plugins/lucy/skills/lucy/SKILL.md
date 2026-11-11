@@ -127,7 +127,12 @@ they are exact; this page only says where things are and what agents get wrong.
      getter), never your own `SelectedObject` listener. Focus on something
      hidden is let go by Lucy; don't poll for it.
    - Arrows that change a value (a slider, a stepper): a component with a
-     `nudge` method, as Slider and Number Field have.
+     `nudge` method, as Slider and Number Field have. When the arrows
+     belong to it only in a mode (a grabbed clip), `Lucy.useHoldArrows(target,
+     active)` keeps the gamepad selection on it meanwhile; see
+     [useHoldArrows](references/reference/composables/use-hold-arrows.md).
+   - A drag with the mouse or a finger: `Lucy.useDrag`, never your own
+     `UserInputService` listeners.
    If none of these fits, the gap belongs in Lucy: add it there (with a spec
    and docs) rather than working round it in the game.
 
@@ -226,6 +231,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [useDrag](references/reference/composables/use-drag.md): Follows a mouse or touch drag starting from a target GUI element.
 - [useFocusScope](references/reference/composables/use-focus-scope.md): Traps keyboard and gamepad focus inside a container while active.
 - [useFocusZone](references/reference/composables/use-focus-zone.md): A group of HUD controls nothing selects until the player steps in with a key; B steps out.
+- [useHoldArrows](references/reference/composables/use-hold-arrows.md): Keeps the gamepad's selection on a control while it takes the arrows itself, such as a grabbed clip.
 - [useMetric](references/reference/composables/use-metric.md): Computes a control size token in pixels following density.
 - [useRequest](references/reference/composables/use-request.md): Asks the server with app.server:call and keeps the answer, the loading flag and any error as state, asking again when its arguments change.
 - [useResponsive](references/reference/composables/use-responsive.md): Returns a getter for a responsive value keyed by device, input mode, breakpoint or orientation.
