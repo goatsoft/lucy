@@ -63,6 +63,10 @@ they are exact; this page only says where things are and what agents get wrong.
    fill takes the fill's `*Foreground` token (`$Primary` with
    `$PrimaryForeground`), never `$White` or `$Black`; a new fill colour gets
    its text from `Lucy.Tokens.onColor`, which keeps it to WCAG AA.
+   Gradients are theme tokens too: draw one with
+   `Lucy.Gradient.new({ gradient = "Primary", Parent = frame })`, and add a
+   new one to the theme with `Lucy.Tokens.gradient`. Never make a `UIGradient`
+   by hand with fixed colours. See [Gradient](references/components/gradient.md).
 3. **Bind, don't watch.** A property that follows state gets a ref or a getter.
    `Lucy.watch` and `Lucy.watchEffect` are only for side effects (tweens,
    sounds, calling game code), never to set a property a binding could own.

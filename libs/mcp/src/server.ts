@@ -16,7 +16,8 @@ The game's UI is reachable while it runs in Play (start it with Studio's start_s
 In edit mode, \`preview\` shows a single story to look at and press.
 Gamepad navigation is Lucy's: a row made a tile (an Item with focus = "tile") is one stop, \`press\` on it steps in (its state shows entered) and B steps out.
 A HUD group nothing selects until a key steps in (a player card, cheer buttons) is a focus zone, \`Lucy.useFocusZone\`; B steps out.
-Don't fix navigation in a game with NextSelection properties or SelectedObject listeners; if Lucy lacks something, it belongs in Lucy.`
+Don't fix navigation in a game with NextSelection properties or SelectedObject listeners; if Lucy lacks something, it belongs in Lucy.
+Looks come from the theme: colours are \`$Token\` style values, and gradients are tokens drawn by \`Lucy.Gradient\` (\`gradient = "Primary"\`), never a hand-made UIGradient with fixed colours.`
 
 export interface ServerInfo {
   name: string
