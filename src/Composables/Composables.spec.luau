@@ -186,7 +186,11 @@ return function()
 			local scope = Reactive.effectScope(true)
 			local zone
 			scope:run(function()
-				zone = Composables.useFocusZone(app, root, { name = "specZoneBack", keys = { [Enum.KeyCode.DPadUp] = "first" } })
+				zone = Composables.useFocusZone(
+					app,
+					root,
+					{ name = "specZoneBack", keys = { [Enum.KeyCode.DPadUp] = "first" } }
+				)
 			end)
 			app.input:setMode("gamepad")
 			local scopes = #app.input._scopes

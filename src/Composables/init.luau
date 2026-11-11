@@ -173,9 +173,14 @@ export type FocusZone = {
 	leave: () -> (),
 }
 
-local EDGES = { "SelectionBehaviorUp", "SelectionBehaviorDown", "SelectionBehaviorLeft", "SelectionBehaviorRight" }
+local EDGES =
+	{ "SelectionBehaviorUp", "SelectionBehaviorDown", "SelectionBehaviorLeft", "SelectionBehaviorRight" }
 
-function Composables.useFocusZone(app: any, root: Reactive.MaybeRef<GuiObject?>, options: { [string]: any }): FocusZone
+function Composables.useFocusZone(
+	app: any,
+	root: Reactive.MaybeRef<GuiObject?>,
+	options: { [string]: any }
+): FocusZone
 	requireOwner("useFocusZone")
 	local name = options.name
 	if type(name) ~= "string" or name == "" then
