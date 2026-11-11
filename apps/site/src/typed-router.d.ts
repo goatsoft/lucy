@@ -157,6 +157,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/gradient': RouteRecordInfo<
+      '/docs/components/gradient',
+      '/docs/components/gradient',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/grid': RouteRecordInfo<
       '/docs/components/grid',
       '/docs/components/grid',
@@ -202,6 +209,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/components/kbd': RouteRecordInfo<
       '/docs/components/kbd',
       '/docs/components/kbd',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/leaderboard': RouteRecordInfo<
+      '/docs/components/leaderboard',
+      '/docs/components/leaderboard',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -293,6 +307,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/components/slider': RouteRecordInfo<
       '/docs/components/slider',
       '/docs/components/slider',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/slot': RouteRecordInfo<
+      '/docs/components/slot',
+      '/docs/components/slot',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -507,6 +528,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/recipes/leaderboards': RouteRecordInfo<
+      '/docs/recipes/leaderboards',
+      '/docs/recipes/leaderboards',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/recipes/pause-menu': RouteRecordInfo<
       '/docs/recipes/pause-menu',
       '/docs/recipes/pause-menu',
@@ -552,6 +580,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/reference/app': RouteRecordInfo<
       '/docs/reference/app',
       '/docs/reference/app',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/boards': RouteRecordInfo<
+      '/docs/reference/boards',
+      '/docs/reference/boards',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -605,9 +640,30 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/composables/use-focus-zone': RouteRecordInfo<
+      '/docs/reference/composables/use-focus-zone',
+      '/docs/reference/composables/use-focus-zone',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-hold-arrows': RouteRecordInfo<
+      '/docs/reference/composables/use-hold-arrows',
+      '/docs/reference/composables/use-hold-arrows',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/composables/use-metric': RouteRecordInfo<
       '/docs/reference/composables/use-metric',
       '/docs/reference/composables/use-metric',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-request': RouteRecordInfo<
+      '/docs/reference/composables/use-request',
+      '/docs/reference/composables/use-request',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -860,6 +916,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/gradient.md': {
+      routes:
+        | '/docs/components/gradient'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/grid.md': {
       routes:
         | '/docs/components/grid'
@@ -911,6 +975,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/kbd.md': {
       routes:
         | '/docs/components/kbd'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/leaderboard.md': {
+      routes:
+        | '/docs/components/leaderboard'
       views:
         | never
       pathParamNames:
@@ -1015,6 +1087,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/slider.md': {
       routes:
         | '/docs/components/slider'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/slot.md': {
+      routes:
+        | '/docs/components/slot'
       views:
         | never
       pathParamNames:
@@ -1260,6 +1340,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/recipes/leaderboards.md': {
+      routes:
+        | '/docs/recipes/leaderboards'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/recipes/pause-menu.md': {
       routes:
         | '/docs/recipes/pause-menu'
@@ -1311,6 +1399,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/app.md': {
       routes:
         | '/docs/reference/app'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/boards.md': {
+      routes:
+        | '/docs/reference/boards'
       views:
         | never
       pathParamNames:
@@ -1372,9 +1468,33 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/reference/composables/use-focus-zone.md': {
+      routes:
+        | '/docs/reference/composables/use-focus-zone'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-hold-arrows.md': {
+      routes:
+        | '/docs/reference/composables/use-hold-arrows'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/reference/composables/use-metric.md': {
       routes:
         | '/docs/reference/composables/use-metric'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-request.md': {
+      routes:
+        | '/docs/reference/composables/use-request'
       views:
         | never
       pathParamNames:

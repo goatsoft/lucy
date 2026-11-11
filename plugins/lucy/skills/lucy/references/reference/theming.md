@@ -71,6 +71,8 @@ Without a `primary`, the `p` values fall back to the base colour shades shown.
 | `DestructiveSubtleForeground` and the rest | text on a wash | on colour, in the full colour's hue | on colour, in the full colour's hue |
 | `OverlayFill`, `OverlayFillForeground`, `OverlayFillTransparency` | a see-through fill over a picture (Badge's overlay) and its words | White 85% opaque, base 950 | Black 85% opaque, White |
 | `MedalGold`, `MedalSilver`, `MedalBronze` | first, second and third place (Leaderboard) | Amber-500, Slate-400, Orange-700 | Yellow-400, Slate-300, Orange-400 |
+| `GradientSurface` | a card deepening toward the background ([Gradient](../components/gradient.md)) | Card to Card mixed 60% with Muted | Card to Background |
+| `GradientPrimary` | the primary colour, lit at the top and deepening at the bottom | Primary mixed 25% with White to Primary mixed 20% with Black | the same |
 
 **On colour** means text in the fill's own colour: its hue taken to its darkest
 (like red-950 on red) or lightest (like red-200), whichever has more contrast
@@ -127,6 +129,7 @@ fit; see [Accessibility](accessibility.md#text-size).
 | `over(fg, bg, alpha)` | `fg` at `alpha` over `bg`, as a theme value; worked out per theme |
 | `mix(a, b, t)` | an even mix of two tokens in Oklab; `t` 0 gives `a`, 1 gives `b` |
 | `onColor(fill, { min?, tint? })` | text for `fill` in its own colour, at its darkest or lightest, readable to `min` (4.5 by default); `tint` takes the hue from another token, for a pale wash; worked out per theme |
+| `gradient(stops)` | a gradient, as a theme value: colours from first to last, or `{ position, colour }` pairs; each a token, a `Color3` or a blend; worked out per theme ([Gradient](../components/gradient.md)) |
 | `readable(fill, a, b, min?)` | text for `fill`: `a` or `b`, whichever reads better, moved in lightness if needed to reach `min` (4.5 by default); worked out per theme |
 | `name(hue, shade)` | a palette token's name: `name("violet", 500)` is `"Violet500"` |
 | `primitives`, `densities`, `themes` | Lucy's own sets, to copy and change |

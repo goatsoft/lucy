@@ -165,6 +165,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [DataGrid](references/components/data-grid.md): A table the player can sort by pressing its headers.
 - [Dialog](references/components/dialog.md): A modal window, and alert dialogs that ask for a yes or no.
 - [Effect](references/components/effect.md): An animated celebration behind a reward or a level up, in types you can add to.
+- [Gradient](references/components/gradient.md): One of the theme's gradients on a frame, a panel or a button.
 - [Grid](references/components/grid.md): Rows of equal cells, such as shop items or emotes.
 - [Icon](references/components/icon.md): A small picture in the theme's colours, by name or asset id.
 - [Image](references/components/image.md): A picture from an asset id or a thumbnail.

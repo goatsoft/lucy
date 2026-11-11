@@ -14,6 +14,7 @@
     "data-grid": "A table the player can sort by pressing its headers",
     "dialog": "Modal dialog and alert dialog",
     "effect": "Animated celebrations behind a reward or level up: rays, and your own types",
+    "gradient": "One of the theme's gradients on a frame, a panel or a button",
     "grid": "Rows of equal cells",
     "heading": "A title over a description, wrapping or side by side on short screens",
     "icon": "Small picture in the theme's colours, by name or asset id",
