@@ -11,23 +11,36 @@
 			size = "md",              -- md | sm
 			selected = false,
 			disabled = false,
+			children = { swatches },  -- optional slot under the text (Slot: strings, handles,
+			                          -- instances, builders)
+			focus = "controls",       -- controls | tile (not a state key)
 			onClick = function(item) end, -- makes the whole row clickable
 			Parent = list,
 		})
+		item:enter()  item:leave()   -- a tile: step in onto its first control, step back out
 
-	State keys: title, description, variant, size, selected, disabled, visible.
+	State keys: title, description, variant, size, selected, disabled, visible, entered.
 	Parts: item.media, item.content, item.title, item.description, item.actions.
 	With onClick the row is a button (item.Activated, item:click(), Component.clickable);
 	without it, a plain frame. The text takes the width between media and actions.
+
+	focus = "tile" (Core/Tiles): the whole row is one stop for a gamepad and the keys, its
+	controls (actions, children) wait inside it. A, Enter, or left or right on it steps in
+	(entered): the D-pad and keys then stay on its controls, A presses one, B steps back out
+	onto the row. A tile is always a button; onClick, if given, runs on a click or tap, A steps
+	in. The mouse and touch reach its controls directly.
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
+local Tiles = require(script.Parent.Parent.Core.Tiles)
+local Slot = require(script.Parent.Slot)
 
 local Item = {}
 
 Item.variants = { "default", "outline", "muted" }
 Item.sizes = { "md", "sm" }
+Item.focuses = { "controls", "tile" }
 
 local ACTIVATED = Element.on("Activated")
 
@@ -90,6 +103,17 @@ Item.rules = {
 		selector = ".ui-item.ui-selected",
 		priority = SELECTED,
 		properties = { BackgroundColor3 = "$Accent", BackgroundTransparency = 0 },
+	},
+	-- A tile the player is inside: ringed, so it reads as the place the D-pad is in
+	{
+		selector = ".ui-item.ui-tile-open::UIStroke",
+		priority = SELECTED + 1,
+		properties = {
+			Color = "$Ring",
+			Thickness = "$StrokeThin",
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
+		},
 	},
 	{
 		selector = ".ui-item.ui-selected::UIStroke",
@@ -182,16 +206,20 @@ local spec: Component.Spec = {
 		selected = false,
 		disabled = false,
 		visible = true,
+		entered = false,
 	},
 	rules = Item.rules,
 	render = function(h)
 		local p: Component.Props = h.props
 		check(Item.variants, h:get("variant"), "variant")
 		check(Item.sizes, h:get("size"), "size")
+		check(Item.focuses, p.focus or "controls", "focus")
 		local app = h.app
 		local variant, size, disabled = h:ref("variant"), h:ref("size"), h:ref("disabled")
 		local description = h:ref("description")
 		local clickable = p.onClick ~= nil
+		local tile = p.focus == "tile"
+		local entered = h:ref("entered")
 
 		local title = Element.new("TextLabel", {
 			Name = "Title",
@@ -232,6 +260,8 @@ local spec: Component.Spec = {
 			body,
 		})
 		h.title, h.description, h.content = title, body, content
+		-- The slot under the text (a row of colours, a progress bar)
+		Slot.fill(content, p.children, { app = app, startOrder = 3 })
 		h.media = slot("Media", 1, p.media, false)
 		h.actions = slot("Actions", 3, p.actions, true)
 
@@ -253,6 +283,8 @@ local spec: Component.Spec = {
 				end,
 				["ui-selected"] = h:ref("selected"),
 				["ui-disabled"] = disabled,
+				[Tiles.TAG] = tile,
+				[Tiles.OPEN] = entered,
 			},
 			Element.new("UIListLayout", {
 				SortOrder = Enum.SortOrder.LayoutOrder,
@@ -266,23 +298,100 @@ local spec: Component.Spec = {
 			content,
 			h.actions,
 		}
-		if clickable then
+		if clickable or tile then
 			props.Text = ""
 			props.AutoButtonColor = false
 			props.Interactable = enabled
-			props.Selectable = enabled
+			props.Selectable = function(): boolean
+				-- An open tile is not a stop itself: its controls are
+				return enabled() and not entered()
+			end
+			if tile then
+				-- Open, the gamepad stays inside (the engine's own trap, as a modal Dialog's)
+				local function edge(): Enum.SelectionBehavior
+					return if entered() then Enum.SelectionBehavior.Stop else Enum.SelectionBehavior.Escape
+				end
+				props.SelectionGroup = entered
+				props.SelectionBehaviorUp = edge
+				props.SelectionBehaviorDown = edge
+				props.SelectionBehaviorLeft = edge
+				props.SelectionBehaviorRight = edge
+			end
 			props[ACTIVATED] = function()
 				h:click()
 			end
 		end
-		return Element.new(if clickable then "TextButton" else "Frame", props)
+		return Element.new(if clickable or tile then "TextButton" else "Frame", props)
 	end,
 }
 
+-- A tile's way in and out (Core/Tiles): entered, its own focus scope and back handler
+local function tiled(handle: any)
+	local popScope: (() -> ())? = nil
+	local popBack: (() -> ())? = nil
+
+	-- Steps in, onto `target` (a control inside it) or its first control
+	function handle.enter(h, target: GuiObject?)
+		if h.destroyed or h:get("entered") or h:get("disabled") then
+			return
+		end
+		local input = h.app.input
+		local first = target or input:selectables(h.Instance)[1]
+		if not first then
+			return -- nothing inside to step onto
+		end
+		h:set("entered", true)
+		Tiles.opened(input, h)
+		popBack = input:pushBack(function(): boolean
+			h:leave()
+			return true
+		end)
+		popScope = input:pushScope({ root = h.Instance, defaultFocus = first, returnFocus = h.Instance })
+		if input:focused() ~= first then
+			input:focus(first)
+		end
+	end
+
+	-- Steps back out: focus goes to the tile if it was inside
+	function handle.leave(h)
+		if not h:get("entered") then
+			return
+		end
+		h:set("entered", false)
+		Tiles.closed(h.app.input, h)
+		local back, scope = popBack, popScope
+		popBack, popScope = nil, nil
+		if back then
+			back()
+		end
+		if scope then
+			scope()
+		end
+	end
+
+	-- A click or tap runs onClick; A or Enter while navigating steps in
+	local click = handle.click
+	function handle.click(h)
+		if h.app.input:isNavigating() and not h:get("entered") then
+			h:enter()
+			return
+		end
+		click(h)
+	end
+
+	handle.maid:give(function()
+		handle:leave()
+	end)
+end
+
 function Item.new(props: { [string]: any }?)
 	local handle = Component.mount(spec, props)
-	if props and props.onClick ~= nil then
+	local tile = props ~= nil and props.focus == "tile"
+	if tile or (props and props.onClick ~= nil) then
 		Component.clickable(handle)
+	end
+	if tile then
+		tiled(handle)
 	end
 	return handle
 end

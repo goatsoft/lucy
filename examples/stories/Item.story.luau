@@ -1,6 +1,6 @@
 return {
 	group = "Components",
-	description = "List rows with media, a title, a description and actions. Click a song to pick it.",
+	description = "List rows with media, a title, a description and actions. Click a song to pick it. The last row is a tile: one gamepad stop, A steps in, B steps out.",
 	width = 480,
 	controls = {
 		variant = { "outline", "default", "muted" },
@@ -60,6 +60,26 @@ return {
 						variant = ctx.controls.variant,
 						size = ctx.controls.size,
 						actions = { Lucy.Button.new({ text = "Buy", size = "sm" }) },
+					}),
+					Lucy.Item.new({
+						title = "Club tee",
+						description = "In your collection",
+						variant = ctx.controls.variant,
+						size = ctx.controls.size,
+						focus = "tile",
+						actions = { Lucy.Button.new({ text = "Wear", size = "sm", variant = "secondary" }) },
+						children = {
+							Lucy.Stack.new({
+								direction = "horizontal",
+								gap = "Space2",
+								wrap = true,
+								children = {
+									Lucy.Button.new({ text = "White", size = "sm", variant = "outline" }),
+									Lucy.Button.new({ text = "Cyan", size = "sm", variant = "outline" }),
+									Lucy.Button.new({ text = "Pink", size = "sm", variant = "outline" }),
+								},
+							}),
+						},
 					}),
 				},
 			}),

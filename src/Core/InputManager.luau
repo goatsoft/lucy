@@ -18,6 +18,12 @@
 		navigating with keyboard or gamepad, like CSS :focus-visible. It also
 		scrolls any ScrollingFrame above it to show it (Core/Scroll).
 
+	Tiles:
+		A tile (an Item with focus = "tile", Core/Tiles) is one stop until the player steps
+		into it: focus that lands inside a closed tile goes to the tile, and selectables()
+		skips what is in it. Each time focus moves, Tiles.landed opens, closes and points the
+		D-pad around tiles.
+
 	Scopes:
 		pushScope({ root, defaultFocus, returnFocus }) confines Tab/arrow navigation
 		to `root` (dialogs and modal scenes push one). When the player picks up a
@@ -64,6 +70,7 @@ local Adaptive = require(script.Parent.Adaptive)
 local Element = require(script.Parent.Element)
 local Maid = require(script.Parent.Maid)
 local Scroll = require(script.Parent.Scroll)
+local Tiles = require(script.Parent.Tiles)
 
 local InputManager = {}
 InputManager.__index = InputManager
@@ -295,6 +302,10 @@ function InputManager.markFocus(self: InputManager, object: GuiObject?)
 		-- The engine scrolls to the gamepad selection, but not to focus Lucy moves.
 		Scroll.reveal(object)
 	end
+	-- Tiles: a closed one takes focus that lands inside it, an open one closes when focus leaves
+	if object ~= previous then
+		Tiles.landed(self, object, previous)
+	end
 end
 
 -- Selects `object` for gamepad/keyboard navigation (no-op where the engine refuses).
@@ -399,6 +410,8 @@ function InputManager.selectables(self: InputManager, root: Instance): { GuiObje
 			and descendant.Selectable
 			and descendant.Interactable
 			and isShown(descendant)
+			-- A closed tile is one stop: what is in it waits until the player steps in
+			and not Tiles.closedAround(descendant, root)
 		then
 			table.insert(out, descendant)
 		end
