@@ -99,6 +99,7 @@ local Lucy = {
 	useMetric = Composables.useMetric,
 	useBackHandler = Composables.useBackHandler,
 	useFocusScope = Composables.useFocusScope,
+	useFocusZone = Composables.useFocusZone,
 	useResponsive = Composables.useResponsive,
 	useUiSound = Composables.useUiSound,
 	useTable = Composables.useTable,

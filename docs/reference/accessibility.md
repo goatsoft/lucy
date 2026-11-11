@@ -61,6 +61,10 @@ Everything that can be pressed can be reached without a mouse or touch:
   `focus = "tile"`) is one stop: up and down go from row to row, A or left or
   right steps in, the D-pad then stays on the row's controls, and B steps back
   out.
+- A HUD group made a focus zone ([`useFocusZone`](composables/use-focus-zone.md))
+  holds no selection while the player plays, so the left stick walks the
+  character. A key (D-pad up, say) steps in, the D-pad stays on the zone's
+  controls, and B steps back out, leaving nothing selected.
 - Each screen starts focus on its `defaultFocus`, or on the first thing that can
   take focus. See [Scenes](../guide/scenes.md).
 

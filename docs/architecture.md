@@ -57,7 +57,7 @@ with each mount's props:
   getters. Everything it creates belongs to the component and is removed with it.
 - **Derived values** are `computed`s, or plain functions when the work is trivial.
 - **Shared behaviour** comes from composables: `useDensity`, `useMetric`,
-  `useResponsive`, `useBackHandler`, `useFocusScope`, `useUiSound`.
+  `useResponsive`, `useBackHandler`, `useFocusScope`, `useFocusZone`, `useUiSound`.
 - **What the player did** (activate, toggle, open, close) is reported with
   `h:emit`, so games can play their own sounds through `useUiSound`. Lucy plays
   no audio.

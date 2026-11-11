@@ -23,6 +23,7 @@ To write your own composables, see [Share logic with composables](../../guide/co
 | [`useResponsive`](use-responsive.md) | Derives a responsive value keyed by device, mode, breakpoint or orientation |
 | [`useBackHandler`](use-back-handler.md) | Intercepts back inputs (B on gamepad, Backspace on keyboard) while active |
 | [`useFocusScope`](use-focus-scope.md) | Traps keyboard and gamepad focus inside a container while active |
+| [`useFocusZone`](use-focus-zone.md) | A group of HUD controls nothing selects until a key steps in; B steps out |
 | [`useUiSound`](use-ui-sound.md) | Calls functions when components activate, toggle, open, close or select |
 | [`useTable`](use-table.md) | Manages sorted rows from raw data tables and column definitions |
 | [`useSort`](use-sort.md) | Sorts any arbitrary list by one or more columns with tiebreakers |

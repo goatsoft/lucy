@@ -116,6 +116,12 @@ they are exact; this page only says where things are and what agents get wrong.
      [Item: one stop per row](references/components/item.md#one-stop-per-row).
    - A panel that keeps focus inside it: a Dialog or Sheet, or
      `Lucy.useFocusScope`. Back on B: `Lucy.useBackHandler`.
+   - HUD controls that must not hold the selection while the player plays
+     (a player card, cheer buttons beside the stage), stepped into with a
+     key: `Lucy.useFocusZone(app, root, { name, keys, enabled })`. B steps
+     out. Never an action set, a first-button search and a back handler of
+     your own. See
+     [useFocusZone](references/reference/composables/use-focus-zone.md).
    - Where focus starts: `defaultFocus` on the scene, sheet or dialog.
    - What has focus now, for a binding: `app.input:focusRef()` (a tracked
      getter), never your own `SelectedObject` listener. Focus on something
@@ -219,6 +225,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [useDensity](references/reference/composables/use-density.md): Returns a getter for the current device density profile.
 - [useDrag](references/reference/composables/use-drag.md): Follows a mouse or touch drag starting from a target GUI element.
 - [useFocusScope](references/reference/composables/use-focus-scope.md): Traps keyboard and gamepad focus inside a container while active.
+- [useFocusZone](references/reference/composables/use-focus-zone.md): A group of HUD controls nothing selects until the player steps in with a key; B steps out.
 - [useMetric](references/reference/composables/use-metric.md): Computes a control size token in pixels following density.
 - [useRequest](references/reference/composables/use-request.md): Asks the server with app.server:call and keeps the answer, the loading flag and any error as state, asking again when its arguments change.
 - [useResponsive](references/reference/composables/use-responsive.md): Returns a getter for a responsive value keyed by device, input mode, breakpoint or orientation.
