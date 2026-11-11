@@ -72,6 +72,12 @@ return function()
 			task.wait(0.2)
 			local body, footer = sheet.body.Instance, sheet.footer
 			local inner = footer.Parent :: Frame
+			-- The panel stays on the screen, however long its body
+			local root = sheet.content:FindFirstAncestorWhichIsA("LayerCollector") :: ScreenGui
+			local screenBottom = root.AbsolutePosition.Y + root.AbsoluteSize.Y
+			expect(sheet.content.AbsolutePosition.Y + sheet.content.AbsoluteSize.Y <= screenBottom + 1).to.equal(
+				true
+			)
 			-- The footer at the bottom of the panel (inside its padding)
 			local bottom = inner.AbsolutePosition.Y + inner.AbsoluteSize.Y
 			local footerBottom = footer.AbsolutePosition.Y + footer.AbsoluteSize.Y

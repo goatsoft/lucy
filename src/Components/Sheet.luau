@@ -347,10 +347,14 @@ local spec: Component.Spec = {
 			safeArea,
 		})
 
+		-- A drawer fits its children; a panel keeps the height the overlay gives it (the screen's,
+		-- less the top bar), or it would grow past the bottom of the screen
 		content = Element.new("Frame", {
 			Name = "Content",
 			Size = UDim2.fromScale(1, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
+			AutomaticSize = function(): Enum.AutomaticSize
+				return if isDrawer() then Enum.AutomaticSize.Y else Enum.AutomaticSize.None
+			end,
 			Active = true,
 			Tags = { "ui-sheet-content" :: any, ["ui-sheet-drawer"] = isDrawer },
 			inner,
