@@ -190,6 +190,18 @@ return function()
 			expect(first:get("entered")).to.equal(false)
 		end)
 
+		it("steps in on its first action even when a control in it sits higher", function()
+			local first, wear, red = tiles()
+			-- The swatches sit above the button's middle
+			red.Parent.LayoutOrder = -1
+			Harness.flush()
+			first:enter()
+			expect(app.input:focused()).to.equal(wear)
+			first:leave()
+			first:enter(red)
+			expect(app.input:focused()).to.equal(red)
+		end)
+
 		it("steps in with enter, A or Enter, onto its first control", function()
 			local first, wear, red = tiles()
 			app.input:focus(first.Instance)

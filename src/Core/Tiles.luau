@@ -131,7 +131,10 @@ function Tiles.landed(input: any, object: GuiObject?, previous: GuiObject?)
 	end
 	-- On a closed tile: left and right lead in, up and down to the stops around it
 	if object:HasTag(Tiles.TAG) and not object:HasTag(Tiles.OPEN) then
-		local first = input:selectables(object)[1]
+		-- Where stepping in lands: the first action (an Item's main button), else the first control
+		local handle = handleOf(input, object)
+		local actions = handle and handle.actions
+		local first = (actions and input:selectables(actions)[1]) or input:selectables(object)[1]
 		object.NextSelectionLeft = first
 		object.NextSelectionRight = first
 		object.NextSelectionUp = Tiles.toward(input, object, Vector2.new(0, -1))

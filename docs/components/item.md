@@ -81,7 +81,7 @@ Only on a tile:
 
 | Name | What it does |
 |---|---|
-| `item:enter(control?)` | Steps in, onto `control` or the row's first control |
+| `item:enter(control?)` | Steps in, onto `control`, else the row's first action, else its first control |
 | `item:leave()` | Steps back out, focus on the row |
 
 Its parts are on the handle too: `item.media`, `item.content`, `item.title`,
@@ -179,7 +179,8 @@ On a gamepad or the keys:
 
 - Up and down go from row to row, and a [Scroll Area](scroll-area.md) around
   the list scrolls to follow. Nothing inside a row stops them.
-- A, Enter, or left or right on a row steps into it, onto its first control.
+- A, Enter, or left or right on a row steps into it, onto its first action
+  (Wear), or its first control when it has no actions.
 - Inside, the D-pad and keys move only between the row's controls, and A
   presses one.
 - B or Backspace steps back out onto the row. Moving focus anywhere else does

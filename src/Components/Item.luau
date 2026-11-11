@@ -330,13 +330,14 @@ local function tiled(handle: any)
 	local popScope: (() -> ())? = nil
 	local popBack: (() -> ())? = nil
 
-	-- Steps in, onto `target` (a control inside it) or its first control
+	-- Steps in, onto `target` (a control inside it), else its first action (the row's main
+	-- button, WEAR or BUY), else the first control in it
 	function handle.enter(h, target: GuiObject?)
 		if h.destroyed or h:get("entered") or h:get("disabled") then
 			return
 		end
 		local input = h.app.input
-		local first = target or input:selectables(h.Instance)[1]
+		local first = target or input:selectables(h.actions)[1] or input:selectables(h.Instance)[1]
 		if not first then
 			return -- nothing inside to step onto
 		end
