@@ -31,6 +31,21 @@ Rules:
   `require(game.ReplicatedStorage.LucyTests.Runner).run()`. JB serves Rojo himself (port 38574).
 - Shell commands on JB's Mac run through zsh: `zsh -lc "cd ~/Projects/Lucy && ..."`.
 - Format before committing: `stylua src tests scripts examples` (CI runs `stylua --check`).
+- Generated files stay in sync with every change, in the same commit. CI (and so every
+  release) fails when they drift, and it has happened several times:
+  - Any change under `docs/` (a new or edited page, the component index, the API list,
+    theming): run `node scripts/skills.ts` and commit what it writes under
+    `plugins/lucy/skills/`.
+  - A new component: give it a one line description in `registry.json`, as well as its
+    export in `src/init.luau`, docs page and index row.
+  - Before every commit, run what CI runs and see each one pass:
+    `stylua --check src tests scripts examples`, `selene src tests examples`,
+    `lune run scripts/add -- --check`, `node scripts/skills.ts --check`, luau-lsp
+    (docs/development.md "Static checks"), and `pnpm site:typecheck` when the site or
+    docs changed.
+  - `pnpm site:build` rewrites `apps/site/src/typed-router.d.ts` when a docs page is added:
+    commit it with the page.
+  - After JB pushes, check the run: `gh run list --limit 3` shows Release and Pages green.
 - Commit messages are semantic: `type(scope): summary`, lower case, no full stop,
   in the imperative ("fix(select): close on back"). Types: `feat` (something new
   for games), `fix` (a bug), `docs`, `refactor`, `perf`, `test`, `build`, `ci`,
