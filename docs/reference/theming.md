@@ -77,7 +77,7 @@ Without a `primary`, the `p` values fall back to the base colour shades shown.
 | `OverlayFill`, `OverlayFillForeground`, `OverlayFillTransparency` | a see-through fill over a picture (Badge's overlay) and its words | White 85% opaque, base 950 | Black 85% opaque, White |
 | `MedalGold`, `MedalSilver`, `MedalBronze` | first, second and third place (Leaderboard) | Amber-500, Slate-400, Orange-700 | Yellow-400, Slate-300, Orange-400 |
 | `GradientSurface` | a card deepening toward the background ([Gradient](../components/gradient.md)) | Card to Card mixed 60% with Muted | Card to Background |
-| `GradientPrimary` | the primary colour, lit at the top | Primary mixed 20% with White to Primary | the same |
+| `GradientPrimary` | the primary colour, lit at the top and deepening at the bottom | Primary mixed 25% with White to Primary mixed 20% with Black | the same |
 
 **On colour** means text in the fill's own colour: its hue taken to its darkest
 (like red-950 on red) or lightest (like red-200), whichever has more contrast

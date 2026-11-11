@@ -13,12 +13,14 @@ picks it by name.
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-gradient-light.webp" alt="Gradient example" loading="lazy"><img class="example-dark" src="/images/examples/components-gradient-dark.webp" alt="Gradient example" loading="lazy"></figure>
 
 ```luau
-local card = Lucy.new "Frame" {
-    Size = UDim2.fromOffset(320, 160),
-    Lucy.new "UICorner" { CornerRadius = UDim.new(0, 12) },
+local unlock = Lucy.Button.new({
+    text = "UNLOCK VIP",
+    icon = "lucide-extended:crown-filled",
+    size = "xl",
     Parent = parent,
-}
-Lucy.Gradient.new({ gradient = "Primary", Parent = card })
+})
+Lucy.hydrate(unlock.Instance)({ Size = UDim2.fromOffset(320, 96) })
+Lucy.Gradient.new({ gradient = "Primary", Parent = unlock.Instance })
 ```
 
 ## Props
@@ -37,6 +39,12 @@ it, so while it shows, Lucy makes the parent's fill white (the
 `ui-gradient-host` tag) and the gradient's own colours come through. The
 parent's transparency still applies.
 
+A gradient tints its parent's own words too, so put it on something whose words
+sit in a child: a Frame with a Text in it, or a Button with an icon (its words
+are then a label of their own). On a text-only Button the words take the
+gradient's colours and can disappear into it; Lucy warns in Studio when that
+happens.
+
 ## Gradients in the theme
 
 Every built in theme has two:
@@ -44,7 +52,7 @@ Every built in theme has two:
 | Token | What it is |
 |---|---|
 | `GradientSurface` | a card that deepens toward the background, for panels and screens |
-| `GradientPrimary` | the primary colour, lit at the top |
+| `GradientPrimary` | the primary colour, lit at the top and deepening at the bottom |
 
 Add your own to every theme with `Lucy.Tokens.gradient`. Its stops are colours
 from first to last, spaced evenly, or `{ position, colour }` pairs from 0 to 1.

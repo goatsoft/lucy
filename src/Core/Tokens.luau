@@ -233,9 +233,13 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		MedalSilver = "$Slate400",
 		MedalBronze = "$Orange700",
 		-- Gradients (Lucy.Gradient): a surface that deepens down to the background, and the
-		-- primary colour lit at the top
+		-- primary colour lit at the top and deepening at the bottom (so it reads as a gradient even
+		-- on a neutral primary)
 		GradientSurface = Tokens.gradient({ "$Card", Tokens.mix("$Card", "$Muted", 0.6) }),
-		GradientPrimary = Tokens.gradient({ Tokens.mix("$Primary", "$White", 0.2), "$Primary" }),
+		GradientPrimary = Tokens.gradient({
+			Tokens.mix("$Primary", "$White", 0.25),
+			Tokens.mix("$Primary", "$Black", 0.2),
+		}),
 	}
 
 	local dark = {
@@ -289,9 +293,13 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 		MedalSilver = "$Slate300",
 		MedalBronze = "$Orange400",
 		-- Gradients (Lucy.Gradient): a surface that deepens down to the background, and the
-		-- primary colour lit at the top
+		-- primary colour lit at the top and deepening at the bottom (so it reads as a gradient even
+		-- on a neutral primary)
 		GradientSurface = Tokens.gradient({ "$Card", "$Background" }),
-		GradientPrimary = Tokens.gradient({ Tokens.mix("$Primary", "$White", 0.2), "$Primary" }),
+		GradientPrimary = Tokens.gradient({
+			Tokens.mix("$Primary", "$White", 0.25),
+			Tokens.mix("$Primary", "$Black", 0.2),
+		}),
 	}
 
 	return { light = light, dark = dark }
