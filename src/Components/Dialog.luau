@@ -54,6 +54,7 @@
 
 local Button = require(script.Parent.Button)
 local Component = require(script.Parent.Parent.Core.Component)
+local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Heading = require(script.Parent.Heading)
 local Overlay = require(script.Parent.Parent.Core.Overlay)
@@ -93,6 +94,17 @@ local rules: { Component.Rule } = {
 			PaddingBottom = "$Space6",
 			PaddingLeft = "$Space6",
 			PaddingRight = "$Space6",
+		},
+	},
+	{
+		-- A short screen (a phone held sideways) has little height to give to padding
+		selector = ".ui-dialog-inner.ui-dialog-short::UIPadding",
+		priority = 1,
+		properties = {
+			PaddingTop = "$Space4",
+			PaddingBottom = "$Space4",
+			PaddingLeft = "$Space4",
+			PaddingRight = "$Space4",
 		},
 	},
 	{
@@ -159,13 +171,14 @@ function Dialog.new(props: { [string]: any }?)
 			)
 			-- Padding and layout live on an inner frame, so the close button can sit in
 			-- the content's own corner.
-			local inner = Component.create("Frame", {
+			local short = Composables.useResponsive(h.app, { short = true, default = false })
+			local inner = Element.new("Frame", {
 				Name = "Inner",
 				Size = UDim2.fromScale(1, 0),
 				AutomaticSize = Enum.AutomaticSize.Y,
-				Tags = { "ui-dialog-inner" },
-				Parent = content,
-			})
+				Tags = { "ui-dialog-inner" :: any, ["ui-dialog-short"] = short },
+			}) :: Frame
+			inner.Parent = content
 			local gap = Component.space(h.app, "Space4", 16)
 			Component.list({ Padding = gap, Parent = inner })
 
@@ -225,7 +238,12 @@ function Dialog.new(props: { [string]: any }?)
 			-- The body scrolls in what is left of the overlay's height (and maxHeight)
 			-- after the padding, header, footer and gaps.
 			local overlayRef: Reactive.Ref<Overlay.Overlay?> = Reactive.ref(nil :: Overlay.Overlay?)
-			local pad = Component.space(h.app, "Space6", 24).Offset
+			-- The inner padding, as the rules above set it
+			local function pad(): number
+				return if short()
+					then Component.space(h.app, "Space4", 16).Offset
+					else Component.space(h.app, "Space6", 24).Offset
+			end
 			local function bodyCap(): number
 				local overlay = overlayRef()
 				if not overlay then
@@ -239,7 +257,7 @@ function Dialog.new(props: { [string]: any }?)
 				if scale <= 0 then
 					scale = 1
 				end
-				local used = pad * 2 + headerSize().Y / scale + gap.Offset
+				local used = pad() * 2 + headerSize().Y / scale + gap.Offset
 				if footerShown then
 					used += footerSize().Y / scale + gap.Offset
 				end

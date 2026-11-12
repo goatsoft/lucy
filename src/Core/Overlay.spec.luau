@@ -58,6 +58,19 @@ return function()
 			expect(plain.position).to.equal(UDim2.fromScale(0.5, 0.5))
 		end)
 
+		it("keeps a smaller margin round a centred overlay on a short screen", function()
+			-- A phone held sideways has little height to give away
+			local phone = Vector2.new(960, 540)
+			local at = Overlay.place(
+				"center",
+				{ view = phone, content = Vector2.new(300, 200), top = 58, short = true }
+			)
+			expect(at.maxHeight).to.equal(540 - 58 - Overlay.shortCenterMargin * 2)
+			expect(Overlay.shortCenterMargin < Overlay.centerMargin).to.equal(true)
+			local tall = Overlay.place("center", { view = phone, content = Vector2.new(300, 200), top = 58 })
+			expect(tall.maxHeight).to.equal(540 - 58 - Overlay.centerMargin * 2)
+		end)
+
 		it("keeps a panel and a drawer clear of the top bar", function()
 			local panel = Overlay.place("panel", { view = view, content = Vector2.new(300, 200), top = 58 })
 			expect(panel.position.Y.Offset).to.equal(58)

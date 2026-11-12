@@ -71,6 +71,7 @@ local Overlay = {}
 Overlay.margin = 8 -- popup distance from the viewport edges
 Overlay.gap = 4 -- popup distance from its anchor
 Overlay.centerMargin = 32
+Overlay.shortCenterMargin = 8 -- on a short screen, which has little height to give away
 Overlay.drawerShare = 0.85 -- of the viewport height
 Overlay.slideTime = 0.2 -- seconds a drawer takes to slide in or out
 Overlay.fadeTime = 0.15 -- seconds the dimming takes to fade in or out
@@ -111,6 +112,8 @@ export type PlaceInput = {
 	panelSide: string?,
 	-- How much of the view's top is under Roblox's top bar (its buttons); nothing goes there
 	top: number?,
+	-- A short screen (a phone held sideways): a centred overlay keeps a smaller margin
+	short: boolean?,
 }
 
 export type Placement = {
@@ -138,11 +141,12 @@ function Overlay.resolve(presentation: string?, prefer: string?, mode: string?):
 end
 
 -- Centred in the view under the top bar
-local function centered(view: Vector2, top: number): Placement
+local function centered(view: Vector2, top: number, short: boolean?): Placement
+	local margin = if short then Overlay.shortCenterMargin else Overlay.centerMargin
 	return {
 		anchorPoint = Vector2.new(0.5, 0.5),
 		position = UDim2.new(0.5, 0, 0.5, math.floor(top / 2)),
-		maxHeight = math.max(0, view.Y - top - Overlay.centerMargin * 2),
+		maxHeight = math.max(0, view.Y - top - margin * 2),
 	}
 end
 
@@ -171,7 +175,7 @@ function Overlay.place(presentation: string, input: PlaceInput): Placement
 
 	local anchor = input.anchor
 	if presentation ~= "popup" or anchor == nil then
-		local at = centered(view, inset)
+		local at = centered(view, inset, input.short)
 		-- A popup with no anchor keeps the width it asks for, as it would beside one
 		if presentation == "popup" and input.width then
 			at.width = math.max(0, math.min(input.width, view.X - Overlay.margin * 2))
@@ -634,6 +638,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 	end)
 
 	-- Placement, from engine measurements while open.
+	local short = Composables.useResponsive(app, { short = true, default = false })
 	local placing = false
 	local function place()
 		if placing then
@@ -663,6 +668,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 			-- Absolute 0 is under Roblox's top bar: a root that starts above it (IgnoreGuiInset)
 			-- has that much under the bar's buttons
 			top = math.max(0, -origin.Y) / scale,
+			short = Reactive.peek(short :: any) == true,
 		}
 		local at = (options.place and options.place(presentation(), input))
 			or Overlay.place(presentation(), input)
@@ -792,6 +798,13 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		end)
 		tween:Play()
 	end
+
+	-- A screen turning short (or back) moves the margin round a centred one
+	Reactive.watch(short, function()
+		if Reactive.peek(open) then
+			place()
+		end
+	end)
 
 	Reactive.watch(open, function(isOpen, previous)
 		if isOpen and not previous then

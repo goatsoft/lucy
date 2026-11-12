@@ -51,6 +51,11 @@ scrolls and the title, the `header` and `footer` slots and the actions stay
 where they are. So leave out a table's
 `maxHeight` inside a dialog, unless the table should scroll on its own.
 
+On a short screen (a phone held sideways) a dialog keeps less room round
+itself and pads its inside less (`Space4` instead of `Space6`, tag
+`ui-dialog-short`), and the description sits beside the title, so the body gets
+as much of the height as it can.
+
 While a modal dialog is open, keyboard and gamepad focus stay inside it. When
 it opens on a keyboard or gamepad, its last action (the main one) is selected,
 or the close button when it has no actions; pass `defaultFocus` to pick

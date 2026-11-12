@@ -433,6 +433,23 @@ return function()
 			expect(scroll.AbsoluteCanvasSize.Y > scroll.AbsoluteSize.Y).to.equal(true)
 		end)
 
+		it("pads less on a short screen, and gives the body that room", function()
+			local dialog = Dialog.new({ app = app, open = true, title = "Rules", children = rows(60) })
+			local inner = dialog.content:FindFirstChild("Inner") :: Frame
+			app.state:set("input.height", "tall")
+			task.wait(0.3)
+			expect(inner:HasTag("ui-dialog-short")).to.equal(false)
+			local tallRoom = dialog.bodyRoom()
+			app.state:set("input.height", "short")
+			expect(inner:HasTag("ui-dialog-short")).to.equal(true)
+			-- Less padding and a smaller margin round it: more room for the body
+			expect(Harness.waitFor(function()
+				return dialog.bodyRoom() > tallRoom
+			end)).to.equal(true)
+			app.state:set("input.height", "tall")
+			expect(inner:HasTag("ui-dialog-short")).to.equal(false)
+		end)
+
 		it("fits short content with no scrolling", function()
 			local dialog = Dialog.new({ app = app, open = true, maxHeight = 600, children = rows(2) })
 			task.wait(0.3)
