@@ -1,7 +1,7 @@
 ---
 title: The App
 description: Lucy.App.new and every option it takes, the parts an App holds, and its methods.
-order: 1
+order: 2
 ---
 
 # The App

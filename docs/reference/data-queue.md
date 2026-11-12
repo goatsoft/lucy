@@ -1,7 +1,7 @@
 ---
 title: The data queue
 description: Lucy.DataQueue paces DataStore requests to the engine's limits, caches reads, keeps leaderboards and writes what is pending when the server closes. Every method and option.
-order: 9
+order: 5
 ---
 
 # The data queue

@@ -1,7 +1,7 @@
 ---
 title: Utils
 description: "Plain helpers and utility classes: Lucy.Format, Lucy.Scroll, Lucy.Signal and Lucy.Maid."
-order: 11
+order: 9
 ---
 
 # Utils

@@ -1,7 +1,7 @@
 ---
 title: Boards
 description: Lucy.Boards keeps a game's leaderboards on the server, all time, this week and today, with each player's own rank, their names, the request a client asks with, and rows published for everyone. Every method and option.
-order: 8
+order: 6
 ---
 
 # Boards
