@@ -26,6 +26,7 @@ Lucy.Stack.new({
 | `children` | table | | | Anything after the text in the badge's [slot](slot.md): strings, components, instances or builders. They take the badge's colours |
 | `variant` | string | `"default"` | yes | `default`, `secondary`, `destructive`, `outline` or `overlay` (a translucent fill for a count over a picture: dark with white words in the dark theme, light with dark words in the light one) |
 | `shape` | string | `"rounded"` | yes | `rounded`, or `square`: only slightly rounded (`$RadiusXs`, 3 px) and a little tighter, for tags and labels such as a rarity |
+| `size` | string | `"sm"` | yes | `sm`, `md`, `lg` or `xl`. Its words are a [Button](button.md)'s at the same size, and its icon and padding grow with them |
 | `visible` | boolean | `true` | yes | Shows or hides the badge |
 
 It also takes the [props every component takes](index.md#using-a-component).
@@ -79,6 +80,17 @@ Lucy.Badge.new({
     children = { Lucy.Icon.new({ icon = "lucide-extended:star-filled" }) },
     Parent = row,
 })
+```
+
+A badge at each size. Its words match a Button of the same size, so a
+`lg` badge reads right beside a `lg` button. Use a bigger one for a tag
+players need to read at a glance, such as a dancer's genre and level:
+
+```luau
+for _, size in { "sm", "md", "lg", "xl" } do
+    Lucy.Badge.new({ text = string.upper(size), variant = "outline", size = size, Parent = row })
+end
+Lucy.Badge.new({ icon = "lucide-extended:star-filled", text = "LV 12", size = "lg", Parent = row })
 ```
 
 To colour a badge your own way, use

@@ -174,4 +174,56 @@ return function()
 			Badge.new({ app = app, variant = "gold" })
 		end).to.throw()
 	end)
+	describe("size", function()
+		-- A badge's words at each size are a Button's at that size, so a badge sits right beside one
+		local TEXT = { sm = "TextXs", md = "TextSm", lg = "TextBase", xl = "TextLg" }
+
+		it("is sm by default and follows state", function()
+			local badge = Badge.new({ app = app, id = "tag", Parent = gui, text = "HOUSE" })
+			expect(badge.Instance:HasTag("ui-badge-size-sm")).to.equal(true)
+			app.state:set("ui.tag.size", "lg")
+			expect(badge.Instance:HasTag("ui-badge-size-lg")).to.equal(true)
+			expect(badge.Instance:HasTag("ui-badge-size-sm")).to.equal(false)
+		end)
+
+		it("sizes its words as a Button of the same size", function()
+			for size, token in TEXT do
+				local badge = Badge.new({ app = app, Parent = gui, text = "LV 12", size = size })
+				Harness.flush()
+				expect(Harness.styled(badge.Instance, "TextSize")).to.equal(app.theme:resolve(token))
+			end
+		end)
+
+		it("grows its icon and the words in its slot with it", function()
+			local small = Badge.new({ app = app, Parent = gui, text = "VIP", icon = "lucy:close" })
+			local big = Badge.new({ app = app, Parent = gui, text = "VIP", icon = "lucy:close", size = "xl" })
+			Harness.flush()
+			expect(big.icon.Instance.Size.X.Offset > small.icon.Instance.Size.X.Offset).to.equal(true)
+			expect(Harness.styled(big.label.Instance, "TextSize")).to.equal(app.theme:resolve("TextLg"))
+		end)
+
+		it("pads a bigger badge more", function()
+			local found = {}
+			for _, rule in Badge.rules do
+				found[rule.selector] = rule
+			end
+			local function top(selector: string): number
+				local value = found[selector].properties.PaddingTop
+				return if typeof(value) == "UDim"
+					then value.Offset
+					else app.theme:resolve(string.sub(value, 2)).Offset
+			end
+			local sm = top(".ui-badge::UIPadding")
+			local md = top(".ui-badge-size-md::UIPadding")
+			local lg = top(".ui-badge-size-lg::UIPadding")
+			local xl = top(".ui-badge-size-xl::UIPadding")
+			expect(sm < md and md < lg and lg < xl).to.equal(true)
+		end)
+
+		it("errors on an unknown size", function()
+			expect(function()
+				Badge.new({ app = app, size = "huge" })
+			end).to.throw()
+		end)
+	end)
 end

@@ -5,6 +5,7 @@ return {
 		text = "New",
 		variant = { "default", "secondary", "destructive", "outline", "overlay" },
 		shape = { "rounded", "square" },
+		size = { "sm", "md", "lg", "xl" },
 	},
 	render = function(ctx)
 		local Lucy = ctx.Lucy
@@ -13,6 +14,20 @@ return {
 				text = ctx.controls.text,
 				variant = ctx.controls.variant,
 				shape = ctx.controls.shape,
+				size = ctx.controls.size,
+			}),
+			-- Each size, its words as a Button's at that size
+			Lucy.Stack.new({
+				direction = "horizontal",
+				gap = "Space2",
+				justify = "center",
+				align = "center",
+				children = {
+					Lucy.Badge.new({ text = "SM", variant = "outline", size = "sm" }),
+					Lucy.Badge.new({ text = "MD", variant = "outline", size = "md" }),
+					Lucy.Badge.new({ text = "LG", variant = "outline", size = "lg" }),
+					Lucy.Badge.new({ text = "XL", variant = "outline", size = "xl" }),
+				},
 			}),
 			Lucy.Stack.new({
 				direction = "horizontal",
