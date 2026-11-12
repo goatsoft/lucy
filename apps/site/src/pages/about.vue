@@ -14,15 +14,15 @@ useHead({
 const pillars = [
   {
     title: 'Native Roblox styling',
-    text: 'Lucy styles through built-in Roblox StyleSheets instead of Luau loops. Hover states and light or dark theme swaps cost zero script time.',
+    text: 'Lucy styles through native Roblox StyleSheets instead of Luau loops. Hover states and light or dark theme swaps cost zero script time.',
   },
   {
     title: 'Instant updates, zero rebuilds',
-    text: 'Change a stat or setting and only the exact UI property bound to it updates. No tree rebuilds, no frame drops, and zero runtime dependencies.',
+    text: 'Change a stat or setting and only the exact UI property bound to it updates. No full rebuilds, no frame drops, and zero runtime dependencies.',
   },
   {
     title: 'Ready for every device',
-    text: 'Desktop, console, tablet, and phone work from day one, with gamepad focus rings, 44px touch targets, hotkeys, server sync, and guided tours included.',
+    text: 'Desktop, console, tablet, and phone work from day one, with gamepad focus rings, 44px touch targets, hotkeys, server sync, plus guided tours.',
   },
 ] as const
 </script>
@@ -45,7 +45,7 @@ const pillars = [
         Built to stop Roblox teams reinventing the UI wheel
       </h1>
       <p class="animate-rise mx-auto mt-6 max-w-2xl text-lead leading-8 text-pretty text-muted-foreground [animation-delay:120ms]">
-        Lucy is an open-source UI and app framework by GOATsoft. It gives your game 47 themed components, shared state, and cross-device input so you can focus on gameplay instead of UI plumbing.
+        Lucy is an open UI and app framework by GOATsoft. It gives your game themed components, shared state, plus full controller and mobile input so you can focus on gameplay instead of UI plumbing.
       </p>
     </section>
 
@@ -65,10 +65,10 @@ const pillars = [
               rel="noopener"
               class="font-medium text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary"
             >GOATsoft</a>
-            comes from years of building apps and component libraries before bringing that same polish into Roblox: clean spacing, readable contrast, full controller support, and zero state spaghetti.
+            comes from years of building software and component libraries before bringing that same polish into Roblox: clean spacing, readable contrast, full controller support, with zero state spaghetti.
           </p>
           <p class="mt-4 text-sm leading-7 text-pretty text-muted-foreground">
-            Alongside Lucy, we build open-source tooling for our own games and sites, including the Aurora shader background engine and Gruff, the documentation framework behind this site.
+            Alongside Lucy, we build open tooling for our projects, including the Aurora shader background engine and Gruff, the documentation framework behind this site.
           </p>
         </article>
 
@@ -80,10 +80,10 @@ const pillars = [
             Closing the Roblox UI gap
           </h2>
           <p class="mt-4 text-sm leading-7 text-pretty text-muted-foreground">
-            Building Roblox UI usually leaves you with three rough options: wiring every Instance and cleanup loop by hand, adopting a heavy tree-rebuilding framework, or grabbing a bare reactive library and still writing buttons, dialogs, gamepad focus, DataStore queues, and leaderboards yourself.
+            Building Roblox UI usually leaves you with three rough options: wiring Instance cleanup loops by hand, adopting a heavy virtual tree framework, or grabbing a bare reactive library while still writing buttons, dialogs, gamepad focus, DataStore queues, and leaderboards yourself.
           </p>
           <p class="mt-4 text-sm leading-7 text-pretty text-muted-foreground">
-            Lucy gives you the whole foundation out of the box: 47 themed components, shared client-server state, layered scenes, Studio previews, and coding agent tools.
+            Lucy gives you the whole foundation out of the box: themed components, shared client and server state, layered scenes, Studio previews, plus coding agent tools.
           </p>
         </article>
       </div>

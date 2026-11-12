@@ -50,10 +50,10 @@ function movePanelLight(event: PointerEvent): void {
 
 // The four that matter most, as cards.
 const features = [
-  { icon: Boxes, title: '47 ready-to-use components', text: 'Stop rebuilding buttons, dialogs, dropdowns, tabs, and leaderboards every game. Drop them straight into your HUDs, shops, and menus.', to: '/docs/components/' },
+  { icon: Boxes, title: 'Components ready to ship', text: 'Stop rebuilding buttons, dialogs, dropdowns, tabs, and leaderboards every game. Drop them straight into HUDs, shops, or menus.', to: '/docs/components/' },
   { icon: Atom, title: 'Shared state, zero sync bugs', text: 'Keep coins, settings, and open menus in one store. Change a value anywhere and only the exact label or slider bound to it updates.', to: '/docs/guide/app-state' },
   { icon: Gamepad, title: 'PC, console, and mobile built in', text: 'Gamepad focus, keyboard shortcuts, and 44px touch targets work out of the box. Layouts scale cleanly from phones to TVs.', to: '/docs/guide/accessibility' },
-  { icon: SwatchBook, title: 'Live themes, zero script cost', text: 'Swap light, dark, or custom palettes mid-game. Hovers and theme changes run in Roblox StyleSheets, not Luau loops.', to: '/docs/guide/themes' },
+  { icon: SwatchBook, title: 'Live themes, zero script cost', text: 'Swap light, dark, or custom palettes while the game runs. Hovers and theme changes run in Roblox StyleSheets, not Luau loops.', to: '/docs/guide/themes' },
 ] as const
 
 // High level game capabilities, as a short list under the cards.
@@ -62,12 +62,12 @@ const more = [
   { icon: Keyboard, title: 'Hotkeys', text: 'Bind keyboard and controller inputs once by action name. Disable all gameplay keys in one call whenever a menu opens.', to: '/docs/guide/actions' },
   { icon: DatabaseZap, title: 'Server and boards', text: 'Replicate server state to each player\'s UI with zero RemoteEvent glue. Includes DataStore request pacing and live leaderboards.', to: '/docs/guide/server' },
   { icon: Globe, title: 'UI in the world', text: 'Put themed, clickable UI on SurfaceGuis and overhead BillboardGuis, driven by the same state as your HUD.', to: '/docs/guide/world-ui' },
-  { icon: Signpost, title: 'Guided tours', text: 'Build step-by-step new-player tutorials with spotlights and arrows right over your real menus, with no duplicate UI.', to: '/docs/guide/tutorials' },
-  { icon: Contrast, title: 'Accessibility', text: 'Checked text contrast on every colour, plus built-in support for Roblox reduce motion, text size, and background transparency.', to: '/docs/guide/accessibility' },
+  { icon: Signpost, title: 'Guided tours', text: 'Guide new players with spotlights and arrows right over your real menus, without duplicating any UI.', to: '/docs/guide/tutorials' },
+  { icon: Contrast, title: 'Accessibility', text: 'Checked text contrast on every colour, plus native support for Roblox reduce motion, text size, and background transparency.', to: '/docs/guide/accessibility' },
   { icon: Shapes, title: 'Icons', text: 'Use any Iconify icon by name instead of uploading assets one by one. lucy-icons packs them into sprite sheets for you.', to: '/docs/guide/icons' },
   { icon: Blocks, title: 'Code or Studio', text: 'Write UI purely in Luau, or lay it out visually in Studio and wire it to Lucy state with Lucy.hydrate.', to: '/docs/reactivity#ui-built-in-studio' },
   { icon: ScanEye, title: 'Preview in Studio', text: 'Preview any component, shop card, or full menu right inside Studio edit mode. No more hitting Play just to tweak a layout.', to: '/docs/stories' },
-  { icon: Bot, title: 'Ready for agents', text: 'Ships with agent skills and an MCP server so your AI coding assistant uses real Lucy components and verifies UI in Studio.', to: '/docs/guide/agents' },
+  { icon: Bot, title: 'Ready for agents', text: 'Includes agent skills alongside an MCP server so your AI coding assistant uses real Lucy components and verifies UI in Studio.', to: '/docs/guide/agents' },
 ] as const
 
 const install = 'Lucy = "goatsoft/lucy@0.1.0"'

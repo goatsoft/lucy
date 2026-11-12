@@ -7,7 +7,7 @@ export const SITE = {
   repo: 'https://github.com/goatsoft/lucy',
   wally: 'https://wally.run/package/goatsoft/lucy',
   goatsoft: 'https://goatsoft.io',
-  description: '47 themed components, shared state, server sync, and built-in console and mobile support. Skip the Roblox UI boilerplate and ship faster.',
+  description: 'Themed components, shared state, server sync, and full device support. Skip the Roblox UI boilerplate so you can ship faster.',
 }
 
 export interface Head {
