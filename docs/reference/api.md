@@ -54,7 +54,7 @@ the [composables reference](composables/index.md).
 
 | Name | What it is | More |
 |---|---|---|
-| `Lucy.App` | Make the App: `Lucy.App.new(options)` | [The App](app.md) |
+| `Lucy.App` | Make the App: `Lucy.App.new(options)` | [The app](app.md) |
 | `Lucy.AppState` | The store's class; use `app.state` | [The store](store.md) |
 | `Lucy.Theme` | The theme's class; use `app.theme` | [Theming](theming.md) |
 | `Lucy.SceneManager` | The scenes' class; use `app.scenes` | [Build screens with scenes](../guide/scenes.md) |

@@ -1,10 +1,10 @@
 ---
-title: The App
+title: The app
 description: Lucy.App.new and every option it takes, the parts an App holds, and its methods.
 order: 2
 ---
 
-# The App
+# The app
 
 A game makes one App on the client, before it builds any UI. The App holds the
 store, the themes, input, hotkeys and scenes. Components find it by themselves,

@@ -1,7 +1,7 @@
 ---
 title: Composables
 description: State over time and behaviour shared between components. Every Lucy.use* composable.
-order: 8
+order: 7
 ---
 
 # Composables

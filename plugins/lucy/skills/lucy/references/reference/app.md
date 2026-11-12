@@ -1,5 +1,5 @@
 <!-- Made by scripts/skills.ts from docs/reference/app.md. Edit the doc, not this file. -->
-# The App
+# The app
 
 A game makes one App on the client, before it builds any UI. The App holds the
 store, the themes, input, hotkeys and scenes. Components find it by themselves,

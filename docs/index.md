@@ -51,7 +51,7 @@ local app = Lucy.App.new({
 })
 ```
 
-Every option, and everything an App holds, is listed in [The App](reference/app.md).
+Every option, and everything an App holds, is listed in [The app](reference/app.md).
 
 Make it once, in one client script. Components you create use this App without
 being told, and other scripts reach it with `Lucy.App.current()`:
