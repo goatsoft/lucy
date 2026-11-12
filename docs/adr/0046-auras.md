@@ -47,11 +47,16 @@ half, not only a UI library, so effects in the world belong here too.
   particles thin out), the `hidden` flag games set, and cleanup on the
   character's or App's maid.
 - **Who wears what lives in the store**, on the server half (ADR 0033):
-  `shared.auras.<userId or bot id>.<type>` is `{ options, untilTime }`, one
+  `shared.auras.<u<UserId> or bot id>.<type>` is `{ options, untilTime }`, one
   entry per type (wearing a type again replaces it), so every App reads it at
   `server.auras`. The server writes it (`Aura.wear`, `Aura.take`); every App
   draws it (`Aura.follow`). A timed aura ends itself when
   `untilTime` passes, so a game only sets it once.
+- **Players are `u<UserId>`** (amended 2026-11-13), as `Server.playerKey`:
+  `wear` and `take` take a Player or a UserId and key it that way
+  (`Aura.idOf`), and refuse an id of digits alone or with a dot. A bare
+  UserId was an array index in the store and came back to the client as
+  text, so taking an aura off never reached the client (found in Dance Lab).
 - **Nothing about why.** Ranks, purchases, timers that pause while a player is
   away, XP bonuses: the game decides and writes the store. Lucy only draws.
 - **Built in:** `glow` (a soft halo with rising sparks, in theme tones), so the

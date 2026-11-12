@@ -18,18 +18,20 @@
 	Every aura in the store, on whoever wears it (the usual way, on the client):
 
 		Lucy.Aura.follow(app, {
-			resolve = function(id) return characterOf(id) end, -- default: the player with that UserId
+			resolve = function(id) return characterOf(id) end, -- default: players, by u<UserId>
 			hidden = onStage,           -- a ref or getter: hides every aura while true
 		})
 
 	and on the server, who wears what (every App sees it at server.auras):
 
-		Lucy.Aura.wear(server, player.UserId, "glow", { options = { token = "Warning" }, seconds = 1800 })
-		Lucy.Aura.take(server, player.UserId, "glow")
+		Lucy.Aura.wear(server, player, "glow", { options = { token = "Warning" }, seconds = 1800 })
+		Lucy.Aura.take(server, player, "glow")
 
 	The store holds shared.auras.<id>.<type> = { options, untilTime } on the server, so each App
-	reads server.auras.<id>.<type>. A timed aura closes by itself when the server's clock passes
-	untilTime. Lucy only draws: why someone wears an aura, and for how long, is the game's.
+	reads server.auras.<id>.<type>. A player's id is u<UserId> (Aura.idOf), as in Lucy.Server:
+	an id of digits alone would be an array index in the store and never come off the client.
+	A timed aura closes by itself when the server's clock passes untilTime. Lucy only draws: why
+	someone wears an aura, and for how long, is the game's.
 
 	The base mounts each aura (it comes back after a respawn), runs every aura in a follower from
 	one frame driver, fades auras with distance from the camera and stops the farthest past the
@@ -69,6 +71,7 @@ local Animate = require(script.Parent.Animate)
 local Maid = require(script.Parent.Maid)
 local Preferences = require(script.Parent.Preferences)
 local Reactive = require(script.Parent.Reactive)
+local Server = require(script.Parent.Server)
 local Signal = require(script.Parent.Signal)
 
 local Aura = {}
@@ -476,11 +479,42 @@ export type Follower = typeof(setmetatable(
 	Follower
 ))
 
+--[[
+	Aura.idOf(who): the id an aura wearer has in the store. A Player (or anything with a UserId)
+	or a UserId is u<UserId>, the key Lucy.Server keeps players under; any other id (a bot's)
+	is itself. An id of digits alone, with a dot, or empty is refused: the store would read it
+	as an array index or a path.
+]]
+function Aura.idOf(who: any): string
+	if type(who) == "number" then
+		return Server.playerKey({ UserId = who })
+	end
+	if type(who) == "table" or typeof(who) == "Instance" then
+		local ok, userId = pcall(function()
+			return (who :: any).UserId
+		end)
+		if ok and type(userId) == "number" then
+			return Server.playerKey(who)
+		end
+	end
+	assert(
+		type(who) == "string" and who ~= "",
+		`[Lucy] an aura id is a Player, a UserId or a string, not {tostring(who)}`
+	)
+	assert(
+		string.find(who, "^%d+$") == nil,
+		`[Lucy] aura id "{who}" is all digits: pass the Player or its UserId (it becomes u{who})`
+	)
+	assert(string.find(who, ".", 1, true) == nil, `[Lucy] aura id "{who}" has a dot`)
+	return who
+end
+
 local function defaultResolve(id: string): Model?
-	local userId = tonumber(id)
+	local userId = tonumber(string.match(id, "^u(%d+)$"))
 	local player = userId and Players:GetPlayerByUserId(userId)
 	return player and player.Character or nil
 end
+Aura._defaultResolve = defaultResolve
 
 local function defaultFocus(): Vector3?
 	local camera = workspace.CurrentCamera
@@ -494,7 +528,7 @@ end
 --[[
 	Aura.follow(app, options): wears every aura in the store on whoever it names. options:
 		path      where the store keeps them ("server.auras")
-		resolve   (id) -> Model?: the character for an id (default: the player with that UserId)
+		resolve   (id) -> Model?: the character for an id (default: the player a u<UserId> id names)
 		hidden    a ref, getter or boolean: hides every aura while true
 		max       how many run at once, nearest first (12)
 		near      studs from the camera within which an aura is at full strength (40)
@@ -651,25 +685,27 @@ function Follower.destroy(self: Follower)
 end
 
 --[[
-	Server side: who wears what. id is a UserId or a bot's id (no dots); type a registered aura.
+	Server side: who wears what. who is a Player, a UserId or a bot's id (Aura.idOf); kind a
+	registered aura.
 	options:
 		options   the type's options for this wearer
 		seconds   a timed aura: it closes by itself this long from now
 		now       the clock (workspace:GetServerTimeNow())
 	Wearing a type again replaces it (a new clock, new options).
 ]]
-function Aura.wear(server: any, id: any, kind: string, options: { [string]: any }?)
+function Aura.wear(server: any, who: any, kind: string, options: { [string]: any }?)
+	local id = Aura.idOf(who)
 	local opts: { [string]: any } = options or {}
 	local entry: { [string]: any } = { options = opts.options }
 	if type(opts.seconds) == "number" then
 		entry.untilTime = (opts.now or serverNow()) + opts.seconds
 	end
-	server.state:set(`shared.auras.{tostring(id)}.{kind}`, entry)
+	server.state:set(`shared.auras.{id}.{kind}`, entry)
 end
 
 -- Takes one aura off, or every aura the id wears when kind is nil.
-function Aura.take(server: any, id: any, kind: string?)
-	local path = `shared.auras.{tostring(id)}`
+function Aura.take(server: any, who: any, kind: string?)
+	local path = `shared.auras.{Aura.idOf(who)}`
 	if kind then
 		server.state:remove(`{path}.{kind}`)
 		local left = server.state:get(path)

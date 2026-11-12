@@ -41,18 +41,27 @@ take it off with `Lucy.Aura.take`. A timed aura takes itself off:
 local server = Lucy.Server.new()
 
 -- Bought for 30 minutes
-Lucy.Aura.wear(server, player.UserId, "glow", {
+Lucy.Aura.wear(server, player, "glow", {
     options = { token = "Warning", size = 8 },
     seconds = 30 * 60,
 })
 
 -- A rank glow that stays on until the game takes it off
-Lucy.Aura.wear(server, player.UserId, "rankGlow", { options = { rank = 3 } })
-Lucy.Aura.take(server, player.UserId, "rankGlow")
+Lucy.Aura.wear(server, player, "rankGlow", { options = { rank = 3 } })
+Lucy.Aura.take(server, player, "rankGlow")
 
 -- Everything a player wears
-Lucy.Aura.take(server, player.UserId)
+Lucy.Aura.take(server, player)
+
+-- A bot, by an id of its own
+Lucy.Aura.wear(server, "bot_3", "glow")
 ```
+
+A player (or their UserId) is kept as `u<UserId>`, the same key `Lucy.Server`
+keeps players under, and `Lucy.Aura.idOf(player)` gives it. Any other id is
+used as it is, so give bots ids with a letter in them: an id that is only
+digits, or has a dot, is refused, since the store would read it as a list
+index or a path.
 
 Wearing a type again replaces it, with the new options and a new clock. Lucy
 only draws: why someone wears an aura, and for how long, is your game's to
@@ -67,13 +76,14 @@ In the client script that makes your App, follow the auras once:
 local app = Lucy.App.new({ server = true })
 
 Lucy.Aura.follow(app, {
-    -- Bots have ids of their own; players are found by UserId when this is left out
+    -- Bots have ids of their own; players (u<UserId>) are found when this is left out
     resolve = function(id)
         local bot = workspace.Crowd:FindFirstChild(id)
         if bot then
             return bot
         end
-        local player = Players:GetPlayerByUserId(tonumber(id) or 0)
+        local userId = tonumber(string.match(id, "^u(%d+)$"))
+        local player = userId and Players:GetPlayerByUserId(userId)
         return player and player.Character
     end,
     -- No auras while the cutscene plays
@@ -89,7 +99,7 @@ App.
 
 | Option | Default | What it does |
 |---|---|---|
-| `resolve` | the player with that UserId | `(id) -> Model?`: the character an id names |
+| `resolve` | the player a `u<UserId>` id names | `(id) -> Model?`: the character an id names |
 | `hidden` | `false` | A ref, getter or boolean: hides every aura while true |
 | `max` | `12` | How many auras run at once, nearest to the camera first |
 | `near` | `40` | Studs from the camera within which an aura is at full strength |

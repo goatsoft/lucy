@@ -48,7 +48,7 @@ the [composables reference](composables/index.md).
 
 | Name | What it is | More |
 |---|---|---|
-| `Lucy.Aura` | Effects worn on characters or at points: `Aura.follow(app, options)` on the client, `Aura.wear` and `Aura.take` on the server, `Aura.new` for one, `Aura.register` for your own types | [Auras](../guide/auras.md) |
+| `Lucy.Aura` | Effects worn on characters or at points: `Aura.follow(app, options)` on the client, `Aura.wear` and `Aura.take` on the server (players by Player or UserId, kept as `u<UserId>`: `Aura.idOf`), `Aura.new` for one, `Aura.register` for your own types | [Auras](../guide/auras.md) |
 
 ## Images
 

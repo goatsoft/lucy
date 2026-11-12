@@ -389,16 +389,92 @@ return function()
 			local server =
 				Server.new({ players = false, autoFlush = false, transport = { send = function() end } })
 			Aura.wear(server, 42, "glow", { options = { token = "Warning" }, seconds = 60, now = 1000 })
-			local entry = server.state:get("shared.auras.42.glow")
+			local entry = server.state:get("shared.auras.u42.glow")
 			expect(entry.untilTime).to.equal(1060)
 			expect(entry.options.token).to.equal("Warning")
 			Aura.wear(server, "bot_3", "glow")
 			expect(server.state:get("shared.auras.bot_3.glow").untilTime).to.equal(nil)
 			Aura.take(server, 42, "glow")
-			expect(server.state:get("shared.auras.42")).to.equal(nil)
+			expect(server.state:get("shared.auras.u42")).to.equal(nil)
 			Aura.take(server, "bot_3")
 			expect(server.state:get("shared.auras.bot_3")).to.equal(nil)
 			server:destroy()
+		end)
+
+		-- A bare UserId is all digits: the store keeps it as an array index and the client gets it
+		-- back as text, so taking an aura off never reached the client. Players are u<UserId>.
+		it("keeps a player under u<UserId>, given the player or the UserId", function()
+			local server =
+				Server.new({ players = false, autoFlush = false, transport = { send = function() end } })
+			local player = { UserId = 7 }
+			expect(Aura.idOf(player)).to.equal("u7")
+			expect(Aura.idOf(7)).to.equal("u7")
+			expect(Aura.idOf("bot_3")).to.equal("bot_3")
+			Aura.wear(server, player, "glow")
+			expect(server.state:get("shared.auras.u7.glow")).to.be.ok()
+			Aura.take(server, player)
+			expect(server.state:get("shared.auras.u7")).to.equal(nil)
+			server:destroy()
+		end)
+
+		it("takes a player's aura off every App, end to end", function()
+			local who = { UserId = 7, Name = "Dancer7" }
+			local server, linked
+			local link = {}
+			function link.send(kind: string)
+				if kind == "ready" and server then
+					server:_ready(who)
+				end
+			end
+			function link.call()
+				return true, nil
+			end
+			local toClient = {}
+			function toClient.send(_player: any, message: any)
+				if linked then
+					linked.server:_receive(message)
+				end
+			end
+			server = Server.new({ transport = toClient, players = false, autoFlush = false })
+			server:_join(who)
+			local done
+			linked, done = Harness.app({ namePrefix = "LucyAuraLinked_", server = { transport = link } })
+			server:_ready(who)
+
+			Aura.wear(server, who.UserId, "glow")
+			server:flush()
+			local worn = linked.state:get("server.auras.u7.glow")
+			Aura.take(server, who.UserId, "glow")
+			server:flush()
+			local after = linked.state:get("server.auras")
+			done()
+			server:destroy()
+			expect(worn).to.be.ok()
+			expect(type(after) ~= "table" or next(after) == nil).to.equal(true)
+		end)
+
+		it("refuses an id that is all digits or has a dot", function()
+			local server =
+				Server.new({ players = false, autoFlush = false, transport = { send = function() end } })
+			expect(function()
+				Aura.wear(server, "42", "glow")
+			end).to.throw()
+			expect(function()
+				Aura.wear(server, "bot.3", "glow")
+			end).to.throw()
+			expect(function()
+				Aura.take(server, "")
+			end).to.throw()
+			server:destroy()
+		end)
+
+		it("finds a player's character from u<UserId> by default", function()
+			expect(Aura._defaultResolve("u0")).to.equal(nil)
+			expect(Aura._defaultResolve("bot_3")).to.equal(nil)
+			local me = game:GetService("Players").LocalPlayer
+			if me and me.Character then
+				expect(Aura._defaultResolve("u" .. me.UserId)).to.equal(me.Character)
+			end
 		end)
 	end)
 end
