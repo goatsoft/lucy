@@ -329,6 +329,9 @@ function Handle.destroy(self: Handle)
 		return
 	end
 	self.destroyed = true
+	-- A newer component may have mounted with this id (a list rebuilt with the same ids makes the
+	-- new items before it drops the old): then ui.<id> is its state now, and stays
+	local owner = self.app:handle(self.id) == self
 	self.app:unregisterHandle(self)
 	local scope = self.scope
 	if scope then
@@ -338,7 +341,7 @@ function Handle.destroy(self: Handle)
 	if self.Instance then
 		self.Instance:Destroy()
 	end
-	if not self.props.persist then
+	if owner and not self.props.persist then
 		self.app.state:remove(self.path)
 	end
 end
