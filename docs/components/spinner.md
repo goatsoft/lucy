@@ -8,7 +8,7 @@ description: A turning ring that shows something is loading.
 A small ring that turns while something loads: finding a server, saving, or
 waiting on a purchase.
 
-<!-- preview -->
+<!-- preview animate="0.8" fps="15" -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-spinner-light.webp" alt="Spinner example" loading="lazy"><img class="example-dark" src="/images/examples/components-spinner-dark.webp" alt="Spinner example" loading="lazy"></figure>
 
 ```luau
@@ -44,7 +44,7 @@ rules.
 
 A spinner beside a line of text:
 
-<!-- preview -->
+<!-- preview animate="0.8" fps="15" -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-spinner-2-light.webp" alt="Spinner example" loading="lazy"><img class="example-dark" src="/images/examples/components-spinner-2-dark.webp" alt="Spinner example" loading="lazy"></figure>
 
 ```luau
@@ -62,7 +62,7 @@ Lucy.Stack.new({
 
 Shown only while a request is out:
 
-<!-- preview -->
+<!-- preview animate="0.8" fps="15" -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-spinner-3-light.webp" alt="Spinner example" loading="lazy"><img class="example-dark" src="/images/examples/components-spinner-3-dark.webp" alt="Spinner example" loading="lazy"></figure>
 
 ```luau

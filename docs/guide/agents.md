@@ -80,3 +80,26 @@ Ask your agent something like "add a settings menu with a volume slider and a
 music switch". It should find Lucy in your game, use `Lucy.Slider` and
 `Lucy.Switch`, bind them to app state and give the menu a `defaultFocus`, without
 being told to read anything.
+
+## Inspect and drive UI with lucy-mcp
+
+The repo includes an MCP server at `libs/mcp` (`@goatsoft/lucy-mcp`) so an
+agent can inspect a running Lucy app in Studio, read `app.state`, click
+buttons, move gamepad focus, open stories in edit mode and take screenshots.
+It uses Studio's own MCP server, so keep **Enable Studio as MCP server** on in
+Studio's **Manage MCP Servers** panel.
+
+Requires Node 24 or newer. Point your agent's MCP config (for example `.mcp.json`
+in your game's folder) at `libs/mcp/src/cli.ts`:
+
+```json
+{
+  "mcpServers": {
+    "lucy": { "command": "node", "args": ["/path/to/lucy/libs/mcp/src/cli.ts"] }
+  }
+}
+```
+
+The server exposes `studios`, `apps`, `tree`, `state`, `set`, `press`, `focus`,
+`overlays`, `actions`, `preview` and `screenshot`. In Play mode it reads your
+game's live UI; in edit mode it reads any story opened with `preview`.

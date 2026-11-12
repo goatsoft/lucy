@@ -63,7 +63,7 @@ See [Responsive values](index.md#responsive-values) for every key you can use.
 
 A row with `align = "baseline"` lines up its texts where the letters sit, so a
 small line beside a big title reads as one line. The children sit
-bottom-aligned, and each text is lifted onto the biggest one's baseline. A
+aligned at the bottom, and each text is lifted onto the biggest one's baseline. A
 child's text is the child itself or its first text descendant (a Marquee), and
 hidden children do not count.
 

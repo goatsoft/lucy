@@ -143,11 +143,12 @@ app.toast.success("Round won", { description = "+$250" })
 
 ## Features
 
-- Button, Pressable, Badge, Text, Panel, Dialog, Toaster, Input, Checkbox,
-  Switch, Toggle, Toggle Group, Tabs, Radio Group, Progress, Skeleton,
-  Separator, Stack, Scroll Area, Grid, Item, Spinner, Alert, Image, Avatar,
-  Icon, Kbd, Marquee, Sheet, Select, Table, DataGrid, Slider, Number Field,
-  Collapsible and Accordion.
+- Accordion, Alert, Arrow, Attribution, Avatar, Badge, Button, Checkbox,
+  Collapsible, DataGrid, Dialog, Effect, Gradient, Grid, Icon, Image,
+  Inline Confirm, Input, Item, Kbd, Leaderboard, Marquee, Menu, Number Field,
+  Panel, Pressable, Progress, Radio Group, Scroll Area, Select, Separator,
+  Sheet, Skeleton, Slider, Slot, SortButton, Spinner, Stack, Switch, Table,
+  Tabs, Text, Toaster, Toggle, Toggle Group, Tour and Waveform.
 - Light and dark themes for each base colour, with an optional primary colour,
   switchable while the game runs.
 - Controls that grow for touch and console, and layout props that change with
@@ -163,15 +164,16 @@ app.toast.success("Round won", { description = "+$250" })
   lucy-icons build.
 - UI in the world: SurfaceGuis on parts and BillboardGuis over heads that
   follow the theme and take clicks.
-- A server half: the same store on the server, sending each player what they
-  may see, and requests from players with the server checking every one.
+- Guided tours with spotlight cutouts and arrows for first time players.
+- Server state sync, DataQueue request pacing, synced Boards and requests from
+  players checked on the server.
 - `Lucy.hydrate` to add behaviour to UI built in Studio.
 - Stories that preview any component or scene in Studio without pressing Play.
-- Devtools that show a running UI, and press and focus things as a player
-  would, to check your work in Studio by hand or with an agent.
+- Devtools and the Lucy MCP server that look at and drive a running UI in
+  Studio, by hand or with a coding agent.
 - Skills for Claude Code, Codex and Antigravity, so coding agents build with
   Lucy's components and rules.
-- Strict types, no runtime dependencies, and over 750 specs.
+- Strict types and no runtime dependencies.
 
 ## Architecture
 

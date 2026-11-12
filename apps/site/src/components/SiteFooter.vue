@@ -15,6 +15,7 @@ const columns = [
   {
     title: 'Project',
     links: [
+      { label: 'About', to: '/about' },
       { label: 'GitHub', href: SITE.repo },
       { label: 'Wally package', href: SITE.wally },
     ],

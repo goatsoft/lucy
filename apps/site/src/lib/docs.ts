@@ -9,11 +9,12 @@ import IconSearch from '~icons/lucide-extended/search-duotone'
 import { useHead } from '@/head'
 import * as data from 'virtual:gruff'
 
-// The basics: install, screens, state and input.
-const getStarted = new Set(['/docs', '/docs/guide/scenes', '/docs/guide/app-state', '/docs/guide/actions'])
+// The basics: install, screens, state, input and full export list.
+const getStarted = new Set(['/docs', '/docs/guide/scenes', '/docs/guide/app-state', '/docs/guide/actions', '/docs/reference/api'])
 // Past the basics: your own components and logic, previews, agents.
 const goFurther = new Set(['/docs/guide/components', '/docs/guide/composables', '/docs/stories', '/docs/guide/agents'])
-const reference = new Set(['/docs/reactivity', '/docs/architecture', '/docs/benchmarks', '/docs/known-issues'])
+const contributing = new Set(['/docs/development', '/docs/known-issues'])
+const reference = new Set(['/docs/reactivity', '/docs/architecture', '/docs/benchmarks'])
 
 /**
  * The docs sidebar, in the order a game is built: the basics, the rest of the guides,
@@ -26,8 +27,8 @@ export const nav = navGroups(data.pages, [
   { title: 'Components', match: (r) => r === '/docs/components' || r.startsWith('/docs/components/') },
   { title: 'Recipes', match: (r) => r.startsWith('/docs/recipes') },
   { title: 'Go further', match: (r) => goFurther.has(r) },
-  { title: 'Reference', match: (r) => reference.has(r) || (r.startsWith('/docs/reference/') && !r.startsWith('/docs/reference/composables/')) },
-  { title: 'Contributing', match: (r) => r === '/docs/development' },
+  { title: 'Reference', match: (r) => reference.has(r) || (r.startsWith('/docs/reference/') && !getStarted.has(r) && !r.startsWith('/docs/reference/composables/')) },
+  { title: 'Contributing', match: (r) => contributing.has(r) },
 ])
 
 /** What the site gives gruff's docs components (`app.use(gruffDocs(docs))`). */

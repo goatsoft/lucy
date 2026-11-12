@@ -10,7 +10,7 @@ new item in the shop, a door they can walk through. It grows in when it shows,
 then keeps moving so the eye finds it. [Tour](tour.md) points at each step's
 target with one.
 
-<!-- preview -->
+<!-- preview animate="1.6" fps="12" warmup="0.45" -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-arrow-light.webp" alt="Arrow example" loading="lazy"><img class="example-dark" src="/images/examples/components-arrow-dark.webp" alt="Arrow example" loading="lazy"></figure>
 
 ```luau
@@ -48,9 +48,9 @@ It also takes the [props every component takes](index.md#using-a-component).
 ## Your own arrow
 
 Pass any icon name your game registered (see [Icon](icon.md)). Draw it
-pointing down; it is turned to `direction` like the built-in shapes, and moves
+pointing down; it is turned to `direction` like the built in shapes, and moves
 the same way. It keeps the Icon's colours: register it with `tint = false` for
-full-colour art.
+full colour art.
 
 ```luau
 Lucy.Arrow.new({ icon = "dl:pointer", size = "lg", direction = "left", Parent = hud })

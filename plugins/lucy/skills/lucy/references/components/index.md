@@ -1,56 +1,83 @@
 <!-- Made by scripts/skills.ts from docs/components/index.md. Edit the doc, not this file. -->
 # Components
 
-Each component has its own page with its props, usage and examples:
+47 components, grouped by what they do.
+
+## Actions and choices
+
+| Component | What it is |
+|---|---|
+| [Button](button.md) | A button, in six variants and four sizes |
+| [Checkbox](checkbox.md) | A box that can be checked, with an optional label |
+| [Inline Confirm](inline-confirm.md) | Asks "Are you sure?" in place, with YES and NO |
+| [Menu](menu.md) | Actions that open as a list, a ring or a fan and close once one is picked |
+| [Pressable](pressable.md) | A surface the player can click that holds anything |
+| [Radio Group](radio-group.md) | A list of options where the player picks exactly one |
+| [Select](select.md) | A button that opens a list of options to pick one from |
+| [Switch](switch.md) | An on and off switch, with an optional label |
+| [Toggle](toggle.md) | A button that stays pressed until it is clicked again |
+| [Toggle Group](toggle-group.md) | A row of toggles where the player picks one or several |
+
+## Forms and inputs
+
+| Component | What it is |
+|---|---|
+| [Input](input.md) | A text field, on one line or several |
+| [Number Field](number-field.md) | A number with minus and plus buttons, typed or stepped |
+| [Slider](slider.md) | Picks a number in a range by dragging or with the arrows |
+
+## Layout and surfaces
 
 | Component | What it is |
 |---|---|
 | [Accordion](accordion.md) | Sections the player opens and closes, one or several at a time |
+| [Collapsible](collapsible.md) | A header that shows or hides what is under it |
+| [Gradient](gradient.md) | One of the theme's gradients on a frame, a panel or a button |
+| [Grid](grid.md) | Rows of equal cells, such as shop items or emotes |
+| [Panel](panel.md) | A card with a header, content and footer |
+| [Scroll Area](scroll-area.md) | A region that scrolls when its content does not fit |
+| [Separator](separator.md) | A thin line between items |
+| [Slot](slot.md) | What goes inside a badge, button, tab or option, and how it takes the component's colours |
+| [Stack](stack.md) | A row or column that lays out its children |
+| [Tabs](tabs.md) | A tab bar with one panel per tab |
+
+## Lists and data
+
+| Component | What it is |
+|---|---|
+| [DataGrid](data-grid.md) | A table the player can sort by pressing its headers |
+| [Item](item.md) | A row in a list, with media, a title, a description and actions |
+| [Leaderboard](leaderboard.md) | Ranked players with medals for the top three and the player's own row pinned |
+| [SortButton](sort-button.md) | A column heading that sorts a list when pressed |
+| [Table](table.md) | Rows and columns for leaderboards, friends lists and inventories |
+
+## Overlays, tours and alerts
+
+| Component | What it is |
+|---|---|
 | [Alert](alert.md) | A box that calls attention to a message |
 | [Arrow](arrow.md) | A big arrow that points at something on screen, grows in and bounces |
+| [Dialog](dialog.md) | A modal window, and alert dialogs that ask for a yes or no |
+| [Sheet](sheet.md) | A panel from the side of the screen, a drawer from the bottom on touch |
+| [Toaster](toaster.md) | Toast notifications through `app.toast` |
+| [Tour](tour.md) | A guided walk through your game's own UI, one step at a time |
+
+## Display, motion and media
+
+| Component | What it is |
+|---|---|
 | [Attribution](attribution.md) | A badge displaying "Built with Lucy" with Lucy's mascot head |
 | [Avatar](avatar.md) | A player's headshot, or a monogram for a bot |
 | [Badge](badge.md) | A small label for a status or count |
-| [Button](button.md) | A button, in six variants and four sizes |
-| [Checkbox](checkbox.md) | A box that can be checked, with an optional label |
-| [Collapsible](collapsible.md) | A header that shows or hides what is under it |
-| [DataGrid](data-grid.md) | A table the player can sort by pressing its headers |
-| [Dialog](dialog.md) | A modal window, and alert dialogs that ask for a yes or no |
-| [Effect](effect.md) | An animated celebration behind a reward or a level up: rays, or your own |
-| [Gradient](gradient.md) | One of the theme's gradients on a frame, a panel or a button |
-| [Grid](grid.md) | Rows of equal cells, such as shop items or emotes |
+| [Effect](effect.md) | An animated celebration behind a reward or a level up: rays, outline, or your own |
 | [Icon](icon.md) | A small picture in the theme's colours, by name or asset id |
 | [Image](image.md) | A picture from an asset id or a thumbnail |
-| [Inline Confirm](inline-confirm.md) | Asks "Are you sure?" in place, with YES and NO |
-| [Input](input.md) | A text field, on one line or several |
-| [Item](item.md) | A row in a list, with media, a title, a description and actions |
 | [Kbd](kbd.md) | The key to press, for the player's keyboard or controller |
-| [Leaderboard](leaderboard.md) | Ranked players with medals for the top three and the player's own row pinned |
 | [Marquee](marquee.md) | One line of text that scrolls, back and forth or round like a ticker, when it is too long to fit |
-| [Menu](menu.md) | Actions that open as a list, a ring or a fan and close once one is picked |
-| [Number Field](number-field.md) | A number with minus and plus buttons, typed or stepped |
-| [Panel](panel.md) | A card with a header, content and footer |
-| [Pressable](pressable.md) | A surface the player can click that holds anything |
 | [Progress](progress.md) | A bar that fills from 0 to a maximum |
-| [Radio Group](radio-group.md) | A list of options where the player picks exactly one |
-| [Scroll Area](scroll-area.md) | A region that scrolls when its content does not fit |
-| [Select](select.md) | A button that opens a list of options to pick one from |
-| [Separator](separator.md) | A thin line between items |
-| [Sheet](sheet.md) | A panel from the side of the screen, a drawer from the bottom on touch |
-| [Slot](slot.md) | What goes inside a badge, button, tab or option, and how it takes the component's colours |
 | [Skeleton](skeleton.md) | A pulsing placeholder while content loads |
-| [Slider](slider.md) | Picks a number in a range by dragging or with the arrows |
-| [SortButton](sort-button.md) | A column heading that sorts a list when pressed |
 | [Spinner](spinner.md) | A turning ring while something loads |
-| [Stack](stack.md) | A row or column that lays out its children |
-| [Switch](switch.md) | An on and off switch, with an optional label |
-| [Table](table.md) | Rows and columns for leaderboards, friends lists and inventories |
-| [Tabs](tabs.md) | A tab bar with one panel per tab |
 | [Text](text.md) | Headings, body copy and labels |
-| [Toaster](toaster.md) | Toast notifications through `app.toast` |
-| [Tour](tour.md) | A guided walk through your game's own UI, one step at a time |
-| [Toggle](toggle.md) | A button that stays pressed until it is clicked again |
-| [Toggle Group](toggle-group.md) | A row of toggles where the player picks one or several |
 | [Waveform](waveform.md) | A row of columns from levels: a song's loudness, an equaliser, a meter |
 
 ## Using a component
@@ -104,11 +131,17 @@ local coins = Lucy.ref(0)
 local isBusy = Lucy.ref(false)
 local lights = Lucy.ref(true)
 
-Lucy.Button.new({
-    text = function() return `Buy ({coins()})` end,
-    disabled = isBusy,
+Lucy.Stack.new({
+    gap = "Space3",
+    children = {
+        Lucy.Button.new({
+            text = function() return `Buy ({coins()})` end,
+            disabled = isBusy,
+        }),
+        Lucy.Switch.new({ label = "Club lights", checked = lights }),
+    },
+    Parent = parent,
 })
-Lucy.Switch.new({ label = "Club lights", checked = lights })
 ```
 
 - **Writable sources bind both ways.** A ref, or a computed made with `{ get, set }`,
@@ -145,119 +178,13 @@ sideways or a short window), `default`. First match in that order wins.
 
 ## Writing a component
 
-A component is a spec, a table built once, passed to `Lucy.Component.mount` with
-each mount's props. Its `render` runs once per mount and describes the instances;
-bindings keep them in step with state from then on.
-
-```luau
-local TweenService = game:GetService("TweenService")
-local Lucy = require(ReplicatedStorage.Packages.Lucy)
-
-local Stat = {}
-
-local rules: { Lucy.Rule } = {
-    { selector = ".ui-stat", priority = 0, properties = { BackgroundColor3 = "$Card", BorderSizePixel = 0 } },
-    { selector = ".ui-stat.ui-low", priority = 10, properties = { BackgroundColor3 = "$Destructive" } },
-    {
-        selector = ".ui-stat-text",
-        priority = 0,
-        properties = { BackgroundTransparency = 1, TextColor3 = "$CardForeground", FontFace = "$FontSansSemibold" },
-    },
-}
-Stat.rules = rules
-
--- Built once and shared by every Stat.
-local spec: Lucy.Spec = {
-    kind = "stat",
-    defaults = { label = "", value = 0, low = 10, visible = true }, -- the keys in ui.<id>
-    rules = Stat.rules,
-    render = function(h)
-        local label, value, low = h:ref("label"), h:ref("value"), h:ref("low")
-        -- Read by two bindings and a watcher, so a computed; trivial ones can be plain functions.
-        local isLow = Lucy.computed(function()
-            return value() <= low()
-        end)
-        local height = Lucy.useMetric(h.app, "ControlMd") -- follows density
-
-        local text = Lucy.new "TextLabel" {
-            Size = function() return UDim2.new(1, 0, 0, height()) end,
-            Text = function() return `{label()}: {value()}` end,
-            Tags = { "ui-stat-text" },
-        }
-
-        -- A side effect, so a watcher: pulse when the stat turns low.
-        local pulse = TweenService:Create(text, TweenInfo.new(0.2, Enum.EasingStyle.Quad,
-            Enum.EasingDirection.Out, 0, true), { TextTransparency = 0.5 })
-        Lucy.watch(isLow, function(nowLow)
-            if nowLow then pulse:Play() end
-        end)
-
-        return Lucy.new "Frame" {
-            Size = UDim2.fromScale(1, 0),
-            AutomaticSize = Enum.AutomaticSize.Y,
-            Visible = h:ref("visible"),
-            Tags = { "ui-stat", ["ui-low"] = isLow },
-            text,
-        }
-    end,
-}
-
-function Stat.new(props: Lucy.Props?): Lucy.Handle
-    return Lucy.Component.mount(spec, props)
-end
-
-return Stat
-```
-
-- **`h:ref(key)`** is a writable ref onto one state key. Reading it in a binding or
-  computed subscribes to that key only; writing it writes the store. `h:get(key)` reads without tracking,
-  `h:set(key, value)` writes one key and `h:set(patch)` merges several.
-- **Everything render creates belongs to the component**: bindings, computeds,
-  watchers, composables and the elements themselves. Destroying the handle stops
-  all of it.
-- **Validate in render.** Check props there (an unknown variant, say) so a bad
-  value fails `new` itself. A binding that sees a bad value later reports it
-  like any effect error.
-- **Variants are tags.** Bind them with a getter in `Tags`:
-  `function() return "ui-stat-tone-" .. tone() end`. Looks stay in rules.
-- **Static helpers can stay plain.** Layout objects with no bindings, such as a
-  `UIListLayout`, can be `Lucy.Component.list(...)` or `Lucy.Component.create(...)`.
-- **Build the spec once.** A spec made at the top of the module costs nothing per
-  mount. Read each mount's own props (callbacks and the like) from `h.props`.
-- **Methods go on the handle** after `mount` returns: `function handle.toggle(h) ... end`.
-- **Clickable components** call `Lucy.Component.clickable(handle)` after `mount`:
-  it adds `handle.Activated`, `handle:click()` and the `onClick` prop, the same as
-  Button and Pressable.
-- **Report what the player did** with `h:emit(event, value)` (`activate`, `toggle`,
-  `open`, `close`), so games can play sounds for it through
-  [useUiSound](../reference/composables/use-ui-sound.md).
-
-### Watchers are a last resort
-
-A watcher that sets a property is a binding written the long way: it runs more
-often, and the property now has two owners. Bind the property instead.
-
-```luau
--- No: a watcher setting what a binding could own.
-Lucy.watch(h:ref("disabled"), function(off) button.Interactable = not off end)
-
--- Yes: a binding.
-Interactable = function() return not disabled() end,
-```
-
-Use `Lucy.watch` and `Lucy.watchEffect` for side effects only: tweens, callbacks
-into game code (`onCheckedChange`), focus scopes and back handlers (through their
-composables), sounds, timers.
-
-### Where the cost goes
-
-Each bound key costs a little at mount: it gets a binding, and the store sets
-up tracking for it the first time it is read. That is paid once. After that, a
-write runs only the bindings that read the key and creates no garbage: changing
-a Button's text sets its `Text` again and nothing else. See
+A component is a spec table passed to `Lucy.Component.mount` with each mount's
+props. `render` runs once to describe the instances, and bindings keep them in
+step with state from then on. For the full walkthrough, rules and performance
+notes, see [Build a component](../guide/components.md) and
 [Benchmarks](https://lucy.goatsoft.io/docs/benchmarks/).
 
 ## Roadmap
 
-After 0.1.0: Tooltip, Carousel, Field, Empty, Dropdown Menu, `toast.promise`, pausing
-toasts on hover.
+After 0.1.0: Tooltip, Carousel, Field, Empty, `toast.promise`, pausing toasts
+on hover.

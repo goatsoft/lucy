@@ -94,7 +94,7 @@ Every token, option and method is in the [theming reference](reference/theming.m
 | overlay | 100+ | any, independent (`scenes.visible`) | HUD, chat |
 | modal | 200+ | stacked (`scenes.stack`) | Pause, Settings |
 | portal: modal | 900 | dialogs and anything else floating, newest on top | Dialog, Dialog.alert |
-| portal: tour | 950 | the running tour's cut-out and callout | Tour |
+| portal: tour | 950 | the running tour's cutout and callout | Tour |
 | portal: toast | 1000 | toasts | app.toast |
 
 [Build screens with scenes](guide/scenes.md) shows how to register and move between them.

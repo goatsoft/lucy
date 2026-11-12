@@ -231,9 +231,9 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Composables](references/reference/composables/index.md): State over time and behaviour shared between components. Every Lucy.use* composable.
 - [useBackHandler](references/reference/composables/use-back-handler.md): Intercepts back inputs while active, calling your function.
 - [useCount](references/reference/composables/use-count.md): Counts a number smoothly up or down to a target value with easing.
-- [useCountdown](references/reference/composables/use-countdown.md): Synchronized countdown of whole seconds remaining until a timestamp.
+- [useCountdown](references/reference/composables/use-countdown.md): Synchronised countdown of whole seconds remaining until a timestamp.
 - [useDensity](references/reference/composables/use-density.md): Returns a getter for the current device density profile.
-- [useDrag](references/reference/composables/use-drag.md): Follows a mouse or touch drag starting from a target GUI element.
+- [useDrag](references/reference/composables/use-drag.md): Follows a mouse or touch drag starting from a GUI element.
 - [useFocusScope](references/reference/composables/use-focus-scope.md): Traps keyboard and gamepad focus inside a container while active.
 - [useFocusZone](references/reference/composables/use-focus-zone.md): A group of HUD controls nothing selects until the player steps in with a key; B steps out.
 - [useHoldArrows](references/reference/composables/use-hold-arrows.md): Keeps the gamepad's selection on a control while it takes the arrows itself, such as a grabbed clip.
@@ -242,7 +242,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [useResponsive](references/reference/composables/use-responsive.md): Returns a getter for a responsive value keyed by device, input mode, breakpoint or orientation.
 - [useReveal](references/reference/composables/use-reveal.md): Types text out character by character for dialogue and narrative lines.
 - [useSize](references/reference/composables/use-size.md): Follows an object's size in the units you lay it out in, for layout that depends on the room it gets.
-- [useSort](references/reference/composables/use-sort.md): Multi-column sorting engine for any arbitrary list of items.
+- [useSort](references/reference/composables/use-sort.md): Sorts any list by one or more keys.
 - [useTable](references/reference/composables/use-table.md): Manages sorting for tabular data and column definitions.
 - [useUiSound](references/reference/composables/use-ui-sound.md): Registers sound callbacks for UI component events like clicks, toggles and opens.
 - [useWhile](references/reference/composables/use-while.md): Runs a setup function while a condition is true, cleaning it up when false.
@@ -254,7 +254,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Utils](references/reference/utils.md): Plain helpers and utility classes: Lucy.Format, Lucy.Scroll, Lucy.Signal and Lucy.Maid.
 - [Known issues](references/known-issues.md): Problems Lucy cannot fix on its own, what you will see, why, and what to do instead.
 - [Game folder structure](references/recipes/folder-structure.md): A suggested layout for your game folder, and where each part of a Lucy game goes: one App, utils, features, composables, components, world UI, panels and scenes on the client; services and requests on the server.
-- [HUD](references/recipes/hud.md): A dance floor heads-up display with a combo badge, coins that pop when they change, a hype meter that fills with the crowd, and a toast for combo milestones.
+- [HUD](references/recipes/hud.md): A dance floor HUD with a combo badge, coins that pop when they change, a hype meter that fills with the crowd, and a toast for combo milestones.
 - [Recipes](references/recipes/index.md): Where each part of a game goes, then whole pieces from Club Lucy you can copy into a game and change: a HUD, a pause menu, audio settings that save, an emote shop and saved player data.
 - [Leaderboards](references/recipes/leaderboards.md): Best combo and Hype boards kept in DataStores, all time and this week, a Leaderboards dialog with a tab per board and the dancer's own rank, and a top 5 every player sees.
 - [Pause menu](references/recipes/pause-menu.md): A pause menu that opens on B or Backspace and from a button, with a dimmed backdrop, options on top, a confirm before leaving, and gameplay keys off while it is open.

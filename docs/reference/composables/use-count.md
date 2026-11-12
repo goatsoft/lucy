@@ -6,10 +6,9 @@ order: 13
 
 # useCount
 
-`Lucy.useCount` animates a numeric value smoothly towards a target number,
-updating whenever the target value changes. It starts from `from` (defaulting to
-0) and applies ease-out timing so large score increases or coin gains feel punchy
-without dragging on.
+`Lucy.useCount` animates a number smoothly towards `value` whenever `value`
+changes. It starts from `from` (`0` by default) and eases out towards the new
+target.
 
 ## Usage
 
@@ -19,32 +18,31 @@ local counter = Lucy.useCount(value, options?)
 
 | Argument | Type | Default | What it is |
 |---|---|---|---|
-| `value` | `MaybeRef<number>` | required | Target number to count towards |
-| `options` | `table?` | `{}` | Timing and starting options (see below) |
+| `value` | `MaybeRef<number>` | required | Target number to count to |
+| `options` | `table?` | `{}` | Timing and starting value |
 
 ### Options
 
 | Option | Type | Default | What it does |
 |---|---|---|---|
-| `seconds` | `number` | `0.8` | Total duration of the counting transition in seconds |
-| `from` | `number` | `0` | Starting value for the initial animation |
+| `seconds` | `number` | `0.8` | How long the count takes, in seconds |
+| `from` | `number` | `0` | Starting value on mount |
 
 ### Returns
 
 | Name | Type | What it is |
 |---|---|---|
-| `value()` | `() -> number` | The instantaneous unrounded animated number |
-| `counting()` | `() -> boolean` | `true` while the count transition is running |
-| `skip()` | `() -> ()` | Immediately snaps the number to the final target value |
-| `done` | `Lucy.Signal` | Fires whenever the count reaches the target number |
+| `value()` | `() -> number` | Current animated number (unrounded) |
+| `counting()` | `() -> boolean` | `true` while counting |
+| `skip()` | `() -> ()` | Jumps straight to the target value |
+| `done` | `Lucy.Signal` | Fires when the count reaches the target |
 
-Format `counter.value()` with [`Lucy.Format.number`](../utils.md#formatnumber) to
-display clean integers with commas.
+Pass `counter.value()` through
+[`Lucy.Format.number`](../utils.md#formatnumber) to round it and add commas.
 
-## Example: Club Lucy coin reward
+## Example: coin reward
 
-Display animated coins after winning a dance-off, playing a coin sound when the
-count finishes:
+Count up won coins and play a chime when the count finishes:
 
 ```luau
 local coins = app.state:ref("player.coins")
@@ -62,5 +60,5 @@ Lucy.new "TextLabel" {
 }
 ```
 
-The [Text](../../components/text.md) component provides this built in via the
-`value` and `count` props: `Lucy.Text.new({ value = coins, count = true })`.
+[Text](../../components/text.md) has this built in via `value` and `count`:
+`Lucy.Text.new({ value = coins, count = true })`.

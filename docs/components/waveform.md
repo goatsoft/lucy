@@ -106,6 +106,9 @@ Lucy.Waveform.new({
 A song's loudness for a timeline, each section's colour blending into the next along the width,
 the stops at the sections' starts:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-waveform-3-light.webp" alt="Waveform example" loading="lazy"><img class="example-dark" src="/images/examples/components-waveform-3-dark.webp" alt="Waveform example" loading="lazy"></figure>
+
 ```luau
 local stops = {}
 for _, section in song.sections do
@@ -119,7 +122,8 @@ Lucy.Waveform.new({
     end,
     stretch = true,
     stops = stops,
-    height = 48,
+    trail = 0.1,
+    size = UDim2.fromOffset(420, 56),
     Parent = timeline,
 })
 ```

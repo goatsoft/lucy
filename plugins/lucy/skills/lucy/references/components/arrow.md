@@ -41,9 +41,9 @@ It also takes the [props every component takes](index.md#using-a-component).
 ## Your own arrow
 
 Pass any icon name your game registered (see [Icon](icon.md)). Draw it
-pointing down; it is turned to `direction` like the built-in shapes, and moves
+pointing down; it is turned to `direction` like the built in shapes, and moves
 the same way. It keeps the Icon's colours: register it with `tint = false` for
-full-colour art.
+full colour art.
 
 ```luau
 Lucy.Arrow.new({ icon = "dl:pointer", size = "lg", direction = "left", Parent = hud })

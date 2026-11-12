@@ -42,6 +42,9 @@ local STATE = {
 }
 
 function S.clear()
+	if S.Lucy and S.Lucy.Animate then
+		S.Lucy.Animate.manual = false
+	end
 	for _, undo in S.undo or {} do
 		pcall(undo)
 	end
@@ -301,11 +304,40 @@ local function fixtures(lucy, slot)
 		track("sunset-groove", "Sunset Groove", "The Glowsticks", 118, 241),
 		track("midnight-drop", "Midnight Drop", "DJ Lucy", 140, 187),
 	}
+	tracks[1].sections = {
+		{ start = 0, kind = "intro" },
+		{ start = 48, kind = "drop" },
+		{ start = 112, kind = "break" },
+		{ start = 164, kind = "outro" },
+	}
+	local levels64 = {}
+	for i = 1, 64 do
+		levels64[i] = 0.45 + 0.35 * math.sin(i / 5) + 0.15 * math.sin(i * 1.3)
+	end
 	local nova = { Name = "NovaDances", DisplayName = "Nova", UserId = 2 }
 	local f = {
 		tracks = tracks,
 		song = tracks[1],
 		track = tracks[1],
+		songLevels = levels64,
+		songLength = lucy.ref(214),
+		playhead = lucy.ref(108),
+		sectionColour = {
+			intro = "$Sky400",
+			drop = "$Pink500",
+			["break"] = "$Purple400",
+			outro = "$Amber400",
+		},
+		sectionAt = function(col)
+			if col <= 15 then
+				return "intro"
+			elseif col <= 36 then
+				return "drop"
+			elseif col <= 50 then
+				return "break"
+			end
+			return "outro"
+		end,
 		player = { Name = "DJLucy", DisplayName = "DJ Lucy", UserId = 1 },
 		friend = nova,
 		emote = { id = "moonwalk", name = "Moonwalk", price = 300 },
@@ -432,6 +464,35 @@ local function fixtures(lucy, slot)
 		"1. Be kind on the Dance Floor. Everyone is here to have fun.\n\n2. No spamming emotes in someone's face. Give the crew room to move.\n\n3. Requests go in the queue. DJ Lucy plays them in order, so be patient.\n\n4. The Booth is for the DJ on the decks. Ask before you step up.\n\n5. Coins you earn are yours. Trading them for real money is not allowed.\n\n6. Report bad behaviour with the menu, not in chat."
 	f.reloadSortedBy = function() end
 	f.loadNextPage = function() end
+	f.loadTopDancers = function()
+		task.wait(10)
+	end
+	f.saveOutfit = function()
+		task.wait(10)
+	end
+	f.buildMoves = function()
+		return S.Lucy.Stack.new({
+			direction = "horizontal",
+			gap = "Space2",
+			children = {
+				S.Lucy.Button.new({ text = "Moonwalk 300", variant = "outline" }),
+				S.Lucy.Button.new({ text = "Robot 150", variant = "outline" }),
+				S.Lucy.Button.new({ text = "Twirl 50", variant = "outline" }),
+			},
+		})
+	end
+	f.buildPacks = function()
+		return S.Lucy.Text.new({ text = "Club packs and bundles", variant = "muted" })
+	end
+	f.buildDrinks = function()
+		return S.Lucy.Text.new({ text = "Sodas and energy drinks", variant = "muted" })
+	end
+	f.buildEmotes = f.buildMoves
+	f.buildOutfits = function()
+		return S.Lucy.Text.new({ text = "New outfits drop every Friday", variant = "muted" })
+	end
+	f.moves = f.buildMoves
+	f.packs = f.buildPacks
 	f.icon = S.Lucy.Icon.new({ icon = "lucide-extended:sparkles-filled", size = "lg" })
 	f.name = S.Lucy.Text.new({ text = "Moonwalk", variant = "large" })
 	-- Containers an example parents to without making them: the picture's slot.
@@ -439,6 +500,7 @@ local function fixtures(lucy, slot)
 		{
 			"settings",
 			"crewList",
+			"crewCard",
 			"podium",
 			"list",
 			"emoteShop",
@@ -463,6 +525,8 @@ local function fixtures(lucy, slot)
 			"footer",
 			"content",
 			"nowPlaying",
+			"ticker",
+			"timeline",
 			"levelStage",
 			"dialog",
 			"panel",
@@ -814,9 +878,83 @@ function S.screen(item, theme)
 	return string.format("%s 0,0,%d,%d vp=%d,%d", item.name, screen.X, screen.Y, screen.X, screen.Y)
 end
 
+-- What the rendered item drew on screen, or the whole screen when requested.
+function S._measure(item, slot, screen)
+	if item.screen and not item.trim then
+		return { 0, 0, screen.X, screen.Y }
+	end
+	local r = S.ink(slot, screen)
+	for _, g in overlayGuis() do
+		r = union(r, S.ink(g, screen))
+	end
+	return r
+end
+
+function S._advance(dt)
+	local step = 1 / 60
+	local left = dt
+	while left > 1e-4 do
+		local chunk = math.min(step, left)
+		S.Lucy.Animate.step(chunk)
+		left -= chunk
+	end
+end
+
+-- Mounts one animated example with manual clock stepping; preserves _animBox on light pass.
+function S.animSetup(item, theme, preserveBox)
+	S.mount(theme)
+	S.Lucy.Animate.manual = true
+	if not preserveBox then
+		S._animBox = nil
+	end
+	local screen = workspace.CurrentCamera.ViewportSize
+	local slot = newSlot(1)
+	if not item.screen then
+		slot.AnchorPoint = Vector2.new(0.5, 0.5)
+		slot.Position = UDim2.fromScale(0.5, 0.5)
+	end
+	S._animItem, S._animSlot = item, slot
+	local err = run(item.code, slot, item["then"])
+	if err then
+		return item.name .. " ERR " .. err
+	end
+	task.wait(0.25)
+	local warm = item.warmup or 0
+	if warm > 0 then
+		S._advance(warm)
+		task.wait(0.05)
+	end
+	S._animBox = union(S._animBox, S._measure(item, slot, screen))
+	return "ANIMATE " .. item.name
+end
+
+function S.step(dt)
+	S._advance(dt)
+	task.wait(0.05)
+	local screen = workspace.CurrentCamera.ViewportSize
+	S._animBox = union(S._animBox, S._measure(S._animItem, S._animSlot, screen))
+	return "ok"
+end
+
+function S.box()
+	local item = S._animItem
+	local screen = workspace.CurrentCamera.ViewportSize
+	local r = S._animBox
+	if item.screen and not item.trim then
+		r = { 0, 0, screen.X, screen.Y }
+	end
+	if not r then
+		return item.name .. " EMPTY"
+	end
+	return string.format("%s %s vp=%d,%d", item.name, fmt(r), screen.X, screen.Y)
+end
+
 -- One example by name, the way its marker asks.
 function S.one(name, theme)
 	local e = S.byName[name]
+	if e.animate ~= nil then
+		return S.animSetup(e, theme, false)
+	end
 	if e.screen then
 		return S.screen(e, theme)
 	end
@@ -865,10 +1003,10 @@ function S.start(list)
 	return `{n} examples`
 end
 
--- Inline examples share a screen; solo and screen ones get one each.
+-- Inline examples share a screen; solo, screen and animated ones get one each.
 local function alone(name)
 	local e = S.byName[name]
-	return e.solo or e.screen
+	return e.solo or e.screen or (e.animate ~= nil)
 end
 
 -- Draws the next screenful from the queue in `theme`.
@@ -908,6 +1046,10 @@ end
 function S.again(theme)
 	assert(S.lastSet, "nothing drawn yet")
 	if #S.lastSet == 1 and alone(S.lastSet[1]) then
+		local e = S.byName[S.lastSet[1]]
+		if e.animate ~= nil then
+			return S.animSetup(e, theme, true)
+		end
 		return S.one(S.lastSet[1], theme)
 	end
 	return S.sheet(S.lastSet, theme)

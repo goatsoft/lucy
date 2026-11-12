@@ -6,9 +6,9 @@ order: 6
 
 # useUiSound
 
-Lucy plays no audio directly. Components emit semantic events when players
-interact with them (`activate`, `toggle`, `open`, `close`, `select`), and
-`Lucy.useUiSound` listens for these events to trigger your game's sound effects.
+Lucy plays no audio of its own. Components report events when the player
+interacts with them (`activate`, `toggle`, `open`, `close`, `select`), and
+`Lucy.useUiSound` hooks those events to your game's sounds.
 
 ## Usage
 
@@ -18,36 +18,33 @@ Lucy.useUiSound(app?, soundMap)
 
 | Argument | Type | Default | What it is |
 |---|---|---|---|
-| `app` | `Lucy.App?` | `Lucy.App.current()` | The app instance routing UI events |
-| `soundMap` | `table` | required | Event callback mappings |
+| `app` | `Lucy.App?` | `Lucy.App.current()` | The App routing UI events |
+| `soundMap` | `table` | required | Map of event names to functions (or `false`) |
 
 ### Supported events
 
-| Event | When it fires | Callback value |
+| Event | When it fires | Value passed |
 |---|---|---|
 | `activate` | A Button or Pressable is clicked | None |
-| `toggle` | A Switch or Checkbox is turned on or off | `boolean` (new checked state) |
-| `open` | A Dialog or sheet opens | None |
-| `close` | A Dialog or sheet closes | None |
-| `select` | An option is chosen in RadioGroup, ToggleGroup or Select | The selected value |
+| `toggle` | A Switch or Checkbox changes | `boolean` (new checked state) |
+| `open` | A Dialog or Sheet opens | None |
+| `close` | A Dialog or Sheet closes | None |
+| `select` | A choice is picked in RadioGroup, ToggleGroup, Select or Tabs | The picked value |
 
 ### Scoping and silencing
 
-- **Innermost scope wins**: Lucy searches from the emitting component upwards
-  through its parent reactive scopes. The first handler that names the event is
-  called. Call `useUiSound` at the scene level for default sounds, and call it
-  again in a specific panel to override sounds locally.
-- **Passing `false` silences an event**: `{ activate = false }` silences buttons
-  in busy rhythm mini-games.
-- **Component prop `sound = false`**: Silences all sound events emitted by that
-  specific component instance.
-- **Safe error handling**: If a sound callback throws an error, the error is
-  warned in output without breaking the player's interaction or click logic.
+- **Innermost scope wins**: Lucy walks up from the component through its
+  parent scopes and calls the first handler that names the event. Set default
+  sounds on the scene, then override them inside a panel when needed.
+- **`false` silences an event**: `{ activate = false }` stops button sounds
+  during a busy rhythm minigame.
+- **`sound = false` on a component**: silences every event from that instance.
+- **Errors stay contained**: an error in a sound function warns in the output
+  without breaking the click itself.
 
-## Example: Club Lucy audio feedback
+## Example: audio feedback
 
-In Club Lucy, UI interactions trigger turntable scratch samples and button
-thumps:
+Play sounds for clicks, switches, menus and selections:
 
 ```luau
 Lucy.useUiSound(app, {

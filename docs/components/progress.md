@@ -92,6 +92,8 @@ its instance and add rules for `.ui-progress-step`, `.ui-progress-step-on` and
 A hype meter that follows app state and turns red when the crowd goes cold:
 
 <!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-progress-3-light.webp" alt="Progress example" loading="lazy"><img class="example-dark" src="/images/examples/components-progress-3-dark.webp" alt="Progress example" loading="lazy"></figure>
+
 ```luau
 local hype = app.state:ref("player.hype")
 

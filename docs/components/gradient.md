@@ -41,7 +41,7 @@ parent's transparency still applies.
 
 A gradient tints its parent's own words too, so put it on something whose words
 sit in a child: a Frame with a Text in it, or a Button with an icon (its words
-are then a label of their own). On a text-only Button the words take the
+are then a label of their own). On a text Button the words take the
 gradient's colours and can disappear into it; Lucy warns in Studio when that
 happens.
 

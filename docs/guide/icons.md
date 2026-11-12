@@ -163,7 +163,7 @@ a project that maps `src/shared` to `ReplicatedStorage.Shared` finds it; use
 your own project's path. `Icon.register` needs no App, so it can run before
 `App.new`.
 
-Until the build has run, a name draws nothing, so an icon-only button is
+Until the build has run, a name draws nothing, so an icon button is
 blank. Give such a button `text` too, or check `Lucy.Icon.has(name)` and fall
 back to text.
 

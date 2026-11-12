@@ -9,7 +9,7 @@ A little animated picture that celebrates something: a reward landing, a level
 up, a prize. Put it behind (or over) the thing it celebrates. Lucy comes with
 `rays` and `outline`, and you can add your own types.
 
-<!-- preview -->
+<!-- preview animate="2.0" fps="12" warmup="0.5" -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-effect-light.webp" alt="Effect example" loading="lazy"><img class="example-dark" src="/images/examples/components-effect-dark.webp" alt="Effect example" loading="lazy"></figure>
 
 ```luau
@@ -19,11 +19,14 @@ local reward = Lucy.new("Frame", {
     Parent = dialog,
 })
 local burst = Lucy.Effect.new({ type = "rays", variant = "warning", Parent = reward })
-Lucy.Icon.new({
+local trophy = Lucy.Icon.new({
     icon = "lucide-extended:trophy-filled",
     size = "xl",
     Parent = reward,
 })
+trophy.Instance.AnchorPoint = Vector2.new(0.5, 0.5)
+trophy.Instance.Position = UDim2.fromScale(0.5, 0.5)
+trophy.Instance.ZIndex = 2
 
 -- The moment the reward lands
 burst:play()
@@ -93,14 +96,17 @@ stretch of light runs round and round the rim. It fades in, then keeps running,
 and the glow breathes a little. Use it to call the player to one thing: a reward
 to claim, the better of two offers.
 
-<!-- preview -->
+<!-- preview animate="2.5" fps="12" warmup="0.3" -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-effect-2-light.webp" alt="Effect example" loading="lazy"><img class="example-dark" src="/images/examples/components-effect-2-dark.webp" alt="Effect example" loading="lazy"></figure>
+
 ```luau
 local box = Lucy.new("Frame", {
     Size = UDim2.fromOffset(220, 48),
     BackgroundTransparency = 1,
     Parent = parent,
 })
-Lucy.Button.new({ text = "Claim reward", size = UDim2.fromScale(1, 1), Parent = box })
+local claim = Lucy.Button.new({ text = "Claim reward", size = "lg", Parent = box })
+claim.Instance.Size = UDim2.fromScale(1, 1)
 Lucy.Effect.new({ type = "outline", variant = "warning", radius = 8, Parent = box })
 ```
 
@@ -124,7 +130,7 @@ and each `ui-effect-outline-<variant>`, for your own styling.
 
 ## Your own types
 
-Register a type once, then use it like a built-in one. It only draws: the effect
+Register a type once, then use it like a built in one. It only draws: the effect
 times it, hides it and respects reduced motion for you.
 
 ```luau

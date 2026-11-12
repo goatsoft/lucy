@@ -149,7 +149,7 @@ them update when they change.
 | `setReducedMotion(on)` | sets reduced motion from your game's own settings; `nil` follows Roblox again |
 | `textSize()` | the player's text size: `"Medium"` (the default), `"Large"`, `"Larger"` or `"Largest"` |
 | `added(size)` | how many pixels taller Roblox draws text of `size` at that text size |
-| `transparency()` | how see-through backgrounds should be, from `0` (solid) to `1` (as designed): the game's own setting if it set one, otherwise the Roblox one |
+| `transparency()` | how translucent backgrounds should be, from `0` (solid) to `1` (as designed): the game's own setting if it set one, otherwise the Roblox one |
 | `setTransparency(value)` | sets it from your game's own settings, kept between 0 and 1; `nil` follows Roblox again |
 
 Text size can't be set: Roblox draws the text, so Lucy only follows it.

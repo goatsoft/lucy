@@ -7,7 +7,7 @@ order: 8
 # Leaderboards
 
 Club Lucy keeps two boards. **Best combo** keeps each dancer's longest combo,
-and **Hype** adds up all the hype they've earned. Each board has an all-time
+and **Hype** adds up all the hype they've earned. Each board has an all time
 list and a list for this week. A Leaderboards dialog shows a tab per board, with
 All time and This week under the tabs, the top 20, and your own row pinned at
 the bottom with your rank. The best combos also go up on the Dance Floor's wall

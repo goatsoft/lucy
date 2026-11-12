@@ -1,10 +1,10 @@
 <!-- Made by scripts/skills.ts from docs/reference/composables/use-responsive.md. Edit the doc, not this file. -->
 # useResponsive
 
-`Lucy.useResponsive` returns a getter for a responsive value table, evaluated
-against the player's active device and input profile. If passed a plain value,
-it wraps it in a getter so you can bind both plain and responsive values with
-the exact same syntax.
+`Lucy.useResponsive` returns a getter that picks a value from `map` for the
+player's current device, input mode, breakpoint or orientation. If you pass a
+plain value instead of a map, it wraps it in a getter so callers can take either
+the same way.
 
 ## Usage
 
@@ -14,32 +14,30 @@ local value = Lucy.useResponsive(app?, map)
 
 | Argument | Type | Default | What it is |
 |---|---|---|---|
-| `app` | `Lucy.App?` | `Lucy.App.current()` | The app instance providing device and input state |
-| `map` | `table` | required | A table mapping device/input keys to resolved values |
+| `app` | `Lucy.App?` | `Lucy.App.current()` | The App tracking device and input state |
+| `map` | `table` | required | Table mapping responsive keys to values |
 
 ### Keys
 
-The first matching key in this priority order wins:
+The first matching key wins, in this order:
 
 1. **`device`**: `"mobile"`, `"tablet"`, `"desktop"`, `"console"`
 2. **`mode`**: `"touch"`, `"gamepad"`, `"keyboard"`, `"mouse"`
 3. **`breakpoint`**: `"compact"`, `"regular"`, `"wide"`
 4. **`orientation`**: `"portrait"`, `"landscape"`
-5. **`default`**: Fallback value when no other key matches
+5. **`default`**: Used when nothing above matches
 
-For more details on responsive keys, see
-[Responsive values](../../components/index.md#responsive-values).
+See [Responsive values](../../components/index.md#responsive-values).
 
 ### Returns
 
 | Name | Type | What it is |
 |---|---|---|
-| `value` | `() -> any` | A reactive getter returning the resolved responsive value |
+| `value` | `() -> any` | Resolved responsive value |
 
-## Example: Club Lucy responsive layout
+## Example: responsive HUD spacing
 
-Adjust spacing and column padding between phones and console TVs in the Club
-Lucy dance floor HUD:
+Widen the gap between items on touch screens and console TVs:
 
 ```luau
 local function DanceFloorHUD(h)

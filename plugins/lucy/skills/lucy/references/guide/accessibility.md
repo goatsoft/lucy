@@ -112,11 +112,11 @@ local rules = {
 If code needs a control's height in pixels, `Lucy.useMetric(app, "ControlMd")`
 follows both the density and the player's text size.
 
-## Keep see-through backgrounds in tokens
+## Keep translucent backgrounds in tokens
 
 Players can ask for solid backgrounds in the Roblox menu. Lucy makes every
 theme token whose name ends in `Transparency` more solid to match, so put the
-transparency of a see-through panel in a token rather than in the rule:
+transparency of a translucent panel in a token rather than in the rule:
 
 ```luau
 local themes = Lucy.Tokens.themesFor("slate")
@@ -133,7 +133,7 @@ local rules = {
 }
 ```
 
-Text over a see-through panel has to stay readable over whatever the game shows
+Text over a translucent panel has to stay readable over whatever the game shows
 behind it, so check it against the busiest scene, not the panel colour. A
 [ScrollArea](../components/scroll-area.md#edge-fades) in such a panel takes
 `fade = false`, or `fade = "content"` if it should still fade its edges.

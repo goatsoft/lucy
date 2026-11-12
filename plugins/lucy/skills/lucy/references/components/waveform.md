@@ -109,7 +109,8 @@ Lucy.Waveform.new({
     end,
     stretch = true,
     stops = stops,
-    height = 48,
+    trail = 0.1,
+    size = UDim2.fromOffset(420, 56),
     Parent = timeline,
 })
 ```

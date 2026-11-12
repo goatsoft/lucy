@@ -1,7 +1,7 @@
 ---
 title: Known issues
 description: Problems Lucy cannot fix on its own, what you will see, why, and what to do instead.
-order: 13
+order: 2
 ---
 
 # Known issues

@@ -116,7 +116,7 @@ Gotchas:
    keys ([stories](stories.md)). `tests/Stories.spec.luau` mounts every story in
    each theme and device.
 7. Add it to `src/init.luau` and give it a one line description in
-   `registry.json` (the copy-in installer works out its files and dependencies
+   `registry.json` (the copy in installer works out its files and dependencies
    from `src` itself), give it a page in `docs/components/` and add it to the
    list in `docs/components/index.md`.
 8. Grep for the em dash character before committing: `grep -rn $'\xe2\x80\x94' .`
@@ -133,7 +133,7 @@ stylua --check src tests scripts examples
 lune run scripts/add -- --check
 ```
 
-The last one installs every component with the copy-in installer into a
+The last one installs every component with the copy in installer into a
 temporary folder and checks that every `require` finds its module, and that
 every component has a description in `registry.json`.
 
@@ -206,13 +206,16 @@ above its `luau` block. The marker can take options:
 - `<!-- preview screen -->`: a whole client script (a recipe, the homepage
   example), shown full screen. It runs in edit mode too: the renderer stands in
   for `Players.LocalPlayer` and for remotes, which answer nothing. An App made
-  with `server = true` gets a stand-in server: `app.server:call` answers from
+  with `server = true` gets a mock server: `app.server:call` answers from
   `S.ANSWERS` in `scripts/doc-pictures.luau` (`boards.get` gives the crew's
   rows), and anything else gets `nil`.
 - `<!-- preview screen trim -->`: the same, but the picture is cut to what the
   script drew, as for other examples, and the frame fits the picture. Use it
   when the script draws one panel in the middle of the screen, as the homepage
   example does.
+- `<!-- preview animate="1.6" fps="12" warmup="0.4" -->`: advances
+  `Animate.manual` step by step and writes a looping animated WebP pair with
+  `img2webp`. Use `warmup` to skip an opening delay and start mid motion.
 
 Any marker can add `then="..."`: Luau run after the example, with the same
 names in scope, such as going to the scene or opening the menu the picture
@@ -226,8 +229,8 @@ example, `apps/site/src/content/quickstart.md`, is `home-quickstart`.
 
 Pictures come from Studio, so a person or an agent with Studio makes them. The
 renderer is `scripts/doc-pictures.luau`, which the LucyTests place syncs as
-`ReplicatedStorage.LucyDocPictures`. Cropping needs `cwebp` and `dwebp`
-(libwebp, `brew install webp`).
+`ReplicatedStorage.LucyDocPictures`. Cropping and animation need `cwebp`,
+`dwebp` and `img2webp` (libwebp, `brew install webp`).
 
 1. Open the LucyTests place in Studio, in edit mode, with Studio as an MCP
    server (**Assistant**, **...**, **Manage MCP Servers**, **Enable Studio as
@@ -251,11 +254,11 @@ kind of screen so they match.
 same cutting from two screenshots taken another way, with the box lines from
 the renderer's `next` and `again` on its input.
 
-Examples run with stand-ins for names they only borrow from earlier on their
+Examples run with mock data for names they only borrow from earlier on their
 page, and for a client (`Players.LocalPlayer`, remotes that answer nothing), so
 no server script runs while pictures are made.
 
-Re-render a page's pictures when its example or the component's look changes.
+Render a page's pictures again when its example or the component's look changes.
 
 The docs icon sheet is built like a game's:
 

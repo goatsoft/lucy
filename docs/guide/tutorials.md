@@ -1,12 +1,12 @@
 ---
 title: Write a tutorial
 description: Walk a new player through your game's own menus with Lucy.Tour, and keep everything else quiet while you do.
-order: 5
+order: 6
 ---
 
 # Write a tutorial
 
-A good first-time tutorial points at the real buttons and waits for the player
+A good new player tutorial points at the real buttons and waits for the player
 to press them, one at a time. `Lucy.Tour` does that over the UI you already
 have, so a tutorial is a list of steps, not a second copy of your menus.
 
@@ -136,7 +136,7 @@ app.toast("Nice moves!", { channel = "tour" })                 -- the tour allow
 
 Toasts that waited show when quiet ends, the newest few only.
 
-### Your own pop-ups
+### Your own popups
 
 Open your own prompts through `after`, and they wait for the tutorial too:
 

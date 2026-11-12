@@ -6,10 +6,9 @@ order: 1
 
 # useDensity
 
-`Lucy.useDensity` returns a getter that follows the theme's active density
-profile (`"default"`, `"touch"` or `"tv"`). Every caller in an App shares the
-same underlying reactive state, so calling it multiple times across different
-components carries no extra overhead.
+`Lucy.useDensity` returns a getter for the theme's active density profile
+(`"default"`, `"touch"` or `"tv"`). Every call in the same App reads one shared
+value.
 
 ## Usage
 
@@ -19,18 +18,17 @@ local density = Lucy.useDensity(app?)
 
 | Argument | Type | Default | What it is |
 |---|---|---|---|
-| `app` | `Lucy.App?` | `Lucy.App.current()` | The app instance to read density from |
+| `app` | `Lucy.App?` | `Lucy.App.current()` | The App to read density from |
 
 ### Returns
 
 | Name | Type | What it is |
 |---|---|---|
-| `density` | `() -> "default" | "touch" | "tv"` | A getter returning the active density string |
+| `density` | `() -> "default" \| "touch" \| "tv"` | Active density profile |
 
-## Example: Club Lucy responsive badge
+## Example: responsive badge
 
-In Club Lucy, badges can adjust their layout and font sizing when rendered on
-touch devices or large TV screens:
+Swap text or layout for touch screens and TVs:
 
 ```luau
 local function DanceFloorBadge(h)

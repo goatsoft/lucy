@@ -13,6 +13,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     Button: typeof import('./components/ui/Button.vue')['default']
     GoatsoftLogo: typeof import('./components/GoatsoftLogo.vue')['default']
+    ILcArrowUpRight: typeof import('~icons/lucide/arrow-up-right')['default']
     ILcChevronRight: typeof import('~icons/lucide/chevron-right')['default']
     ILcMenu: typeof import('~icons/lucide/menu')['default']
     ILcX: typeof import('~icons/lucide/x')['default']

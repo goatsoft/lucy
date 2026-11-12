@@ -79,7 +79,7 @@ Lucy.Button.new({
 })
 ```
 
-A hint needs text beside it: an icon-only button (`size = "icon"`) is a fixed
+A hint needs text beside it: an icon button (`size = "icon"`) is a fixed
 square with no room for the key cap, so give it `text` when it has a hint.
 
 It takes the same fields as [Kbd](kbd.md): `keyboard`, `gamepad` and `touch`,
@@ -128,7 +128,7 @@ Lucy.Button.new({
 
 A string becomes text in the button's font and size. A Text or Icon in the
 slot takes the button's colour over its own variant, and fades with it when
-disabled; give a full-colour picture the `ui-icon-untinted` tag to keep its
+disabled; give a full colour picture the `ui-icon-untinted` tag to keep its
 own colours.
 
 ## Examples

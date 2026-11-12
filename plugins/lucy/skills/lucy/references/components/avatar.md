@@ -23,7 +23,7 @@ Lucy.Stack.new({
 
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
-| `userId` | number | `0` | yes | The player's user id. `0` or below shows the monogram |
+| `userId` | number | `0` | yes | The player's user ID. `0` or below shows the monogram |
 | `name` | string | `""` | yes | The name the monogram's letters come from |
 | `size` | string or number | `"md"` | yes | `sm` (32 pixels), `md` (40), `lg` (56) or `xl` (80, a featured player: who is up next, a profile), or a number of pixels, such as `120` for the winner on a podium |
 | `visible` | boolean | `true` | yes | Shows or hides it |
@@ -37,7 +37,7 @@ The monogram is the first letter of each of the first two words in `name`:
 
 Its parts are on the handle: `avatar.image` is the headshot and
 `avatar.monogram` the letters. `Lucy.Avatar.headshot(userId)` gives the
-headshot url on its own, and `Lucy.Avatar.initials(name)` the letters.
+headshot URL on its own, and `Lucy.Avatar.initials(name)` the letters.
 
 ## Examples
 

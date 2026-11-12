@@ -6,13 +6,13 @@ order: 9
 
 # useWhile
 
-`Lucy.useWhile` executes a setup function whenever a condition turns `true`, and
-automatically cleans up everything created by that function when the condition
-turns `false` or when the enclosing owner stops.
+`Lucy.useWhile` runs a setup function whenever a condition becomes `true`, and
+cleans up everything it made when the condition becomes `false` or the owner
+stops.
 
 The setup function can return a cleanup function or connection, call
-`Lucy.onCleanup`, or create nested effects; all resources are tracked and torn
-down cleanly when the condition deactivates.
+`Lucy.onCleanup`, or create child effects; all of them stop together when the
+condition turns off.
 
 ## Usage
 
@@ -22,19 +22,18 @@ Lucy.useWhile(condition, callback)
 
 | Argument | Type | Default | What it is |
 |---|---|---|---|
-| `condition` | `MaybeRef<boolean>` | required | Reactive condition triggering the setup callback |
-| `callback` | `() -> (CleanupFn | RBXScriptConnection | void)` | required | Runs when condition flips to true |
+| `condition` | `MaybeRef<boolean>` | required | Condition that turns the setup on and off |
+| `callback` | `() -> (CleanupFn \| RBXScriptConnection \| void)` | required | Runs when the condition turns true |
 
 ### Reactivity rules
 
-`useWhile` triggers only when the condition flips truthiness (from `false` to
-`true`, or `true` to `false`). Values read inside the callback body do not
-re-trigger the callback while the condition remains true.
+`useWhile` runs only when the condition flips between falsy and truthy. Other
+state read inside `callback` does not run it again while the condition stays
+true.
 
-## Example: pausing gameplay and hotkeys in Club Lucy
+## Example: pausing gameplay while a dialog is open
 
-A frequent pattern is disabling gameplay movement and hotkeys while a modal menu
-or dialogue is open:
+Turn off gameplay hotkeys while a modal menu is up:
 
 ```luau
 local UserInputService = game:GetService("UserInputService")

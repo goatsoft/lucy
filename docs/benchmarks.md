@@ -1,7 +1,7 @@
 ---
 title: Benchmarks
 description: Mount, update and teardown costs for big lists, busy HUDs, components and the reactive core.
-order: 12
+order: 13
 ---
 
 # Benchmarks

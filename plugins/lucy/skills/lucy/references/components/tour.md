@@ -2,11 +2,21 @@
 # Tour
 
 A tour points at the buttons your game already has, one at a time, and waits
-for the player to use each one. Use it for a first-time tutorial, or to show
-off a new screen. It works with mouse, touch, keyboard and gamepad, and keeps
-the rest of the app quiet while it runs.
+for the player to use each one. Use it to welcome new players, or to show off
+a new screen. It works with mouse, touch, keyboard and gamepad, and keeps the
+rest of the app quiet while it runs.
 
 ```luau
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space4",
+    children = {
+        Lucy.Button.new({ id = "play", text = "Play" }),
+        Lucy.Button.new({ id = "shop", text = "Shop", variant = "outline" }),
+    },
+    Parent = hud,
+})
+
 local tour = Lucy.Tour.new(app, {
     id = "first-round",
     steps = {
@@ -26,15 +36,15 @@ tour:start()
 
 While a step's target is on screen:
 
-- the screen dims, but for a cut-out round the target, with a ring on it;
-- presses outside the cut-out do nothing, presses on the target work as usual;
+- the screen dims, but for a cutout round the target, with a ring on it;
+- presses outside the cutout do nothing, presses on the target work as usual;
 - a callout next to the target holds the step's title and text, with a small
   notch pointing at it;
 - a big [Arrow](arrow.md) points at the target from the other side, grows in and
   bounces toward it, and a ring ripples out from the target;
 - on a gamepad or keyboard, focus moves to the target and stays there.
 
-Moving on, the cut-out and callout glide to the next target and the callout
+Moving on, the cutout and callout glide to the next target and the callout
 fades and slides in. With reduced motion (see
 [Accessibility](../reference/accessibility.md)) the tour jumps between targets,
 the callout only fades, the ripple is off and the arrow fades in and keeps still.
@@ -73,7 +83,7 @@ puts the step back.
 | `side` | `auto` (the default), `top`, `bottom`, `left` or `right`: where the callout sits. It moves to the other side when there is no room |
 | `action` | An action name (see [Hotkeys](../guide/actions.md)) whose key shows in the callout |
 | `scrim` | `false`: no dimming. Presses outside the target are still blocked |
-| `pad` | Room between the target and the cut-out's edge, in pixels (`8`) |
+| `pad` | Room between the target and the cutout's edge, in pixels (`8`) |
 | `pointer` | [Arrow](arrow.md) props for this step's arrow, over the tour's, or `false` for none |
 
 `waitFor` is one of:

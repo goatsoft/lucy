@@ -19,13 +19,13 @@ import Bot from '~icons/lucide-extended/bot-duotone'
 import Boxes from '~icons/lucide-extended/boxes-duotone'
 import Clapperboard from '~icons/lucide-extended/clapperboard-duotone'
 import Contrast from '~icons/lucide-extended/contrast-duotone'
-import Feather from '~icons/lucide-extended/feather-duotone'
+import DatabaseZap from '~icons/lucide-extended/database-zap-duotone'
 import Gamepad from '~icons/lucide-extended/gamepad-2-duotone'
+import Globe from '~icons/lucide-extended/globe-duotone'
 import Keyboard from '~icons/lucide-extended/keyboard-duotone'
-import Layers from '~icons/lucide-extended/layers-duotone'
-import Orbit from '~icons/lucide-extended/orbit-duotone'
 import ScanEye from '~icons/lucide-extended/scan-eye-duotone'
 import Shapes from '~icons/lucide-extended/shapes-duotone'
+import Signpost from '~icons/lucide-extended/signpost-duotone'
 import SwatchBook from '~icons/lucide-extended/swatch-book-duotone'
 
 useHead({ description: SITE.description })
@@ -50,24 +50,24 @@ function movePanelLight(event: PointerEvent): void {
 
 // The four that matter most, as cards.
 const features = [
-  { icon: Boxes, title: '36 components', text: 'Buttons, dialogs, selects, tables, sliders, tabs and more, ready for menus, HUDs and shops.' },
-  { icon: Atom, title: 'One source of truth', text: 'All UI and app state in one store. Change a value and only the properties that read it are updated.' },
-  { icon: Gamepad, title: 'Any input, any device', text: 'Mouse, keyboard, gamepad and touch, on desktop, console, tablet and phone. Controls grow for touch and TV.' },
-  { icon: SwatchBook, title: 'Themes', text: 'Light and dark themes, switched while the game runs. Hover and theme changes run no Luau.' },
+  { icon: Boxes, title: '47 components', text: 'Buttons, dialogs, selects, tables, menus, leaderboards, tours, tabs and more, ready for menus, HUDs and shops.', to: '/docs/components/' },
+  { icon: Atom, title: 'One source of truth', text: 'All UI and app state in one store. Change a value and only the properties that read it are updated.', to: '/docs/guide/app-state' },
+  { icon: Gamepad, title: 'Any input, any device', text: 'Mouse, keyboard, gamepad and touch across desktop, console, tablet and phone. Controls grow for touch and TV.', to: '/docs/guide/accessibility' },
+  { icon: SwatchBook, title: 'Themes', text: 'Light and dark themes, switched while the game runs. Hover and theme changes run no Luau.', to: '/docs/guide/themes' },
 ] as const
 
-// Everything else, as a short list under the cards.
+// High level game capabilities, as a short list under the cards.
 const more = [
-  { icon: Clapperboard, title: 'Scenes', text: 'Each screen on its own layer, so menus never take input from the screen below.' },
-  { icon: Layers, title: 'Dialogs and sheets', text: 'Dialogs, sheets, selects and toasts float above the game, newest on top.' },
-  { icon: Keyboard, title: 'Hotkeys', text: 'Name an action once for keyboard and gamepad, and switch it off while a menu is open.' },
-  { icon: Contrast, title: 'Accessibility', text: 'Readable text on every colour, and the player\'s reduce motion, text size and background settings respected.' },
-  { icon: Shapes, title: 'Any icon', text: 'Add any Iconify icon by name, its then packed into a sheet by the lucy-icons build.' },
-  { icon: Orbit, title: 'Springs and tweens', text: 'Animate any property by binding it to a spring or a tween.' },
-  { icon: Blocks, title: 'Code or Studio', text: 'Write UI in code, or add behaviour to UI you laid out in Studio.' },
-  { icon: ScanEye, title: 'Preview in Studio', text: 'See any component or scene in Studio without pressing Play.' },
-  { icon: Bot, title: 'Ready for agents', text: 'Skills that teach AI agents to build with Lucy.' },
-  { icon: Feather, title: 'Small and tested', text: 'Strict types, no runtime dependencies and over 800 specs.' },
+  { icon: Clapperboard, title: 'Scenes', text: 'Each screen on its own layer, so menus never take input from the screen below.', to: '/docs/guide/scenes' },
+  { icon: Keyboard, title: 'Hotkeys', text: 'Name an action once for keyboard and gamepad, and switch it off while a menu is open.', to: '/docs/guide/actions' },
+  { icon: DatabaseZap, title: 'Server and boards', text: 'A server store replicated per player, DataStore request pacing and ranked leaderboards.', to: '/docs/guide/server' },
+  { icon: Globe, title: 'UI in the world', text: 'SurfaceGuis on parts and BillboardGuis over heads that follow your theme and take clicks.', to: '/docs/guide/world-ui' },
+  { icon: Signpost, title: 'Guided tours', text: 'Interactive tutorials with spotlight cutouts and arrows that pause gameplay UI cleanly.', to: '/docs/guide/tutorials' },
+  { icon: Contrast, title: 'Accessibility', text: 'Readable text on every colour, and player reduce motion, text size and background settings respected.', to: '/docs/guide/accessibility' },
+  { icon: Shapes, title: 'Icons', text: 'Add any Iconify icon by name; it is packed into a sheet by the lucy-icons build.', to: '/docs/guide/icons' },
+  { icon: Blocks, title: 'Code or Studio', text: 'Write UI in code, or add behaviour to UI you laid out in Studio.', to: '/docs/reactivity#ui-built-in-studio' },
+  { icon: ScanEye, title: 'Preview in Studio', text: 'See any component or scene in Studio without pressing Play.', to: '/docs/stories' },
+  { icon: Bot, title: 'Ready for agents', text: 'Skills and the Lucy MCP server so coding agents inspect trees, drive UI and take screenshots.', to: '/docs/guide/agents' },
 ] as const
 
 const install = 'Lucy = "goatsoft/lucy@0.1.0"'
@@ -140,11 +140,12 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
           What Lucy does
         </h2>
         <div class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <article
+          <RouterLink
             v-for="feature in features"
             :key="feature.title"
+            :to="feature.to"
             @pointermove="movePanelLight"
-            class="group relative isolate overflow-hidden rounded-2xl border border-border bg-surface p-6 [--light-x:0px] [--light-y:0px] shadow-[inset_0_1px_0_0_color-mix(in_oklab,white_8%,transparent)] transition duration-300 hover:border-primary/50 motion-safe:hover:-translate-y-0.5"
+            class="group relative isolate block overflow-hidden rounded-2xl border border-border bg-surface p-6 [--light-x:0px] [--light-y:0px] shadow-[inset_0_1px_0_0_color-mix(in_oklab,white_8%,transparent)] transition duration-300 hover:border-primary/50 focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 motion-safe:hover:-translate-y-0.5"
           >
             <ThemedBackground
               :dark="panelSignalDark"
@@ -166,13 +167,13 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
                 aria-hidden="true"
               />
             </div>
-            <h3 class="mt-5 font-display text-base leading-snug font-semibold text-balance text-foreground">
+            <h3 class="mt-5 font-display text-base leading-snug font-semibold text-balance text-foreground transition-colors group-hover:text-primary">
               {{ feature.title }}
             </h3>
             <p class="mt-2 text-sm leading-6 text-pretty text-muted-foreground">
               {{ feature.text }}
             </p>
-          </article>
+          </RouterLink>
         </div>
         <ul class="mt-12 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
           <li
@@ -187,7 +188,12 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
             />
             <div>
               <h3 class="font-display text-sm font-semibold text-foreground">
-                {{ item.title }}
+                <RouterLink
+                  :to="item.to"
+                  class="transition-colors hover:text-primary focus-visible:text-primary focus-visible:outline-none"
+                >
+                  {{ item.title }}
+                </RouterLink>
               </h3>
               <p class="mt-1 text-sm leading-6 text-pretty text-muted-foreground">
                 {{ item.text }}

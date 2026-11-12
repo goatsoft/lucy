@@ -1,7 +1,7 @@
 ---
 title: The server
 description: Lucy.Server and app.server, every option and method, which paths reach which players, and how changes travel.
-order: 8
+order: 7
 ---
 
 # The server

@@ -10,20 +10,22 @@ Switch and Collapsible take `children` after their label. Their `text`,
 `children` when you need more than words and one icon.
 
 ```luau
-Lucy.Badge.new({ icon = "lucide-extended:music-filled", variant = "secondary", Parent = row })
-
-Lucy.Button.new({
-    text = "UNLOCK",
-    children = { Lucy.Icon.new({ icon = "lucide-extended:coins-filled" }), "199" },
-    Parent = card,
-})
-
-Lucy.Tabs.new({
-    items = {
-        { value = "moves", text = "Moves", children = { Lucy.Badge.new({ text = "3" }) }, content = moves },
-        { value = "packs", text = "Packs", content = packs },
+Lucy.Stack.new({
+    gap = "Space3",
+    children = {
+        Lucy.Badge.new({ icon = "lucide-extended:music-filled", variant = "secondary" }),
+        Lucy.Button.new({
+            text = "UNLOCK",
+            children = { Lucy.Icon.new({ icon = "lucide-extended:coins-filled" }), "199" },
+        }),
+        Lucy.Tabs.new({
+            items = {
+                { value = "moves", text = "Moves", children = { Lucy.Badge.new({ text = "3" }) }, content = moves },
+                { value = "packs", text = "Packs", content = packs },
+            },
+        }),
     },
-    Parent = panel,
+    Parent = parent,
 })
 ```
 
@@ -53,7 +55,7 @@ included:
 - an [Icon](icon.md) takes the colour and fade as `ImageColor3` and
   `ImageTransparency`.
 
-A full-colour picture (a flag, an item's art) keeps its own colours with the
+A full colour picture (a flag, an item's art) keeps its own colours with the
 `ui-icon-untinted` tag. Parts that are not content, such as a sort button's
 or collapsible's chevron, keep theirs too.
 

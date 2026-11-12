@@ -1,11 +1,10 @@
 <!-- Made by scripts/skills.ts from docs/reference/composables/use-table.md. Edit the doc, not this file. -->
 # useTable
 
-`Lucy.useTable` turns raw data arrays and column definitions into reactive sorted
-rows. It manages multi-column sorting, tiebreaking, natural text sorting and
-direction toggling. It renders no visual elements on its own: components like
-[DataGrid](../../components/data-grid.md) use it for column headers, and you can
-use it to sort custom lists and leaderboards.
+`Lucy.useTable` sorts rows of data by one or more columns, with natural text
+sorting, tiebreakers and direction toggling. It draws nothing itself;
+[DataGrid](../../components/data-grid.md) uses it for column headers, and you can
+use it for custom lists and boards.
 
 ## Usage
 
@@ -17,50 +16,46 @@ local tableModel = Lucy.useTable(options)
 
 | Option | Type | Default | What it does |
 |---|---|---|---|
-| `data` | `array | Ref | () -> array` | required | The raw row data tables |
-| `columns` | `array` | required | Column specifications (see below) |
-| `rowId` | `(row: any) -> any` | row index | Function deriving a unique row identifier |
-| `sorting` | `table | Ref | false` | `false` | Starting sort `{ id = "key", desc = true }`, or a ref to hold it |
-| `multi` | `boolean` | `false` | Allows sorting across multiple columns with tiebreakers |
-| `sortable` | `boolean` | `true` | When `false`, disables sorting across all columns |
-| `removable` | `boolean` | `true` | A third header click clears the column sort |
-| `descFirst` | `boolean` | `false` | First header click sorts descending instead of ascending |
-| `manual` | `boolean` | `false` | Data is pre-sorted on the server; track sort state without reordering |
+| `data` | `array \| Ref \| () -> array` | required | Row data |
+| `columns` | `array` | required | Column definitions |
+| `rowId` | `(row: any) -> any` | row index | Unique row key |
+| `sorting` | `table \| Ref \| false` | `false` | Starting sort `{ id = "key", desc = true }`, or a ref |
+| `multi` | `boolean` | `false` | Allows sorting by several columns with tiebreakers |
+| `sortable` | `boolean` | `true` | `false` disables sorting for every column |
+| `removable` | `boolean` | `true` | A third toggle clears the column from the sort |
+| `descFirst` | `boolean` | `false` | First toggle sorts descending instead of ascending |
+| `manual` | `boolean` | `false` | Data is already sorted on the server; track sort state without reordering |
 
-### Column specifications
-
-Each entry in `columns` can specify:
+### Column options
 
 | Field | Type | What it does |
 |---|---|---|
-| `key` | `string` | The table property to read and default column ID |
-| `id` | `string` | Explicit column ID (used when `get` is provided instead of `key`) |
-| `get` | `(row) -> any` | Value accessor function for computed column values |
-| `header` | `string` | Display label for the column header |
-| `sortable` | `boolean` | Set to `false` to prevent this column from sorting |
-| `sortFn` | `"auto" | "number" | "text" | fn` | Comparison strategy. Default is `"auto"` |
-| `descFirst` | `boolean` | Sort descending on first click for this column |
-| `invert` | `boolean` | Inverts sort direction (useful for ranks where lower is better) |
+| `key` | `string` | Field name on the row, also used as the column ID |
+| `id` | `string` | Explicit column ID when using `get` instead of `key` |
+| `get` | `(row) -> any` | Reads a computed value from a row |
+| `header` | `string` | Column header label |
+| `sortable` | `boolean` | `false` disables sorting for this column |
+| `sortFn` | `"auto" \| "number" \| "text" \| fn` | Compare mode (`"auto"` by default) |
+| `descFirst` | `boolean` | Sort descending on the first toggle for this column |
+| `invert` | `boolean` | Flips sort order (for ranks where 1 is highest) |
 
 ### Returns
 
-`useTable` returns a table model object with reactive getters and helper methods:
-
 | Name | Type | What it does |
 |---|---|---|
-| `rows()` | `() -> { TableRow }` | Getter for the sorted rows. Each row has `id`, `index`, `original`, and `row:value(colId)` |
-| `sorting()` | `() -> SortState` | Getter for the current sort configuration |
-| `list()` | `() -> { SortEntry }` | Returns active sorts as an array, primary sort first |
-| `toggle(columnId)` | `(id: string) -> ()` | Cycles a column's sort: ascending -> descending -> none |
-| `sortedBy(columnId)` | `(id: string) -> "asc" | "desc" | false` | Returns the current sort direction for a column |
-| `priority(columnId)` | `(id: string) -> number?` | Column tiebreaker priority (1 is primary sort, 2 is second, etc.) |
-| `canSort(columnId)` | `(id: string) -> boolean` | Whether the column supports sorting |
-| `setSorting(sort)` | `(sort: any) -> ()` | Directly updates the active sort state |
-| `columns` | `array` | The resolved column definition list |
+| `rows()` | `() -> { TableRow }` | Sorted rows (`id`, `index`, `original`, `row:value(colId)`) |
+| `sorting()` | `() -> SortState` | Current sort state |
+| `list()` | `() -> { SortEntry }` | Active sorts in priority order |
+| `toggle(columnId)` | `(id: string) -> ()` | Cycles a column through ascending, descending and off |
+| `sortedBy(columnId)` | `(id: string) -> "asc" \| "desc" \| false` | Current sort direction for that column |
+| `priority(columnId)` | `(id: string) -> number?` | Tiebreaker position (`1` for primary, `2` for second) |
+| `canSort(columnId)` | `(id: string) -> boolean` | Whether the column can be sorted |
+| `setSorting(sort)` | `(sort: any) -> ()` | Sets the active sort directly |
+| `columns` | `array` | Resolved columns list |
 
-## Example: Club Lucy top dancers leaderboard
+## Example: top dancers board
 
-Sort dancers by score, level, and on-beat accuracy:
+Sort dancers by score, then beat accuracy:
 
 ```luau
 local dancers = Lucy.ref({

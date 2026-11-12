@@ -69,7 +69,7 @@ Without a `primary`, the `p` values fall back to the base colour shades shown.
 | `SuccessForeground`, `WarningForeground`, `InfoForeground` | text on a status colour | on colour | on colour |
 | `DestructiveSubtle`, `SuccessSubtle`, `WarningSubtle`, `InfoSubtle` | a pale wash of the colour, for alerts | colour at 10% over Card | colour at 16% over Card |
 | `DestructiveSubtleForeground` and the rest | text on a wash | on colour, in the full colour's hue | on colour, in the full colour's hue |
-| `OverlayFill`, `OverlayFillForeground`, `OverlayFillTransparency` | a see-through fill over a picture (Badge's overlay) and its words | White 85% opaque, base 950 | Black 85% opaque, White |
+| `OverlayFill`, `OverlayFillForeground`, `OverlayFillTransparency` | a translucent fill over a picture (Badge's overlay) and its words | White 85% opaque, base 950 | Black 85% opaque, White |
 | `MedalGold`, `MedalSilver`, `MedalBronze` | first, second and third place (Leaderboard) | Amber-500, Slate-400, Orange-700 | Yellow-400, Slate-300, Orange-400 |
 | `GradientSurface` | a card deepening toward the background ([Gradient](../components/gradient.md)) | Card to Card mixed 60% with Muted | Card to Background |
 | `GradientPrimary` | the primary colour, lit at the top and deepening at the bottom | Primary mixed 25% with White to Primary mixed 20% with Black | the same |

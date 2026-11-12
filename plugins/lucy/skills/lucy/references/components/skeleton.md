@@ -5,8 +5,8 @@ A grey shape that pulses while content loads, in place of the text or picture
 that will be there. The pulse stops while it is hidden and when it is destroyed.
 
 ```luau
-Lucy.Stack.new({
-    gap = "Space2",
+Lucy.Panel.new({
+    size = UDim2.fromOffset(392, 0),
     children = {
         Lucy.Skeleton.new({ size = UDim2.fromOffset(360, 120) }),
         Lucy.Skeleton.new({ size = UDim2.fromOffset(240, 16) }),
@@ -31,8 +31,8 @@ It also takes the [props every component takes](index.md#using-a-component).
 A placeholder card for a Crew member:
 
 ```luau
-Lucy.Stack.new({
-    gap = "Space2",
+Lucy.Panel.new({
+    size = UDim2.fromOffset(220, 0),
     children = {
         Lucy.Skeleton.new({ size = UDim2.fromOffset(48, 48), circle = true }),
         Lucy.Skeleton.new({ size = UDim2.fromOffset(160, 16) }),

@@ -58,7 +58,7 @@ Each tab is a table:
 | `icon` | An [icon](icon.md) name drawn before the tab's text |
 | `children` | Anything after the text in the tab's [slot](slot.md), such as a count badge. With an icon or children and no text, the tab shows no text. They take the tab's colours |
 | `disabled` | Greys this tab out |
-| `visible` | Shows or hides this tab: `true`, `false`, a ref or a getter. A hidden tab leaves the bar and can't be picked. Defaults to `true` |
+| `visible` | Shows or hides this tab: `true`, `false`, a ref or a getter. A hidden tab leaves the bar and cannot be picked. Defaults to `true` |
 
 Every panel is built when the tabs are, and kept: switching back to a tab finds
 it as the player left it, scrolled to the same place. Tabs fill the width and
@@ -106,6 +106,9 @@ tab's value to its panel frame.
 
 Text tabs with a line under the picked one, for the sections of a big menu:
 
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-tabs-2-light.webp" alt="Tabs example" loading="lazy"><img class="example-dark" src="/images/examples/components-tabs-2-dark.webp" alt="Tabs example" loading="lazy"></figure>
+
 ```luau
 Lucy.Tabs.new({
     variant = "line",
@@ -121,7 +124,7 @@ Lucy.Tabs.new({
 Every crew member's set list, more than fit across a phone. The bar scrolls:
 
 <!-- preview -->
-<figure class="example-preview"><img class="example-light" src="/images/examples/components-tabs-2-light.webp" alt="Tabs example" loading="lazy"><img class="example-dark" src="/images/examples/components-tabs-2-dark.webp" alt="Tabs example" loading="lazy"></figure>
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-tabs-3-light.webp" alt="Tabs example" loading="lazy"><img class="example-dark" src="/images/examples/components-tabs-3-dark.webp" alt="Tabs example" loading="lazy"></figure>
 
 ```luau
 local crew = { "DJ Lucy", "Nova", "Beatrix", "Kai", "Juno", "Remy", "Pixel Pulse", "The Glowsticks" }
@@ -141,7 +144,7 @@ Lucy.Tabs.new({ variant = "line", items = items, value = "Kai", Parent = box })
 Open the shop on a tab kept in app state:
 
 <!-- preview -->
-<figure class="example-preview"><img class="example-light" src="/images/examples/components-tabs-3-light.webp" alt="Tabs example" loading="lazy"><img class="example-dark" src="/images/examples/components-tabs-3-dark.webp" alt="Tabs example" loading="lazy"></figure>
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-tabs-4-light.webp" alt="Tabs example" loading="lazy"><img class="example-dark" src="/images/examples/components-tabs-4-dark.webp" alt="Tabs example" loading="lazy"></figure>
 
 ```luau
 local section = app.state:ref("shop.section")

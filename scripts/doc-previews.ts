@@ -17,6 +17,9 @@
  *                                    it drew (a centred panel), as other examples are
  *   <!-- preview then="..." -->      Luau run after the example (any kind), to go to
  *                                    a scene or open a menu first
+ *   <!-- preview animate -->         capture multiple frames with Animate.step and
+ *   <!-- preview animate="2.0" -->   write a looping animated WebP pair (optional
+ *                                    fps="12" and warmup="0.5")
  *
  * Names: the first marked example on docs/components/button.md is
  * components-button, the second components-button-2, and so on. The homepage's
@@ -39,7 +42,7 @@
  * <name>-dark.webp. The site shows the one for its theme.
  */
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { connectStudio } from '../libs/mcp/src/studio.ts'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -95,6 +98,9 @@ interface Options {
   screen: boolean
   trim: boolean
   then?: string
+  animate?: number
+  fps?: number
+  warmup?: number
 }
 
 function parseOptions(raw: string | undefined): Options {
@@ -105,7 +111,19 @@ function parseOptions(raw: string | undefined): Options {
     else if (key === 'screen') options.screen = true
     else if (key === 'trim') options.trim = true
     else if (key === 'then') options.then = value
-    else throw new Error(`unknown preview option "${key}"`)
+    else if (key === 'animate') {
+      const duration = value === undefined ? 1.6 : Number(value)
+      if (!Number.isFinite(duration) || duration <= 0) throw new Error(`invalid animate duration "${value}"`)
+      options.animate = duration
+    } else if (key === 'fps') {
+      const fps = Number(value)
+      if (!Number.isFinite(fps) || fps <= 0) throw new Error(`invalid fps "${value}"`)
+      options.fps = fps
+    } else if (key === 'warmup') {
+      const warmup = Number(value)
+      if (!Number.isFinite(warmup) || warmup < 0) throw new Error(`invalid warmup "${value}"`)
+      options.warmup = warmup
+    } else throw new Error(`unknown preview option "${key}"`)
   }
   return options
 }
@@ -236,9 +254,7 @@ function frame(dark: Image, light: Image, area: Rect): Rect | undefined {
   ]
 }
 
-// Writes `rect` of `image` as apps/site/public/images/examples/<file>.
-function writeWebp(image: Image, [x0, y0, x1, y1]: Rect, file: string) {
-  const dir = mkdtempSync(join(tmpdir(), 'lucy-pictures-'))
+function writePpm(image: Image, [x0, y0, x1, y1]: Rect, file: string) {
   const width = x1 - x0
   const height = y1 - y0
   const rows = Buffer.alloc(width * height * 3)
@@ -246,9 +262,35 @@ function writeWebp(image: Image, [x0, y0, x1, y1]: Rect, file: string) {
     const from = ((y0 + y) * image.width + x0) * 3
     image.data.copy(rows, y * width * 3, from, from + width * 3)
   }
-  const ppm = join(dir, 'a.ppm')
-  writeFileSync(ppm, Buffer.concat([Buffer.from(`P6\n${width} ${height}\n255\n`, 'latin1'), rows]))
-  execFileSync('cwebp', ['-quiet', '-q', '90', '-m', '6', ppm, '-o', join(IMAGES, file)])
+  writeFileSync(file, Buffer.concat([Buffer.from(`P6\n${width} ${height}\n255\n`, 'latin1'), rows]))
+}
+
+// Writes `rect` of `image` as apps/site/public/images/examples/<file>.
+function writeWebp(image: Image, rect: Rect, file: string) {
+  const dir = mkdtempSync(join(tmpdir(), 'lucy-pictures-'))
+  try {
+    const ppm = join(dir, 'a.ppm')
+    writePpm(image, rect, ppm)
+    execFileSync('cwebp', ['-quiet', '-q', '90', '-m', '6', ppm, '-o', join(IMAGES, file)])
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+}
+
+function writeAnimatedWebp(images: Image[], rect: Rect, delayMs: number, file: string) {
+  const dir = mkdtempSync(join(tmpdir(), 'lucy-anim-'))
+  try {
+    const args = ['-min_size', '-mixed', '-loop', '0', '-d', String(delayMs), '-lossy', '-q', '85', '-m', '6']
+    images.forEach((image, index) => {
+      const ppm = join(dir, `f${String(index).padStart(3, '0')}.ppm`)
+      writePpm(image, rect, ppm)
+      args.push(ppm)
+    })
+    args.push('-o', join(IMAGES, file))
+    execFileSync('img2webp', args, { stdio: 'pipe' })
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 }
 
 // A picture pair from a dark and a light image of the same place: cut to what was
@@ -261,6 +303,57 @@ function writePair(name: string, dark: Image, light: Image, area: Rect, whole: b
   return `${name} ${rect[2] - rect[0]}x${rect[3] - rect[1]}`
 }
 
+function framesRect(images: Image[], area: Rect): Rect | undefined {
+  let ink: Rect | undefined
+  for (const img of images) {
+    const box = drawn(img, area)
+    if (!box) continue
+    ink = ink
+      ? [Math.min(ink[0], box[0]), Math.min(ink[1], box[1]), Math.max(ink[2], box[2]), Math.max(ink[3], box[3])]
+      : box
+  }
+  if (!ink) return undefined
+  return [
+    Math.max(area[0], ink[0] - PAD),
+    Math.max(area[1], ink[1] - PAD),
+    Math.min(area[2], ink[2] + PAD),
+    Math.min(area[3], ink[3] + PAD),
+  ]
+}
+
+function writeAnimatedPair(name: string, darkFiles: string[], lightFiles: string[], area: Rect, whole: boolean, delayMs: number): string {
+  const dark = darkFiles.map(decode)
+  const light = lightFiles.map(decode)
+  for (const img of [...dark.slice(1), ...light]) {
+    if (img.width !== dark[0]!.width || img.height !== dark[0]!.height) throw new Error(`${name}: captured frames differ in size`)
+  }
+  const rect = whole ? area : framesRect([...dark, ...light], area)
+  if (!rect) return `${name}: nothing drawn`
+  writeAnimatedWebp(dark, rect, delayMs, `${name}-dark.webp`)
+  writeAnimatedWebp(light, rect, delayMs, `${name}-light.webp`)
+  return `${name} ${rect[2] - rect[0]}x${rect[3] - rect[1]} (${dark.length} frames @ ${delayMs}ms)`
+}
+
+function parseBoxLine(line: string, width: number, height: number): { name: string; area: Rect; whole: boolean } | undefined {
+  const m = line.trim().match(/^(\S+) ([\d.]+),([\d.]+),([\d.]+),([\d.]+) vp=(\d+),(\d+)/)
+  if (!m) return undefined
+  const name = m[1] as string
+  const [bx0, by0, bx1, by1, vw, vh] = m.slice(2).map(Number) as [number, number, number, number, number, number]
+  const scale = width / vw
+  const isScreen = bx0 <= 0 && by0 <= 0 && bx1 >= vw && by1 >= vh
+  const trimmed = examples().some((example) => example.name === name && example.trim)
+  const whole = isScreen && !trimmed
+  const area: Rect = isScreen
+    ? [0, 0, width, Math.min(height, Math.round(vh * scale))]
+    : [
+        Math.max(0, Math.floor(bx0 * scale) - PAD),
+        Math.max(0, Math.floor(by0 * scale) - PAD),
+        Math.min(width, Math.ceil(bx1 * scale) + PAD),
+        Math.min(height, Math.ceil(by1 * scale) + PAD),
+      ]
+  return { name, area, whole }
+}
+
 // One picture pair per box line: the box (viewport pixels) is scaled to the capture
 // and padded. A box that is the whole viewport (a screen) is kept whole.
 function crop(darkFile: string, lightFile: string, lines: string[]): string[] {
@@ -269,26 +362,12 @@ function crop(darkFile: string, lightFile: string, lines: string[]): string[] {
   if (dark.width !== light.width || dark.height !== light.height) throw new Error('the two captures differ in size')
   const report: string[] = []
   for (const line of lines) {
-    const m = line.trim().match(/^(\S+) ([\d.]+),([\d.]+),([\d.]+),([\d.]+) vp=(\d+),(\d+)/)
-    if (!m) {
+    const parsed = parseBoxLine(line, dark.width, dark.height)
+    if (!parsed) {
       if (line.trim()) report.push(`skipped: ${line.trim()}`)
       continue
     }
-    const name = m[1] as string
-    const [bx0, by0, bx1, by1, vw, vh] = m.slice(2).map(Number) as [number, number, number, number, number, number]
-    const scale = dark.width / vw
-    const isScreen = bx0 <= 0 && by0 <= 0 && bx1 >= vw && by1 >= vh
-    const trimmed = examples().some((example) => example.name === name && example.trim)
-    const whole = isScreen && !trimmed
-    const area: Rect = isScreen
-      ? [0, 0, dark.width, Math.min(dark.height, Math.round(vh * scale))]
-      : [
-          Math.max(0, Math.floor(bx0 * scale) - PAD),
-          Math.max(0, Math.floor(by0 * scale) - PAD),
-          Math.min(dark.width, Math.ceil(bx1 * scale) + PAD),
-          Math.min(dark.height, Math.ceil(by1 * scale) + PAD),
-        ]
-    report.push(writePair(name, dark, light, area, whole))
+    report.push(writePair(parsed.name, dark, light, parsed.area, parsed.whole))
   }
   return report
 }
@@ -311,6 +390,11 @@ async function render(names: string[]) {
     const luau = (code: string) => studio.run(target.id, 'Edit', code)
     const settle = () => new Promise((resolve) => setTimeout(resolve, 1000))
     const dir = mkdtempSync(join(tmpdir(), 'lucy-captures-'))
+    const saveCapture = (filePrefix: string, shot: { data: string; mimeType: string }) => {
+      const file = join(dir, `${filePrefix}.${shot.mimeType.endsWith('png') ? 'png' : 'jpg'}`)
+      writeFileSync(file, Buffer.from(shot.data, 'base64'))
+      return file
+    }
     console.log(await luau(`
 local list = game:GetService("HttpService"):JSONDecode([==[${json}]==])
 local R = require(game.ReplicatedStorage.LucyDocPictures:Clone())
@@ -321,20 +405,55 @@ return R.start(list)
       for (let screen = 1; ; screen++) {
         const lines = await luau('return _G.LucyDocPicturesRun.next("dark")')
         if (lines.trim() === 'done') break
+        if (lines.startsWith('ANIMATE ')) {
+          const name = lines.slice('ANIMATE '.length).trim()
+          const ex = picked.find((e) => e.name === name)
+          if (!ex) throw new Error(`unexpected animated example "${name}"`)
+          const fps = ex.fps ?? 12
+          const count = Math.max(2, Math.round((ex.animate ?? 1.6) * fps))
+          const dt = 1 / fps
+          const delayMs = Math.round(1000 / fps)
+          const captureRun = async (theme: 'dark' | 'light') => {
+            const files: string[] = []
+            for (let i = 0; i < count; i++) {
+              if (i > 0) await luau(`return _G.LucyDocPicturesRun.step(${dt})`)
+              else await new Promise((resolve) => setTimeout(resolve, 120))
+              files.push(saveCapture(`${screen}-${theme}-${i}`, await studio.capture(target.id)))
+            }
+            return files
+          }
+          const darkFiles = await captureRun('dark')
+          const lightStart = await luau('return _G.LucyDocPicturesRun.again("light")')
+          if (/ ERR /.test(lightStart)) {
+            console.error(lightStart)
+            continue
+          }
+          const lightFiles = await captureRun('light')
+          const boxLine = await luau('return _G.LucyDocPicturesRun.box()')
+          if (/ (?:ERR|EMPTY)\b/.test(boxLine)) {
+            console.error(boxLine)
+            continue
+          }
+          const first = decode(darkFiles[0]!)
+          const parsed = parseBoxLine(boxLine, first.width, first.height)
+          if (!parsed) {
+            console.error(`bad box line: ${boxLine}`)
+            continue
+          }
+          console.log(writeAnimatedPair(name, darkFiles, lightFiles, parsed.area, parsed.whole, delayMs))
+          continue
+        }
         await settle()
-        const dark = await studio.capture(target.id)
+        const darkFile = saveCapture(`${screen}-dark`, await studio.capture(target.id))
         await luau('return _G.LucyDocPicturesRun.again("light")')
         await settle()
-        const light = await studio.capture(target.id)
-        const darkFile = join(dir, `${screen}-dark.${dark.mimeType.endsWith('png') ? 'png' : 'jpg'}`)
-        const lightFile = join(dir, `${screen}-light.${light.mimeType.endsWith('png') ? 'png' : 'jpg'}`)
-        writeFileSync(darkFile, Buffer.from(dark.data, 'base64'))
-        writeFileSync(lightFile, Buffer.from(light.data, 'base64'))
-        const drawn = lines.split('\n').filter((line) => !line.endsWith(' LATER') && !/ ERR /.test(line))
+        const lightFile = saveCapture(`${screen}-light`, await studio.capture(target.id))
+        const drawnLines = lines.split('\n').filter((line) => !line.endsWith(' LATER') && !/ ERR /.test(line))
         for (const line of lines.split('\n').filter((line) => / ERR /.test(line))) console.error(line)
-        for (const line of crop(darkFile, lightFile, drawn)) console.log(line)
+        for (const line of crop(darkFile, lightFile, drawnLines)) console.log(line)
       }
     } finally {
+      rmSync(dir, { recursive: true, force: true })
       console.log(await luau('local R = _G.LucyDocPicturesRun if R then R.stop() end _G.LucyDocPicturesRun = nil return "stopped"'))
     }
   } finally {

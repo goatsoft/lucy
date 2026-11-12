@@ -1,21 +1,19 @@
 <!-- Made by scripts/skills.ts from docs/reference/utils.md. Edit the doc, not this file. -->
 # Utils
 
-Lucy includes stateless helpers and lightweight utility classes. They do not
-depend on components or reactive scopes, so you can call them anywhere on the
-client or the server.
+Plain helpers and utility classes that work anywhere on the client or server,
+without components or reactive scopes.
 
-| Utility | What it is |
+| Utility | What it does |
 |---|---|
-| [`Lucy.Format`](#lucyformat) | Turns numbers into text with thousands separators and decimal rounding |
-| [`Lucy.Scroll`](#lucyscroll) | Scrolls ancestor ScrollingFrames to reveal an object and measures scroll metrics |
-| [`Lucy.Signal`](#lucysignal) | A lightweight synchronous event emitter for plain Luau objects |
-| [`Lucy.Maid`](#lucymaid) | Collects instances, connections, functions and threads to clean them up together |
+| [`Lucy.Format`](#lucyformat) | Formats numbers with thousands separators and decimal rounding |
+| [`Lucy.Scroll`](#lucyscroll) | Scrolls ancestor ScrollingFrames to show an object and reads combined UIScale |
+| [`Lucy.Signal`](#lucysignal) | Synchronous event emitter for plain Luau objects |
+| [`Lucy.Maid`](#lucymaid) | Collects instances, connections, functions and threads to clean them up in one call |
 
 ## Lucy.Format
 
-`Lucy.Format` turns values into text. Its functions are plain: they take a
-value and return a string, with nothing to set up or clean up.
+`Lucy.Format` turns values into strings, with nothing to set up or clean up.
 
 ### Format.number
 
@@ -26,20 +24,20 @@ Lucy.Format.number(1234.5678, 2)     -- "1,234.57"
 Lucy.Format.number(1234567, 0, ".")  -- "1.234.567"
 ```
 
-Groups a number's thousands and rounds it to `decimals` places.
+Groups thousands and rounds to `decimals` places.
 
-| Argument | Type | Default | What it is |
+| Argument | Type | Default | What it does |
 |---|---|---|---|
-| `n` | `number` | required | The number to format |
+| `n` | `number` | required | Number to format |
 | `decimals` | `number?` | `0` | Decimal places to round to |
 | `separator` | `string?` | `","` | Separator between groups of three digits |
 
-Luau's `string.format` pads and rounds (`"%.1f"`, `"%05d"`), but does not add
+Luau's `string.format` pads and rounds (`"%.1f"`, `"%05d"`), without adding
 thousands separators.
 
 ### Formatting labels in UI
 
-Format a number inside surrounding text for player HUDs and counters:
+Format numbers inside labels and counters:
 
 ```luau
 local coins = app.state:ref("player.coins")
@@ -53,39 +51,39 @@ Lucy.Text.new({
 ```
 
 A [Text](../components/text.md) with a numeric `value` formats numbers with
-`Lucy.Format.number` by default, and so does an animated count from
-[`useCount`](composables/use-count.md) when rendered.
+`Lucy.Format.number` by default, and [`useCount`](composables/use-count.md)
+follows the same formatting.
 
 ## Lucy.Scroll
 
-`Lucy.Scroll` provides helpers for `ScrollingFrame`s. `InputManager` uses it
-internally to keep focused objects in view during keyboard and gamepad navigation.
-You can also use it directly in scenes and menus to scroll to specific items.
+`Lucy.Scroll` provides helpers for `ScrollingFrame`s. `InputManager` uses it to
+keep focused items in view on keyboard and gamepad, and you can call it directly
+in your own menus.
 
 ### Scroll.reveal
 
-Scrolls every `ScrollingFrame` ancestor above `object` until the object is fully
-visible inside each frame's viewport, or only the one you name:
+Scrolls every `ScrollingFrame` ancestor above `object` until `object` fits inside
+each viewport, or only the single frame you pass in `only`:
 
 ```luau
 Lucy.Scroll.reveal(object, margin?, only?)
 ```
 
-| Argument | Type | Default | What it is |
+| Argument | Type | Default | What it does |
 |---|---|---|---|
-| `object` | `GuiObject` | required | The target element to reveal |
-| `margin` | `number?` | `8` | Extra padding in pixels around the element |
-| `only` | `ScrollingFrame?` | every ancestor | Scroll just this frame and leave the ones around it alone |
+| `object` | `GuiObject` | required | Element to scroll into view |
+| `margin` | `number?` | `8` | Extra padding in pixels around `object` |
+| `only` | `ScrollingFrame?` | every ancestor | Scroll only this frame and leave outer scrollers alone |
 
-Pass `only` when a row scrolls inside a page: a tab bar shows its picked tab in
-its own scroller, and the page the bar sits in stays where the player scrolled it.
+Pass `only` when one scroller sits inside another: a tab bar scrolls its active
+tab into view inside its own strip without scrolling the whole page.
 
-`CanvasPosition`, `AbsolutePosition` and `AbsoluteWindowSize` are in screen
-pixels (after `UIScale`), so `reveal` works accurately across all screen densities
-without manual scaling calculations.
+`CanvasPosition`, `AbsolutePosition` and `AbsoluteWindowSize` are measured in
+screen pixels (after `UIScale`), so `reveal` works across densities without
+extra maths.
 
 ```luau
--- Jump to a selected track in the Club Lucy booth queue
+-- Jump to a picked track in the booth queue
 local function highlightTrack(trackItem: GuiObject)
     Lucy.Scroll.reveal(trackItem, 16)
 end
@@ -93,60 +91,55 @@ end
 
 ### Scroll.offsetFor
 
-A pure math function that computes the new canvas offset along one axis needed to
-bring a span into view:
+Computes the new canvas offset along one axis needed to bring a span into view:
 
 ```luau
 local newOffset = Lucy.Scroll.offsetFor(position, view, top, bottom, margin?)
 ```
 
-| Argument | Type | Default | What it is |
+| Argument | Type | Default | What it does |
 |---|---|---|---|
 | `position` | `number` | required | Current canvas scroll position |
 | `view` | `number` | required | Visible window size along the axis |
-| `top` | `number` | required | Starting coordinate of the span in canvas space |
-| `bottom` | `number` | required | Ending coordinate of the span in canvas space |
+| `top` | `number` | required | Start of the span in canvas space |
+| `bottom` | `number` | required | End of the span in canvas space |
 | `margin` | `number?` | `0` | Extra padding around the span |
 
-Returns `position` unchanged if the span is already within the visible view. If
-the span is taller than `view`, it returns the offset that aligns the top edge.
+Returns `position` unchanged when the span is already in view. When the span is
+taller than `view`, it aligns the top edge.
 
 ### Scroll.scaleOf
 
-Returns the combined scale factor of all `UIScale` objects above `object`:
+Returns the combined scale factor of every `UIScale` above `object`:
 
 ```luau
 local scale = Lucy.Scroll.scaleOf(object)
 ```
 
-Use `scaleOf` to convert measured screen coordinates (`AbsoluteSize`) back into
-the unscaled layout offsets used by `UDim2`.
+Use `scaleOf` to convert measured screen pixels (`AbsoluteSize`) back into
+unscaled layout offsets for `UDim2`.
 
 ## Lucy.Signal
 
-`Lucy.Signal` is a tiny synchronous event system for plain Luau objects where an
-engine `RBXScriptSignal` is not available. Handlers run synchronously in
-connection order; an error in one handler reports a warning and does not prevent
-other handlers from running.
+`Lucy.Signal` is a synchronous event for plain Luau objects when a Roblox
+`RBXScriptSignal` is not available. Handlers run in connection order; an error in
+one logs a warning and does not stop the rest.
 
 ### Methods
 
 | Method | Returns | What it does |
 |---|---|---|
-| `Signal.new()` | `Signal` | Creates a new signal instance |
-| `signal:Connect(fn)` | `Connection` | Subscribes a handler function |
-| `signal:Once(fn)` | `Connection` | Subscribes a handler that disconnects itself after running once |
-| `signal:Fire(...)` | `()` | Calls every active handler synchronously with the given arguments |
+| `Signal.new()` | `Signal` | Creates a signal |
+| `signal:Connect(fn)` | `Connection` | Registers a handler |
+| `signal:Once(fn)` | `Connection` | Registers a handler that disconnects after firing once |
+| `signal:Fire(...)` | `()` | Calls every active handler synchronously with the arguments |
 | `signal:DisconnectAll()` | `()` | Disconnects all active handlers |
 
-A `Connection` object provides:
+A `Connection` provides `conn.Connected` (boolean) and `conn:Disconnect()`.
 
-- `conn.Connected`: `boolean` indicating if the connection is still active.
-- `conn:Disconnect()`: Disconnects this handler from the signal.
+### Example: booth events
 
-### Example: DJ booth events
-
-Use signals for decoupled client-side events between game features and UI:
+Use signals for plain Luau events between game systems and UI:
 
 ```luau
 local onTrackChanged = Lucy.Signal.new()
@@ -155,18 +148,15 @@ local conn = onTrackChanged:Connect(function(trackName: string, bpm: number)
     print(`Now playing {trackName} at {bpm} BPM`)
 end)
 
--- Fire when the track changes
 onTrackChanged:Fire("Neon Nights", 124)
 
--- Clean up
 conn:Disconnect()
 ```
 
 ## Lucy.Maid
 
-`Lucy.Maid` collects tasks and objects that require cleanup and tears them down
-together in one call. Tasks are cleaned up in reverse order (last in, first out),
-ensuring dependents are cleaned up before their dependencies.
+`Lucy.Maid` collects cleanup tasks and tears them down together in reverse order
+(last in, first out), so later resources clean up before the things they depend on.
 
 ### Supported cleanup types
 
@@ -175,7 +165,7 @@ ensuring dependents are cleaned up before their dependencies.
 | `Instance` | Calls `item:Destroy()` |
 | `RBXScriptConnection` | Calls `item:Disconnect()` |
 | `Lucy.Signal.Connection` | Calls `item:Disconnect()` |
-| `function` | Invokes `item()` |
+| `function` | Calls `item()` |
 | `thread` | Cancels via `task.cancel(thread)` if still alive |
 | `table` | Calls `item:Destroy()`, `item:destroy()`, or `item:Disconnect()` |
 
@@ -184,8 +174,8 @@ ensuring dependents are cleaned up before their dependencies.
 | Method | What it does |
 |---|---|
 | `Maid.new()` | Creates an empty Maid |
-| `maid:give(item)` | Adds `item` to the cleanup list and returns `item` |
-| `maid:clean()` | Cleans up every item in reverse order and clears the list |
+| `maid:give(item)` | Adds `item` to the cleanup list and returns it |
+| `maid:clean()` | Cleans every item in reverse order and clears the list |
 | `maid:destroy()` | Alias for `maid:clean()` |
 | `maid:Destroy()` | Alias for `maid:clean()` |
 
@@ -194,7 +184,6 @@ ensuring dependents are cleaned up before their dependencies.
 ```luau
 local floorMaid = Lucy.Maid.new()
 
--- Give parts, connections, threads and functions to the maid
 floorMaid:give(danceFloorLightPart)
 floorMaid:give(sound.Ended:Connect(onTrackFinished))
 floorMaid:give(task.spawn(pulseFloorBeats))
@@ -202,6 +191,6 @@ floorMaid:give(function()
     print("Dance floor effects torn down")
 end)
 
--- When the player leaves the dance floor, clean everything in one call:
+-- When the player leaves the floor, clean everything in one call:
 floorMaid:clean()
 ```

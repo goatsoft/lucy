@@ -31,7 +31,7 @@ Lucy.Stack.new({
 | `text` | string | `"Badge"`, or `""` with an icon or children | yes | The label |
 | `icon` | string | | yes | An [icon](icon.md) name drawn before the text, in the badge's colour (`badge.icon`) |
 | `children` | table | | | Anything after the text in the badge's [slot](slot.md): strings, components, instances or builders. They take the badge's colours |
-| `variant` | string | `"default"` | yes | `default`, `secondary`, `destructive`, `outline` or `overlay` (a see-through fill for a count over a picture: dark with white words in the dark theme, light with dark words in the light one) |
+| `variant` | string | `"default"` | yes | `default`, `secondary`, `destructive`, `outline` or `overlay` (a translucent fill for a count over a picture: dark with white words in the dark theme, light with dark words in the light one) |
 | `shape` | string | `"rounded"` | yes | `rounded`, or `square`: only slightly rounded (`$RadiusXs`, 3 px) and a little tighter, for tags and labels such as a rarity |
 | `visible` | boolean | `true` | yes | Shows or hides the badge |
 
@@ -67,7 +67,7 @@ Lucy.Badge.new({
 ```
 
 How many of a dance a player owns, on the corner of its tile. `overlay` is a
-see-through fill, so the number reads on any picture:
+translucent fill, so the number reads on any picture:
 
 <!-- preview -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-badge-4-light.webp" alt="Badge example" loading="lazy"><img class="example-dark" src="/images/examples/components-badge-4-dark.webp" alt="Badge example" loading="lazy"></figure>

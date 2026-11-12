@@ -85,7 +85,7 @@ player's background setting changes. With nothing behind it, it uses the page
 background.
 
 A fade is a colour laid over the content, so it only works over a solid
-surface. Over a see-through panel or a picture, it shows as a darker band. There
+surface. Over a translucent panel or a picture, it shows as a darker band. There
 you have two choices:
 
 - `fade = false`: no fades.

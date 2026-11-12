@@ -1,10 +1,10 @@
 <!-- Made by scripts/skills.ts from docs/reference/composables/use-countdown.md. Edit the doc, not this file. -->
 # useCountdown
 
-`Lucy.useCountdown` counts the whole seconds remaining until `endsAt`, evaluated
-in `workspace:GetServerTimeNow()` time. Because the countdown references server
-time, all players see the exact same synchronized countdown across different
-clients without needing the server to broadcast second-by-second network updates.
+`Lucy.useCountdown` counts whole seconds left until `endsAt` using
+`workspace:GetServerTimeNow()`. Because every client reads server time, all
+players see the same second tick down without the server sending updates every
+second.
 
 ## Usage
 

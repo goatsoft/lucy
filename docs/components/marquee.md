@@ -11,17 +11,23 @@ tickers and names on boards, where wrapping would break the layout. With
 `loop` on it goes round instead, like a ticker: a copy of the text follows the
 first one a gap behind, so it never stops or jumps back.
 
-<!-- preview -->
+<!-- preview animate="2.8" fps="12" warmup="1.6" -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-marquee-light.webp" alt="Marquee example" loading="lazy"><img class="example-dark" src="/images/examples/components-marquee-dark.webp" alt="Marquee example" loading="lazy"></figure>
 
 ```luau
 local track = app.state:ref("server.dj.title")
 
-Lucy.Marquee.new({
-    text = function()
-        return track() or ""
-    end,
-    variant = "large",
+Lucy.Panel.new({
+    title = "Now playing",
+    size = UDim2.fromOffset(220, 0),
+    children = {
+        Lucy.Marquee.new({
+            text = function()
+                return track() or ""
+            end,
+            variant = "large",
+        }),
+    },
     Parent = nowPlaying,
 })
 ```
@@ -56,7 +62,7 @@ much the UIScales above an instance scale it, all together.
 
 `handle.strip` is the moving TextLabel, for your own rules: tag it and style it
 with tokens. `handle.scrolling` says whether it is moving right now. With `loop`,
-`handle.repeatStrip` is the copy; it takes its text size, color and font from
+`handle.repeatStrip` is the copy; it takes its text size, colour and font from
 the strip, so style the strip.
 
 ## Examples
@@ -86,12 +92,24 @@ Lucy.Marquee.new({
 
 A ticker that goes round without stopping, for a long line of news:
 
+<!-- preview animate="2.4" fps="12" warmup="1.6" -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-marquee-2-light.webp" alt="Marquee example" loading="lazy"><img class="example-dark" src="/images/examples/components-marquee-2-dark.webp" alt="Marquee example" loading="lazy"></figure>
+
 ```luau
-Lucy.Marquee.new({
-    text = "Sign-ups are open at The Lab · DJ GOD is on the decks · Next round in 2 minutes",
-    variant = "large",
-    loop = true,
-    speed = 90,
+Lucy.Panel.new({
+    size = UDim2.fromOffset(300, 0),
+    children = {
+        Lucy.Marquee.new({
+            text = "Sign ups are open at The Lab · DJ GOD is on the decks · Next round in 2 minutes",
+            variant = "large",
+            loop = true,
+            speed = 90,
+        }),
+    },
     Parent = ticker,
 })
 ```
+
+## Preview
+
+In Studio, from the command bar: `Lucy.Preview.show("Marquee")`.

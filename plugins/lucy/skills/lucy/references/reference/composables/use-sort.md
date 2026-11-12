@@ -1,12 +1,11 @@
 <!-- Made by scripts/skills.ts from docs/reference/composables/use-sort.md. Edit the doc, not this file. -->
 # useSort
 
-`Lucy.useSort` provides a multi-column sorting engine for arbitrary lists that
-are not formatted as tabular records (such as card grids or shop items).
-[`useTable`](use-table.md) is built directly on top of `useSort`.
+`Lucy.useSort` sorts any list by one or more keys (a grid of cards, a shop
+list). [`useTable`](use-table.md) uses it under the surface.
 
-While `useTable` formats rows into record objects with cell getters, `useSort`
-returns your original items sorted in an `items` array.
+Unlike `useTable`, which wraps each entry into a table row with `row:value()`,
+`useSort` returns your original items sorted in `items()`.
 
 ## Usage
 
@@ -16,32 +15,32 @@ local sortModel = Lucy.useSort(options)
 
 ### Options
 
-`useSort` accepts the same options as [`useTable`](use-table.md) (excluding
-`rowId` and `manual`):
+`useSort` takes the same options as [`useTable`](use-table.md), without `rowId`
+or `manual`:
 
 | Option | Type | Default | What it does |
 |---|---|---|---|
-| `data` | `array | Ref | () -> array` | required | The list of items to sort |
-| `columns` | `array` | required | Columns defining sort keys and comparison functions |
-| `sorting` | `table | Ref | false` | `false` | Starting sort configuration |
-| `multi` | `boolean` | `false` | Enables multi-column tiebreaker sorting |
-| `sortable` | `boolean` | `true` | When `false`, sorting is disabled |
-| `removable` | `boolean` | `true` | A third toggle clears the column from the sort |
+| `data` | `array \| Ref \| () -> array` | required | Items to sort |
+| `columns` | `array` | required | Sort keys and compare functions |
+| `sorting` | `table \| Ref \| false` | `false` | Starting sort |
+| `multi` | `boolean` | `false` | Allows secondary columns as tiebreakers |
+| `sortable` | `boolean` | `true` | `false` turns sorting off |
+| `removable` | `boolean` | `true` | A third toggle clears that key from the sort |
 | `descFirst` | `boolean` | `false` | First toggle sorts descending |
 
 ### Returns
 
-Returns the same methods as `useTable`, with:
+Returns the same methods as `useTable`, plus:
 
 | Name | Type | What it is |
 |---|---|---|
-| `items()` | `() -> array` | Getter returning your original items array, sorted |
-| `sort(list)` | `(list: array) -> array` | Helper to sort any independent array using the same sort rules |
+| `items()` | `() -> array` | Your items in sorted order |
+| `sort(list)` | `(list: array) -> array` | Sorts another list with the same rules |
 
-## Example: Club Lucy emote shop sorting
+## Example: emote shop sorting
 
-Sort emote shop cards by rarity, style and name using
-[SortButton](../../components/sort-button.md) controls:
+Sort emote cards by rarity, style and name using
+[SortButton](../../components/sort-button.md):
 
 ```luau
 local RARITY_RANKS = { Common = 1, Rare = 2, Epic = 3, Legendary = 4 }

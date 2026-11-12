@@ -29,7 +29,7 @@ check a name exists before you use it, and find the page that explains it.
 ## Composables
 
 `Lucy.useDensity`, `useMetric`, `useResponsive`, `useBackHandler`,
-`useFocusScope`, `useFocusZone`, `useHoldArrows`, `useSize`, `useUiSound`, `useTable`, `useWhile`, `useCountdown`,
+`useFocusScope`, `useFocusZone`, `useHoldArrows`, `useSize`, `useUiSound`, `useTable`, `useSort`, `useWhile`, `useCountdown`,
 `useDrag`, `useReveal`, `useCount` and `useRequest`. See
 the [composables reference](composables/index.md).
 
@@ -84,10 +84,10 @@ the [composables reference](composables/index.md).
 
 `Lucy.Accordion`, `Alert`, `Arrow`, `Attribution`, `Avatar`, `Badge`, `Button`, `Checkbox`,
 `Collapsible`, `DataGrid`, `Dialog`, `Effect`, `Gradient`, `Grid`, `Icon`, `Image`, `InlineConfirm`,
-`Input`, `Item`, `Kbd`, `NumberField`, `Panel`, `Pressable`, `Progress`,
+`Input`, `Item`, `Kbd`, `Leaderboard`, `Marquee`, `Menu`, `NumberField`, `Panel`, `Pressable`, `Progress`,
 `RadioGroup`, `ScrollArea`, `Select`, `Separator`, `Sheet`, `Skeleton`,
-`Slider`, `Spinner`, `Stack`, `Switch`, `Table`, `Tabs`, `Text`, `Toaster`,
-`Toggle`, `ToggleGroup` and `Tour`. Each has a page under [Components](../components/index.md).
+`Slider`, `Slot`, `SortButton`, `Spinner`, `Stack`, `Switch`, `Table`, `Tabs`, `Text`, `Toaster`,
+`Toggle`, `ToggleGroup`, `Tour` and `Waveform`. Each has a page under [Components](../components/index.md).
 
 ## Tools
 

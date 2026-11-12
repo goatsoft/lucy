@@ -1,11 +1,10 @@
 <!-- Made by scripts/skills.ts from docs/reference/composables/use-metric.md. Edit the doc, not this file. -->
 # useMetric
 
-`Lucy.useMetric` computes the resolved height in pixels of a control size token
+`Lucy.useMetric` returns the height in pixels of a control size token
 (`ControlSm`, `ControlMd`, `ControlLg`, `ControlXl` or `ControlIcon`) for the
-current device density. While control tokens are full `UDim2` values in
-Universal Styling rules, `useMetric` returns their numeric pixel height for use
-in code calculations and dynamic sizing.
+current density. Style rules use full `UDim2` tokens; `useMetric` gives the
+plain pixel number when code computes sizes or positions.
 
 ## Usage
 
@@ -15,19 +14,18 @@ local height = Lucy.useMetric(app?, tokenName)
 
 | Argument | Type | Default | What it is |
 |---|---|---|---|
-| `app` | `Lucy.App?` | `Lucy.App.current()` | The app instance to derive metrics from |
+| `app` | `Lucy.App?` | `Lucy.App.current()` | The App to read metrics from |
 | `tokenName` | `string` | required | One of `"ControlSm"`, `"ControlMd"`, `"ControlLg"`, `"ControlXl"`, `"ControlIcon"` |
 
 ### Returns
 
 | Name | Type | What it is |
 |---|---|---|
-| `height` | `() -> number` | A computed getter returning the token height in pixels |
+| `height` | `() -> number` | Token height in pixels |
 
-## Example: Club Lucy DJ deck controls
+## Example: DJ deck controls
 
-In the DJ Booth, row items match the standard control height across mobile,
-desktop and console:
+Match row heights to the control metric across phone, desktop and console:
 
 ```luau
 local function BoothChannelRow(h)

@@ -12,11 +12,14 @@ local reward = Lucy.new("Frame", {
     Parent = dialog,
 })
 local burst = Lucy.Effect.new({ type = "rays", variant = "warning", Parent = reward })
-Lucy.Icon.new({
+local trophy = Lucy.Icon.new({
     icon = "lucide-extended:trophy-filled",
     size = "xl",
     Parent = reward,
 })
+trophy.Instance.AnchorPoint = Vector2.new(0.5, 0.5)
+trophy.Instance.Position = UDim2.fromScale(0.5, 0.5)
+trophy.Instance.ZIndex = 2
 
 -- The moment the reward lands
 burst:play()
@@ -92,7 +95,8 @@ local box = Lucy.new("Frame", {
     BackgroundTransparency = 1,
     Parent = parent,
 })
-Lucy.Button.new({ text = "Claim reward", size = UDim2.fromScale(1, 1), Parent = box })
+local claim = Lucy.Button.new({ text = "Claim reward", size = "lg", Parent = box })
+claim.Instance.Size = UDim2.fromScale(1, 1)
 Lucy.Effect.new({ type = "outline", variant = "warning", radius = 8, Parent = box })
 ```
 
@@ -116,7 +120,7 @@ and each `ui-effect-outline-<variant>`, for your own styling.
 
 ## Your own types
 
-Register a type once, then use it like a built-in one. It only draws: the effect
+Register a type once, then use it like a built in one. It only draws: the effect
 times it, hides it and respects reduced motion for you.
 
 ```luau

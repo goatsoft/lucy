@@ -65,7 +65,7 @@ app.scenes:register("Title", {
 | `onBack(scene)` | B or Backspace on a screen, when nothing is open on top |
 | `keepAlive` | `true` (the default) keeps the UI when the scene hides; `false` destroys it and builds it again next time |
 | `ignoreGuiInset` | `true` (the default) draws under Roblox's top bar; see [Safe area](#safe-area) |
-| `safeArea` | `true` also makes `scene.safe`, a frame clear of the top bar and the notch, for a full-screen panel over a backdrop; see [Safe area](#safe-area) |
+| `safeArea` | `true` also makes `scene.safe`, a frame clear of the top bar and the notch, for a full screen panel over a backdrop; see [Safe area](#safe-area) |
 
 `scene` is a table you can keep your own parts on, like `scene.play` above. It
 also has `scene.gui`, `scene.app`, `scene.params`, `scene.maid` and, with

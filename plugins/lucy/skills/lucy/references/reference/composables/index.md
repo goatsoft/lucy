@@ -3,46 +3,43 @@
 
 A composable is a function named `useX` that creates refs, computeds and effects
 for whatever is running now: a component's render, a scene's `build`, an
-effect, or `scope:run` of a `Lucy.effectScope()`. What it creates stops with
-that owner. Every composable raises an error when called without an active owner,
-preventing dangling unmanaged effects.
+effect, or `scope:run` on a `Lucy.effectScope()`. Anything it creates stops when
+that owner stops. Calling a composable without an active owner throws an error.
 
 To write your own composables, see [Share logic with composables](../../guide/composables.md).
 
-## Built-in composables
+## Built in composables
 
 | Composable | What it does |
 |---|---|
-| [`useDensity`](use-density.md) | Follows the active device density profile (`"default"`, `"touch"` or `"tv"`) |
-| [`useMetric`](use-metric.md) | Computes a control height token in pixels based on density |
-| [`useResponsive`](use-responsive.md) | Derives a responsive value keyed by device, mode, breakpoint or orientation |
-| [`useBackHandler`](use-back-handler.md) | Intercepts back inputs (B on gamepad, Backspace on keyboard) while active |
-| [`useFocusScope`](use-focus-scope.md) | Traps keyboard and gamepad focus inside a container while active |
-| [`useFocusZone`](use-focus-zone.md) | A group of HUD controls nothing selects until a key steps in; B steps out |
-| [`useHoldArrows`](use-hold-arrows.md) | Keeps the gamepad's selection on a control while it takes the arrows itself |
-| [`useSize`](use-size.md) | Follows an object's size in the units you lay it out in, for layout that depends on the room it gets |
-| [`useUiSound`](use-ui-sound.md) | Calls functions when components activate, toggle, open, close or select |
-| [`useTable`](use-table.md) | Manages sorted rows from raw data tables and column definitions |
-| [`useSort`](use-sort.md) | Sorts any arbitrary list by one or more columns with tiebreakers |
-| [`useWhile`](use-while.md) | Runs a setup callback while a condition is true, cleaning up on false |
-| [`useCountdown`](use-countdown.md) | Synchronized countdown of whole seconds remaining until a timestamp |
-| [`useDrag`](use-drag.md) | Tracks pointer or touch drag gestures starting from a target element |
-| [`useReveal`](use-reveal.md) | Types text out character by character for dialogue and notifications |
-| [`useCount`](use-count.md) | Counts a number smoothly up or down with easing |
-| [`useRequest`](use-request.md) | Asks the server and keeps the answer, asking again when its arguments change |
+| [`useDensity`](use-density.md) | Follows the active density profile (`"default"`, `"touch"` or `"tv"`) |
+| [`useMetric`](use-metric.md) | Returns a control height in pixels for the current density |
+| [`useResponsive`](use-responsive.md) | Picks a value by device, input mode, breakpoint or orientation |
+| [`useBackHandler`](use-back-handler.md) | Handles back inputs (B on gamepad, Backspace on keyboard) while active |
+| [`useFocusScope`](use-focus-scope.md) | Keeps keyboard and gamepad focus inside a frame while active |
+| [`useFocusZone`](use-focus-zone.md) | A group of HUD controls skipped by focus until the player steps in; B steps out |
+| [`useHoldArrows`](use-hold-arrows.md) | Holds gamepad selection on a control while it handles arrow keys itself |
+| [`useSize`](use-size.md) | Tracks an object's size in layout units, for layouts that react to available space |
+| [`useUiSound`](use-ui-sound.md) | Runs callbacks when components activate, toggle, open, close or select |
+| [`useTable`](use-table.md) | Manages sorted rows from raw tables and column definitions |
+| [`useSort`](use-sort.md) | Sorts a list by one or more columns with tiebreakers |
+| [`useWhile`](use-while.md) | Runs a setup callback while a condition holds, cleaning up when it turns false |
+| [`useCountdown`](use-countdown.md) | Synchronised countdown of whole seconds remaining until a timestamp |
+| [`useDrag`](use-drag.md) | Follows mouse or touch drags starting from a control |
+| [`useReveal`](use-reveal.md) | Types text out character by character for dialogue and notices |
+| [`useCount`](use-count.md) | Animates a number smoothly toward a target value |
+| [`useRequest`](use-request.md) | Calls the server, keeps the answer and requests again when inputs change |
 
 ## Lifetime and ownership
 
-Composables must be called inside an active reactive owner:
+Call composables inside an active reactive owner:
 
-1. **Inside a component**: In `render(h)`, all refs, computeds and watchers
-   created by composables are automatically bound to that component handle. When
-   the component is destroyed with `handle:destroy()`, its composables are
-   cleaned up automatically.
-2. **Inside a scene**: In `build(scene)`, composables run in the scene's scope
-   and clean up when the scene is torn down.
-3. **Inside an effect or scope**: When used in custom features or client scripts
-   outside components, wrap composables in an effect scope:
+1. **In a component**: Inside `render(h)`, composables attach to that handle
+   and stop when `handle:destroy()` runs.
+2. **In a scene**: Inside `build(scene)`, composables attach to the scene and
+   stop when the scene tears down.
+3. **In scripts or effects**: Outside components and scenes, wrap calls in an
+   effect scope:
 
 ```luau
 local scope = Lucy.effectScope()
@@ -50,6 +47,6 @@ scope:run(function()
     Lucy.useWhile(isOpen, blockInput)
 end)
 
--- Stop all composables and effects created inside:
+-- Stop everything created inside the scope:
 scope:stop()
 ```
