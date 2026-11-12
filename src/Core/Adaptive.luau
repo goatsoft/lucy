@@ -101,9 +101,11 @@ end
 ]]
 function Adaptive.attach(gui: Instance, options: { [string]: any }?)
 	local opts: { [string]: any } = options or {}
+	-- A ScreenGui outside the game reports a made-up 800x600 (App attaches before parenting),
+	-- so its own size counts only once it is in the game; until then, the camera's viewport
 	local getViewport: () -> Vector2 = opts.getViewport
 		or function()
-			if gui:IsA("ScreenGui") and gui.AbsoluteSize.X > 0 then
+			if gui:IsA("ScreenGui") and gui:IsDescendantOf(game) and gui.AbsoluteSize.X > 0 then
 				return gui.AbsoluteSize
 			end
 			return cameraViewport()

@@ -78,6 +78,21 @@ return function()
 			gui:Destroy()
 		end)
 
+		it("scales a gui not yet in the game from the camera, not its placeholder size", function()
+			-- An unparented ScreenGui reports a made-up 800x600, and App attaches before parenting
+			local camera = workspace.CurrentCamera
+			if not camera or camera.ViewportSize.X <= 0 then
+				return
+			end
+			local gui = Instance.new("ScreenGui")
+			local options = { base = Vector2.new(1280, 720), min = 0.1, max = 4, watch = false }
+			local handle = Adaptive.attach(gui, options)
+			local want = Adaptive.computeScale(camera.ViewportSize, options)
+			expect(math.abs(handle.scale.Scale - want) < 1e-4).to.equal(true)
+			handle:destroy()
+			gui:Destroy()
+		end)
+
 		it("can be reconfigured with another profile", function()
 			local gui = Instance.new("ScreenGui")
 			local handle = Adaptive.attach(gui, {
