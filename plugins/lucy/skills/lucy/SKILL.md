@@ -216,6 +216,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Make your UI accessible](references/guide/accessibility.md): Check your own UI so every player can read it, reach it with a keyboard or gamepad, and use it at any text size.
 - [Hotkeys and modal input](references/guide/actions.md): Name your game's actions once for keyboard and gamepad, switch them off while a menu is open, and stop the character moving under a dialog.
 - [Work with app state](references/guide/app-state.md): Keep game data in the app's store and bind UI to it with state:ref, state.root, lists and subscribers.
+- [Auras](references/guide/auras.md): Effects worn in the world, on a character or at a point, that every player sees, with a budget so a full server stays smooth.
 - [Build a component](references/guide/components.md): Write a Stepper component step by step, with state keys, h:ref, bindings, methods and a value bound to app state.
 - [Share logic with composables](references/guide/composables.md): Use Lucy's built in composables and write your own, such as a cooldown for a hype button.
 - [Build screens with scenes](references/guide/scenes.md): Split your UI into scenes, move between screens, show a HUD over them, open a pause menu on top, and handle back with a gamepad.

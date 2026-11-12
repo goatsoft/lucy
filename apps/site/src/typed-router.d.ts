@@ -444,6 +444,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/guide/auras': RouteRecordInfo<
+      '/docs/guide/auras',
+      '/docs/guide/auras',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/guide/components': RouteRecordInfo<
       '/docs/guide/components',
       '/docs/guide/components',
@@ -1260,6 +1267,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/guide/app-state.md': {
       routes:
         | '/docs/guide/app-state'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/guide/auras.md': {
+      routes:
+        | '/docs/guide/auras'
       views:
         | never
       pathParamNames:

@@ -39,6 +39,12 @@ the [composables reference](composables/index.md).
 |---|---|---|
 | `Lucy.spring`, `tween` | Values that move smoothly to a target, and follow reduced motion | [Animation](../reactivity.md#animation) |
 
+## In the world
+
+| Name | What it is | More |
+|---|---|---|
+| `Lucy.Aura` | Effects worn on characters or at points: `Aura.follow(app, options)` on the client, `Aura.wear` and `Aura.take` on the server, `Aura.new` for one, `Aura.register` for your own types | [Auras](../guide/auras.md) |
+
 ## Images
 
 | Name | What it is | More |

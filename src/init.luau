@@ -147,6 +147,9 @@ local Lucy = {
 	Maid = require(Core.Maid),
 	Preview = Preview,
 
+	-- In the world (Core/Aura): effects worn on characters or at points
+	Aura = require(Core.Aura),
+
 	-- Components
 	Accordion = require(Components.Accordion),
 	Alert = require(Components.Alert),
