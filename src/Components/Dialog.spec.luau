@@ -424,6 +424,57 @@ return function()
 			expect(plain.footer.Visible).to.equal(false)
 		end)
 
+		it("drops a footer whose children are all hidden, gap and all, and brings it back", function()
+			local hints = Instance.new("Frame")
+			hints.Size = UDim2.new(1, 0, 0, 30)
+			local dialog = Dialog.new({
+				app = app,
+				open = true,
+				title = "Songs",
+				children = rows(60),
+				footer = { hints },
+			})
+			expect(dialog.footer.Visible).to.equal(true)
+			task.wait(0.3)
+			local withHints = dialog.bodyRoom()
+			hints.Visible = false -- keys hidden on touch
+			expect(Harness.waitFor(function()
+				return not dialog.footer.Visible
+			end)).to.equal(true)
+			expect(dialog.footerSlot.Visible).to.equal(false)
+			-- The body gets the hints' height and the gap over them
+			local gap = Harness.waitFor(function()
+				return dialog.bodyRoom() >= withHints + 30 + 8
+			end)
+			expect(gap).to.equal(true)
+			hints.Visible = true
+			expect(Harness.waitFor(function()
+				return dialog.footer.Visible
+			end)).to.equal(true)
+			expect(Harness.waitFor(function()
+				return dialog.bodyRoom() == withHints
+			end)).to.equal(true)
+		end)
+
+		it("keeps the actions when the footer slot's children are hidden", function()
+			local hints = Instance.new("Frame")
+			hints.Visible = false
+			local dialog = Dialog.new({ app = app, footer = { hints }, actions = { { text = "OK" } } })
+			expect(dialog.footerSlot.Visible).to.equal(false)
+			expect(dialog.footer.Visible).to.equal(true)
+			expect(dialog.actionsRow.Visible).to.equal(true)
+		end)
+
+		it("hides a header slot whose children are all hidden", function()
+			local filters = Instance.new("Frame")
+			local dialog = Dialog.new({ app = app, header = { filters } })
+			expect(dialog.headerSlot.Visible).to.equal(true)
+			filters.Visible = false
+			expect(Harness.waitFor(function()
+				return not dialog.headerSlot.Visible
+			end)).to.equal(true)
+		end)
+
 		it("fits the screen with a long body even without maxHeight", function()
 			local dialog = Dialog.new({ app = app, open = true, title = "Rules", children = rows(60) })
 			task.wait(0.3)

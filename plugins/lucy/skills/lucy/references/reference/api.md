@@ -29,7 +29,7 @@ check a name exists before you use it, and find the page that explains it.
 ## Composables
 
 `Lucy.useDensity`, `useMetric`, `useResponsive`, `useBackHandler`,
-`useFocusScope`, `useFocusZone`, `useHoldArrows`, `useSize`, `useUiSound`, `useTable`, `useSort`, `useWhile`, `useCountdown`,
+`useFocusScope`, `useFocusZone`, `useHoldArrows`, `useSize`, `useAnyShown`, `useUiSound`, `useTable`, `useSort`, `useWhile`, `useCountdown`,
 `useDrag`, `useReveal`, `useCount` and `useRequest`. See
 the [composables reference](composables/index.md).
 

@@ -605,6 +605,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/composables/use-any-shown': RouteRecordInfo<
+      '/docs/reference/composables/use-any-shown',
+      '/docs/reference/composables/use-any-shown',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/composables/use-back-handler': RouteRecordInfo<
       '/docs/reference/composables/use-back-handler',
       '/docs/reference/composables/use-back-handler',
@@ -1437,6 +1444,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/composables/index.md': {
       routes:
         | '/docs/reference/composables/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-any-shown.md': {
+      routes:
+        | '/docs/reference/composables/use-any-shown'
       views:
         | never
       pathParamNames:

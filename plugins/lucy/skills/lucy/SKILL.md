@@ -229,6 +229,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [The app](references/reference/app.md): Lucy.App.new and every option it takes, the parts an App holds, and its methods.
 - [Boards](references/reference/boards.md): Lucy.Boards keeps a game's leaderboards on the server, all time, this week and today, with each player's own rank, their names, the request a client asks with, and rows published for everyone. Every method and option.
 - [Composables](references/reference/composables/index.md): State over time and behaviour shared between components. Every Lucy.use* composable.
+- [useAnyShown](references/reference/composables/use-any-shown.md): Follows whether anything inside a frame is visible, so an empty slot can drop out of its layout.
 - [useBackHandler](references/reference/composables/use-back-handler.md): Intercepts back inputs while active, calling your function.
 - [useCount](references/reference/composables/use-count.md): Counts a number smoothly up or down to a target value with easing.
 - [useCountdown](references/reference/composables/use-countdown.md): Synchronised countdown of whole seconds remaining until a timestamp.

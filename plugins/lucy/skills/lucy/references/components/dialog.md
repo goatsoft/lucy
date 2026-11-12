@@ -27,9 +27,9 @@ quit:open()
 | `title` | string | `""` | yes | The heading |
 | `description` | string | `""` | yes | Text under the heading |
 | `actions` | table | | | Buttons along the bottom, see [Actions](#actions) |
-| `header` | table | | | Instances or handles under the title, such as tabs or filters. They stay put while the body scrolls |
+| `header` | table | | | Instances or handles under the title, such as tabs or filters. They stay put while the body scrolls. When all of them are hidden the slot takes no room |
 | `children` | table | | | Instances or handles to put in the content area |
-| `footer` | table | | | Instances or handles under the body, above the actions. They stay put while the body scrolls |
+| `footer` | table | | | Instances or handles under the body, above the actions. They stay put while the body scrolls. When all of them are hidden (key hints on touch, say) the footer takes no room |
 | `dismissible` | boolean | `true` | | Whether B, Backspace, the overlay and the close button can close it |
 | `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it (off by default when `modal` is `false`) |
 | `modal` | boolean | `true` | | `false` lets clicks reach what is behind it and lets focus move out of it |
@@ -48,7 +48,8 @@ dialog opened later shows above one opened earlier.
 
 When the content is taller than `maxHeight`, or than the screen, the body
 scrolls and the title, the `header` and `footer` slots and the actions stay
-where they are. So leave out a table's
+where they are. A slot whose children are all hidden drops out, gap and all,
+so the body gets that room. So leave out a table's
 `maxHeight` inside a dialog, unless the table should scroll on its own.
 
 On a short screen (a phone held sideways) a dialog keeps less room round

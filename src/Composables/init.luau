@@ -13,6 +13,7 @@
 			Lucy.useUiSound(h.app, { activate = playClick })     -- the game's own sounds
 			local gap = Lucy.useResponsive(h.app, { touch = 16, default = 8 })
 			local room = Lucy.useSize(body)                      -- room().Y: its height in the scene's units
+			local any = Lucy.useAnyShown(slot)                   -- any(): a child of slot is visible
 			local board = Lucy.useTable({ data = players, columns = columns })
 			local dances = Lucy.useSort({ data = list, columns = columns, multi = true })  -- dances.items()
 			Lucy.useWhile(open, function() return signal:Connect(onFire) end)  -- only while open
@@ -166,6 +167,77 @@ function Composables.useSize(target: Reactive.MaybeRef<GuiObject?>): () -> Vecto
 	end)
 	return function(): Vector2
 		return size()
+	end
+end
+
+--[[
+	Whether any GUI child of `target` is visible: a getter that follows each child's
+	Visible and children coming and going. False while there is no target. `target`
+	may be a ref or a getter.
+
+	For a slot that should drop out of its layout (gap and all) when everything put
+	in it hides itself, such as key hints hidden on touch:
+
+		local any = Lucy.useAnyShown(slot)
+		Element.new("Frame", { Visible = any })
+]]
+function Composables.useAnyShown(target: Reactive.MaybeRef<Instance?>): () -> boolean
+	requireOwner("useAnyShown")
+	local shown = Reactive.ref(false)
+	local last = false
+	local function set(value: boolean)
+		if value ~= last then
+			last = value
+			shown(value)
+		end
+	end
+	Reactive.watchEffect(function(onCleanup)
+		local parent: Instance? = Reactive.toValue(target) :: any
+		if not parent then
+			set(false)
+			return
+		end
+		local function check()
+			for _, child in parent:GetChildren() do
+				if child:IsA("GuiObject") and child.Visible then
+					set(true)
+					return
+				end
+			end
+			set(false)
+		end
+		local watched: { [Instance]: RBXScriptConnection } = {}
+		local function watch(child: Instance)
+			if not watched[child] and child:IsA("GuiObject") then
+				watched[child] = child:GetPropertyChangedSignal("Visible"):Connect(check)
+			end
+		end
+		for _, child in parent:GetChildren() do
+			watch(child)
+		end
+		local added = parent.ChildAdded:Connect(function(child)
+			watch(child)
+			check()
+		end)
+		local removed = parent.ChildRemoved:Connect(function(child)
+			local connection = watched[child]
+			if connection then
+				connection:Disconnect()
+				watched[child] = nil
+			end
+			check()
+		end)
+		onCleanup(function()
+			added:Disconnect()
+			removed:Disconnect()
+			for _, connection in watched do
+				connection:Disconnect()
+			end
+		end)
+		Reactive.untrack(check)
+	end)
+	return function(): boolean
+		return shown()
 	end
 end
 
