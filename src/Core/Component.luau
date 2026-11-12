@@ -194,7 +194,33 @@ function Component.space(app: any, value: any, fallback: number?): UDim
 	return UDim.new(0, fallback or 0)
 end
 
--- Pixel height of a control token in the active density (ControlSm/Md/Lg/Icon).
+--[[
+	The sizes every sized control takes (Button, Toggle, ToggleGroup, Tabs, Select, Input), each
+	with its height and text token, so controls of the same size line up in a row or a form.
+]]
+Component.controlSizes = { "sm", "md", "lg", "xl" }
+Component.controlTokens = (
+	{
+		sm = { height = "ControlSm", text = "TextXs" },
+		md = { height = "ControlMd", text = "TextSm" },
+		lg = { height = "ControlLg", text = "TextBase" },
+		xl = { height = "ControlXl", text = "TextLg" },
+	} :: any
+) :: { [string]: { height: string, text: string } }
+
+function Component.checkControlSize(size: any, what: string)
+	if type(size) ~= "string" or Component.controlTokens[size] == nil then
+		error(
+			`[Lucy] unknown {what} size "{tostring(size)}" (expected {table.concat(
+				Component.controlSizes,
+				", "
+			)})`,
+			0
+		)
+	end
+end
+
+-- Pixel height of a control token in the active density (ControlSm/Md/Lg/Xl/Icon).
 function Component.metric(app: any, token: string): number
 	local value = app.theme:resolve(token)
 	if typeof(value) == "UDim2" then

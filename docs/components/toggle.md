@@ -37,7 +37,7 @@ Lucy.Stack.new({
 | `text` | string | `""` | yes | The text on it |
 | `pressed` | boolean | `false` | yes | Whether it is on |
 | `variant` | string | `"default"` | yes | `default`, `outline`, or `line`: text only, with a line under it while pressed |
-| `size` | string | `"md"` | yes | `sm`, `md` or `lg` |
+| `size` | string | `"md"` | yes | `sm`, `md`, `lg` or `xl`: each as tall as a [Button](button.md) of the same size |
 | `disabled` | boolean | `false` | yes | Greys it out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `icon` | string | | | An [icon](icon.md) name drawn before the text (`toggle.icon`) |

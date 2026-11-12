@@ -38,6 +38,39 @@ return function()
 		expect(picker.valueLabel:HasTag("ui-select-placeholder")).to.equal(false)
 	end)
 
+	it("lines up with a Button of the same size, sm to xl, filling the width", function()
+		local Button = require(script.Parent.Button)
+		for _, size in { "sm", "md", "lg", "xl" } do
+			local select = Select.new({ app = app, Parent = gui, items = ITEMS, size = size })
+			local button = Button.new({ app = app, Parent = gui, text = "Go", size = size })
+			Harness.flush()
+			local trigger = select.Instance
+			if not trigger:IsA("TextButton") then
+				trigger = trigger:FindFirstChildWhichIsA("TextButton", true) :: any
+			end
+			expect(trigger.Size.Y.Offset).to.equal(Harness.styled(button.Instance, "Size").Y.Offset)
+			expect(trigger.Size.X.Scale).to.equal(1)
+			expect(Harness.styled(select.valueLabel, "TextSize")).to.equal(
+				Harness.styled(button.Instance, "TextSize")
+			)
+		end
+	end)
+
+	it("still takes a UDim2 size for the trigger's box", function()
+		local select = make({ size = UDim2.fromOffset(180, 30) })
+		local trigger = select.Instance
+		if not trigger:IsA("TextButton") then
+			trigger = trigger:FindFirstChildWhichIsA("TextButton", true) :: any
+		end
+		expect(trigger.Size).to.equal(UDim2.fromOffset(180, 30))
+	end)
+
+	it("rejects an unknown size", function()
+		expect(function()
+			Select.new({ app = app, Parent = gui, items = ITEMS, size = "huge" })
+		end).to.throw()
+	end)
+
 	it("draws the lucy:chevron-down icon on the trigger", function()
 		local picker = make()
 		local slot: any = Icon.resolve("lucy:chevron-down")

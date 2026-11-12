@@ -65,6 +65,21 @@ return function()
 		end).to.throw()
 	end)
 
+	it("is as tall as a Button of the same size, sm to xl, with the same text size", function()
+		local Button = require(script.Parent.Button)
+		for _, size in { "sm", "md", "lg", "xl" } do
+			local toggle = Toggle.new({ app = app, Parent = gui, text = "On", size = size })
+			local button = Button.new({ app = app, Parent = gui, text = "Go", size = size })
+			Harness.flush()
+			expect(Harness.styled(toggle.Instance, "Size").Y.Offset).to.equal(
+				Harness.styled(button.Instance, "Size").Y.Offset
+			)
+			expect(Harness.styled(toggle.Instance, "TextSize")).to.equal(
+				Harness.styled(button.Instance, "TextSize")
+			)
+		end
+	end)
+
 	it("emits toggle from the player path only", function()
 		local calls = {}
 		local scope = Reactive.effectScope(true)

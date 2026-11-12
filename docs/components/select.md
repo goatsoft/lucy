@@ -46,7 +46,7 @@ Lucy.Stack.new({
 | `placeholder` | string | `"Select"` | yes | Shown until something is picked |
 | `open` | boolean | `false` | yes | Whether the list is open |
 | `disabled` | boolean | `false` | yes | Stops the player opening it, and closes it |
-| `size` | UDim2 | full width, control height | | The button's size |
+| `size` | string or UDim2 | `"md"` | yes | `sm`, `md`, `lg` or `xl`: the button fills the width at the height and text of a [Button](button.md) of the same size, so they line up in a row or a form. A UDim2 sets the button's box instead |
 | `side` | string | `"bottom"` | | `bottom`, `top`, `left` or `right`: where the list opens. It flips when the other side has more room. `auto` opens below if it fits, then above, then beside |
 | `align` | string | `"start"` | | `start`, `center` or `end`: how the list lines up with the button |
 | `onValueChange` | function | | | Called with `(value, handle)` when the value changes |

@@ -267,6 +267,61 @@ return function()
 		end)
 	end)
 
+	describe("shoulder hints", function()
+		it("shows LB and RB either side of the bar on a controller only", function()
+			local _, _, items = panels()
+			local tabs = Tabs.new({ app = app, Parent = gui, items = items })
+			expect(tabs.hints).to.be.ok()
+			local back, forward = tabs.hints.back, tabs.hints.forward
+			expect(back:get("gamepad")).to.equal(Enum.KeyCode.ButtonL1)
+			expect(forward:get("gamepad")).to.equal(Enum.KeyCode.ButtonR1)
+			local bar = tabs.list.Instance.Parent :: Frame
+			expect(back.Instance.Parent).to.equal(bar)
+			expect(forward.Instance.Parent).to.equal(bar)
+			expect(back.Instance.LayoutOrder < tabs.list.Instance.LayoutOrder).to.equal(true)
+			expect(forward.Instance.LayoutOrder > tabs.list.Instance.LayoutOrder).to.equal(true)
+			app.input:setMode("mouse")
+			expect(back.Instance.Visible).to.equal(false)
+			app.input:setMode("gamepad")
+			expect(back.Instance.Visible).to.equal(true)
+			expect(forward.Instance.Visible).to.equal(true)
+		end)
+
+		it("shows none with hints = false or without shoulder buttons", function()
+			local _, _, items = panels()
+			expect(Tabs.new({ app = app, Parent = gui, items = items, hints = false }).hints).to.equal(nil)
+			local _, _, more = panels()
+			expect(Tabs.new({ app = app, Parent = gui, items = more, shoulderButtons = false }).hints).to.equal(
+				nil
+			)
+		end)
+
+		it("can keep the hints while the game handles LB and RB itself", function()
+			local _, _, items = panels()
+			local tabs =
+				Tabs.new({ app = app, Parent = gui, items = items, shoulderButtons = false, hints = true })
+			expect(tabs.hints).to.be.ok()
+		end)
+	end)
+
+	it("passes the segmented look to its tab bar", function()
+		local _, _, items = panels()
+		local tabs = Tabs.new({ app = app, Parent = gui, items = items, variant = "segmented", size = "lg" })
+		local row = tabs.list.items[1].Parent :: Frame
+		expect(row:HasTag("ui-toggle-group-segmented")).to.equal(true)
+		tabs:set("size", "xl")
+		expect(tabs.list.items[1]:HasTag("ui-toggle-size-xl")).to.equal(true)
+	end)
+
+	it("fits itself to the tab bar when it is just a bar that does not scroll", function()
+		local tabs = Tabs.new({ app = app, Parent = gui, items = { "basic", "advanced" }, scroll = false })
+		expect(tabs.Instance.AutomaticSize).to.equal(Enum.AutomaticSize.XY)
+		expect(tabs.Instance.Size).to.equal(UDim2.fromOffset(0, 0))
+		local _, _, items = panels()
+		local full = Tabs.new({ app = app, Parent = gui, items = items, scroll = false })
+		expect(full.Instance.Size).to.equal(UDim2.fromScale(1, 0))
+	end)
+
 	it("destroys its tab bar with it", function()
 		local _, _, items = panels()
 		local tabs = Tabs.new({ app = app, Parent = gui, items = items })

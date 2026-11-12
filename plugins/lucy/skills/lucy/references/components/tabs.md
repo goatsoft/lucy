@@ -29,11 +29,12 @@ Lucy.Tabs.new({
 |---|---|---|---|---|
 | `items` | table | | | The tabs, in order (see below) |
 | `value` | any | the first tab | yes | The tab shown |
-| `variant` | string | `"default"` | yes | The tab bar's look: `default`, `outline`, or `line` for text tabs with a line under the picked one |
-| `size` | string | `"md"` | yes | The tab bar's size: `sm`, `md` or `lg` |
+| `variant` | string | `"default"` | yes | The tab bar's look: `default`, `outline`, `line` for text tabs with a line under the picked one, or `segmented` for a pill as tall as a control of its size ([Toggle Group](toggle-group.md#segmented)) |
+| `size` | string | `"md"` | yes | The tab bar's size: `sm`, `md`, `lg` or `xl`, each as tall as a [Button](button.md) of the same size |
 | `gap` | spacing | `"Space2"` | | Space between the tab bar and the panels |
 | `shoulderButtons` | boolean | `true` | | LB and RB switch tabs while focus is inside |
-| `scroll` | boolean | `true` | | A tab bar too long for its room scrolls sideways. `false` makes the bar as wide as its tabs |
+| `hints` | boolean | follows `shoulderButtons` | | Shows LB and RB either side of the bar on a controller. `true` keeps them with `shoulderButtons = false`, for a game that handles LB and RB itself |
+| `scroll` | boolean | `true` | | A tab bar too long for its room scrolls sideways. `false` makes the bar as wide as its tabs; with no panels, the tabs then fit the bar, to sit in a row beside other controls |
 | `disabled` | boolean | `false` | yes | Greys every tab out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `onValueChange` | function | | | Called with `(value, handle)` when it changes |
@@ -58,11 +59,12 @@ grow to fit the panel shown. Put a [Scroll Area](scroll-area.md) in a panel for
 long content.
 
 In a [Dialog](dialog.md) or a [Sheet](sheet.md), whose body scrolls, put the tab bar
-in its `header` so it stays put while a long panel scrolls under it:
+in its `header` so it stays put while a long panel scrolls under it. `tabs.bar`
+is the bar with its LB and RB hints:
 
 ```luau
 local tabs = Lucy.Tabs.new({ items = items })
-Lucy.Sheet.new({ title = "Booth", header = { tabs.list }, children = { tabs } })
+Lucy.Sheet.new({ title = "Booth", header = { tabs.bar }, children = { tabs } })
 ```
 
 When the player picks a tab, it reports `select` with the tab's value for
@@ -74,15 +76,18 @@ While focus is anywhere inside the tabs, on the tab bar or in a panel, LB and RB
 move to the previous and next tab, skipping disabled ones and wrapping around at
 the ends. If focus was in the old panel, it moves to the first thing the player
 can select in the new one, otherwise to the new tab. With tabs inside tabs, the
-inner ones switch.
+inner ones switch. On a controller, LB and RB show either side of the bar
+(`hints`), drawn as the player's own controller buttons.
 
 A tab bar too long for its room scrolls sideways, its edges fading where there
 are more tabs. On touch the player drags it. With a controller or the keyboard,
 moving along the tabs scrolls the bar with them, and the picked tab is always
 brought into view, however it was picked.
 
-`handle.list` is the tab bar and `handle.panels` maps each tab's value to its
-panel frame.
+`handle.list` is the tab bar, `handle.bar` the row it sits in with its hints (the
+list itself without hints), `handle.hints` the two [Kbd](kbd.md) hints
+(`back` and `forward`, `nil` without hints), and `handle.panels` maps each
+tab's value to its panel frame.
 
 ## Methods
 

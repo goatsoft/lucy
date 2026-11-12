@@ -7,7 +7,7 @@
 			icon = "lucide:bold",  -- optional: before the text (toggle.icon); alone with no text
 			pressed = false,
 			variant = "default",   -- default | outline | line (an underline when on, as tabs)
-			size = "md",           -- sm | md | lg
+			size = "md",           -- sm | md | lg | xl (as tall as a Button of the same size)
 			disabled = false,
 			visible = true,
 			children = { icon },   -- optional: after the text in its slot (Slot: strings, handles,
@@ -22,7 +22,8 @@
 	State keys: text, pressed, variant, size, disabled, visible.
 	Events: "toggle" with the new value, for Lucy.useUiSound.
 
-	ToggleGroup items share these rules and tags (Toggle.tags, Toggle.check).
+	ToggleGroup items share these rules and tags (Toggle.tags, Toggle.check), and so does the
+	group's segmented look (the pill the group draws round its items).
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
@@ -34,7 +35,7 @@ local Slot = require(script.Parent.Slot)
 local Toggle = {}
 
 Toggle.variants = { "default", "outline", "line" }
-Toggle.sizes = { "sm", "md", "lg" }
+Toggle.sizes = Component.controlSizes
 
 local ACTIVATED = Element.on("Activated")
 
@@ -113,6 +114,63 @@ Toggle.rules = {
 		selector = ".ui-toggle-size-lg::UIPadding",
 		priority = VARIANT,
 		properties = { PaddingLeft = "$Space4", PaddingRight = "$Space4" },
+	},
+	{
+		selector = ".ui-toggle-size-xl",
+		priority = VARIANT,
+		properties = { Size = "$ControlXl", TextSize = "$TextLg" },
+	},
+	{
+		selector = ".ui-toggle-size-xl::UIPadding",
+		priority = VARIANT,
+		properties = { PaddingLeft = "$Space6", PaddingRight = "$Space6" },
+	},
+	-- A ToggleGroup's segmented look: the group is a pill as tall as a control of its size, its
+	-- items fill the pill inside its padding, muted until picked, the picked one raised on the
+	-- background
+	{
+		selector = ".ui-toggle-group-segmented",
+		priority = BASE,
+		properties = { BackgroundColor3 = "$Muted", BorderSizePixel = 0 },
+	},
+	{
+		selector = ".ui-toggle-group-segmented::UICorner",
+		priority = BASE,
+		properties = { CornerRadius = "$RadiusLg" },
+	},
+	{
+		selector = ".ui-toggle-group-segmented::UIPadding",
+		priority = BASE,
+		properties = {
+			PaddingTop = "$Space1",
+			PaddingBottom = "$Space1",
+			PaddingLeft = "$Space1",
+			PaddingRight = "$Space1",
+		},
+	},
+	{
+		selector = ".ui-toggle-group-fill > .ui-toggle",
+		priority = VARIANT + 2,
+		properties = { Size = UDim2.fromScale(0, 1) },
+	},
+	{
+		selector = ".ui-toggle-group-segmented > .ui-toggle",
+		priority = VARIANT + 1,
+		properties = { TextColor3 = "$MutedForeground" },
+	},
+	{
+		selector = ".ui-toggle-group-segmented > .ui-toggle:Hover",
+		priority = STATE + 1,
+		properties = { BackgroundTransparency = 1, TextColor3 = "$Foreground" },
+	},
+	{
+		selector = ".ui-toggle-group-segmented > .ui-toggle.ui-selected",
+		priority = SELECTED + 1,
+		properties = {
+			BackgroundColor3 = "$Background",
+			BackgroundTransparency = 0,
+			TextColor3 = "$Foreground",
+		},
 	},
 	-- line: text only, muted until on, with an underline (the Indicator) when on
 	{

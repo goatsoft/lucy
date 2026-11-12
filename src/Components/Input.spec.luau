@@ -86,6 +86,28 @@ return function()
 		expect(field.Instance.Size.Y.Offset).to.equal(52)
 	end)
 
+	it("lines up with a Button of the same size, sm to xl", function()
+		local Button = require(script.Parent.Button)
+		for _, size in { "sm", "md", "lg", "xl" } do
+			local field = Input.new({ app = app, Parent = gui, size = size })
+			local button = Button.new({ app = app, Parent = gui, text = "Go", size = size })
+			Harness.flush()
+			expect(field.Instance.Size.Y.Offset).to.equal(Harness.styled(button.Instance, "Size").Y.Offset)
+			expect(Harness.styled(field.Instance, "TextSize")).to.equal(
+				Harness.styled(button.Instance, "TextSize")
+			)
+		end
+	end)
+
+	it("follows a size change, and rejects an unknown size", function()
+		local field = Input.new({ app = app, Parent = gui })
+		field:set("size", "lg")
+		expect(field.Instance.Size.Y.Offset).to.equal(40)
+		expect(function()
+			Input.new({ app = app, Parent = gui, size = "huge" })
+		end).to.throw()
+	end)
+
 	describe("filterNumber", function()
 		it("keeps digits, one leading minus and one point", function()
 			expect(Input.filterNumber("12a3")).to.equal("123")

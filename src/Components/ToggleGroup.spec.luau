@@ -341,6 +341,103 @@ return function()
 		end)
 	end)
 
+	describe("segmented", function()
+		local Button = require(script.Parent.Button)
+		local Component = require(script.Parent.Parent.Core.Component)
+
+		it("draws the pill itself, as tall as a control of its size", function()
+			for _, size in { "sm", "md", "lg", "xl" } do
+				local group = ToggleGroup.new({
+					app = app,
+					Parent = gui,
+					items = GENRES,
+					variant = "segmented",
+					size = size,
+				})
+				Harness.flush()
+				local token = "Control" .. string.upper(string.sub(size, 1, 1)) .. string.sub(size, 2)
+				expect(group.Instance:HasTag("ui-toggle-group-segmented")).to.equal(true)
+				expect(group.Instance.Size.Y.Offset).to.equal(Component.metric(app, token))
+				expect(group.Instance.AutomaticSize).to.equal(Enum.AutomaticSize.X)
+				expect(Harness.styled(group.Instance, "BackgroundTransparency")).to.equal(0)
+			end
+		end)
+
+		it("lines up with a Button of the same size, its items filling the pill", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local group = ToggleGroup.new({
+				app = app,
+				Parent = gui,
+				items = GENRES,
+				variant = "segmented",
+				size = "lg",
+			})
+			local button = Button.new({ app = app, Parent = gui, text = "ACCEPT", size = "lg" })
+			Harness.flush()
+			expect(math.abs(group.Instance.AbsoluteSize.Y - button.Instance.AbsoluteSize.Y) < 1).to.equal(
+				true
+			)
+			-- The items fill the pill inside its Space1 padding (in the gui's own scale)
+			local control = Component.metric(app, "ControlLg")
+			local scale = group.Instance.AbsoluteSize.Y / control
+			local pad = (app.theme:resolve("Space1") :: UDim).Offset
+			local item = group.items[1]
+			expect(math.abs(item.AbsoluteSize.Y - (control - pad * 2) * scale) < 1).to.equal(true)
+		end)
+
+		it("raises the picked item on the background, the rest muted", function()
+			local group = ToggleGroup.new({
+				app = app,
+				Parent = gui,
+				items = GENRES,
+				variant = "segmented",
+				value = "House",
+			})
+			Harness.flush()
+			local picked, other = group.items[1], group.items[2]
+			expect(picked:HasTag("ui-toggle-variant-default")).to.equal(true)
+			expect(Harness.styled(picked, "BackgroundTransparency")).to.equal(0)
+			expect(
+				Harness.colorEq(Harness.styled(picked, "BackgroundColor3"), app.theme:resolve("Background"))
+			).to.equal(true)
+			expect(Harness.colorEq(Harness.styled(other, "TextColor3"), app.theme:resolve("MutedForeground"))).to.equal(
+				true
+			)
+		end)
+
+		it("goes back to a plain row when the variant changes", function()
+			local group = ToggleGroup.new({ app = app, Parent = gui, items = GENRES, variant = "segmented" })
+			group:set("variant", "outline")
+			Harness.flush()
+			expect(group.Instance:HasTag("ui-toggle-group-segmented")).to.equal(false)
+			expect(group.Instance.AutomaticSize).to.equal(Enum.AutomaticSize.XY)
+			expect(group.Instance.Size).to.equal(UDim2.fromOffset(0, 0))
+			expect(Harness.styled(group.Instance, "BackgroundTransparency")).to.equal(1)
+			expect(group.items[1]:HasTag("ui-toggle-variant-outline")).to.equal(true)
+		end)
+
+		it("keeps its pill height in a row that scrolls", function()
+			local group = ToggleGroup.new({
+				app = app,
+				Parent = gui,
+				items = GENRES,
+				variant = "segmented",
+				size = "lg",
+				scroll = true,
+			})
+			local row = group.items[1].Parent :: Frame
+			expect(row.Size.Y.Offset).to.equal(Component.metric(app, "ControlLg"))
+		end)
+
+		it("rejects an unknown variant", function()
+			expect(function()
+				ToggleGroup.new({ app = app, Parent = gui, items = GENRES, variant = "shiny" })
+			end).to.throw()
+		end)
+	end)
+
 	it("rejects an unknown type", function()
 		expect(function()
 			ToggleGroup.new({ app = app, Parent = gui, items = GENRES, type = "some" })

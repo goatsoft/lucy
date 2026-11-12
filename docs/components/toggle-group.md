@@ -31,8 +31,8 @@ Lucy.ToggleGroup.new({
 | `type` | string | `"single"` | | `single` picks one, `multiple` picks any number |
 | `value` | any | `false`, or `{}` for multiple | yes | The picked value, or the list of picked values |
 | `required` | boolean | `false` | | Single only: picking the picked item again keeps it picked |
-| `variant` | string | `"default"` | yes | `default`, `outline`, or `line`: text only, with a line under the picked items |
-| `size` | string | `"md"` | yes | `sm`, `md` or `lg` |
+| `variant` | string | `"default"` | yes | `default`, `outline`, `line`: text only, with a line under the picked items, or `segmented`: the group is a pill with the picked item raised in it (see below) |
+| `size` | string | `"md"` | yes | `sm`, `md`, `lg` or `xl`: each as tall as a [Button](button.md) of the same size |
 | `orientation` | string | `"horizontal"` | | `horizontal` for a row, `vertical` for a column |
 | `gap` | spacing | `"Space1"` | | Space between items |
 | `scroll` | boolean | `false` | | A row too long for its room scrolls sideways and keeps the picked item in view. [Tabs](tabs.md) turn it on |
@@ -61,6 +61,15 @@ When the player picks an item, it reports `select` with that item's value for
 [useUiSound](../reference/composables/use-ui-sound.md).
 
 `handle.items` holds the item buttons, in order.
+
+## Segmented
+
+With `variant = "segmented"` the group draws a pill round its items, and the
+whole pill is as tall as a control of its `size`: a `lg` segmented group lines
+up with a `lg` [Button](button.md), [Select](select.md) or [Input](input.md)
+beside it. The items fill the pill inside its padding, muted until picked; the
+picked one sits raised on the background colour. Use it for a mode switch in a
+header or toolbar, such as BASIC and ADVANCED. [Tabs](tabs.md) take it too.
 
 ## Methods
 
@@ -127,6 +136,31 @@ Lucy.ToggleGroup.new({
     value = "tonight",
     required = true,
     variant = "line",
+    Parent = parent,
+})
+```
+
+A BASIC / ADVANCED switch in an editor's header, as tall as the SAVE button
+beside it:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-toggle-group-5-light.webp" alt="Toggle Group example" loading="lazy"><img class="example-dark" src="/images/examples/components-toggle-group-5-dark.webp" alt="Toggle Group example" loading="lazy"></figure>
+
+```luau
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space2",
+    align = "center",
+    children = {
+        Lucy.ToggleGroup.new({
+            items = { { value = "basic", text = "BASIC" }, { value = "advanced", text = "ADVANCED" } },
+            value = "basic",
+            required = true,
+            variant = "segmented",
+            size = "lg",
+        }),
+        Lucy.Button.new({ text = "SAVE", size = "lg" }),
+    },
     Parent = parent,
 })
 ```

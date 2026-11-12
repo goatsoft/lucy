@@ -10,7 +10,8 @@
 			multiple = false,          -- pick several (a check select)
 			placeholder = "Region",    -- shown until something is picked
 			disabled = false,
-			size = UDim2,              -- the trigger's size; full width, control height when left out
+			size = "md",               -- sm | md | lg | xl: full width, as tall as a Button of the same
+			                           -- size; or a UDim2, the trigger's box
 			side = "bottom",           -- bottom | top | left | right | auto: where the list opens, flipping
 			                           -- when there is no room
 			align = "start",           -- start | center | end
@@ -35,7 +36,7 @@
 	when it closes. A long list scrolls. The trigger draws lucy:chevron-down
 	(see Icon to change it).
 
-	State keys: value, open, placeholder, disabled, visible.
+	State keys: value, open, placeholder, size, disabled, visible.
 	Events: "select" with the value picked, for Lucy.useUiSound.
 	select.items holds one { root, label, check? } per option, in order.
 ]]
@@ -186,10 +187,25 @@ table.insert(Select.rules, {
 	priority = 0,
 	properties = { BackgroundTransparency = 1, BorderSizePixel = 0 },
 })
+-- The trigger's words at its size, as a Button of the same size
+for name, tokens in Component.controlTokens do
+	table.insert(Select.rules, {
+		selector = `.ui-select-size-{name} > .ui-select-value`,
+		priority = 5,
+		properties = { TextSize = "$" .. tokens.text },
+	})
+end
 
 local spec: Component.Spec = {
 	kind = "select",
-	defaults = { value = false, open = false, placeholder = "Select", disabled = false, visible = true },
+	defaults = {
+		value = false,
+		open = false,
+		placeholder = "Select",
+		size = "md",
+		disabled = false,
+		visible = true,
+	},
 	rules = Select.rules,
 	render = function(h)
 		local p: Component.Props = h.props
@@ -208,7 +224,19 @@ local spec: Component.Spec = {
 			end)
 		end
 		local placeholder = h:ref("placeholder")
+		-- The options stay at the md height; the trigger takes its size's
 		local height = Composables.useMetric(app, "ControlMd")
+		Component.checkControlSize(h:get("size"), "Select")
+		local size = h:ref("size")
+		local heights: { [string]: () -> number } = {}
+		for _, name in Component.controlSizes do
+			heights[name] = Composables.useMetric(app, Component.controlTokens[name].height)
+		end
+		local function sizeTag(): { string }
+			local s = size()
+			Component.checkControlSize(s, "Select")
+			return { "ui-select-size-" .. s }
+		end
 		local entries = ToggleGroup.normalize(p.items, "Select")
 		h.entries = entries
 
@@ -273,19 +301,19 @@ local spec: Component.Spec = {
 		caret.Instance.Position = UDim2.fromScale(1, 0.5)
 		h.caret = caret
 
-		local given: UDim2? = p.size
+		local given: UDim2? = p._selectBox
 		local trigger = Element.new("TextButton", {
 			Text = "",
 			AutoButtonColor = false,
 			Size = if given
 				then given
 				else function(): UDim2
-					return UDim2.new(1, 0, 0, height())
+					return UDim2.new(1, 0, 0, heights[size()]())
 				end,
 			Interactable = enabled,
 			Selectable = enabled,
 			Visible = h:ref("visible"),
-			Tags = { "ui-select-trigger" :: any, ["ui-open"] = open, ["ui-disabled"] = disabled },
+			Tags = { "ui-select-trigger" :: any, sizeTag, ["ui-open"] = open, ["ui-disabled"] = disabled },
 			[ACTIVATED] = function()
 				h:click()
 			end,
@@ -489,6 +517,10 @@ function Select.new(props: { [string]: any }?)
 	end
 	if multiple and given.value == nil then
 		given.value = {}
+	end
+	-- A UDim2 size is the trigger's box (the size it had before sm to xl); the words stay md
+	if typeof(given.size) == "UDim2" then
+		given._selectBox, given.size = given.size, "md"
 	end
 	-- Read by render (the spec is shared, so it goes through the props).
 	given._selectKind, given._selectMultiple = kind, multiple

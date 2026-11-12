@@ -8,8 +8,9 @@
 			type = "single",       -- single | multiple
 			value = "House",       -- single: a value or false; multiple: a list
 			required = false,      -- single: picking the picked item again keeps it
-			variant = "default",   -- default | outline | line (the Toggle looks)
-			size = "md",           -- sm | md | lg
+			variant = "default",   -- default | outline | line (the Toggle looks) | segmented (the group
+			                       -- is a pill as tall as a control of its size, its items inside)
+			size = "md",           -- sm | md | lg | xl (as tall as a Button of the same size)
 			orientation = "horizontal", -- horizontal | vertical
 			gap = "Space1",
 			scroll = false,        -- a row too long for its room scrolls sideways, its edges
@@ -39,6 +40,7 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
@@ -46,6 +48,27 @@ local ScrollArea = require(script.Parent.ScrollArea)
 local Toggle = require(script.Parent.Toggle)
 
 local ToggleGroup = {}
+
+-- The Toggle looks, and segmented: the group's own pill round toggles in the default look
+ToggleGroup.variants = { "default", "outline", "line", "segmented" }
+
+function ToggleGroup.check(variant: string, size: string)
+	if not table.find(ToggleGroup.variants, variant) then
+		error(
+			`[Lucy] unknown ToggleGroup variant "{variant}" (expected {table.concat(
+				ToggleGroup.variants,
+				", "
+			)})`,
+			0
+		)
+	end
+	Component.checkControlSize(size, "ToggleGroup")
+end
+
+-- The look an item takes in a group of `variant`
+local function itemVariant(variant: string): string
+	return if variant == "segmented" then "default" else variant
+end
 
 export type Item = {
 	value: any,
@@ -95,7 +118,7 @@ local spec: Component.Spec = {
 	rules = Toggle.rules,
 	render = function(h)
 		local p: Component.Props = h.props
-		Toggle.check(h:get("variant"), h:get("size"))
+		ToggleGroup.check(h:get("variant"), h:get("size"))
 		local multiple = p.type == "multiple"
 		local direction = DIRECTION[p.orientation or "horizontal"]
 		if not direction then
@@ -115,8 +138,20 @@ local spec: Component.Spec = {
 		local variant, size = h:ref("variant"), h:ref("size")
 		local function tags(): { string }
 			local v, s = variant(), size()
-			Toggle.check(v, s)
-			return Toggle.tags(v, s)
+			ToggleGroup.check(v, s)
+			return Toggle.tags(itemVariant(v), s)
+		end
+		-- Segmented: the group draws the pill, as tall as a control of its size in a row
+		local function segmented(): boolean
+			return variant() == "segmented"
+		end
+		local row = direction == Enum.FillDirection.Horizontal
+		local function fills(): boolean
+			return row and segmented()
+		end
+		local heights: { [string]: () -> number } = {}
+		for _, name in Component.controlSizes do
+			heights[name] = Composables.useMetric(h.app, Component.controlTokens[name].height)
 		end
 
 		if p.onValueChange then
@@ -173,11 +208,25 @@ local spec: Component.Spec = {
 		h.entries = items
 
 		local frame = Element.new("Frame", {
-			BackgroundTransparency = 1,
-			Size = UDim2.fromOffset(0, 0),
-			AutomaticSize = Enum.AutomaticSize.XY,
+			BackgroundTransparency = function(): number
+				return if segmented() then 0 else 1
+			end,
+			Size = function(): UDim2
+				if fills() then
+					local height = heights[size()]
+					return UDim2.fromOffset(0, if height then height() else 0)
+				end
+				return UDim2.fromOffset(0, 0)
+			end,
+			AutomaticSize = function(): Enum.AutomaticSize
+				return if fills() then Enum.AutomaticSize.X else Enum.AutomaticSize.XY
+			end,
 			Visible = h:ref("visible"),
-			Tags = { "ui-toggle-group" },
+			Tags = {
+				"ui-toggle-group" :: any,
+				["ui-toggle-group-segmented"] = segmented,
+				["ui-toggle-group-fill"] = fills,
+			},
 			Component.list({
 				FillDirection = direction,
 				VerticalAlignment = Enum.VerticalAlignment.Center,

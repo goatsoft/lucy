@@ -7,6 +7,7 @@
 			placeholder = "Display name",
 			value = "",
 			disabled = false,
+			size = "md",                    -- sm | md | lg | xl: as tall as a Button of the same size
 			width = UDim.new(1, 0),         -- default fills the parent
 			maxLength = 20,                 -- characters the player can type
 			numeric = false,                -- only digits, one leading minus, one point
@@ -17,11 +18,11 @@
 		})
 		app.state:get("ui.playerName.value")
 
-	Height follows the density token ControlMd (36 desktop, 44 touch, 52 console).
-	A multiline field is ControlMd plus a line for each row after the first.
+	Height follows the size's density token (md: ControlMd, 36 desktop, 44 touch, 52 console).
+	A multiline field is that height plus a line for each row after the first.
 	The focus ring shows whenever the field is being typed in. maxLength and
 	numeric apply to what the player types; the value stays a string.
-	State keys: value, placeholder, disabled, visible.
+	State keys: value, placeholder, size, disabled, visible.
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
@@ -81,6 +82,14 @@ local rules: { Component.Rule } = {
 		properties = { TextTransparency = 0.5, BackgroundTransparency = 0.5 },
 	},
 }
+-- The words at the field's size, as a Button of the same size
+for name, tokens in Component.controlTokens do
+	table.insert(rules, {
+		selector = `.ui-input-size-{name}`,
+		priority = 5,
+		properties = { TextSize = "$" .. tokens.text },
+	})
+end
 Input.rules = rules
 
 Input.rows = 3 -- a multiline field's default height in lines
@@ -133,12 +142,22 @@ end
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "input",
-	defaults = { value = "", placeholder = "", disabled = false, visible = true },
+	defaults = { value = "", placeholder = "", size = "md", disabled = false, visible = true },
 	rules = Input.rules,
 	render = function(h)
 		local p: Component.Props = h.props
 		local value, disabled = h:ref("value"), h:ref("disabled")
-		local height = Composables.useMetric(h.app, "ControlMd")
+		Component.checkControlSize(h:get("size"), "Input")
+		local size = h:ref("size")
+		local heights: { [string]: () -> number } = {}
+		for _, name in Component.controlSizes do
+			heights[name] = Composables.useMetric(h.app, Component.controlTokens[name].height)
+		end
+		local function sizeTag(): { string }
+			local s = size()
+			Component.checkControlSize(s, "Input")
+			return { "ui-input-size-" .. s }
+		end
 		local focused = Reactive.ref(false)
 		local width: UDim = p.width or UDim.new(1, 0)
 		local multiline = p.multiline == true
@@ -149,12 +168,13 @@ local spec: Component.Spec = {
 			return not disabled()
 		end
 		local function fieldHeight(): number
-			local base = height()
+			local s = size()
+			local base = heights[s]()
 			if not multiline or rows <= 1 then
 				return base
 			end
-			local size = theme:resolve("TextSm")
-			local line = math.ceil((if type(size) == "number" then size else 14) * Input.lineHeight)
+			local text = theme:resolve(Component.controlTokens[s].text)
+			local line = math.ceil((if type(text) == "number" then text else 14) * Input.lineHeight)
 			return base + (rows - 1) * line
 		end
 
@@ -176,6 +196,7 @@ local spec: Component.Spec = {
 			Visible = h:ref("visible"),
 			Tags = {
 				"ui-input" :: any,
+				sizeTag,
 				if multiline then "ui-input-multiline" else nil,
 				["ui-disabled"] = disabled,
 				["ui-focused"] = focused,

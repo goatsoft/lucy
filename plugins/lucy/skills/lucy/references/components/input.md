@@ -32,6 +32,7 @@ Lucy.Stack.new({
 |---|---|---|---|---|
 | `value` | string | `""` | yes | The text in the field |
 | `placeholder` | string | `""` | yes | Grey text shown while the field is empty |
+| `size` | string | `"md"` | yes | `sm`, `md`, `lg` or `xl`: the field's height and text, as a [Button](button.md) of the same size, so they line up in a row or a form |
 | `disabled` | boolean | `false` | yes | Greys it out and stops typing |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `width` | UDim | fills the parent | | How wide the field is |
