@@ -1,0 +1,37 @@
+{
+  "$schema": "https://aurora.goatsoft.io/schema/v1.json",
+  "format": "aurora",
+  "version": 1,
+  "name": "Lucy Panel Pillar",
+  "motion": {
+    "speed": 1,
+    "reduced": "still"
+  },
+  "palette": [
+    "oklch(0.15 0.012 288)",
+    "oklch(0.24 0.08 293)",
+    "oklch(0.22 0.075 326)",
+    "oklch(1 0 0)"
+  ],
+  "layers": [
+    {
+      "type": "linear-sweep",
+      "colors": [0, 1, 2],
+      "params": {
+        "angle": 135,
+        "spin": 4,
+        "speed": 0.04,
+        "scale": 1.1
+      }
+    },
+    {
+      "type": "grain",
+      "colors": [3],
+      "params": {
+        "amount": 0.025,
+        "size": 1,
+        "rate": 10
+      }
+    }
+  ]
+}

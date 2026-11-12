@@ -1,0 +1,61 @@
+{
+  "$schema": "https://aurora.goatsoft.io/schema/v1.json",
+  "format": "aurora",
+  "version": 1,
+  "name": "Lucy Panel Games",
+  "motion": {
+    "speed": 1,
+    "reduced": "still"
+  },
+  "modifiers": {
+    "vignette": {
+      "amount": 0.48,
+      "radius": 0.55,
+      "softness": 0.55
+    }
+  },
+  "palette": [
+    "oklch(0.14 0.025 288)",
+    "oklch(0.28 0.14 292)",
+    "oklch(0.34 0.17 328)",
+    "oklch(0.25 0.09 230)",
+    "oklch(0.806 0.119 223.8)",
+    "oklch(0.683 0.265 332.6)",
+    "oklch(1 0 0)"
+  ],
+  "layers": [
+    {
+      "type": "mesh-gradient",
+      "colors": [0, 1, 2, 3],
+      "params": {
+        "speed": 0.14,
+        "softness": 2.2,
+        "warp": 0.24,
+        "spread": 0.42,
+        "seed": 12
+      }
+    },
+    {
+      "type": "phosphor",
+      "blend": "screen",
+      "opacity": 0.2,
+      "colors": [0, 4, 5],
+      "params": {
+        "spacing": 10,
+        "glow": 0.55,
+        "strength": 0.35,
+        "speed": 0.05,
+        "phase": 0.2
+      }
+    },
+    {
+      "type": "grain",
+      "colors": [6],
+      "params": {
+        "amount": 0.035,
+        "size": 1,
+        "rate": 12
+      }
+    }
+  ]
+}

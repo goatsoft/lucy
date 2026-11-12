@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { AuroraScene } from '@goatsoft/aurora-vue'
 import { RouterLink } from 'vue-router'
-import builtDark from '@/backgrounds/built-dark.aurora'
-import builtLight from '@/backgrounds/built-light.aurora'
 import heroDark from '@/backgrounds/hero-dark.aurora'
 import heroLight from '@/backgrounds/hero-light.aurora'
+import panelGamesDark from '@/backgrounds/panel-games-dark.aurora'
+import panelGamesLight from '@/backgrounds/panel-games-light.aurora'
+import panelPillarDark from '@/backgrounds/panel-pillar-dark.aurora'
+import panelPillarLight from '@/backgrounds/panel-pillar-light.aurora'
 import { SITE, useHead } from '@/head'
 
 useHead({
@@ -11,18 +14,25 @@ useHead({
   description: 'Why Lucy exists, the Roblox UI problems it solves, and who builds it at GOATsoft.',
 })
 
+function movePanelLight(event: PointerEvent): void {
+  const panel = event.currentTarget as HTMLElement
+  const box = panel.getBoundingClientRect()
+  panel.style.setProperty('--light-x', `${event.clientX - box.left}px`)
+  panel.style.setProperty('--light-y', `${event.clientY - box.top}px`)
+}
+
 const pillars = [
   {
     title: 'Native Roblox styling',
-    text: 'Lucy styles through native Roblox StyleSheets instead of Luau loops. Hover states and light or dark theme swaps cost zero script time.',
+    text: 'Style through Roblox StyleSheets instead of Luau loops. Hovers and theme swaps cost zero script time.',
   },
   {
     title: 'Instant updates, zero rebuilds',
-    text: 'Change a stat or setting and only the exact UI property bound to it updates. No full rebuilds, no frame drops, and zero runtime dependencies.',
+    text: 'Update a value once and only its bound UI property changes. No full rebuilds, no frame drops, zero dependencies.',
   },
   {
     title: 'Ready for every device',
-    text: 'Desktop, console, tablet, and phone work from day one, with gamepad focus rings, 44px touch targets, hotkeys, server sync, plus guided tours.',
+    text: 'Desktop, console, tablet, and phone work from day one with gamepad focus, touch targets, hotkeys, plus server sync.',
   },
 ] as const
 </script>
@@ -42,7 +52,7 @@ const pillars = [
         About
       </p>
       <h1 class="animate-rise mx-auto mt-4 max-w-3xl font-display text-heading font-semibold tracking-tight text-balance">
-        Built to stop Roblox teams reinventing the UI wheel
+        Built so Roblox teams stop rebuilding the same UI
       </h1>
       <p class="animate-rise mx-auto mt-6 max-w-2xl text-lead leading-8 text-pretty text-muted-foreground [animation-delay:120ms]">
         Lucy is an open UI and app framework by GOATsoft. It gives your game themed components, shared state, plus full controller and mobile input so you can focus on gameplay instead of UI plumbing.
@@ -65,7 +75,7 @@ const pillars = [
               rel="noopener"
               class="font-medium text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary"
             >GOATsoft</a>
-            comes from years of building software and component libraries before bringing that same polish into Roblox: clean spacing, readable contrast, full controller support, with zero state spaghetti.
+            comes from years of building software and component libraries before bringing that same polish into Roblox: clean spacing, readable contrast, full controller support, and clean state management.
           </p>
           <p class="mt-4 text-sm leading-7 text-pretty text-muted-foreground">
             Alongside Lucy, we build open tooling for our projects, including the Aurora shader background engine and Gruff, the documentation framework behind this site.
@@ -88,29 +98,44 @@ const pillars = [
         </article>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-3">
-        <article
-          v-for="pillar in pillars"
-          :key="pillar.title"
-          class="rounded-2xl border border-border bg-surface/70 p-6"
-        >
-          <h3 class="font-display text-base font-semibold text-foreground">
-            {{ pillar.title }}
-          </h3>
-          <p class="mt-2 text-sm leading-6 text-pretty text-muted-foreground">
-            {{ pillar.text }}
-          </p>
-        </article>
-      </div>
+      <AuroraScene name="about-pillars">
+        <div class="grid gap-4 md:grid-cols-3">
+          <article
+            v-for="pillar in pillars"
+            :key="pillar.title"
+            class="group relative isolate overflow-hidden rounded-2xl border border-border bg-surface p-6 [--light-x:0px] [--light-y:0px] shadow-[inset_0_1px_0_0_color-mix(in_oklab,white_8%,transparent)] transition duration-300 hover:border-primary/40"
+            @pointermove="movePanelLight"
+          >
+            <ThemedBackground
+              :dark="panelPillarDark"
+              :light="panelPillarLight"
+            />
+            <div
+              aria-hidden="true"
+              class="absolute inset-0 -z-10 bg-linear-to-t from-background/90 via-background/60 to-background/20"
+            />
+            <div
+              aria-hidden="true"
+              class="absolute inset-0 -z-10 bg-[radial-gradient(circle_14rem_at_var(--light-x)_var(--light-y),color-mix(in_oklab,var(--primary)_18%,transparent),transparent_65%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            />
+            <h3 class="font-display text-base font-semibold text-foreground">
+              {{ pillar.title }}
+            </h3>
+            <p class="mt-2 text-sm leading-6 text-pretty text-muted-foreground">
+              {{ pillar.text }}
+            </p>
+          </article>
+        </div>
+      </AuroraScene>
 
       <section class="relative isolate overflow-hidden rounded-2xl border border-border bg-surface p-8 md:p-10">
         <ThemedBackground
-          :dark="builtDark"
-          :light="builtLight"
+          :dark="panelGamesDark"
+          :light="panelGamesLight"
         />
         <div
           aria-hidden="true"
-          class="absolute inset-0 -z-10 bg-linear-to-r from-background/90 via-background/80 to-background/60"
+          class="absolute inset-0 -z-10 bg-linear-to-r from-background/85 via-background/70 to-background/50"
         />
         <p class="eyebrow">
           Games
@@ -119,18 +144,18 @@ const pillars = [
           Built alongside real games
         </h2>
         <p class="mt-4 max-w-2xl text-sm leading-7 text-pretty text-muted-foreground">
-          Lucy is not a library designed in a vacuum. After shipping <strong class="font-semibold text-foreground">Turf Heist</strong>, we started rebuilding <strong class="font-semibold text-foreground">Dance Lab</strong> and used it to pressure test every part of Lucy against real screens: live HUDs, shops, persistent audio settings, pause menus, weekly leaderboards and guided tutorials for new players.
+          Lucy is tested on real production screens, not toy demos. <strong class="font-semibold text-foreground">Dance Lab</strong> runs its entire UI on Lucy: live HUDs, shops, audio settings, pause menus, leaderboards, and guided tours.
         </p>
         <div class="mt-6 grid gap-4 sm:grid-cols-2">
-          <div class="rounded-xl border border-border bg-background/75 p-5">
+          <div class="rounded-xl border border-border bg-background/80 p-5 backdrop-blur-md">
             <h3 class="font-display text-base font-semibold text-foreground">
               Turf Heist
             </h3>
             <p class="mt-1.5 text-sm leading-6 text-muted-foreground">
-              Earlier GOATsoft Roblox action title that helped shape what our studio wanted from menus, HUD layouts and controller support.
+              Our earlier Roblox action game that showed us what menus, HUD layouts, and controller support needed.
             </p>
           </div>
-          <div class="rounded-xl border border-border bg-background/75 p-5">
+          <div class="rounded-xl border border-border bg-background/80 p-5 backdrop-blur-md">
             <div class="flex items-center justify-between gap-2">
               <h3 class="font-display text-base font-semibold text-foreground">
                 Dance Lab
@@ -140,7 +165,7 @@ const pillars = [
               </span>
             </div>
             <p class="mt-1.5 text-sm leading-6 text-muted-foreground">
-              Currently in development with Lucy powering the whole client UI. A full Dance Lab case study will be published here when it goes live.
+              In development with its entire client UI powered by Lucy. A full case study will be published when the game launches.
             </p>
           </div>
         </div>
