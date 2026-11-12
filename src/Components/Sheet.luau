@@ -31,7 +31,8 @@
 		settings:open()  settings:close()  settings:toggle()
 
 	The header and footer slots stay where they are while the body scrolls
-	between them; the body gets whatever height they leave.
+	between them; the body gets whatever height they leave. sheet.bodyRoom() is that height, in
+	the sheet's own units (a getter that follows the screen): for a body that should fit it.
 
 	Sheets float on the app's overlay layer with dialogs and popups, newest on
 	top. The panel or drawer is decided each time it opens: a drawer when the
@@ -406,6 +407,7 @@ local spec: Component.Spec = {
 
 		h.overlay, h.content, h.body, h.footer, h.actions =
 			overlay.scrim, content, body, footer, actionHandles
+		h.bodyRoom = bodyCap
 		h.headerSlot, h.footerSlot, h.actionsRow = headerSlot, footerSlot, actionsRow
 		h.handleBar, h.presentation = handleBar, overlay.presentation
 		Component.claimSelection(app, overlay.root)

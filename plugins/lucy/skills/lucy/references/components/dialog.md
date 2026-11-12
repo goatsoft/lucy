@@ -79,6 +79,7 @@ An action closes the dialog after its `onClick` runs, unless `onClick` returns
 | `dialog:toggle()` | Opens it if closed, closes it if open |
 | `dialog.body` | The frame that holds `children` (hidden when there are none) |
 | `dialog.scroll` | The [ScrollArea](scroll-area.md) around the body |
+| `dialog.bodyRoom()` | The height the body may take before it scrolls, in the dialog's own units. It follows the screen, the header and the footer, so a body that should fit rather than scroll (a card shrunk to the room) can read it |
 | `dialog.headerSlot` | The frame that holds `header` |
 | `dialog.footerSlot` | The frame that holds `footer` |
 

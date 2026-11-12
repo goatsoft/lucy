@@ -36,7 +36,9 @@
 	An action closes the dialog after its onClick unless onClick returns false.
 	The body (dialog.body holds the children) scrolls when the dialog would be
 	taller than maxHeight or the screen; the title, the header and footer slots
-	and the actions stay put.
+	and the actions stay put. dialog.bodyRoom() is the height the body may take before it
+	scrolls, in the dialog's own units (a getter that follows the screen; math.huge until
+	mounted): for a body that should fit its room rather than scroll.
 	Dialogs mount into the app's "modal" portal (above every scene) unless Parent is given,
 	and stack with sheets and popups by the order they open (Core/Overlay).
 
@@ -255,6 +257,7 @@ function Dialog.new(props: { [string]: any }?)
 			local body = scroll.content
 			Component.list({ Padding = gap, Parent = body })
 			h.scroll = scroll
+			h.bodyRoom = bodyCap
 
 			local footer = Element.new("Frame", {
 				Name = "Footer",

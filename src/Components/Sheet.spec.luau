@@ -293,6 +293,21 @@ return function()
 		expect(sheet.body.frame.AbsoluteCanvasSize.Y > sheet.body.frame.AbsoluteSize.Y).to.equal(true)
 	end)
 
+	it("gives bodyRoom, the height a long body is capped at", function()
+		local Scroll = require(script.Parent.Parent.Core.Scroll)
+		local rows: { Instance } = {}
+		for i = 1, 40 do
+			table.insert(rows, button("Row" .. i))
+		end
+		table.insert(rows, Instance.new("UIListLayout"))
+		local sheet = Sheet.new({ app = app, open = true, title = "Long", children = rows })
+		task.wait(0.3)
+		local room = sheet.bodyRoom()
+		expect(room > 0 and room < math.huge).to.equal(true)
+		local height = sheet.body.Instance.AbsoluteSize.Y / Scroll.scaleOf(sheet.content)
+		expect(math.abs(height - room) <= 2).to.equal(true)
+	end)
+
 	it("leaves room for the bottom safe area as a drawer", function()
 		local Overlay = require(script.Parent.Parent.Core.Overlay)
 		local measure = Overlay.measureSafeBottom

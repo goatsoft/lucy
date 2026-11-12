@@ -367,6 +367,22 @@ return function()
 			expect(dialog.footer.AbsoluteSize.Y > 0).to.equal(true)
 		end)
 
+		it("gives bodyRoom, the height a long body is capped at", function()
+			local dialog = Dialog.new({
+				app = app,
+				open = true,
+				title = "Rules",
+				maxHeight = 300,
+				children = rows(30),
+				actions = { { text = "OK" } },
+			})
+			task.wait(0.3)
+			local room = dialog.bodyRoom()
+			expect(room > 0 and room < 300).to.equal(true)
+			local height = dialog.scroll.Instance.AbsoluteSize.Y / Scroll.scaleOf(dialog.content)
+			expect(math.abs(height - room) <= 2).to.equal(true)
+		end)
+
 		it("keeps header and footer children in place while the body scrolls", function()
 			local filters = Instance.new("Frame")
 			filters.Name = "Filters"

@@ -80,6 +80,7 @@ whatever had it before.
 | `sheet:toggle()` | Opens it if closed, closes it if open |
 | `sheet.presentation()` | `"panel"` or `"drawer"`, for this opening |
 | `sheet.body` | The [ScrollArea](scroll-area.md) that holds `children` |
+| `sheet.bodyRoom()` | The height the body may take before it scrolls, in the sheet's own units. It follows the screen, the header and the footer |
 | `sheet.headerSlot` | The frame that holds `header` |
 | `sheet.footerSlot` | The frame that holds `footer` |
 | `sheet.content` | The panel or drawer itself |
