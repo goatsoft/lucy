@@ -217,6 +217,18 @@ return function()
 			local loose = Overlay.place("popup", { view = view, content = Vector2.new(300, 200) })
 			expect(loose.anchorPoint).to.equal(Vector2.new(0.5, 0.5))
 		end)
+
+		it("keeps a popup's width with no anchor, inside the view", function()
+			-- A list menu opened with no anchor sized to its content and collapsed to nothing
+			local at = Overlay.place("popup", { view = view, content = Vector2.new(14, 80), width = 320 })
+			expect(at.width).to.equal(320)
+			local narrow =
+				Overlay.place("popup", { view = Vector2.new(300, 600), content = Vector2.zero, width = 320 })
+			expect(narrow.width).to.equal(300 - Overlay.margin * 2)
+			local center =
+				Overlay.place("center", { view = view, content = Vector2.new(300, 200), width = 320 })
+			expect(center.width).to.equal(nil)
+		end)
 	end)
 
 	describe("use", function()

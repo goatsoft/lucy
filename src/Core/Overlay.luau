@@ -12,7 +12,8 @@
 			side = "bottom",            -- popup: bottom | top | left | right, flips when the other has
 			                            -- more room; auto: below if it fits, then above, then beside
 			align = "start",            -- popup: start | center | end
-			width = 240,                -- popup: at least this (and the anchor's width); panel: this
+			width = 240,                -- popup: at least this (and the anchor's width), with no
+			                            -- anchor this; panel: this
 			                            -- (a number or a getter)
 			panelSide = "right",        -- panel: left | right
 			place = nil,                -- (presentation, input) -> Placement?: places the content itself
@@ -170,7 +171,12 @@ function Overlay.place(presentation: string, input: PlaceInput): Placement
 
 	local anchor = input.anchor
 	if presentation ~= "popup" or anchor == nil then
-		return centered(view, inset)
+		local at = centered(view, inset)
+		-- A popup with no anchor keeps the width it asks for, as it would beside one
+		if presentation == "popup" and input.width then
+			at.width = math.max(0, math.min(input.width, view.X - Overlay.margin * 2))
+		end
+		return at
 	end
 
 	local m, gap = Overlay.margin, Overlay.gap
