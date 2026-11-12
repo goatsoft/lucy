@@ -17,6 +17,7 @@
 
 local TweenService = game:GetService("TweenService")
 
+local Animate = require(script.Parent.Parent.Core.Animate)
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Preferences = require(script.Parent.Parent.Core.Preferences)
@@ -80,6 +81,7 @@ local spec: Component.Spec = {
 		checkSize(h:get("size"))
 		local size, variant, visible = h:ref("size"), h:ref("variant"), h:ref("visible")
 
+		local fade = Element.new("UIGradient", { Transparency = FADE })
 		local stroke = Element.new("UIStroke", {
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 			Tags = {
@@ -93,7 +95,7 @@ local spec: Component.Spec = {
 					return "ui-spinner-ring-" .. size()
 				end,
 			},
-			Element.new("UIGradient", { Transparency = FADE }),
+			fade,
 		})
 		h.stroke = stroke
 
@@ -115,19 +117,44 @@ local spec: Component.Spec = {
 		})
 
 		-- Side effect: the turn (or the pulse, with reduced motion) plays while visible.
-		local spin = TweenService:Create(frame, Spinner.turn, { Rotation = 360 })
+		-- Turning the UIGradient rotates the arc on a UIStroke; Frame.Rotation leaves it still.
+		local spin = TweenService:Create(fade, Spinner.turn, { Rotation = 360 })
 		local pulse = TweenService:Create(stroke, Spinner.pulse, { Transparency = 0.6 })
+		local stopDrive: (() -> ())? = nil
 		Reactive.watchEffect(function()
 			local on = visible() == true
 			local still = Preferences.reducedMotion()
 			spin:Cancel()
 			pulse:Cancel()
-			frame.Rotation = 0
+			if stopDrive then
+				stopDrive()
+				stopDrive = nil
+			end
+			fade.Rotation = 0
 			stroke.Transparency = 0
-			if on and still then
-				pulse:Play()
-			elseif on then
-				spin:Play()
+			if on then
+				if Animate.manual then
+					local elapsed = 0
+					stopDrive = Animate.drive(function(dt: number): boolean
+						elapsed += dt
+						if still then
+							local cycle = (elapsed / Spinner.pulse.Time) % 2
+							local phase = if cycle > 1 then 2 - cycle else cycle
+							stroke.Transparency = TweenService:GetValue(
+								phase,
+								Spinner.pulse.EasingStyle,
+								Spinner.pulse.EasingDirection
+							) * 0.6
+						else
+							fade.Rotation = (elapsed / Spinner.turn.Time * 360) % 360
+						end
+						return false
+					end)
+				elseif still then
+					pulse:Play()
+				else
+					spin:Play()
+				end
 			end
 			h.spinning = on and not still
 			h.pulsing = on and still
@@ -135,6 +162,10 @@ local spec: Component.Spec = {
 		Reactive.onCleanup(function()
 			spin:Cancel()
 			pulse:Cancel()
+			if stopDrive then
+				stopDrive()
+				stopDrive = nil
+			end
 			h.spinning = false
 			h.pulsing = false
 		end)
