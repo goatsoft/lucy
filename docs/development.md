@@ -58,12 +58,16 @@ Keep build output and scratch files outside the repo (for example `~/tmp`).
 Spec helpers (`src/Testing/Harness.luau`):
 
 - `Harness.app(config)` → `app, cleanup`: an isolated App with a deterministic
-  desktop input profile and no engine listeners. Always call `cleanup` in `afterEach`.
+  desktop input profile, no engine listeners and no UIScale (pass `adaptive = {}` for
+  one; on a client it would follow the Studio window). Always call `cleanup` in `afterEach`.
 - `Harness.caps.desktop / mobile / tablet / console` for `app.input:setCaps(...)`.
 - `Harness.mount(app)` → a linked test ScreenGui to parent components into.
 - `Harness.flush()` → wait for Universal Styling to apply (a few frames).
 - `Harness.styled(instance, prop)` → the resolved value (`GetStyled`).
 - `Harness.colorEq(a, b)` → Color3 compare within 1/255.
+- `Harness.waitFor(check, timeout?)` → waits until `check()` is true (up to a second by
+  default) and says whether it got there. Use it for what follows a delay or a layout pass,
+  not a fixed `task.wait`, which fails whenever a frame runs long.
 
 Gotchas:
 

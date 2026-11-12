@@ -461,7 +461,9 @@ return function()
 
 		it("can be selected itself when it scrolls and holds nothing selectable", function()
 			local area = make({ text(400) })
-			expect(area.frame.Selectable).to.equal(true)
+			expect(Harness.waitFor(function()
+				return area.frame.Selectable
+			end)).to.equal(true)
 		end)
 
 		it("is not selectable with nothing to scroll", function()
@@ -489,7 +491,10 @@ return function()
 			p.size = UDim2.fromOffset(200, 100)
 			p.children = { block(height) }
 			local handle = ScrollArea.new(p)
-			task.wait(0.1)
+			-- Until the engine measures the canvas the area thinks nothing overflows
+			Harness.waitFor(function()
+				return handle.overflows() == (height > 100)
+			end)
 			return handle
 		end
 		local function shown(handle): boolean
@@ -518,8 +523,9 @@ return function()
 			handle.frame.CanvasPosition = Vector2.new(0, 50)
 			task.wait(0.05)
 			expect(shown(handle)).to.equal(true)
-			task.wait(0.3)
-			expect(shown(handle)).to.equal(false)
+			expect(Harness.waitFor(function()
+				return not shown(handle)
+			end)).to.equal(true)
 		end)
 
 		it("scroll stays hidden when nothing overflows", function()
@@ -551,8 +557,9 @@ return function()
 			expect(shown(handle)).to.equal(false)
 			handle._pointer(true)
 			expect(shown(handle)).to.equal(true)
-			task.wait(0.3)
-			expect(shown(handle)).to.equal(false)
+			expect(Harness.waitFor(function()
+				return not shown(handle)
+			end)).to.equal(true)
 		end)
 
 		it("styles the bar from the tag", function()

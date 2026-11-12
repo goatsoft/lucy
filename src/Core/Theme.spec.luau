@@ -250,8 +250,9 @@ return function()
 			expect(Harness.colorEq(Harness.styled(frame, "BackgroundColor3"), hex("ff0000"))).to.equal(true)
 
 			theme:set("dark")
-			Harness.flush()
-			expect(Harness.colorEq(Harness.styled(frame, "BackgroundColor3"), hex("0000ff"))).to.equal(true)
+			expect(Harness.waitFor(function()
+				return Harness.colorEq(Harness.styled(frame, "BackgroundColor3"), hex("0000ff"))
+			end)).to.equal(true)
 			gui:Destroy()
 		end)
 

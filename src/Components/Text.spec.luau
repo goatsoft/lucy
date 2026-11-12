@@ -86,7 +86,7 @@ return function()
 			if not Harness.laysOutLive() then
 				return
 			end
-			local text = Text.new({ text = "1", reserve = "00", variant = "h1" })
+			local text = Text.new({ app = app, text = "1", reserve = "00", variant = "h1" })
 			text.Instance.Parent = gui
 			task.wait(0.3)
 			local held = text.Instance.AbsoluteSize.X

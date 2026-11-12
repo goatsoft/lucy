@@ -53,6 +53,11 @@ function Harness.app(config: { [string]: any }?)
 		watch = false,
 		caps = Harness.caps.desktop,
 	}
+	-- No UIScale unless a spec asks (`adaptive = {}`): on a client the scale follows the Studio
+	-- window, so sizes a spec measures in pixels would change with it.
+	if options.adaptive == nil then
+		options.adaptive = false
+	end
 	local app = App.new(options)
 	return app, function()
 		app:destroy()
@@ -74,6 +79,22 @@ function Harness.flush()
 	for _ = 1, Harness.styleFrames do
 		RunService.Heartbeat:Wait()
 	end
+end
+
+--[[
+	Waits until `check` returns true, up to `timeout` seconds (default 1), and says whether it
+	got there. For what happens after a delay or a layout pass: a fixed `task.wait` fails
+	whenever a frame runs long, as frames do under a full suite.
+]]
+function Harness.waitFor(check: () -> boolean, timeout: number?): boolean
+	local deadline = os.clock() + (timeout or 1)
+	while not check() do
+		if os.clock() > deadline then
+			return false
+		end
+		task.wait()
+	end
+	return true
 end
 
 --[[

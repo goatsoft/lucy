@@ -241,8 +241,11 @@ return function()
 		end
 
 		it("follows the object's size in the units it is laid out in, without the scales above it", function()
+			if not Harness.laysOutLive() then
+				return -- sizes follow live layout only (Harness.laysOutLive)
+			end
 			local gui = Instance.new("ScreenGui")
-			gui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+			gui.Parent = Harness.guiParent()
 			local scale = Instance.new("UIScale")
 			scale.Scale = 2
 			scale.Parent = gui
@@ -280,8 +283,12 @@ return function()
 				return Composables.useSize(target)
 			end)
 			expect(size()).to.equal(Vector2.zero)
+			if not Harness.laysOutLive() then
+				scope:stop()
+				return -- following the object's size needs live layout (Harness.laysOutLive)
+			end
 			local gui = Instance.new("ScreenGui")
-			gui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+			gui.Parent = Harness.guiParent()
 			local frame = Instance.new("Frame")
 			frame.Size = UDim2.fromOffset(80, 20)
 			frame.Parent = gui

@@ -99,9 +99,9 @@ return function()
 		local bare = Avatar.new({ app = app, Parent = gui, name = "A", background = false })
 		expect(bare.Instance:HasTag("ui-avatar-bare")).to.equal(true)
 		-- The theme's rules set it: read what is styled, not the property
-		task.wait()
-		expect((bare.Instance :: any):GetStyled("BackgroundTransparency")).to.equal(1)
-		expect((filled.Instance :: any):GetStyled("BackgroundTransparency")).to.equal(0)
+		Harness.flush()
+		expect(Harness.styled(bare.Instance, "BackgroundTransparency")).to.equal(1)
+		expect(Harness.styled(filled.Instance, "BackgroundTransparency")).to.equal(0)
 	end)
 
 	it("is round unless asked to be square", function()
