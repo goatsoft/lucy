@@ -11,7 +11,7 @@ render gets long and part of it is about one thing.
 ## The built in ones
 
 Lucy comes with `useDensity`, `useMetric`, `useResponsive`, `useBackHandler`,
-`useFocusScope`, `useFocusZone`, `useHoldArrows`, `useSize`, `useAnyShown`, `useUiSound`, `useTable`, `useSort`, `useWhile`, `useCountdown`, `useDrag`, `useReveal`, `useCount` and `useRequest`. The [composables reference](../reference/composables/index.md)
+`useFocusScope`, `useFocusZone`, `useHoldArrows`, `useSize`, `useHasVisibleChild`, `useUiSound`, `useTable`, `useSort`, `useWhile`, `useCountdown`, `useDrag`, `useReveal`, `useCount` and `useRequest`. The [composables reference](../reference/composables/index.md)
 says what each takes and returns.
 
 ```luau

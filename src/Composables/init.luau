@@ -13,7 +13,7 @@
 			Lucy.useUiSound(h.app, { activate = playClick })     -- the game's own sounds
 			local gap = Lucy.useResponsive(h.app, { touch = 16, default = 8 })
 			local room = Lucy.useSize(body)                      -- room().Y: its height in the scene's units
-			local any = Lucy.useAnyShown(slot)                   -- any(): a child of slot is visible
+			local visible = Lucy.useHasVisibleChild(slot)           -- visible(): a child of slot has Visible on
 			local board = Lucy.useTable({ data = players, columns = columns })
 			local dances = Lucy.useSort({ data = list, columns = columns, multi = true })  -- dances.items()
 			Lucy.useWhile(open, function() return signal:Connect(onFire) end)  -- only while open
@@ -171,18 +171,17 @@ function Composables.useSize(target: Reactive.MaybeRef<GuiObject?>): () -> Vecto
 end
 
 --[[
-	Whether any GUI child of `target` is visible: a getter that follows each child's
-	Visible and children coming and going. False while there is no target. `target`
-	may be a ref or a getter.
+	Whether any GUI child of `target` has Visible on: a getter that follows each
+	child's own Visible (not its ancestors') and children coming and going. False
+	while there is no target. `target` may be a ref or a getter.
 
 	For a slot that should drop out of its layout (gap and all) when everything put
 	in it hides itself, such as key hints hidden on touch:
 
-		local any = Lucy.useAnyShown(slot)
-		Element.new("Frame", { Visible = any })
+		Element.hydrate(slot, { Visible = Lucy.useHasVisibleChild(slot) })
 ]]
-function Composables.useAnyShown(target: Reactive.MaybeRef<Instance?>): () -> boolean
-	requireOwner("useAnyShown")
+function Composables.useHasVisibleChild(target: Reactive.MaybeRef<Instance?>): () -> boolean
+	requireOwner("useHasVisibleChild")
 	local shown = Reactive.ref(false)
 	local last = false
 	local function set(value: boolean)

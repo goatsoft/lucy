@@ -605,13 +605,6 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
-    '/docs/reference/composables/use-any-shown': RouteRecordInfo<
-      '/docs/reference/composables/use-any-shown',
-      '/docs/reference/composables/use-any-shown',
-      Record<never, never>,
-      Record<never, never>,
-      | never
-    >,
     '/docs/reference/composables/use-back-handler': RouteRecordInfo<
       '/docs/reference/composables/use-back-handler',
       '/docs/reference/composables/use-back-handler',
@@ -657,6 +650,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/reference/composables/use-focus-zone': RouteRecordInfo<
       '/docs/reference/composables/use-focus-zone',
       '/docs/reference/composables/use-focus-zone',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-has-visible-child': RouteRecordInfo<
+      '/docs/reference/composables/use-has-visible-child',
+      '/docs/reference/composables/use-has-visible-child',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -1449,14 +1449,6 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
-    '../../docs/reference/composables/use-any-shown.md': {
-      routes:
-        | '/docs/reference/composables/use-any-shown'
-      views:
-        | never
-      pathParamNames:
-        | never
-    }
     '../../docs/reference/composables/use-back-handler.md': {
       routes:
         | '/docs/reference/composables/use-back-handler'
@@ -1508,6 +1500,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/composables/use-focus-zone.md': {
       routes:
         | '/docs/reference/composables/use-focus-zone'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-has-visible-child.md': {
+      routes:
+        | '/docs/reference/composables/use-has-visible-child'
       views:
         | never
       pathParamNames:

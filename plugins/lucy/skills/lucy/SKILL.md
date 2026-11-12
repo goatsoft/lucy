@@ -229,7 +229,6 @@ they are exact; this page only says where things are and what agents get wrong.
 - [The app](references/reference/app.md): Lucy.App.new and every option it takes, the parts an App holds, and its methods.
 - [Boards](references/reference/boards.md): Lucy.Boards keeps a game's leaderboards on the server, all time, this week and today, with each player's own rank, their names, the request a client asks with, and rows published for everyone. Every method and option.
 - [Composables](references/reference/composables/index.md): State over time and behaviour shared between components. Every Lucy.use* composable.
-- [useAnyShown](references/reference/composables/use-any-shown.md): Follows whether anything inside a frame is visible, so an empty slot can drop out of its layout.
 - [useBackHandler](references/reference/composables/use-back-handler.md): Intercepts back inputs while active, calling your function.
 - [useCount](references/reference/composables/use-count.md): Counts a number smoothly up or down to a target value with easing.
 - [useCountdown](references/reference/composables/use-countdown.md): Synchronised countdown of whole seconds remaining until a timestamp.
@@ -237,6 +236,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [useDrag](references/reference/composables/use-drag.md): Follows a mouse or touch drag starting from a GUI element.
 - [useFocusScope](references/reference/composables/use-focus-scope.md): Traps keyboard and gamepad focus inside a container while active.
 - [useFocusZone](references/reference/composables/use-focus-zone.md): A group of HUD controls nothing selects until the player steps in with a key; B steps out.
+- [useHasVisibleChild](references/reference/composables/use-has-visible-child.md): Follows whether any child of a frame has Visible on, so a slot whose contents all hide can drop out of its layout.
 - [useHoldArrows](references/reference/composables/use-hold-arrows.md): Keeps the gamepad's selection on a control while it takes the arrows itself, such as a grabbed clip.
 - [useMetric](references/reference/composables/use-metric.md): Computes a control size token in pixels following density.
 - [useRequest](references/reference/composables/use-request.md): Asks the server with app.server:call and keeps the answer, the loading flag and any error as state, asking again when its arguments change.

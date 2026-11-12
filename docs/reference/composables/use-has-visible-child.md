@@ -1,14 +1,15 @@
 ---
-title: useAnyShown
-description: Follows whether anything inside a frame is visible, so an empty slot can drop out of its layout.
+title: useHasVisibleChild
+description: Follows whether any child of a frame has Visible on, so a slot whose contents all hide can drop out of its layout.
 order: 16
 ---
 
-# useAnyShown
+# useHasVisibleChild
 
-`Lucy.useAnyShown` returns a getter that is `true` while any GUI child of a
-frame is visible. It follows each child's `Visible` and children being added
-and removed, so a binding that reads it updates by itself.
+`Lucy.useHasVisibleChild` returns a getter that is `true` while any GUI child
+of a frame has `Visible` on. It follows each child's own `Visible` (not its
+ancestors') and children being added and removed, so a binding that reads it
+updates by itself.
 
 Use it for a slot whose contents hide themselves: bind the slot's `Visible`
 to it and, when everything in it hides, the slot drops out of its list layout,
@@ -19,7 +20,7 @@ Lucy's [Dialog](../../components/dialog.md) does this for its `header` and
 ## Usage
 
 ```luau
-local any = Lucy.useAnyShown(target)
+local visible = Lucy.useHasVisibleChild(target)
 ```
 
 | Argument | Type | What it is |
@@ -30,7 +31,7 @@ local any = Lucy.useAnyShown(target)
 
 | Name | Type | What it is |
 |---|---|---|
-| `any` | `() -> boolean` | Whether any of its GUI children is visible. `false` while there is no target. Layouts, paddings and other non GUI children never count |
+| `visible` | `() -> boolean` | Whether any of its GUI children has `Visible` on. `false` while there is no target. Layouts, paddings and other non GUI children never count |
 
 It looks at direct children only. It needs an owner, like every composable: a
 component's render, a scene's `build`, or an effect scope.
@@ -54,5 +55,5 @@ Lucy.Stack.new({
     end,
     children = hints,
 }).Instance.Parent = bar
-Lucy.hydrate(bar) { Visible = Lucy.useAnyShown(bar) }
+Lucy.hydrate(bar) { Visible = Lucy.useHasVisibleChild(bar) }
 ```

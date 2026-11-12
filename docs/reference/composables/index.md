@@ -25,7 +25,7 @@ To write your own composables, see [Share logic with composables](../../guide/co
 | [`useFocusZone`](use-focus-zone.md) | A group of HUD controls skipped by focus until the player steps in; B steps out |
 | [`useHoldArrows`](use-hold-arrows.md) | Holds gamepad selection on a control while it handles arrow keys itself |
 | [`useSize`](use-size.md) | Tracks an object's size in layout units, for layouts that react to available space |
-| [`useAnyShown`](use-any-shown.md) | Whether anything inside a frame is visible, so an empty slot can drop out of its layout |
+| [`useHasVisibleChild`](use-has-visible-child.md) | Whether any child of a frame has `Visible` on, so a slot whose contents all hide can drop out of its layout |
 | [`useUiSound`](use-ui-sound.md) | Runs callbacks when components activate, toggle, open, close or select |
 | [`useTable`](use-table.md) | Manages sorted rows from raw tables and column definitions |
 | [`useSort`](use-sort.md) | Sorts a list by one or more columns with tiebreakers |

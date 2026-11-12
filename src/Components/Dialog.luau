@@ -222,7 +222,7 @@ function Dialog.new(props: { [string]: any }?)
 			if p.header then
 				Component.adopt(headerSlot, p.header)
 			end
-			Element.hydrate(headerSlot, { Visible = Composables.useAnyShown(headerSlot) })
+			Element.hydrate(headerSlot, { Visible = Composables.useHasVisibleChild(headerSlot) })
 
 			if showClose then
 				h.closeButton = Button.close({
@@ -302,8 +302,8 @@ function Dialog.new(props: { [string]: any }?)
 			if p.footer then
 				Component.adopt(footerSlot, p.footer)
 			end
-			local slotShown = Composables.useAnyShown(footerSlot)
-			Element.hydrate(footerSlot, { Visible = slotShown })
+			local slotHasVisible = Composables.useHasVisibleChild(footerSlot)
+			Element.hydrate(footerSlot, { Visible = slotHasVisible })
 			local actionsRow = Component.box({ Name = "Actions", LayoutOrder = 2, Parent = footer })
 			Component.list({
 				FillDirection = Enum.FillDirection.Horizontal,
@@ -332,7 +332,7 @@ function Dialog.new(props: { [string]: any }?)
 			actionsRow.Visible = #actionHandles > 0
 			local hasActions = #actionHandles > 0
 			footerShown = function(): boolean
-				return hasActions or slotShown()
+				return hasActions or slotHasVisible()
 			end
 			Element.hydrate(footer, { Visible = footerShown })
 
