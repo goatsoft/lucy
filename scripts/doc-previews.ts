@@ -15,6 +15,9 @@
  *                                    shown full screen
  *   <!-- preview screen trim -->     a whole client script, its picture cut to what
  *                                    it drew (a centred panel), as other examples are
+ *   <!-- preview world -->           a whole client script that draws in the world (an aura,
+ *                                    a part): shown full screen with no backdrop, the
+ *                                    camera put back and what it made in workspace removed
  *   <!-- preview then="..." -->      Luau run after the example (any kind), to go to
  *                                    a scene or open a menu first
  *   <!-- preview animate -->         capture multiple frames with Animate.step and
@@ -97,6 +100,7 @@ interface Options {
   solo: boolean
   screen: boolean
   trim: boolean
+  world: boolean
   then?: string
   animate?: number
   fps?: number
@@ -104,12 +108,16 @@ interface Options {
 }
 
 function parseOptions(raw: string | undefined): Options {
-  const options: Options = { solo: false, screen: false, trim: false }
+  const options: Options = { solo: false, screen: false, trim: false, world: false }
   for (const match of (raw ?? '').matchAll(/(\w+)(?:="([^"]*)")?/g)) {
     const [, key, value] = match
     if (key === 'solo') options.solo = true
     else if (key === 'screen') options.screen = true
     else if (key === 'trim') options.trim = true
+    else if (key === 'world') {
+      options.world = true
+      options.screen = true
+    }
     else if (key === 'then') options.then = value
     else if (key === 'animate') {
       const duration = value === undefined ? 1.6 : Number(value)
@@ -389,6 +397,13 @@ async function render(names: string[]) {
     if (!target) throw new Error('open the LucyTests place in Studio, in edit mode, with Studio as MCP server on')
     const luau = (code: string) => studio.run(target.id, 'Edit', code)
     const settle = () => new Promise((resolve) => setTimeout(resolve, 1000))
+    // A world example's camera is set by its script, which a plain capture of the edit view does
+    // not follow: capture from where the script put it.
+    const shot = async () => {
+      const view = (await luau('return _G.LucyDocPicturesRun.view()')).trim().split(',').map(Number)
+      const at = view.length === 6 && view.every(Number.isFinite) ? { from: view.slice(0, 3), at: view.slice(3) } : undefined
+      return studio.capture(target.id, at)
+    }
     const dir = mkdtempSync(join(tmpdir(), 'lucy-captures-'))
     const saveCapture = (filePrefix: string, shot: { data: string; mimeType: string }) => {
       const file = join(dir, `${filePrefix}.${shot.mimeType.endsWith('png') ? 'png' : 'jpg'}`)
@@ -418,7 +433,7 @@ return R.start(list)
             for (let i = 0; i < count; i++) {
               if (i > 0) await luau(`return _G.LucyDocPicturesRun.step(${dt})`)
               else await new Promise((resolve) => setTimeout(resolve, 120))
-              files.push(saveCapture(`${screen}-${theme}-${i}`, await studio.capture(target.id)))
+              files.push(saveCapture(`${screen}-${theme}-${i}`, await shot()))
             }
             return files
           }
@@ -444,10 +459,10 @@ return R.start(list)
           continue
         }
         await settle()
-        const darkFile = saveCapture(`${screen}-dark`, await studio.capture(target.id))
+        const darkFile = saveCapture(`${screen}-dark`, await shot())
         await luau('return _G.LucyDocPicturesRun.again("light")')
         await settle()
-        const lightFile = saveCapture(`${screen}-light`, await studio.capture(target.id))
+        const lightFile = saveCapture(`${screen}-light`, await shot())
         const drawnLines = lines.split('\n').filter((line) => !line.endsWith(' LATER') && !/ ERR /.test(line))
         for (const line of lines.split('\n').filter((line) => / ERR /.test(line))) console.error(line)
         for (const line of crop(darkFile, lightFile, drawnLines)) console.log(line)

@@ -217,6 +217,11 @@ above its `luau` block. The marker can take options:
   script drew, as for other examples, and the frame fits the picture. Use it
   when the script draws one panel in the middle of the screen, as the homepage
   example does.
+- `<!-- preview world -->`: a whole client script that draws in the world
+  (an aura, a part), shown full screen at night with no backdrop so the 3D
+  view shows and a glow reads.
+  The script places the camera; afterwards the renderer puts the camera back
+  and removes what the script made in `workspace`.
 - `<!-- preview animate="1.6" fps="12" warmup="0.4" -->`: advances
   `Animate.manual` step by step and writes a looping animated WebP pair with
   `img2webp`. Use `warmup` to skip an opening delay and start mid motion.

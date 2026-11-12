@@ -31,7 +31,8 @@ export interface Studio {
   /** Runs Luau and returns what it returned, as text. Throws the Luau error's message. */
   run(id: string, dataModel: DataModel, code: string): Promise<string>
   /** A picture of the Studio viewport. */
-  capture(id: string): Promise<Image>
+  /** A picture of the viewport; `view` points the camera there for this capture only. */
+  capture(id: string, view?: { from: number[]; at: number[] }): Promise<Image>
   close(): void
 }
 
@@ -162,8 +163,12 @@ export function connectStudio(command: Command = findStudioMcp(), options: { tim
     async run(id, dataModel, code) {
       return textOf(await tool('execute_luau', { studio_id: id, datamodel_type: dataModel, code }))
     },
-    async capture(id) {
-      const answer = await tool('screen_capture', { studio_id: id, capture_id: `LucyMcp_${Date.now()}` })
+    async capture(id, view) {
+      const answer = await tool('screen_capture', {
+        studio_id: id,
+        capture_id: `LucyMcp_${Date.now()}`,
+        ...(view ? { camera_position: view.from, look_at_position: view.at } : {}),
+      })
       const image = answer.content?.find((c) => c.type === 'image')
       if (!image?.data) throw new Error('Studio sent no picture')
       return { data: image.data, mimeType: image.mimeType ?? 'image/jpeg' }

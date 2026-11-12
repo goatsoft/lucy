@@ -42,6 +42,7 @@ local STATE = {
 }
 
 function S.clear()
+	S._world = false
 	if S.Lucy and S.Lucy.Animate then
 		S.Lucy.Animate.manual = false
 	end
@@ -865,9 +866,54 @@ function S.solo(item, theme)
 	return string.format("%s %s vp=%d,%d", item.name, fmt(r), screen.X, screen.Y)
 end
 
+-- A world example (marker option world): the 3D view shows through, and afterwards the camera
+-- goes back and what the example made in workspace goes.
+function S.world(item)
+	S._world = item.world == true
+	if not item.world then
+		return
+	end
+	local camera = workspace.CurrentCamera
+	local was = camera.CFrame
+	-- At night, so a glow or a light reads
+	local Lighting = game:GetService("Lighting")
+	local clock = Lighting.ClockTime
+	Lighting.ClockTime = 0
+	local before = {}
+	for _, c in workspace:GetChildren() do
+		before[c] = true
+	end
+	for _, g in StarterGui:GetChildren() do
+		if g.Name:sub(1, 12) == "LucyPreview_" and g:IsA("LayerCollector") then
+			g.Enabled = false
+		end
+	end
+	table.insert(S.undo, function()
+		camera.CFrame = was
+		Lighting.ClockTime = clock
+		for _, c in workspace:GetChildren() do
+			if not before[c] and c ~= camera and not c:IsA("Terrain") then
+				c:Destroy()
+			end
+		end
+	end)
+end
+
+-- Where a world example put the camera, "x,y,z,lx,ly,lz" (a point it looks at), for the capture;
+-- "" for any other example.
+function S.view()
+	if not S._world then
+		return ""
+	end
+	local cf = workspace.CurrentCamera.CFrame
+	local at = cf.Position + cf.LookVector * 10
+	return string.format("%g,%g,%g,%g,%g,%g", cf.X, cf.Y, cf.Z, at.X, at.Y, at.Z)
+end
+
 -- A whole client script, shown full screen.
 function S.screen(item, theme)
 	S.mount(theme)
+	S.world(item)
 	local screen = workspace.CurrentCamera.ViewportSize
 	local slot = newSlot(1)
 	local err = run(item.code, slot, item["then"])
@@ -903,6 +949,7 @@ end
 -- Mounts one animated example with manual clock stepping; preserves _animBox on light pass.
 function S.animSetup(item, theme, preserveBox)
 	S.mount(theme)
+	S.world(item)
 	S.Lucy.Animate.manual = true
 	if not preserveBox then
 		S._animBox = nil
