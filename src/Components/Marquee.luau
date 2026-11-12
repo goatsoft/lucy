@@ -24,6 +24,7 @@
 
 local RunService = game:GetService("RunService")
 
+local Animate = require(script.Parent.Parent.Core.Animate)
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Preferences = require(script.Parent.Parent.Core.Preferences)
@@ -196,7 +197,7 @@ local spec: Component.Spec = {
 				return
 			end
 			local t = if loop then loopClock else 0
-			local heartbeat = RunService.Heartbeat:Connect(function(dt: number)
+			local function stepFrame(dt: number): boolean
 				-- Sizes on screen, in the offsets the strip moves by: a UIScale above (Lucy's own
 				-- on a phone) makes an offset smaller on screen, so divide it back out
 				local scale = Marquee.scaleOf(frame)
@@ -207,7 +208,7 @@ local spec: Component.Spec = {
 					h.scrolling = false
 					offset(0)
 					looping(false)
-					return
+					return false
 				end
 				t += dt
 				h.scrolling = true
@@ -220,9 +221,18 @@ local spec: Component.Spec = {
 				else
 					offset(Marquee.offsetAt(t, overflow, speed, pause))
 				end
-			end)
+				return false
+			end
+			local disconnect = if Animate.manual
+				then Animate.drive(stepFrame)
+				else (function()
+					local heartbeat = RunService.Heartbeat:Connect(stepFrame)
+					return function()
+						heartbeat:Disconnect()
+					end
+				end)()
 			Reactive.onCleanup(function()
-				heartbeat:Disconnect()
+				disconnect()
 				h.scrolling = false
 				-- A loop's copy stays up across a text change (no blink); hiding it is the effect's job
 				if not loop then

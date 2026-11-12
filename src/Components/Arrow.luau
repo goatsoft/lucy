@@ -32,6 +32,7 @@
 
 local RunService = game:GetService("RunService")
 
+local Animate = require(script.Parent.Parent.Core.Animate)
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Icon = require(script.Parent.Icon)
@@ -285,9 +286,9 @@ local spec: Component.Spec = {
 		end, { immediate = true })
 
 		-- Motion, on the frame clock from when it was shown.
-		local shownAt = os.clock()
+		local shownAt = Animate.now()
 		local function step()
-			local t = os.clock() - shownAt
+			local t = Animate.now() - shownAt
 			local timing = Arrow.timing
 			local still = Preferences.reducedMotion()
 			local kind = Reactive.peek(motion)
@@ -324,20 +325,32 @@ local spec: Component.Spec = {
 			fade(transparency)
 		end
 		h._replay = function()
-			shownAt = os.clock()
+			shownAt = Animate.now()
 			step()
 		end
 
 		local beat: RBXScriptConnection? = nil
+		local stopDrive: (() -> ())? = nil
 		Reactive.watch(visible, function(on)
 			if beat then
 				beat:Disconnect()
 				beat = nil
 			end
+			if stopDrive then
+				stopDrive()
+				stopDrive = nil
+			end
 			if on then
-				shownAt = os.clock()
+				shownAt = Animate.now()
 				step()
-				beat = RunService.Heartbeat:Connect(step)
+				if Animate.manual then
+					stopDrive = Animate.drive(function()
+						step()
+						return false
+					end)
+				else
+					beat = RunService.Heartbeat:Connect(step)
+				end
 			end
 		end, { immediate = true })
 		Reactive.watch(direction, function()
@@ -348,6 +361,10 @@ local spec: Component.Spec = {
 			if beat then
 				beat:Disconnect()
 				beat = nil
+			end
+			if stopDrive then
+				stopDrive()
+				stopDrive = nil
 			end
 		end)
 

@@ -68,6 +68,7 @@
 
 local RunService = game:GetService("RunService")
 
+local Animate = require(script.Parent.Parent.Core.Animate)
 local Arrow = require(script.Parent.Arrow)
 local Button = require(script.Parent.Button)
 local Element = require(script.Parent.Parent.Core.Element)
@@ -590,7 +591,7 @@ end
 function Tour._layout(self: any, step: Step, target: GuiObject?)
 	local root: Frame = self.root
 	local still = Preferences.reducedMotion()
-	local since = os.clock() - (self._enterAt or 0)
+	local since = Animate.now() - (self._enterAt or 0)
 	local function eased(seconds: number): number
 		local p = math.clamp(since / seconds, 0, 1)
 		return 1 - (1 - p) ^ 3
@@ -940,7 +941,7 @@ function Tour._showStep(self: any, at: number)
 		end
 		if not shownOnce then
 			-- The entrance and glide start now, from the last cut-out drawn.
-			self._enterAt = os.clock()
+			self._enterAt = Animate.now()
 			self._from = self._drawn
 			local props = self:_pointerProps(step)
 			if props then
@@ -1020,14 +1021,23 @@ function Tour.start(self: any, at: number?): boolean
 		end
 		return true
 	end))
-	local beat = if RunService:IsClient() and RunService:IsRunning()
-		then RunService.PreRender
-		else RunService.Heartbeat
-	run:give(beat:Connect(function()
-		if self._check then
-			self._check()
-		end
-	end))
+	if Animate.manual then
+		run:give(Animate.drive(function()
+			if self._check then
+				self._check()
+			end
+			return false
+		end))
+	else
+		local beat = if RunService:IsClient() and RunService:IsRunning()
+			then RunService.PreRender
+			else RunService.Heartbeat
+		run:give(beat:Connect(function()
+			if self._check then
+				self._check()
+			end
+		end))
+	end
 
 	self._running(true)
 	self:_showStep(index)

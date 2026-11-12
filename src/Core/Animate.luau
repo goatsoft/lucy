@@ -45,8 +45,20 @@ local EPSILON = 1e-4
 
 local active: { [Animator]: boolean } = {}
 local connection: RBXScriptConnection? = nil
+local manualClock = 0
+
+-- Current monotonic time in seconds; advances with Animate.step while Animate.manual is true.
+function Animate.now(): number
+	if Animate.manual then
+		return manualClock
+	end
+	return os.clock()
+end
 
 local function stepAll(dt: number)
+	if Animate.manual then
+		manualClock += dt
+	end
 	Reactive.batch(function()
 		for animator in active do
 			if animator.step(dt) then

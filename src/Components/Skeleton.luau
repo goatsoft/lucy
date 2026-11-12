@@ -10,6 +10,7 @@
 
 local TweenService = game:GetService("TweenService")
 
+local Animate = require(script.Parent.Parent.Core.Animate)
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
@@ -48,17 +49,41 @@ local spec: Component.Spec = {
 		})
 		-- Side effect: the pulse plays while visible.
 		local pulse = TweenService:Create(frame, Skeleton.pulse, { BackgroundTransparency = 0.5 })
+		local stopDrive: (() -> ())? = nil
 		Reactive.watchEffect(function()
 			local on = visible() == true
+			pulse:Cancel()
+			if stopDrive then
+				stopDrive()
+				stopDrive = nil
+			end
+			frame.BackgroundTransparency = 0
 			if on then
-				pulse:Play()
-			else
-				pulse:Cancel()
+				if Animate.manual then
+					local elapsed = 0
+					stopDrive = Animate.drive(function(dt: number): boolean
+						elapsed += dt
+						local cycle = (elapsed / Skeleton.pulse.Time) % 2
+						local phase = if cycle > 1 then 2 - cycle else cycle
+						frame.BackgroundTransparency = TweenService:GetValue(
+							phase,
+							Skeleton.pulse.EasingStyle,
+							Skeleton.pulse.EasingDirection
+						) * 0.5
+						return false
+					end)
+				else
+					pulse:Play()
+				end
 			end
 			h.pulsing = on
 		end)
 		Reactive.onCleanup(function()
 			pulse:Cancel()
+			if stopDrive then
+				stopDrive()
+				stopDrive = nil
+			end
 		end)
 		return frame
 	end,
