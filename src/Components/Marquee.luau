@@ -223,14 +223,15 @@ local spec: Component.Spec = {
 				end
 				return false
 			end
-			local disconnect = if Animate.manual
-				then Animate.drive(stepFrame)
-				else (function()
-					local heartbeat = RunService.Heartbeat:Connect(stepFrame)
-					return function()
-						heartbeat:Disconnect()
-					end
-				end)()
+			local disconnect: () -> ()
+			if Animate.manual then
+				disconnect = Animate.drive(stepFrame)
+			else
+				local heartbeat = RunService.Heartbeat:Connect(stepFrame)
+				disconnect = function()
+					heartbeat:Disconnect()
+				end
+			end
 			Reactive.onCleanup(function()
 				disconnect()
 				h.scrolling = false
