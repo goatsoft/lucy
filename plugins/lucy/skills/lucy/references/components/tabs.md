@@ -57,6 +57,14 @@ it as the player left it, scrolled to the same place. Tabs fill the width and
 grow to fit the panel shown. Put a [Scroll Area](scroll-area.md) in a panel for
 long content.
 
+In a [Dialog](dialog.md) or a [Sheet](sheet.md), whose body scrolls, put the tab bar
+in its `header` so it stays put while a long panel scrolls under it:
+
+```luau
+local tabs = Lucy.Tabs.new({ items = items })
+Lucy.Sheet.new({ title = "Booth", header = { tabs.list }, children = { tabs } })
+```
+
 When the player picks a tab, it reports `select` with the tab's value for
 [useUiSound](../reference/composables/use-ui-sound.md).
 

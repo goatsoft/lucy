@@ -30,6 +30,7 @@
 	State keys: value, variant, size, disabled, visible.
 	Events: "select" with the tab's value (sent by the tab bar), for Lucy.useUiSound.
 	tabs.list is the tab bar (a ToggleGroup); tabs.panels maps each value to its panel.
+	In a Dialog or Sheet, pass tabs.list in its header so the bar stays put while the body scrolls.
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
