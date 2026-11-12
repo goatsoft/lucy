@@ -50,24 +50,24 @@ function movePanelLight(event: PointerEvent): void {
 
 // The four that matter most, as cards.
 const features = [
-  { icon: Boxes, title: '47 components', text: 'Buttons, dialogs, selects, tables, menus, leaderboards, tours, tabs and more, ready for menus, HUDs and shops.', to: '/docs/components/' },
-  { icon: Atom, title: 'One source of truth', text: 'All UI and app state in one store. Change a value and only the properties that read it are updated.', to: '/docs/guide/app-state' },
-  { icon: Gamepad, title: 'Any input, any device', text: 'Mouse, keyboard, gamepad and touch across desktop, console, tablet and phone. Controls grow for touch and TV.', to: '/docs/guide/accessibility' },
-  { icon: SwatchBook, title: 'Themes', text: 'Light and dark themes, switched while the game runs. Hover and theme changes run no Luau.', to: '/docs/guide/themes' },
+  { icon: Boxes, title: '47 ready-to-use components', text: 'Stop rebuilding buttons, dialogs, dropdowns, tabs, and leaderboards every game. Drop them straight into your HUDs, shops, and menus.', to: '/docs/components/' },
+  { icon: Atom, title: 'Shared state, zero sync bugs', text: 'Keep coins, settings, and open menus in one store. Change a value anywhere and only the exact label or slider bound to it updates.', to: '/docs/guide/app-state' },
+  { icon: Gamepad, title: 'PC, console, and mobile built in', text: 'Gamepad focus, keyboard shortcuts, and 44px touch targets work out of the box. Layouts scale cleanly from phones to TVs.', to: '/docs/guide/accessibility' },
+  { icon: SwatchBook, title: 'Live themes, zero script cost', text: 'Swap light, dark, or custom palettes mid-game. Hovers and theme changes run in Roblox StyleSheets, not Luau loops.', to: '/docs/guide/themes' },
 ] as const
 
 // High level game capabilities, as a short list under the cards.
 const more = [
-  { icon: Clapperboard, title: 'Scenes', text: 'Each screen on its own layer, so menus never take input from the screen below.', to: '/docs/guide/scenes' },
-  { icon: Keyboard, title: 'Hotkeys', text: 'Name an action once for keyboard and gamepad, and switch it off while a menu is open.', to: '/docs/guide/actions' },
-  { icon: DatabaseZap, title: 'Server and boards', text: 'A server store replicated per player, DataStore request pacing and ranked leaderboards.', to: '/docs/guide/server' },
-  { icon: Globe, title: 'UI in the world', text: 'SurfaceGuis on parts and BillboardGuis over heads that follow your theme and take clicks.', to: '/docs/guide/world-ui' },
-  { icon: Signpost, title: 'Guided tours', text: 'Interactive tutorials with spotlight cutouts and arrows that pause gameplay UI cleanly.', to: '/docs/guide/tutorials' },
-  { icon: Contrast, title: 'Accessibility', text: 'Readable text on every colour, and player reduce motion, text size and background settings respected.', to: '/docs/guide/accessibility' },
-  { icon: Shapes, title: 'Icons', text: 'Add any Iconify icon by name; it is packed into a sheet by the lucy-icons build.', to: '/docs/guide/icons' },
-  { icon: Blocks, title: 'Code or Studio', text: 'Write UI in code, or add behaviour to UI you laid out in Studio.', to: '/docs/reactivity#ui-built-in-studio' },
-  { icon: ScanEye, title: 'Preview in Studio', text: 'See any component or scene in Studio without pressing Play.', to: '/docs/stories' },
-  { icon: Bot, title: 'Ready for agents', text: 'Skills and the Lucy MCP server so coding agents inspect trees, drive UI and take screenshots.', to: '/docs/guide/agents' },
+  { icon: Clapperboard, title: 'Scenes', text: 'Keep your Title, HUD, and Pause menu on separate layers. Modals block clicks behind them and wire up the back button automatically.', to: '/docs/guide/scenes' },
+  { icon: Keyboard, title: 'Hotkeys', text: 'Bind keyboard and controller inputs once by action name. Disable all gameplay keys in one call whenever a menu opens.', to: '/docs/guide/actions' },
+  { icon: DatabaseZap, title: 'Server and boards', text: 'Replicate server state to each player\'s UI with zero RemoteEvent glue. Includes DataStore request pacing and live leaderboards.', to: '/docs/guide/server' },
+  { icon: Globe, title: 'UI in the world', text: 'Put themed, clickable UI on SurfaceGuis and overhead BillboardGuis, driven by the same state as your HUD.', to: '/docs/guide/world-ui' },
+  { icon: Signpost, title: 'Guided tours', text: 'Build step-by-step new-player tutorials with spotlights and arrows right over your real menus, with no duplicate UI.', to: '/docs/guide/tutorials' },
+  { icon: Contrast, title: 'Accessibility', text: 'Checked text contrast on every colour, plus built-in support for Roblox reduce motion, text size, and background transparency.', to: '/docs/guide/accessibility' },
+  { icon: Shapes, title: 'Icons', text: 'Use any Iconify icon by name instead of uploading assets one by one. lucy-icons packs them into sprite sheets for you.', to: '/docs/guide/icons' },
+  { icon: Blocks, title: 'Code or Studio', text: 'Write UI purely in Luau, or lay it out visually in Studio and wire it to Lucy state with Lucy.hydrate.', to: '/docs/reactivity#ui-built-in-studio' },
+  { icon: ScanEye, title: 'Preview in Studio', text: 'Preview any component, shop card, or full menu right inside Studio edit mode. No more hitting Play just to tweak a layout.', to: '/docs/stories' },
+  { icon: Bot, title: 'Ready for agents', text: 'Ships with agent skills and an MCP server so your AI coding assistant uses real Lucy components and verifies UI in Studio.', to: '/docs/guide/agents' },
 ] as const
 
 const install = 'Lucy = "goatsoft/lucy@0.1.0"'
@@ -137,7 +137,7 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
           Features
         </p>
         <h2 class="mx-auto mt-4 max-w-2xl text-center font-display text-heading font-semibold tracking-tight text-balance">
-          What Lucy does
+          Why your game needs Lucy
         </h2>
         <div class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <RouterLink
@@ -214,8 +214,11 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
           Quick start
         </p>
         <h2 class="mx-auto mt-4 max-w-2xl text-center font-display text-heading font-semibold tracking-tight text-balance">
-          A settings menu
+          A working settings menu in one script
         </h2>
+        <p class="mx-auto mt-4 max-w-xl text-center text-base leading-7 text-pretty text-muted-foreground">
+          Bind sliders and dropdowns straight to game state. Switch the theme and the whole UI updates at once.
+        </p>
         <div class="mt-10 flex justify-center">
           <div
             role="tablist"
@@ -269,15 +272,14 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
       />
       <div class="mx-auto max-w-3xl px-6 py-28 text-center">
         <p class="eyebrow">
-          Architecture
+          How it works
         </p>
         <h2 class="mx-auto mt-4 max-w-2xl font-display text-heading font-semibold tracking-tight text-balance">
-          How it is built
+          Fast UI without the script spaghetti
         </h2>
         <p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-pretty text-muted-foreground">
-          Each client has one App. It holds the UI state in a single tree, the theme, input and focus, the scenes and the toasts.
-          Every component keeps its state in that tree, builds its instances once and binds their properties to the state.
-          Looks come from Universal Styling rules matched by tags.
+          Roblox UI usually breaks in two ways: scattered scripts fighting over ScreenGuis, or heavy UI trees rebuilding every time a stat changes.
+          Lucy puts one App in charge of your screens, input, and state. Instances build once, only the changed property updates, and Roblox StyleSheets handle all looks, keeping even busy HUDs fast.
         </p>
         <div class="mt-8 flex justify-center">
           <Button

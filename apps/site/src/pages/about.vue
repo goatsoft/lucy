@@ -8,21 +8,21 @@ import { SITE, useHead } from '@/head'
 
 useHead({
   title: 'About',
-  description: 'Why Lucy exists, how it grew out of web frontend engineering and Roblox games, and who builds it at GOATsoft.',
+  description: 'Why Lucy exists, the Roblox UI problems it solves, and who builds it at GOATsoft.',
 })
 
 const pillars = [
   {
-    title: 'Engine native looks',
-    text: 'Components build their instances once and style through Roblox Universal Styling rules and tokens, so theme swaps and hover states run no Luau.',
+    title: 'Native Roblox styling',
+    text: 'Lucy styles through built-in Roblox StyleSheets instead of Luau loops. Hover states and light or dark theme swaps cost zero script time.',
   },
   {
-    title: 'One store, plain bindings',
-    text: 'Refs, computeds and AppState update only the properties that read a changed key. No virtual tree diffing, no rebuilds and no runtime dependencies.',
+    title: 'Instant updates, zero rebuilds',
+    text: 'Change a stat or setting and only the exact UI property bound to it updates. No tree rebuilds, no frame drops, and zero runtime dependencies.',
   },
   {
-    title: 'Built for real players',
-    text: 'Desktop, console, tablet and phone come first, with gamepad focus rings, touch sizing, hotkeys, accessibility settings, server sync and guided tours included.',
+    title: 'Ready for every device',
+    text: 'Desktop, console, tablet, and phone work from day one, with gamepad focus rings, 44px touch targets, hotkeys, server sync, and guided tours included.',
   },
 ] as const
 </script>
@@ -42,10 +42,10 @@ const pillars = [
         About
       </p>
       <h1 class="animate-rise mx-auto mt-4 max-w-3xl font-display text-heading font-semibold tracking-tight text-balance">
-        Web UI craft, brought to Roblox game development
+        Built to stop Roblox teams reinventing the UI wheel
       </h1>
       <p class="animate-rise mx-auto mt-6 max-w-2xl text-lead leading-8 text-pretty text-muted-foreground [animation-delay:120ms]">
-        Lucy is an open UI and app framework made by GOATsoft for games that want crisp, reliable interfaces without rebuilding every control from scratch.
+        Lucy is an open-source UI and app framework by GOATsoft. It gives your game 47 themed components, shared state, and cross-device input so you can focus on gameplay instead of UI plumbing.
       </p>
     </section>
 
@@ -56,7 +56,7 @@ const pillars = [
             Who is GOATsoft
           </p>
           <h2 class="mt-3 font-display text-2xl font-semibold tracking-tight text-foreground">
-            Long time frontend developer making games
+            Frontend craft brought to Roblox games
           </h2>
           <p class="mt-4 text-sm leading-7 text-pretty text-muted-foreground">
             <a
@@ -65,10 +65,10 @@ const pillars = [
               rel="noopener"
               class="font-medium text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary"
             >GOATsoft</a>
-            started from years of building web apps, design systems and component libraries before bringing that same habit of polish into Roblox. When you have spent a career caring about spacing, contrast, keyboard navigation and clean state management, sloppy game menus stand out straight away.
+            comes from years of building apps and component libraries before bringing that same polish into Roblox: clean spacing, readable contrast, full controller support, and zero state spaghetti.
           </p>
           <p class="mt-4 text-sm leading-7 text-pretty text-muted-foreground">
-            Alongside Lucy, we build open tooling that supports our own games and sites, including the Aurora shader background engine and Gruff, the documentation framework behind this site.
+            Alongside Lucy, we build open-source tooling for our own games and sites, including the Aurora shader background engine and Gruff, the documentation framework behind this site.
           </p>
         </article>
 
@@ -80,10 +80,10 @@ const pillars = [
             Closing the Roblox UI gap
           </h2>
           <p class="mt-4 text-sm leading-7 text-pretty text-muted-foreground">
-            Building UI in Roblox usually meant picking between three rough paths: wiring every Instance and cleanup loop by hand, pulling in a heavy virtual DOM port, or taking a tiny reactive library and still writing buttons, dialogs, sheets, theme tokens, gamepad focus, DataStore queues and leaderboards yourself.
+            Building Roblox UI usually leaves you with three rough options: wiring every Instance and cleanup loop by hand, adopting a heavy tree-rebuilding framework, or grabbing a bare reactive library and still writing buttons, dialogs, gamepad focus, DataStore queues, and leaderboards yourself.
           </p>
           <p class="mt-4 text-sm leading-7 text-pretty text-muted-foreground">
-            Lucy gives games the full foundation ready to use: 47 themed components, one shared state store, layered screens, server replication, Studio story previews and coding agent tools.
+            Lucy gives you the whole foundation out of the box: 47 themed components, shared client-server state, layered scenes, Studio previews, and coding agent tools.
           </p>
         </article>
       </div>
