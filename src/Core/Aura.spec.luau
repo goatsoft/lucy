@@ -272,6 +272,37 @@ return function()
 			follower:destroy()
 		end)
 
+		it("builds it again when it is worn with other options", function()
+			local a = keep(dummy("SpecA", Vector3.new(0, 50, 0)))
+			local follower = Aura.follow(app, {
+				resolve = function()
+					return a
+				end,
+				focus = besideA,
+			})
+			wear("a", "spec-spark", { options = { rate = 20 } })
+			run(0.1)
+			local first = follower.auras["a/spec-spark"]
+			expect(first).to.be.ok()
+			wear("a", "spec-spark", { options = { rate = 20 } })
+			run(0.1)
+			expect(follower.auras["a/spec-spark"]).to.equal(first)
+			wear("a", "spec-spark", { options = { rate = 40 } })
+			run(0.1)
+			local second = follower.auras["a/spec-spark"]
+			expect(second).to.be.ok()
+			expect(second).never.to.equal(first)
+			expect(first.destroyed).to.equal(true)
+			local count = 0
+			for _, child in a:GetChildren() do
+				if child.Name == "LucyAura_spec-spark" then
+					count += 1
+				end
+			end
+			expect(count).to.equal(1)
+			follower:destroy()
+		end)
+
 		it("takes a timed aura off when its time is up", function()
 			local a = keep(dummy("SpecA", Vector3.new(0, 50, 0)))
 			local clock = 100

@@ -167,6 +167,7 @@ export type Handle = typeof(setmetatable(
 		_strength: any,
 		_reduced: any,
 		_stopDrive: (() -> ())?,
+		_optionsKey: string?,
 	},
 	Handle
 ))
@@ -564,8 +565,22 @@ function Aura.follow(app: any, options: { [string]: any }?): Follower
 	return self
 end
 
+-- The options an aura was worn with, as one string: worn again with other options, it is built again
+local function optionsKey(options: any): string
+	if type(options) ~= "table" then
+		return ""
+	end
+	local parts = {}
+	for key, value in options do
+		table.insert(parts, `{tostring(key)}={tostring(value)}`)
+	end
+	table.sort(parts)
+	return table.concat(parts, ";")
+end
+
 -- Matches the auras to the store: puts on what is new, closes what went or ran out,
--- and remounts any whose character changed (a respawn).
+-- remounts any whose character changed (a respawn), and builds again any worn again with other
+-- options (a rank up: the same type, a bigger look).
 function Follower.reconcile(self: Follower)
 	local opts = self._options
 	local resolve = opts.resolve or defaultResolve
@@ -592,8 +607,17 @@ function Follower.reconcile(self: Follower)
 				end
 				local expired = type(entry.untilTime) == "number" and now >= entry.untilTime
 				local current: Handle? = self.auras[key]
-				if current and (current.character ~= character or (current.finishing and not expired)) then
-					current:destroy() -- the character changed (no closing on one that went), or worn again
+				local optKey = optionsKey(entry.options)
+				if
+					current
+					and (
+						current.character ~= character
+						or (current.finishing and not expired)
+						or current._optionsKey ~= optKey
+					)
+				then
+					-- the character changed (no closing on one that went), worn again, or its options changed
+					current:destroy()
 					current = nil
 				end
 				if not expired and character then
@@ -606,6 +630,7 @@ function Follower.reconcile(self: Follower)
 						props.drive = false
 						local ok, made = pcall(Aura.new, props)
 						if ok then
+							made._optionsKey = optKey
 							self.auras[key] = made
 							made.done:Connect(function()
 								if self.auras[key] == made then
