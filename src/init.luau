@@ -177,6 +177,7 @@ local Lucy = {
 	Menu = require(Components.Menu),
 	NumberField = require(Components.NumberField),
 	Panel = require(Components.Panel),
+	PanelCorner = require(Components.PanelCorner),
 	Pressable = require(Components.Pressable),
 	Progress = require(Components.Progress),
 	RadioGroup = require(Components.RadioGroup),

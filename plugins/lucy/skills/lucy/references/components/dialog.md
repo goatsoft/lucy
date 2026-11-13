@@ -222,3 +222,34 @@ local shop = Lucy.Dialog.new({
 })
 shop:open()
 ```
+
+A panel you build by hand can have the same corner with `Lucy.PanelCorner`,
+so its close button sits where every dialog's does. Give it the frame that holds
+the panel, one with no list layout of its own (a layout would place the corner
+with the rest). Call it while the panel is made (in a component's render or an
+effect scope). `clear` is how far the frame's content is padded down, if it is,
+so the corner stays at the top, and `room()` is how much of the top row it
+takes, for that row to stop short of it.
+
+```luau
+local holder = Lucy.new("Frame")({
+    Size = UDim2.fromOffset(360, 120),
+    BackgroundTransparency = 1,
+    Parent = parent,
+})
+Lucy.Panel.new({
+    title = "Crew",
+    description = "Four of you tonight.",
+    size = UDim2.fromScale(1, 1),
+    Parent = holder,
+})
+Lucy.effectScope():run(function()
+    Lucy.PanelCorner.new(app, holder, {
+        close = true,
+        onClose = function()
+            holder.Visible = false
+        end,
+        children = { Lucy.Badge.new({ text = "LIVE", variant = "destructive" }) },
+    })
+end)
+```
