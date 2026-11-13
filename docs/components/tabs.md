@@ -81,10 +81,13 @@ When the player picks a tab, it reports `select` with the tab's value for
 
 While focus is anywhere inside the tabs, on the tab bar or in a panel, LB and RB
 move to the previous and next tab, skipping disabled ones and wrapping around at
-the ends. If focus was in the old panel, it moves to the first thing the player
-can select in the new one, otherwise to the new tab. With tabs inside tabs, the
-inner ones switch. On a controller, LB and RB show either side of the bar
-(`hints`), drawn as the player's own controller buttons.
+the ends. That holds for a bar moved into a Dialog or Sheet's header too: the bar
+carries a `LucyShoulder` attribute naming its tabs. If focus was in the old
+panel, it moves to the first thing the player can select in the new one,
+otherwise to the new tab. With tabs inside tabs, the inner ones switch. On a
+controller, and only there, LB and RB show either side of the tabs (`hints`),
+drawn as the player's own controller buttons and centred on the tabs. Line tabs
+hug their words, so LB sits just before the first tab and RB just after the last.
 
 A tab bar too long for its room scrolls sideways, its edges fading where there
 are more tabs. On touch the player drags it. With a controller or the keyboard,

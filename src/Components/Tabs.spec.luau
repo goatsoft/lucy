@@ -285,6 +285,22 @@ return function()
 			expect(outer:get("value")).to.equal("a")
 		end)
 
+		it("works with focus on the tab bar placed apart from the tabs (a Sheet's header)", function()
+			local tabs = withButtons()
+			local header = Instance.new("Frame")
+			header.Parent = gui
+			tabs.bar.Parent = header
+			app.input:markFocus(tabs.list.items[1])
+			expect(app.input:shoulder(1)).to.equal(true)
+			expect(tabs:get("value")).to.equal("b")
+			expect(app.input:focused()).to.equal(tabs.list.items[2])
+			local plain = withButtons({ hints = false })
+			plain.bar.Parent = header
+			app.input:markFocus(plain.list.items[1])
+			expect(app.input:shoulder(-1)).to.equal(true)
+			expect(plain:get("value")).to.equal("c")
+		end)
+
 		it("can be turned off", function()
 			local tabs = withButtons({ shoulderButtons = false })
 			app.input:markFocus(tabs.list.items[1])
@@ -302,15 +318,42 @@ return function()
 			expect(back:get("gamepad")).to.equal(Enum.KeyCode.ButtonL1)
 			expect(forward:get("gamepad")).to.equal(Enum.KeyCode.ButtonR1)
 			local bar = tabs.list.Instance.Parent :: Frame
-			expect(back.Instance.Parent).to.equal(bar)
-			expect(forward.Instance.Parent).to.equal(bar)
-			expect(back.Instance.LayoutOrder < tabs.list.Instance.LayoutOrder).to.equal(true)
-			expect(forward.Instance.LayoutOrder > tabs.list.Instance.LayoutOrder).to.equal(true)
+			-- each in a holder in the bar (the room under the tabs, so they centre on them)
+			local backHolder, forwardHolder = back.Instance.Parent :: Frame, forward.Instance.Parent :: Frame
+			expect(backHolder.Parent).to.equal(bar)
+			expect(forwardHolder.Parent).to.equal(bar)
+			expect(backHolder.LayoutOrder < tabs.list.Instance.LayoutOrder).to.equal(true)
+			expect(forwardHolder.LayoutOrder > tabs.list.Instance.LayoutOrder).to.equal(true)
 			app.input:setMode("mouse")
 			expect(back.Instance.Visible).to.equal(false)
+			expect(backHolder.Visible).to.equal(false)
 			app.input:setMode("gamepad")
 			expect(back.Instance.Visible).to.equal(true)
 			expect(forward.Instance.Visible).to.equal(true)
+			expect(backHolder.Visible).to.equal(true)
+		end)
+
+		it("centres the hints on the tabs: the same room under them as the bar keeps", function()
+			local _, _, items = panels()
+			local tabs = Tabs.new({ app = app, Parent = gui, items = items, variant = "line" })
+			local below = tabs.list.below()
+			expect(below > 0).to.equal(true)
+			for _, hint in { tabs.hints.back, tabs.hints.forward } do
+				local holder = hint.Instance.Parent :: Frame
+				local padding = holder:FindFirstChildOfClass("UIPadding") :: UIPadding
+				expect(padding.PaddingBottom).to.equal(UDim.new(0, below))
+			end
+		end)
+
+		it("puts RB right after line tabs (the bar hugs them), and fills the row otherwise", function()
+			local _, _, items = panels()
+			local tabs = Tabs.new({ app = app, Parent = gui, items = items, variant = "line" })
+			local flex = tabs.list.Instance:FindFirstChildOfClass("UIFlexItem") :: UIFlexItem
+			expect(flex.FlexMode).to.equal(Enum.UIFlexMode.Shrink)
+			expect(tabs.list.Instance.Size.X.Scale).to.equal(0)
+			tabs:set("variant", "default")
+			expect(flex.FlexMode).to.equal(Enum.UIFlexMode.Fill)
+			expect(tabs.list.Instance.Size.X.Scale).to.equal(1)
 		end)
 
 		it("shows none with hints = false or without shoulder buttons", function()

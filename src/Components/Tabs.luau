@@ -36,7 +36,10 @@
 	tabs.list is the tab bar (a ToggleGroup); tabs.bar is the row it sits in with the LB / RB hints
 	(the list itself without hints); tabs.hints is { back, forward } (Kbd), nil without hints;
 	tabs.panels maps each value to its panel.
-	In a Dialog or Sheet, pass tabs.bar in its header so the bar stays put while the body scrolls.
+	In a Dialog or Sheet, pass tabs.bar in its header so the bar stays put while the body scrolls;
+	LB / RB still switch tabs with focus on the bar (it carries the LucyShoulder attribute).
+	The LB / RB hints sit either side of the tabs, centred on them; line tabs hug their words, so
+	RB comes right after the last tab rather than at the row's far end.
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
@@ -55,6 +58,7 @@ local spec: Component.Spec = {
 		local p: Component.Props = h.props
 		local items = ToggleGroup.normalize(p.items, "Tabs")
 		local value = h:ref("value")
+		local variant = h:ref("variant")
 
 		if p.onValueChange then
 			Reactive.watch(value, function(new)
@@ -91,8 +95,12 @@ local spec: Component.Spec = {
 			variant = h:ref("variant"),
 			size = h:ref("size"),
 			disabled = h:ref("disabled"),
-			-- A long tab bar scrolls sideways, the picked tab kept in view
+			-- A long tab bar scrolls sideways, the picked tab kept in view. Line tabs hug their
+			-- words, so the bar is only as wide as them and RB sits right after the last tab.
 			scroll = scroll,
+			hug = function(): boolean
+				return variant() == "line"
+			end,
 			layoutOrder = if showHints then 2 else 1,
 			name = "List",
 		})
@@ -106,6 +114,34 @@ local spec: Component.Spec = {
 			local forward =
 				Kbd.new({ app = h.app, gamepad = Enum.KeyCode.ButtonR1, layoutOrder = 3, name = "Forward" })
 			h.hints = { back = back, forward = forward }
+			-- Centred on the tabs themselves, not the scrolling bar: the bar keeps room under the tabs
+			-- (its scroll bar, a line tab's underline), so each hint sits in a holder with the same
+			-- room under it. The holder is there only while its hint is (Kbd hides off a controller).
+			local function holder(hint: any, order: number): GuiObject
+				if not scroll then
+					return hint.Instance
+				end
+				local shown = Reactive.ref(hint.Instance.Visible)
+				local changed = hint.Instance:GetPropertyChangedSignal("Visible"):Connect(function()
+					shown(hint.Instance.Visible)
+				end)
+				h.maid:give(changed)
+				local frame = Element.new("Frame", {
+					Name = hint.Instance.Name .. "Hint",
+					LayoutOrder = order,
+					BackgroundTransparency = 1,
+					Size = UDim2.fromOffset(0, 0),
+					AutomaticSize = Enum.AutomaticSize.XY,
+					Visible = shown,
+					Element.new("UIPadding", {
+						PaddingBottom = function(): UDim
+							return UDim.new(0, if list.below then list.below() else 0)
+						end,
+					}) :: any,
+				})
+				hint.Instance.Parent = frame
+				return frame
+			end
 			bar = Element.new("Frame", {
 				Name = "Bar",
 				LayoutOrder = 1,
@@ -117,16 +153,29 @@ local spec: Component.Spec = {
 					VerticalAlignment = Enum.VerticalAlignment.Center,
 					Padding = Component.space(h.app, "Space2", 0),
 				}) :: any,
-				back.Instance,
-				forward.Instance,
+				holder(back, 1),
+				holder(forward, 3),
 			})
+			-- A bar placed apart from the panels (a Dialog or Sheet's header) is still these tabs':
+			-- LB / RB with focus on a tab reach them (InputManager.shoulder)
+			bar:SetAttribute("LucyShoulder", h.id)
 			if scroll then
-				-- The scrolling bar takes the room the hints leave
-				Element.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill }).Parent = list.Instance
+				-- The scrolling bar takes the room the hints leave; line tabs only what their words
+				-- need (hug), shrinking to scroll when there is less
+				local flex = Element.new("UIFlexItem", {
+					FlexMode = function(): Enum.UIFlexMode
+						local line = variant() == "line"
+						return if line then Enum.UIFlexMode.Shrink else Enum.UIFlexMode.Fill
+					end,
+				})
+				flex.Parent = list.Instance
 			end
 			list.Instance.Parent = bar
 		end
 		h.bar = bar
+		if not showHints then
+			bar:SetAttribute("LucyShoulder", h.id)
+		end
 
 		local panels: { [any]: Frame } = {}
 		local holder = Element.new("Frame", {

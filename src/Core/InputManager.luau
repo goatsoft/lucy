@@ -541,7 +541,8 @@ end
 
 --[[
 	The shoulder buttons (LB / RB): from the focused object up, the first
-	component with a `shoulder(step)` method that returns true handles them, so
+	component with a `shoulder(step)` method that returns true handles them (or the one an
+	object names in its LucyShoulder attribute: a Tabs' bar in a header), so
 	only the tabs around the focus switch, the innermost first. Returns whether
 	anything did.
 ]]
@@ -551,6 +552,12 @@ function InputManager.shoulder(self: InputManager, step: number): boolean
 		local id = node:GetAttribute("LucyId")
 		local handle: any = id and self.app:handle(id)
 		if handle and handle.shoulder and handle:shoulder(step) then
+			return true
+		end
+		-- A part of a component placed apart from it (Tabs' bar in a Sheet's header) names it
+		local owner = node:GetAttribute("LucyShoulder")
+		local ownerHandle: any = owner and self.app:handle(owner)
+		if ownerHandle and ownerHandle.shoulder and ownerHandle:shoulder(step) then
 			return true
 		end
 		node = node.Parent

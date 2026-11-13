@@ -15,6 +15,7 @@
 			gap = "Space1",
 			scroll = false,        -- a row too long for its room scrolls sideways, its edges
 			                       -- fading; the picked item is brought into view (Tabs: on)
+			hug = false,           -- with scroll: only as wide as the items (a boolean, ref or getter)
 			disabled = false,
 			visible = true,
 			onValueChange = function(value, group) end,
@@ -30,7 +31,9 @@
 	picked, so a group can offer an item only some of the time without being made again.
 
 	With scroll, the row sits in a ScrollArea (group.scroller) as wide as its room and as tall as
-	its items. A player drags it on touch; a controller's D-pad and the keyboard's arrows move
+	its items, plus group.below() under them (the room kept for the scroll bar and a line tab's
+	underline). With hug it is only as wide as its items: give it a UIFlexItem Shrink in a row so
+	it still scrolls once the room runs out, and what follows it sits right after it. A player drags it on touch; a controller's D-pad and the keyboard's arrows move
 	through the items and the area follows the selection; picking an item any way (a press,
 	LB / RB in Tabs, game code) scrolls it into view.
 
@@ -248,14 +251,24 @@ local spec: Component.Spec = {
 			return frame
 		end
 
-		-- A row too long for its room: it scrolls sideways, as tall as its items
+		-- A row too long for its room: it scrolls sideways, as tall as its items. With hug, only as
+		-- wide as its items (a UIFlexItem Shrink on it keeps it inside its room), so what sits beside
+		-- it in a row sits right after it; otherwise as wide as its room.
 		local height = Reactive.ref(0)
+		local width = Reactive.ref(0)
+		-- The room under the items kept for the scroll bar and a line tab's underline: h.below, for a
+		-- row beside it that lines up with the items rather than the whole area
+		local below = Reactive.ref(0)
+		h.below = below
 		local area = ScrollArea.new({
 			app = h.app,
 			direction = "horizontal",
 			scrollbar = "scroll",
 			visible = h:ref("visible"),
 			size = function(): UDim2
+				if Reactive.toValue(p.hug) == true then
+					return UDim2.fromOffset(width(), height())
+				end
 				return UDim2.new(1, 0, 0, height())
 			end,
 			children = { frame },
@@ -267,11 +280,10 @@ local spec: Component.Spec = {
 		-- underline) is cut
 		local function measure()
 			local scale = Scroll.scaleOf(scroller)
-			height(
-				math.ceil(frame.AbsoluteSize.Y / (if scale > 0 then scale else 1))
-					+ scroller.ScrollBarThickness
-					+ Toggle.INDICATOR_DROP
-			)
+			local unit = if scale > 0 then scale else 1
+			below(scroller.ScrollBarThickness + Toggle.INDICATOR_DROP)
+			height(math.ceil(frame.AbsoluteSize.Y / unit) + below())
+			width(math.ceil(frame.AbsoluteSize.X / unit))
 		end
 		measure()
 		local connection = frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(measure)

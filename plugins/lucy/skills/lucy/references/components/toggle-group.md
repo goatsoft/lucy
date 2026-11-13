@@ -29,6 +29,7 @@ Lucy.ToggleGroup.new({
 | `orientation` | string | `"horizontal"` | | `horizontal` for a row, `vertical` for a column |
 | `gap` | spacing | `"Space1"` | | Space between items |
 | `scroll` | boolean | `false` | | A row too long for its room scrolls sideways and keeps the picked item in view. [Tabs](tabs.md) turn it on |
+| `hug` | boolean | `false` | yes | With `scroll`: only as wide as its items, so what follows it in a row sits right after it (give it a `UIFlexItem` Shrink to scroll once room runs out). `group.below()` is the room kept under the items. [Tabs](tabs.md) hug line tabs |
 | `disabled` | boolean | `false` | yes | Greys every item out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `onValueChange` | function | | | Called with `(value, handle)` when it changes |
