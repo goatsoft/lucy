@@ -78,6 +78,7 @@ local Workspace = game:GetService("Workspace")
 local Adaptive = require(script.Parent.Adaptive)
 local Element = require(script.Parent.Element)
 local Maid = require(script.Parent.Maid)
+local Parts = require(script.Parent.Parts)
 local Reactive = require(script.Parent.Reactive)
 local Scroll = require(script.Parent.Scroll)
 local Tiles = require(script.Parent.Tiles)
@@ -541,10 +542,10 @@ end
 
 --[[
 	The shoulder buttons (LB / RB): from the focused object up, the first
-	component with a `shoulder(step)` method that returns true handles them (or the one an
-	object names in its LucyShoulder attribute: a Tabs' bar in a header), so
+	component with a `shoulder(step)` method that returns true handles them, so
 	only the tabs around the focus switch, the innermost first. Returns whether
-	anything did.
+	anything did. Up is the component tree (Core/Parts): a Tabs' bar in a Sheet's
+	header goes up to its Tabs.
 ]]
 function InputManager.shoulder(self: InputManager, step: number): boolean
 	local node: Instance? = self._focused
@@ -554,13 +555,7 @@ function InputManager.shoulder(self: InputManager, step: number): boolean
 		if handle and handle.shoulder and handle:shoulder(step) then
 			return true
 		end
-		-- A part of a component placed apart from it (Tabs' bar in a Sheet's header) names it
-		local owner = node:GetAttribute("LucyShoulder")
-		local ownerHandle: any = owner and self.app:handle(owner)
-		if ownerHandle and ownerHandle.shoulder and ownerHandle:shoulder(step) then
-			return true
-		end
-		node = node.Parent
+		node = Parts.parent(self.app, node)
 	end
 	return false
 end
@@ -579,7 +574,7 @@ function InputManager.nudge(self: InputManager, dx: number, dy: number, count: n
 			self._nudged = handle
 			return true
 		end
-		node = node.Parent
+		node = Parts.parent(self.app, node)
 	end
 	return false
 end
@@ -651,7 +646,7 @@ function InputManager.activate(self: InputManager)
 		if owner and owner.press and owner:press(focused) then
 			return
 		end
-		node = node.Parent
+		node = Parts.parent(self.app, node)
 	end
 end
 

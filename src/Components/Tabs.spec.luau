@@ -260,6 +260,22 @@ return function()
 			expect(tabs:get("value")).to.equal("c")
 		end)
 
+		it("skips hidden tabs, as they come and go", function()
+			local shown = Reactive.ref(false)
+			local tabs = Tabs.new({
+				app = app,
+				Parent = gui,
+				items = { "a", "b", { value = "c", visible = shown } },
+			})
+			app.input:markFocus(tabs.list.items[2])
+			tabs:select("b")
+			app.input:shoulder(1)
+			expect(tabs:get("value")).to.equal("a")
+			shown(true)
+			app.input:shoulder(-1)
+			expect(tabs:get("value")).to.equal("c")
+		end)
+
 		it("ignores them when focus is outside, or the tabs are disabled", function()
 			local tabs = withButtons()
 			local outside = Button.new({ app = app, Parent = gui })

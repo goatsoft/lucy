@@ -73,9 +73,9 @@ When the player picks a tab, it reports `select` with the tab's value for
 ## Gamepad
 
 While focus is anywhere inside the tabs, on the tab bar or in a panel, LB and RB
-move to the previous and next tab, skipping disabled ones and wrapping around at
-the ends. That holds for a bar moved into a Dialog or Sheet's header too: the bar
-carries a `LucyShoulder` attribute naming its tabs. If focus was in the old
+move to the previous and next tab, skipping disabled and hidden ones and wrapping around at
+the ends. That holds for a bar moved into a Dialog or Sheet's header too: the bar is
+still the tabs' part (Lucy's input follows the component tree, as a portal does). If focus was in the old
 panel, it moves to the first thing the player can select in the new one,
 otherwise to the new tab. With tabs inside tabs, the inner ones switch. On a
 controller, and only there, LB and RB show either side of the tabs (`hints`),

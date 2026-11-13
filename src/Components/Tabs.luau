@@ -37,7 +37,7 @@
 	(the list itself without hints); tabs.hints is { back, forward } (Kbd), nil without hints;
 	tabs.panels maps each value to its panel.
 	In a Dialog or Sheet, pass tabs.bar in its header so the bar stays put while the body scrolls;
-	LB / RB still switch tabs with focus on the bar (it carries the LucyShoulder attribute).
+	it is still the tabs' part (Core/Parts), so LB / RB switch tabs with focus on it.
 	The LB / RB hints sit either side of the tabs, centred on them; line tabs hug their words, so
 	RB comes right after the last tab rather than at the row's far end.
 ]]
@@ -45,6 +45,7 @@
 local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Kbd = require(script.Parent.Kbd)
+local Parts = require(script.Parent.Parent.Core.Parts)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local ToggleGroup = require(script.Parent.ToggleGroup)
 
@@ -156,9 +157,6 @@ local spec: Component.Spec = {
 				holder(back, 1),
 				holder(forward, 3),
 			})
-			-- A bar placed apart from the panels (a Dialog or Sheet's header) is still these tabs':
-			-- LB / RB with focus on a tab reach them (InputManager.shoulder)
-			bar:SetAttribute("LucyShoulder", h.id)
 			if scroll then
 				-- The scrolling bar takes the room the hints leave; line tabs only what their words
 				-- need (hug), shrinking to scroll when there is less
@@ -173,9 +171,9 @@ local spec: Component.Spec = {
 			list.Instance.Parent = bar
 		end
 		h.bar = bar
-		if not showHints then
-			bar:SetAttribute("LucyShoulder", h.id)
-		end
+		-- The bar is these tabs' wherever it is placed (a Dialog or Sheet's header): LB / RB with
+		-- focus on a tab reach them (Core/Parts)
+		Parts.own(h, bar)
 
 		local panels: { [any]: Frame } = {}
 		local holder = Element.new("Frame", {
@@ -242,7 +240,7 @@ function Tabs.new(props: { [string]: any }?)
 	end
 
 	-- LB / RB while focus is inside (InputManager.shoulder): the next or previous
-	-- enabled tab, wrapping. Focus follows: into the new panel if it was in the
+	-- enabled, shown tab, wrapping. Focus follows: into the new panel if it was in the
 	-- old one, otherwise to the new tab.
 	function handle.shoulder(h, step: number): boolean
 		if h.destroyed or h.props.shoulderButtons == false or h:get("disabled") then
@@ -260,7 +258,8 @@ function Tabs.new(props: { [string]: any }?)
 		local target: number? = nil
 		for offset = 1, count - 1 do
 			local i = ((index - 1 + offset * step) % count) + 1
-			if not entries[i].disabled then
+			-- a hidden tab (visible false now) is skipped like a disabled one
+			if not entries[i].disabled and Reactive.toValue(entries[i].visible) ~= false then
 				target = i
 				break
 			end

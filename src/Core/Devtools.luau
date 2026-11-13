@@ -28,6 +28,7 @@
 
 local CollectionService = game:GetService("CollectionService")
 
+local Parts = require(script.Parent.Parts)
 local Reactive = require(script.Parent.Reactive)
 
 local Devtools = {}
@@ -108,9 +109,10 @@ local function isShown(object: Instance): boolean
 	return true
 end
 
--- The component an instance belongs to: its own handle or the nearest above.
+-- The component an instance belongs to: its own handle or the nearest above, going up the
+-- component tree (Core/Parts: a part placed apart, a Tabs' bar in a header, is its component's).
 local function owner(app: any, object: Instance?, skipSelf: boolean?): any
-	local node = if skipSelf and object then object.Parent else object
+	local node = if skipSelf and object then Parts.parent(app, object) else object
 	while node do
 		local id = node:GetAttribute("LucyId")
 		if type(id) == "string" then
@@ -119,7 +121,7 @@ local function owner(app: any, object: Instance?, skipSelf: boolean?): any
 				return handle
 			end
 		end
-		node = node.Parent
+		node = Parts.parent(app, node)
 	end
 	return nil
 end
