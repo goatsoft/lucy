@@ -133,11 +133,11 @@ return function()
 	it("is a focus scope while open", function()
 		local dialog = Dialog.new({ app = app, actions = { { text = "OK" } } })
 		dialog:open()
-		expect(app.input:topScope().root).to.equal(dialog.content)
-		expect(dialog.content.SelectionGroup).to.equal(true)
+		expect(app.input:topScope().root).to.equal(dialog.frame)
+		expect(dialog.frame.SelectionGroup).to.equal(true)
 		dialog:close()
 		local top = app.input:topScope()
-		expect(top == nil or top.root ~= dialog.content).to.equal(true)
+		expect(top == nil or top.root ~= dialog.frame).to.equal(true)
 	end)
 
 	it("selects the primary action when opened on a gamepad", function()
@@ -168,10 +168,10 @@ return function()
 	it("can open with no backdrop and without trapping input", function()
 		local bare = Dialog.new({ app = app, open = true, scrim = false })
 		expect(bare.overlay:HasTag("ui-overlay-scrim")).to.equal(false)
-		expect(app.input:topScope().root).to.equal(bare.content)
+		expect(app.input:topScope().root).to.equal(bare.frame)
 
 		local loose = Dialog.new({ app = app, open = true, modal = false, actions = { { text = "OK" } } })
-		expect(app.input:topScope().root).never.to.equal(loose.content)
+		expect(app.input:topScope().root).never.to.equal(loose.frame)
 		expect(loose.overlay.Active).to.equal(false)
 		expect(loose.overlay:HasTag("ui-overlay-scrim")).to.equal(false)
 		expect(app.state:get("overlay.count")).to.equal(2)
@@ -329,7 +329,7 @@ return function()
 			return out
 		end
 		local function widthCap(dialog): number
-			return dialog.content:FindFirstChildOfClass("UISizeConstraint").MaxSize.X
+			return dialog.frame:FindFirstChildOfClass("UISizeConstraint").MaxSize.X
 		end
 
 		it("takes a size for its width, md by default", function()
@@ -568,7 +568,10 @@ return function()
 				titlePlacement = "edge",
 			})
 			panel:open()
-			task.wait()
+			-- The plate is measured once drawn, and the panel moves down for it a frame later
+			for _ = 1, 4 do
+				task.wait()
+			end
 			expect(panel.plate).to.be.ok()
 			expect(panel.plate:HasTag("ui-dialog-plate")).to.equal(true)
 			expect(panel.titleLabel:IsDescendantOf(panel.plate)).to.equal(true)
@@ -583,8 +586,20 @@ return function()
 			expect(plateBottom > panelTop).to.equal(true)
 		end)
 
-		it("takes the PanelTitle token as every panel's default", function()
-			framed({ PanelTitle = "edge" })
+		it("gives the shadow its panel's own corners, square or round", function()
+			framed({ PanelShadow = 6 })
+			local panel = Dialog.new({ app = app, title = "Hi", presentation = "panel" })
+			panel:open()
+			task.wait()
+			local corner = panel.content:FindFirstChildWhichIsA("UICorner")
+			local shadowCorner = panel.shadow:FindFirstChildWhichIsA("UICorner")
+			local want = if corner then corner.CornerRadius else UDim.new(0, 0)
+			local got = if shadowCorner then shadowCorner.CornerRadius else UDim.new(0, 0)
+			expect(got).to.equal(want)
+		end)
+
+		it("takes the PanelTitleEdge token as every panel's default", function()
+			framed({ PanelTitleEdge = 1 })
 			local panel = Dialog.new({ app = app, title = "Hi" })
 			panel:open()
 			expect(panel.plate).to.be.ok()

@@ -47,7 +47,7 @@ quit:open()
 | `size` | string | `"md"` | | How wide it gets: `sm` (384), `md` (448), `lg` (512), `xl` (640) or `full` |
 | `maxWidth` | number | | | The widest it gets in pixels, instead of `size` |
 | `maxHeight` | number, ref or getter | | | The tallest it gets in pixels. The body scrolls past it |
-| `titlePlacement` | string | the `PanelTitle` token | | `"inside"`, or `"edge"`: the title on a plate standing on the top edge, see [The frame](#the-frame) |
+| `titlePlacement` | string | the `PanelTitleEdge` token | | `"inside"`, or `"edge"`: the title on a plate standing on the top edge, see [The frame](#the-frame) |
 | `onOpenChange` | function | | | Called with `(open, handle)` when it opens or closes |
 
 It also takes the [props every component takes](index.md#using-a-component).
@@ -176,7 +176,7 @@ A dialog's panel sits in a frame that can add two things, both off until asked:
 - **The title on the edge**: with `titlePlacement = "edge"` the title sits on a
   plate (`ui-dialog-plate`) standing on the panel's top edge, which leaves the
   header row for tabs or controls. The description stays in the header. The
-  `PanelTitle` token makes `"edge"` the default for every dialog and sheet.
+  `PanelTitleEdge` token set to 1 makes it the default for every dialog and sheet.
 
 <!-- preview solo -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-dialog-4-light.webp" alt="Dialog example" loading="lazy"><img class="example-dark" src="/images/examples/components-dialog-4-dark.webp" alt="Dialog example" loading="lazy"></figure>
@@ -191,17 +191,17 @@ local pass = Lucy.Dialog.new({
 pass:open()
 ```
 
-A bold look for every panel, from the theme (a thick black border and a hard
-pink shadow; the tokens go in the primitives you give `Lucy.App.new`):
+A bold look for every panel, from the theme (a thick pink border and a hard
+deep pink shadow; the tokens go in the primitives you give `Lucy.App.new`):
 
 ```luau
 local primitives = table.clone(Lucy.Tokens.primitives)
 primitives.PanelShadow = 6
-primitives.PanelTitle = "edge"
+primitives.PanelTitleEdge = 1
 
 app.theme:addRules("myPanels", {
-    { selector = ".ui-dialog-content::UIStroke", priority = 10, properties = { Color = "$Black", Thickness = 4 } },
-    { selector = ".ui-dialog-plate::UIStroke", priority = 10, properties = { Color = "$Black", Thickness = 4 } },
-    { selector = ".ui-dialog-shadow", priority = 10, properties = { BackgroundColor3 = "$Pink500" } },
+    { selector = ".ui-dialog-content::UIStroke", priority = 10, properties = { Color = "$Pink500", Thickness = 4 } },
+    { selector = ".ui-dialog-plate::UIStroke", priority = 10, properties = { Color = "$Pink500", Thickness = 4 } },
+    { selector = ".ui-dialog-shadow", priority = 10, properties = { BackgroundColor3 = "$Pink900" } },
 })
 ```

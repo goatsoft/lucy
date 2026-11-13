@@ -27,6 +27,8 @@ One core piece builds it for both, `Core/PanelFrame`.
 
 - **The shadow** (`ui-dialog-shadow`, `ui-sheet-shadow`) is a frame behind the
   panel, its size, offset by the `PanelShadow` token (pixels, right and down).
+  It takes the panel's own corners, whatever rule set them (JB: not always
+  rounded): a square side sheet has a square shadow.
   `PanelShadow` is 0 in Lucy's themes, so nothing changes for a game that does
   not ask; a theme sets it and colours the shadow with a rule.
 - **The title on the edge**: `titlePlacement = "edge"` puts the title on a plate
@@ -35,18 +37,20 @@ One core piece builds it for both, `Core/PanelFrame`.
   frame keeps the room over the panel for it, and the body's height cap counts
   it. The title label keeps its tag (`ui-dialog-title`), so a title's look and
   `handle.titleLabel` work as before; the description stays in the header.
-- **A game's default**: the `PanelTitle` token ("inside" or "edge") is what a
-  dialog or sheet uses when it does not say, so a game puts every title on the
-  edge from its theme. `titlePlacement` on one panel wins.
+- **A game's default**: the `PanelTitleEdge` token (0 inside, 1 on the edge;
+  tokens are numbers, colours and sizes only) is what a dialog or sheet uses
+  when it does not say, so a game puts every title on the edge from its theme.
+  `titlePlacement` on one panel wins.
 
 Looks stay in rules: the shadow's colour, the plate's fill, corners and stroke.
 Code only places the parts (the offset and the overlap are tokens it reads).
 
 ## Consequences
 
-- One more instance level: the overlay places `frame`, not `content`. Code that
-  used `dialog.Instance` or `dialog.content` is unaffected; code that read the
-  content's parent gets the frame.
+- One more instance level: the overlay places `frame`, not `content`: the frame
+  is the focus scope and selection group, and carries the placement (anchor,
+  size, the width cap). Tags and rules on `content` are unaffected; code that
+  read the content's placement or parent reads the frame.
 - A panel with a shadow is that many pixels wider and taller in the overlay, so a
   centred dialog sits half the offset up and left of where it did.
 - On a sheet that fills the screen's height, the room for an edge title comes

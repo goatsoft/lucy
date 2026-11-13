@@ -17,7 +17,7 @@
 			width = 360,              -- the panel's width, at most 90% of the screen
 			presentation = "auto",    -- auto | panel | drawer
 			titlePlacement = nil,     -- "inside" | "edge": the title on a plate standing on the top
-			                          -- edge; nil: the PanelTitle token (Lucy's themes: inside)
+			                          -- edge; nil: the PanelTitleEdge token (Lucy's themes: 0, inside)
 			dismissible = true,       -- back keys / outside press / close button
 			closeOnOverlay = true,
 			modal = true,             -- false: no focus trap, presses reach what is behind

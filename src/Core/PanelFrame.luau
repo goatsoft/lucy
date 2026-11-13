@@ -6,7 +6,7 @@
 	  the shadow   behind the panel, its size, offset right and down by the PanelShadow token
 	               (0 in Lucy's themes: no shadow until a game's theme sets it; its colour is a
 	               rule on ui-<kind>-shadow)
-	  the plate    with titlePlacement "edge" (or the PanelTitle token "edge"): the title on a
+	  the plate    with titlePlacement "edge" (or the PanelTitleEdge token 1): the title on a
 	               plate standing on the panel's top edge, coming down over it by the
 	               PanelPlateOverlap token, with a shadow of its own. The frame keeps the room
 	               over the panel for it.
@@ -14,7 +14,7 @@
 		local parts = PanelFrame.new(app, content, {
 			kind = "dialog",               -- the tags' prefix: ui-dialog-frame, -shadow, -plate
 			title = h:ref("title"),        -- the plate's words
-			placement = p.titlePlacement,  -- "inside" | "edge"; nil: the PanelTitle token
+			placement = p.titlePlacement,  -- "inside" | "edge"; nil: the PanelTitleEdge token
 			fill = false,                  -- true (or a getter): the panel fills the frame (a sheet's
 			                               -- panel, which the overlay sizes); false: it sets the
 			                               -- frame's height
@@ -23,6 +23,10 @@
 		parts.frame  parts.shadow  parts.edge (boolean)  parts.plate?  parts.titleLabel?
 		parts.rise()    the room over the panel the plate takes, in the frame's own units
 		parts.offset()  the shadow's offset, likewise (both 0 when unused)
+
+	A shadow takes the corners of what it is behind (the panel's, the plate's), whatever rule set
+	them: a square sheet panel has a square shadow, a rounded dialog a rounded one, and a theme
+	that changes a panel's corners changes its shadow's with it.
 
 	Call it in a scope (a component's render). Looks are rules (PanelFrame.rules); this only
 	places the parts.
@@ -52,16 +56,6 @@ function PanelFrame.rules(kind: string): { any }
 			properties = { BackgroundColor3 = "$Black", BackgroundTransparency = 0, BorderSizePixel = 0 },
 		},
 		{
-			selector = `.ui-{kind}-shadow::UICorner`,
-			priority = 0,
-			properties = { CornerRadius = "$RadiusLg" },
-		},
-		{
-			selector = `.ui-{kind}-plate-shadow::UICorner`,
-			priority = 1,
-			properties = { CornerRadius = "$RadiusMd" },
-		},
-		{
 			selector = `.ui-{kind}-plate`,
 			priority = 0,
 			properties = { BackgroundColor3 = "$Background", BackgroundTransparency = 0, BorderSizePixel = 0 },
@@ -78,6 +72,7 @@ function PanelFrame.rules(kind: string): { any }
 				Color = "$Border",
 				Thickness = "$StrokeThin",
 				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+				BorderStrokePosition = Enum.BorderStrokePosition.Inner,
 			},
 		},
 		{
@@ -93,6 +88,43 @@ function PanelFrame.rules(kind: string): { any }
 	}
 end
 
+-- Keeps `shadow`'s corners the same as `source`'s: a UICorner of the same radius while the source
+-- has one (a style rule's ::UICorner or its own), none while it has none
+local function sameCorners(source: GuiObject, shadow: GuiObject)
+	local mirror: UICorner? = nil
+	local watching: RBXScriptConnection? = nil
+	local function update()
+		local corner = source:FindFirstChildWhichIsA("UICorner")
+		if watching then
+			watching:Disconnect()
+			watching = nil
+		end
+		if not corner then
+			if mirror then
+				mirror:Destroy()
+				mirror = nil
+			end
+			return
+		end
+		local made = mirror or Instance.new("UICorner")
+		made.CornerRadius = corner.CornerRadius
+		made.Parent = shadow
+		mirror = made
+		watching = corner:GetPropertyChangedSignal("CornerRadius"):Connect(update)
+	end
+	source.ChildAdded:Connect(function(child)
+		if child:IsA("UICorner") then
+			update()
+		end
+	end)
+	source.ChildRemoved:Connect(function(child)
+		if child:IsA("UICorner") then
+			task.defer(update)
+		end
+	end)
+	update()
+end
+
 export type Parts = {
 	frame: Frame,
 	shadow: Frame,
@@ -103,12 +135,12 @@ export type Parts = {
 	offset: () -> number,
 }
 
--- A panel's own titlePlacement, else the theme's PanelTitle token
+-- A panel's own titlePlacement, else the theme's PanelTitleEdge token (1: on the edge)
 function PanelFrame.edge(app: any, placement: any): boolean
-	if placement ~= "inside" and placement ~= "edge" then
-		placement = app.theme:resolve("PanelTitle")
+	if placement == "inside" or placement == "edge" then
+		return placement == "edge"
 	end
-	return placement == "edge"
+	return app.theme:resolve("PanelTitleEdge") == 1
 end
 
 function PanelFrame.new(app: any, content: GuiObject, options: { [string]: any }): Parts
@@ -186,6 +218,7 @@ function PanelFrame.new(app: any, content: GuiObject, options: { [string]: any }
 		Tags = { `ui-{kind}-shadow` },
 	}) :: Frame
 	shadow.Parent = frame
+	sameCorners(content, shadow)
 
 	local parts: Parts = {
 		frame = frame,
@@ -237,6 +270,7 @@ function PanelFrame.new(app: any, content: GuiObject, options: { [string]: any }
 			Tags = { `ui-{kind}-shadow`, `ui-{kind}-plate-shadow` },
 		}) :: Frame
 		plateShadow.Parent = frame
+		sameCorners(plate, plateShadow)
 		parts.plate = plate
 		parts.titleLabel = label
 	end

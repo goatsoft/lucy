@@ -121,11 +121,11 @@ local function buildPrimitives()
 		FocusRing = 3, -- focus ring stroke in px
 
 		-- Dialog and Sheet's frame (Core/PanelFrame): the shadow's offset right and down in px (0:
-		-- none), how far an edge title's plate comes down over the panel, and where titles go
-		-- ("inside" or "edge") when a panel does not say
+		-- none), how far an edge title's plate comes down over the panel, and whether titles go on
+		-- the edge (1) or inside (0) when a panel does not say
 		PanelShadow = 0,
 		PanelPlateOverlap = 14,
-		PanelTitle = "inside",
+		PanelTitleEdge = 0,
 	}
 	for _, hue in Palette.hues do
 		for shade, swatch in Palette[hue] do

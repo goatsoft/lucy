@@ -24,7 +24,7 @@
 			                          -- getter, or false for nothing
 			size = "md",              -- sm | md | lg | xl | full: how wide it gets
 			titlePlacement = nil,     -- "inside" | "edge": the title on a plate standing on the top
-			                          -- edge; nil: the PanelTitle token (Lucy's themes: inside)
+			                          -- edge; nil: the PanelTitleEdge token (Lucy's themes: 0, inside)
 			maxWidth = nil,           -- pixels, instead of size
 			maxHeight = nil,          -- pixels (a number, ref or getter); the body scrolls past it
 			onOpenChange = function(open, dialog) end,
