@@ -2,7 +2,9 @@
 # Switch
 
 An on and off switch with an optional label, for settings. The whole row is
-the hit area, and the switch grows on touch and console.
+the hit area, and the switch grows on touch and console. It comes in the same
+sizes as the other controls, and a row is as tall as a Button of its size, so
+a switch lines up with buttons and toggles beside it.
 
 ```luau
 Lucy.Stack.new({
@@ -30,6 +32,7 @@ Lucy.Stack.new({
 | `label` | string | `""` | yes | Text beside the switch |
 | `children` | table | | | Anything after the label in its [slot](slot.md), such as a "NEW" badge. They take the label's look and fade when disabled |
 | `disabled` | boolean | `false` | yes | Greys it out and ignores clicks |
+| `size` | `"sm"` \| `"md"` \| `"lg"` \| `"xl"` | `"md"` | yes | The track, the label's text and the row's height, as a Button of the same size |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `onCheckedChange` | function | | | Called with `(checked, handle)` when it changes |
 
@@ -62,6 +65,21 @@ Grey a switch out while something loads:
 local loading = Lucy.ref(true)
 
 Lucy.Switch.new({ label = "Light show", disabled = loading, Parent = settings })
+```
+
+Pick a size to sit beside controls of that size, or to be easy to hit on a busy screen:
+
+```luau
+Lucy.Stack.new({
+    gap = "Space3",
+    children = {
+        Lucy.Switch.new({ label = "Small", size = "sm", checked = true }),
+        Lucy.Switch.new({ label = "Medium", size = "md", checked = true }),
+        Lucy.Switch.new({ label = "Large", size = "lg", checked = true }),
+        Lucy.Switch.new({ label = "Extra large", size = "xl", checked = true }),
+    },
+    Parent = parent,
+})
 ```
 
 ## Preview

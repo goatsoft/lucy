@@ -8,12 +8,15 @@
 			                      -- instances, builders); Foreground, faded when disabled
 			checked = true,
 			disabled = false,
+			size = "md",          -- sm | md | lg | xl: the track, the label and the row's height
 			onCheckedChange = function(checked, switch) end,
 		})
 		switch:toggle()
 
-	Track and thumb grow with density (36x20 desktop, 44x24 touch, 52x28 console);
-	the whole row is the hit area. State keys: checked, label, disabled, visible.
+	The row is as tall as a control of the same size (Component.controlTokens), so a switch
+	lines up with a Button or Toggle of its size; the label takes that size's text. Track and
+	thumb grow with size and with density (md: 36x20 desktop, 44x24 touch, 52x28 console);
+	the whole row is the hit area. State keys: checked, label, disabled, size, visible.
 	Declarative (ADR 0018): the instances bind to state; the only side effects are
 	the thumb slide and onCheckedChange.
 ]]
@@ -29,11 +32,15 @@ local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Switch = {}
 
-local TRACK = {
-	default = Vector2.new(36, 20),
-	touch = Vector2.new(44, 24),
-	tv = Vector2.new(52, 28),
-}
+Switch.sizes = Component.controlSizes
+
+-- The track at each size, for each density (the thumb is its height less 4)
+Switch.tracks = {
+	sm = { default = Vector2.new(30, 16), touch = Vector2.new(36, 20), tv = Vector2.new(44, 24) },
+	md = { default = Vector2.new(36, 20), touch = Vector2.new(44, 24), tv = Vector2.new(52, 28) },
+	lg = { default = Vector2.new(44, 24), touch = Vector2.new(52, 28), tv = Vector2.new(60, 32) },
+	xl = { default = Vector2.new(52, 28), touch = Vector2.new(60, 32), tv = Vector2.new(68, 36) },
+} :: { [string]: { [string]: Vector2 } }
 
 local rules: { Component.Rule } = {
 	{
@@ -64,6 +71,13 @@ local rules: { Component.Rule } = {
 			TextSize = "$TextSm",
 		},
 	},
+	{ selector = ".ui-switch-label.ui-switch-size-sm", priority = 5, properties = { TextSize = "$TextXs" } },
+	{
+		selector = ".ui-switch-label.ui-switch-size-lg",
+		priority = 5,
+		properties = { TextSize = "$TextBase" },
+	},
+	{ selector = ".ui-switch-label.ui-switch-size-xl", priority = 5, properties = { TextSize = "$TextLg" } },
 	{ selector = ".ui-switch.ui-disabled", priority = 30, properties = { BackgroundTransparency = 0.5 } },
 	{ selector = ".ui-switch-label.ui-disabled", priority = 30, properties = { TextTransparency = 0.5 } },
 }
@@ -78,17 +92,27 @@ local SLIDE = TweenInfo.new(0.15, Enum.EasingStyle.Quad)
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "switch",
-	defaults = { checked = false, label = "", disabled = false, visible = true },
+	defaults = { checked = false, label = "", disabled = false, size = "md", visible = true },
 	rules = Switch.rules,
 	render = function(h)
 		local p: Component.Props = h.props
 		local checked, disabled = h:ref("checked"), h:ref("disabled")
-		local label, visible = h:ref("label"), h:ref("visible")
+		local label, visible, sizeName = h:ref("label"), h:ref("visible"), h:ref("size")
+		Component.checkControlSize(h:get("size"), "Switch")
 		local density = Composables.useDensity(h.app)
 		-- Trivial derivations are plain functions: a computed only pays off when
 		-- the work is expensive or many readers share it.
+		local function tracks(): { [string]: Vector2 }
+			local name = sizeName()
+			Component.checkControlSize(name, "Switch")
+			return Switch.tracks[name]
+		end
 		local function size(): Vector2
-			return TRACK[density()] or TRACK.default
+			local list = tracks()
+			return list[density()] or list.default
+		end
+		local function sizeTag(): string
+			return `ui-switch-size-{sizeName()}`
 		end
 		local function knob(): number
 			return size().Y - 4
@@ -124,7 +148,13 @@ local spec: Component.Spec = {
 			Visible = function()
 				return label() ~= ""
 			end,
-			Tags = { "ui-switch-label", ["ui-disabled"] = disabled },
+			Tags = function(): { string }
+				local tags = { "ui-switch-label", sizeTag() }
+				if disabled() then
+					table.insert(tags, "ui-disabled")
+				end
+				return tags
+			end,
 		})
 		h.track, h.thumb, h.label = track, thumb, text
 
@@ -163,7 +193,9 @@ local spec: Component.Spec = {
 			BackgroundTransparency = 1,
 			AutomaticSize = Enum.AutomaticSize.X,
 			Size = function()
-				return UDim2.fromOffset(0, math.max(Component.metric(h.app, "ControlSm"), size().Y))
+				-- As tall as a control of its size, so it lines up with them in a row or a form
+				local height = Component.controlTokens[sizeName()].height
+				return UDim2.fromOffset(0, math.max(Component.metric(h.app, height), size().Y))
 			end,
 			Visible = visible,
 			Interactable = enabled,
