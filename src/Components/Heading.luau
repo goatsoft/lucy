@@ -3,7 +3,7 @@
 	Heading: a title with a description, as Dialog and Sheet show them (not a component of its
 	own: their header part).
 
-		local text, title, description = Heading.new(app, {
+		local text, title, description, shown = Heading.new(app, {
 			title = h:ref("title"), description = h:ref("description"),
 			titleTag = "ui-dialog-title", descriptionTag = "ui-dialog-description",
 		})
@@ -12,7 +12,8 @@
 	input.height "short") the description sits beside the title on one line, so the header takes
 	one line of the little height there is; a description too long for the line scrolls across and
 	back (a Marquee) rather than being cut short. Either hides while its text is empty, and the
-	whole row while both are. Call it in a scope (a component's render).
+	whole row while both are (shown says whether it is up, so the panel can keep what takes the
+	top row clear of its close button). Call it in a scope (a component's render).
 
 	description is the wrapping label (the one a game styles); the one-line description beside the
 	title is a Marquee in the muted style.
@@ -29,12 +30,15 @@ local Heading = {}
 Heading.gap = 6
 Heading.besideGap = 12
 
-function Heading.new(app: any, props: { [string]: any }): (Frame, TextLabel, TextLabel)
+function Heading.new(app: any, props: { [string]: any }): (Frame, TextLabel, TextLabel, () -> boolean)
 	local beside = Composables.useResponsive(app, { short = true, default = false })
 	local titleText: () -> string = props.title
 	local descriptionText: () -> string = props.description
 	local function hasDescription(): boolean
 		return descriptionText() ~= ""
+	end
+	local function shown(): boolean
+		return titleText() ~= "" or hasDescription()
 	end
 
 	local title = Element.new("TextLabel", {
@@ -94,9 +98,7 @@ function Heading.new(app: any, props: { [string]: any }): (Frame, TextLabel, Tex
 		BorderSizePixel = 0,
 		Size = UDim2.fromScale(1, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
-		Visible = function(): boolean
-			return titleText() ~= "" or hasDescription()
-		end,
+		Visible = shown,
 		Element.new("UIListLayout", {
 			SortOrder = Enum.SortOrder.LayoutOrder,
 			FillDirection = function(): Enum.FillDirection
@@ -115,7 +117,7 @@ function Heading.new(app: any, props: { [string]: any }): (Frame, TextLabel, Tex
 		line.Instance,
 	}) :: Frame
 	Baseline.follow(frame, beside)
-	return frame, title, description
+	return frame, title, description, shown
 end
 
 return Heading

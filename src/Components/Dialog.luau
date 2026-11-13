@@ -224,7 +224,7 @@ function Dialog.new(props: { [string]: any }?)
 			-- The title over its description (beside it on a short screen: Components/Heading)
 			-- (with the title on the edge, the description alone)
 			local titleRef = h:ref("title")
-			local text, titleLabel, descriptionLabel = Heading.new(h.app, {
+			local text, titleLabel, descriptionLabel, headingShown = Heading.new(h.app, {
 				title = function(): string
 					return if parts.edge then "" else titleRef()
 				end,
@@ -232,7 +232,9 @@ function Dialog.new(props: { [string]: any }?)
 				titleTag = "ui-dialog-title",
 				descriptionTag = "ui-dialog-description",
 			})
-			text.Size = UDim2.new(1, if showClose then -44 else 0, 0, 0)
+			-- The close button sits in the top right corner: the top row stops short of it
+			local closeRoom = if showClose then 44 else 0
+			text.Size = UDim2.new(1, -closeRoom, 0, 0)
 			text.LayoutOrder = 1
 			text.Parent = header
 			h.titleLabel = parts.titleLabel or titleLabel
@@ -245,6 +247,13 @@ function Dialog.new(props: { [string]: any }?)
 				Parent = header,
 			})
 			Component.list({ Padding = gap, Parent = headerSlot })
+			-- With the heading's row gone (title on the edge, no description) the slot is the top row
+			Element.new("UIPadding", {
+				PaddingRight = function(): UDim
+					return UDim.new(0, if headingShown() then 0 else closeRoom)
+				end,
+			}).Parent =
+				headerSlot
 			if p.header then
 				Component.adopt(headerSlot, p.header)
 			end

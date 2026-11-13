@@ -174,7 +174,7 @@ local spec: Component.Spec = {
 		-- (with the title on the edge, the description alone: the title is on the frame's plate)
 		local edge = PanelFrame.edge(app, p.titlePlacement)
 		local titleRef = h:ref("title")
-		local text, titleLabel, descriptionLabel = Heading.new(h.app, {
+		local text, titleLabel, descriptionLabel, headingShown = Heading.new(h.app, {
 			title = function(): string
 				return if edge then "" else titleRef()
 			end,
@@ -182,7 +182,9 @@ local spec: Component.Spec = {
 			titleTag = "ui-sheet-title",
 			descriptionTag = "ui-sheet-description",
 		})
-		text.Size = UDim2.new(1, if showClose then -44 else 0, 0, 0)
+		-- The close button sits in the top right corner: the top row stops short of it
+		local closeRoom = if showClose then 44 else 0
+		text.Size = UDim2.new(1, -closeRoom, 0, 0)
 		h.titleLabel = titleLabel
 		h.descriptionLabel = descriptionLabel
 
@@ -196,6 +198,13 @@ local spec: Component.Spec = {
 			Visible = p.header ~= nil,
 		})
 		Component.list({ Padding = UDim.new(0, gap), Parent = headerSlot })
+		-- With the heading's row gone (title on the edge, no description) the slot is the top row
+		Element.new("UIPadding", {
+			PaddingRight = function(): UDim
+				return UDim.new(0, if headingShown() then 0 else closeRoom)
+			end,
+		}).Parent =
+			headerSlot
 		if p.header then
 			Component.adopt(headerSlot, p.header)
 		end

@@ -601,6 +601,31 @@ return function()
 			expect((described.descriptionLabel.Parent :: GuiObject).Visible).to.equal(true)
 		end)
 
+		it("keeps the header slot clear of the close button when it is the top row", function()
+			local function slotted(props: { [string]: any })
+				local row = Instance.new("Frame")
+				row.Size = UDim2.new(1, 0, 0, 20)
+				props.app = app
+				props.title = "Hi"
+				props.titlePlacement = "edge"
+				props.header = { row }
+				local panel = Dialog.new(props)
+				panel:open()
+				for _ = 1, 3 do
+					task.wait()
+				end
+				return row, panel.closeButton.Instance
+			end
+			-- No row over it: the slot stops short of the close button
+			local row, close = slotted({})
+			expect(row.AbsolutePosition.X + row.AbsoluteSize.X <= close.AbsolutePosition.X).to.equal(true)
+			-- With the description's row over it, the slot keeps its full width
+			local under, closeOver = slotted({ description = "More" })
+			expect(under.AbsolutePosition.X + under.AbsoluteSize.X > closeOver.AbsolutePosition.X).to.equal(
+				true
+			)
+		end)
+
 		it("gives the shadow its panel's own corners, square or round", function()
 			framed({ PanelShadow = 6 })
 			local panel = Dialog.new({ app = app, title = "Hi", presentation = "panel" })
