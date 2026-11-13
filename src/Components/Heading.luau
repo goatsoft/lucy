@@ -11,8 +11,8 @@
 	The title over its description, both wrapping. On a short screen (a phone held sideways,
 	input.height "short") the description sits beside the title on one line, so the header takes
 	one line of the little height there is; a description too long for the line scrolls across and
-	back (a Marquee) rather than being cut short. Either hides while its text is empty. Call it in
-	a scope (a component's render).
+	back (a Marquee) rather than being cut short. Either hides while its text is empty, and the
+	whole row while both are. Call it in a scope (a component's render).
 
 	description is the wrapping label (the one a game styles); the one-line description beside the
 	title is a Marquee in the muted style.
@@ -86,12 +86,17 @@ function Heading.new(app: any, props: { [string]: any }): (Frame, TextLabel, Tex
 		Element.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill }),
 	})
 
+	-- With neither (a title on the panel's edge, ADR 0047, and no description) the row drops out, so
+	-- the header slot sits at the top
 	local frame = Element.new("Frame", {
 		Name = "Text",
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		Size = UDim2.fromScale(1, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
+		Visible = function(): boolean
+			return titleText() ~= "" or hasDescription()
+		end,
 		Element.new("UIListLayout", {
 			SortOrder = Enum.SortOrder.LayoutOrder,
 			FillDirection = function(): Enum.FillDirection

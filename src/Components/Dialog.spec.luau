@@ -568,9 +568,13 @@ return function()
 				titlePlacement = "edge",
 			})
 			panel:open()
-			-- The plate is measured once drawn, and the panel moves down for it a frame later
-			for _ = 1, 4 do
+			-- The plate is measured once drawn, and the panel moves down for it a frame later (a few more
+			-- under a busy run)
+			for _ = 1, 30 do
 				task.wait()
+				if panel.plate and panel.plate.AbsolutePosition.Y < panel.content.AbsolutePosition.Y then
+					break
+				end
 			end
 			expect(panel.plate).to.be.ok()
 			expect(panel.plate:HasTag("ui-dialog-plate")).to.equal(true)
@@ -584,6 +588,17 @@ return function()
 			local panelTop = panel.content.AbsolutePosition.Y
 			expect(plateTop < panelTop).to.equal(true)
 			expect(plateBottom > panelTop).to.equal(true)
+		end)
+
+		it("leaves out the heading's row with the title on the edge and no description", function()
+			local bare = Dialog.new({ app = app, title = "Hi", titlePlacement = "edge" })
+			bare:open()
+			local heading = bare.descriptionLabel.Parent :: GuiObject
+			expect(heading.Visible).to.equal(false)
+			local described =
+				Dialog.new({ app = app, title = "Hi", description = "More", titlePlacement = "edge" })
+			described:open()
+			expect((described.descriptionLabel.Parent :: GuiObject).Visible).to.equal(true)
 		end)
 
 		it("gives the shadow its panel's own corners, square or round", function()
