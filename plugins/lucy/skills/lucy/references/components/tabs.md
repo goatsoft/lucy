@@ -97,7 +97,9 @@ tab's value to its panel frame.
 
 ## Examples
 
-Text tabs with a line under the picked one, for the sections of a big menu:
+Text tabs with a line under the picked one, for the sections of a big menu. Line tabs have no
+side padding, so the first tab's words line up with the content's edge, and the bold line sits a
+little under the words:
 
 ```luau
 Lucy.Tabs.new({

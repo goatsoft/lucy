@@ -183,6 +183,45 @@ Toggle.rules = {
 		priority = VARIANT,
 		properties = { CornerRadius = UDim.new(0, 0) },
 	},
+	-- No side padding: the words (and the underline under them) start at the toggle's edge, so a
+	-- row of line tabs lines up with the content under it; a ToggleGroup spaces them instead
+	{
+		selector = ".ui-toggle-variant-line::UIPadding",
+		priority = VARIANT + 2,
+		properties = {
+			PaddingLeft = UDim.new(0, 0),
+			PaddingRight = UDim.new(0, 0),
+			PaddingTop = UDim.new(0, 0),
+			PaddingBottom = UDim.new(0, 2),
+		},
+	},
+	-- Line tabs are about as tall as their words (not a control's height), with the words at the
+	-- bottom so the underline sits just under them
+	{
+		selector = ".ui-toggle-variant-line",
+		priority = VARIANT + 2,
+		properties = { TextYAlignment = Enum.TextYAlignment.Bottom },
+	},
+	{
+		selector = ".ui-toggle-variant-line.ui-toggle-size-sm",
+		priority = VARIANT + 3,
+		properties = { Size = UDim2.fromOffset(0, 18) },
+	},
+	{
+		selector = ".ui-toggle-variant-line.ui-toggle-size-md",
+		priority = VARIANT + 3,
+		properties = { Size = UDim2.fromOffset(0, 20) },
+	},
+	{
+		selector = ".ui-toggle-variant-line.ui-toggle-size-lg",
+		priority = VARIANT + 3,
+		properties = { Size = UDim2.fromOffset(0, 24) },
+	},
+	{
+		selector = ".ui-toggle-variant-line.ui-toggle-size-xl",
+		priority = VARIANT + 3,
+		properties = { Size = UDim2.fromOffset(0, 28) },
+	},
 	{
 		selector = ".ui-toggle-variant-line:Hover",
 		priority = STATE + 1,
@@ -246,13 +285,18 @@ function Toggle.tags(variant: string, size: string): { string }
 	return list
 end
 
+-- The underline is bold and sits just under the tab's own box, close under the words (a
+-- ToggleGroup that scrolls keeps INDICATOR_DROP of room under its row for it).
+Toggle.INDICATOR = 4
+Toggle.INDICATOR_DROP = 6
+
 -- The line variant's underline, shown while `shown` is true (a toggle that is on).
 function Toggle.indicator(shown: () -> boolean): Frame
 	return Element.new("Frame", {
 		Name = "Indicator",
 		AnchorPoint = Vector2.new(0, 1),
-		Position = UDim2.fromScale(0, 1),
-		Size = UDim2.new(1, 0, 0, 2),
+		Position = UDim2.new(0, 0, 1, Toggle.INDICATOR_DROP),
+		Size = UDim2.new(1, 0, 0, Toggle.INDICATOR),
 		Visible = shown,
 		Tags = { "ui-toggle-indicator" },
 	})

@@ -104,7 +104,9 @@ tab's value to its panel frame.
 
 ## Examples
 
-Text tabs with a line under the picked one, for the sections of a big menu:
+Text tabs with a line under the picked one, for the sections of a big menu. Line tabs have no
+side padding, so the first tab's words line up with the content's edge, and the bold line sits a
+little under the words:
 
 <!-- preview -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-tabs-2-light.webp" alt="Tabs example" loading="lazy"><img class="example-dark" src="/images/examples/components-tabs-2-dark.webp" alt="Tabs example" loading="lazy"></figure>

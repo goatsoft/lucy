@@ -41,6 +41,32 @@ return function()
 		expect(tabs.list.items[1]:HasTag("ui-selected")).to.equal(true)
 	end)
 
+	it("lines a line tab's first words up with the content's edge, the tabs a gap apart", function()
+		local _, _, items = panels()
+		local tabs = Tabs.new({ app = app, Parent = gui, items = items, variant = "line" })
+		Harness.flush()
+		task.wait()
+		local first, second = tabs.list.items[1], tabs.list.items[2]
+		local row = tabs.list.Instance :: GuiObject
+		-- no side padding: the tab is as wide as its words and starts at the row's edge
+		expect(math.abs(first.AbsolutePosition.X - row.AbsolutePosition.X) < 1).to.equal(true)
+		expect(math.abs(first.AbsoluteSize.X - first.TextBounds.X) < 1).to.equal(true)
+		local gap = second.AbsolutePosition.X - (first.AbsolutePosition.X + first.AbsoluteSize.X)
+		expect(gap >= 16).to.equal(true)
+	end)
+
+	it("draws a line tab's underline bold, a little under the tab", function()
+		local _, _, items = panels()
+		local tabs = Tabs.new({ app = app, Parent = gui, items = items, variant = "line" })
+		Harness.flush()
+		task.wait()
+		local first = tabs.list.items[1]
+		local line = first:FindFirstChild("Indicator") :: Frame
+		expect(line.Size.Y.Offset).to.equal(4)
+		local itemBottom = first.AbsolutePosition.Y + first.AbsoluteSize.Y
+		expect(line.AbsolutePosition.Y + line.AbsoluteSize.Y > itemBottom).to.equal(true)
+	end)
+
 	it("underlines the picked tab with the line variant", function()
 		local _, _, items = panels()
 		local tabs = Tabs.new({ app = app, Parent = gui, items = items, variant = "line" })

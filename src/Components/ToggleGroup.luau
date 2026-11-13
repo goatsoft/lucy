@@ -227,10 +227,18 @@ local spec: Component.Spec = {
 				["ui-toggle-group-segmented"] = segmented,
 				["ui-toggle-group-fill"] = fills,
 			},
-			Component.list({
+			Element.new("UIListLayout", {
+				SortOrder = Enum.SortOrder.LayoutOrder,
 				FillDirection = direction,
 				VerticalAlignment = Enum.VerticalAlignment.Center,
-				Padding = Component.space(h.app, p.gap or "Space1", 0),
+				-- Line tabs have no side padding (their words and underline line up with the content's
+				-- edge), so they keep a wider gap between them
+				Padding = function(): UDim
+					if p.gap == nil and variant() == "line" then
+						return Component.space(h.app, "Space6", 24)
+					end
+					return Component.space(h.app, p.gap or "Space1", 0)
+				end,
 			}) :: any,
 		})
 		for _, button in buttons do
@@ -262,6 +270,7 @@ local spec: Component.Spec = {
 			height(
 				math.ceil(frame.AbsoluteSize.Y / (if scale > 0 then scale else 1))
 					+ scroller.ScrollBarThickness
+					+ Toggle.INDICATOR_DROP
 			)
 		end
 		measure()
