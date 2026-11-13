@@ -51,6 +51,7 @@
 
 local Button = require(script.Parent.Button)
 local Component = require(script.Parent.Parent.Core.Component)
+local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Heading = require(script.Parent.Heading)
 local Overlay = require(script.Parent.Parent.Core.Overlay)
@@ -88,6 +89,17 @@ Sheet.rules = {
 			PaddingBottom = "$Space6",
 			PaddingLeft = "$Space6",
 			PaddingRight = "$Space6",
+		},
+	},
+	{
+		-- A short screen (a phone held sideways) has little height to give to padding, as a dialog
+		selector = ".ui-sheet-inner.ui-sheet-short::UIPadding",
+		priority = 1,
+		properties = {
+			PaddingTop = "$Space4",
+			PaddingBottom = "$Space4",
+			PaddingLeft = "$Space4",
+			PaddingRight = "$Space4",
 		},
 	},
 	{ selector = ".ui-sheet-drawer::UICorner", priority = 0, properties = { CornerRadius = "$RadiusLg" } },
@@ -149,7 +161,13 @@ local spec: Component.Spec = {
 			return overlay ~= nil and overlay.presentation() == "drawer"
 		end
 
-		local pad = Component.space(app, "Space6", 24).Offset
+		-- The inner padding, as the rules above set it (smaller on a short screen, as a dialog's)
+		local short = Composables.useResponsive(app, { short = true, default = false })
+		local function pad(): number
+			return if short()
+				then Component.space(app, "Space4", 16).Offset
+				else Component.space(app, "Space6", 24).Offset
+		end
 		local gap = Component.space(app, "Space4", 16).Offset
 		local headerSize = Reactive.ref(Vector2.zero)
 		local footerSize = Reactive.ref(Vector2.zero)
@@ -162,15 +180,8 @@ local spec: Component.Spec = {
 			Tags = { "ui-sheet-handle" },
 			Element.new("UICorner", { CornerRadius = UDim.new(1, 0) }),
 		})
-		local handleRow = Element.new("Frame", {
-			Name = "HandleRow",
-			Size = UDim2.new(1, 0, 0, 4),
-			LayoutOrder = 1,
-			Visible = isDrawer,
-			Tags = { "ui-sheet-part" },
-			handleBar,
-		})
-		handleBar.Position = UDim2.fromScale(0.5, 0)
+		-- The drawer's handle sits in the top padding, so the first row starts where a dialog's does
+		-- (placed with the panel, below)
 
 		-- The title over its description (beside it on a short screen: Components/Heading)
 		-- (with the title on the edge, the description alone: the title is on the frame's plate)
@@ -308,7 +319,7 @@ local spec: Component.Spec = {
 			if scale <= 0 then
 				scale = 1
 			end
-			local used = pad * 2 + headerSize().Y / scale + gap
+			local used = pad() * 2 + headerSize().Y / scale + gap
 			if parts then
 				used += parts.rise() + parts.offset() + parts.clear()
 			end
@@ -316,7 +327,6 @@ local spec: Component.Spec = {
 				used += footerSize().Y / scale + gap
 			end
 			if isDrawer() then
-				used += 4 + gap
 				local safe = overlay.safeBottom()
 				if safe > 0 then
 					used += safe + gap
@@ -367,12 +377,11 @@ local spec: Component.Spec = {
 			AutomaticSize = function(): Enum.AutomaticSize
 				return if isDrawer() then Enum.AutomaticSize.Y else Enum.AutomaticSize.None
 			end,
-			Tags = { "ui-sheet-inner", "ui-sheet-part" },
+			Tags = { "ui-sheet-inner" :: any, "ui-sheet-part", ["ui-sheet-short"] = short },
 			Element.new("UIListLayout", {
 				SortOrder = Enum.SortOrder.LayoutOrder,
 				Padding = UDim.new(0, gap),
 			}),
-			handleRow,
 			header,
 			body.Instance,
 			footer,
@@ -411,6 +420,15 @@ local spec: Component.Spec = {
 			clear = framed.clear,
 		})
 		h.cornerSlot = corner.slot
+		-- The handle, centred in the top padding (an edge title's clearance moves the content down: the
+		-- handle moves back up, as the corner does)
+		Element.hydrate(handleBar, {
+			Position = function(): UDim2
+				return UDim2.new(0.5, 0, 0, math.max(0, (pad() - 4) // 2) - framed.clear())
+			end,
+			ZIndex = 3,
+		})
+		handleBar.Parent = content
 		h.closeButton = corner.closeButton
 		cornerRef(corner)
 		Element.hydrate(framed.frame, {

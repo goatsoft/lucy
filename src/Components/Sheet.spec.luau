@@ -462,6 +462,42 @@ return function()
 			expect(row.AbsolutePosition.X + row.AbsoluteSize.X <= chip.AbsolutePosition.X).to.equal(true)
 		end)
 
+		it("starts its first row where a dialog does, panel or drawer", function()
+			local Dialog = require(script.Parent.Dialog)
+			-- How far below the panel's top edge the header's first row starts
+			local function firstRow(make: (row: Frame) -> any): number
+				local row = Instance.new("Frame")
+				row.Size = UDim2.new(1, 0, 0, 20)
+				local panel = make(row)
+				panel:open()
+				for _ = 1, 30 do
+					task.wait()
+					if panel.plate and panel.plate.AbsolutePosition.Y < panel.content.AbsolutePosition.Y then
+						break
+					end
+				end
+				task.wait()
+				local offset = row.AbsolutePosition.Y - panel.content.AbsolutePosition.Y
+				panel:close()
+				return offset
+			end
+			local dialog = firstRow(function(row)
+				return Dialog.new({ app = app, title = "Hi", titlePlacement = "edge", header = { row } })
+			end)
+			for _, presentation in { "panel", "drawer" } do
+				local sheet = firstRow(function(row)
+					return Sheet.new({
+						app = app,
+						title = "Hi",
+						titlePlacement = "edge",
+						presentation = presentation,
+						header = { row },
+					})
+				end)
+				expect(math.abs(sheet - dialog) <= 1).to.equal(true)
+			end
+		end)
+
 		it("keeps the header slot clear of the close button when it is the top row", function()
 			local function slotted(props: { [string]: any })
 				local row = Instance.new("Frame")
