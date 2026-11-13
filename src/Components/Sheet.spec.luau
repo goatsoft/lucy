@@ -256,7 +256,7 @@ return function()
 		local sheet = Sheet.new({ app = app, open = true, title = "Hi" })
 		task.wait(0.2)
 		local close = sheet.closeButton.Instance
-		expect(close.Parent).to.equal(sheet.content)
+		expect(close:IsDescendantOf(sheet.content)).to.equal(true)
 		local c = sheet.content
 		local right = c.AbsolutePosition.X + c.AbsoluteSize.X
 		local gapRight = right - (close.AbsolutePosition.X + close.AbsoluteSize.X)
@@ -268,7 +268,7 @@ return function()
 		sheet:open()
 		task.wait(0.2)
 		close = sheet.closeButton.Instance
-		expect(close.Parent).to.equal(sheet.content)
+		expect(close:IsDescendantOf(sheet.content)).to.equal(true)
 		c = sheet.content
 		right = c.AbsolutePosition.X + c.AbsoluteSize.X
 		gapRight = right - (close.AbsolutePosition.X + close.AbsoluteSize.X)
@@ -426,6 +426,40 @@ return function()
 			-- least the small one) under the plate, not under the panel's top edge
 			local plateBottom = panel.plate.AbsolutePosition.Y + panel.plate.AbsoluteSize.Y
 			expect(row.AbsolutePosition.Y - plateBottom >= 12).to.equal(true)
+		end)
+
+		it("keeps its close button in the same corner with the title on the edge", function()
+			local function cornerOf(placement: string): number
+				local panel = Sheet.new({ app = app, title = "Hi", titlePlacement = placement })
+				panel:open()
+				for _ = 1, 4 do
+					task.wait()
+				end
+				return panel.closeButton.Instance.AbsolutePosition.Y - panel.content.AbsolutePosition.Y
+			end
+			expect(math.abs(cornerOf("edge") - cornerOf("inside")) <= 1).to.equal(true)
+		end)
+
+		it("puts the corner slot beside the close button, and the top row stops short of both", function()
+			local chip = Instance.new("Frame")
+			chip.Size = UDim2.fromOffset(60, 20)
+			local row = Instance.new("Frame")
+			row.Size = UDim2.new(1, 0, 0, 20)
+			local panel = Sheet.new({
+				app = app,
+				title = "Hi",
+				titlePlacement = "edge",
+				header = { row },
+				corner = { chip },
+			})
+			panel:open()
+			for _ = 1, 4 do
+				task.wait()
+			end
+			expect(chip:IsDescendantOf(panel.cornerSlot)).to.equal(true)
+			local close = panel.closeButton.Instance
+			expect(chip.AbsolutePosition.X + chip.AbsoluteSize.X <= close.AbsolutePosition.X).to.equal(true)
+			expect(row.AbsolutePosition.X + row.AbsoluteSize.X <= chip.AbsolutePosition.X).to.equal(true)
 		end)
 
 		it("keeps the header slot clear of the close button when it is the top row", function()

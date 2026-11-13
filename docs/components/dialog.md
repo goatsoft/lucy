@@ -35,6 +35,7 @@ quit:open()
 | `description` | string | `""` | yes | Text under the heading |
 | `actions` | table | | | Buttons along the bottom, see [Actions](#actions) |
 | `header` | table | | | Instances or handles under the title, such as tabs or filters. They stay put while the body scrolls. When all of them are hidden the slot takes no room |
+| `corner` | table | | | Instances or handles in the top right corner, left of the close button, such as a currency chip. See [The corner](#the-corner) |
 | `children` | table | | | Instances or handles to put in the content area |
 | `footer` | table | | | Instances or handles under the body, above the actions. They stay put while the body scrolls. When all of them are hidden (key hints on touch, say) the footer takes no room |
 | `dismissible` | boolean | `true` | | Whether B, Backspace, the overlay and the close button can close it |
@@ -95,6 +96,7 @@ An action closes the dialog after its `onClick` runs, unless `onClick` returns
 | `dialog.scroll` | The [ScrollArea](scroll-area.md) around the body |
 | `dialog.bodyRoom()` | The height the body may take before it scrolls, in the dialog's own units. It follows the screen, the header and the footer, so a body that should fit rather than scroll (a card shrunk to the room) can read it |
 | `dialog.headerSlot` | The frame that holds `header` |
+| `dialog.cornerSlot` | The frame that holds `corner` |
 | `dialog.footerSlot` | The frame that holds `footer` |
 | `dialog.content` | The panel itself, where a game's own tags go |
 | `dialog.frame` | The clear frame round the panel that the overlay places, with the shadow and the plate |
@@ -204,4 +206,38 @@ app.theme:addRules("myPanels", {
     { selector = ".ui-dialog-plate::UIStroke", priority = 10, properties = { Color = "$Pink500", Thickness = 4 } },
     { selector = ".ui-dialog-shadow", priority = 10, properties = { BackgroundColor3 = "$Pink900" } },
 })
+```
+
+## The corner
+
+The close button sits in the panel's top right corner, in the same place and at
+the same size on every dialog and sheet, whether the title is inside or on the
+edge. The `corner` slot puts more beside it, on its left: a currency chip, a
+help button. The header's top row stops short of the corner, so tabs never run
+under it, and with the title on the edge the tabs move down to clear the plate
+while the corner stays at the top.
+
+<!-- preview solo -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-dialog-5-light.webp" alt="Dialog example" loading="lazy"><img class="example-dark" src="/images/examples/components-dialog-5-dark.webp" alt="Dialog example" loading="lazy"></figure>
+
+```luau
+local coins = Lucy.Badge.new({ text = "1,250", icon = "lucide-extended:coins-filled" })
+local shop = Lucy.Dialog.new({
+    title = "Shop",
+    titlePlacement = "edge",
+    size = "lg",
+    corner = { coins },
+    header = {
+        Lucy.Tabs.new({
+            variant = "line",
+            items = {
+                { value = "featured", text = "Featured" },
+                { value = "emotes", text = "Emotes" },
+                { value = "boosts", text = "Boosts" },
+            },
+        }).bar,
+    },
+    children = { Lucy.Text.new({ text = "Today's picks.", variant = "muted" }) },
+})
+shop:open()
 ```

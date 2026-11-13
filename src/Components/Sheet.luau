@@ -8,6 +8,7 @@
 			title = "Settings",
 			description = "Saved to your profile.",
 			header = { ... },                       -- under the title, stays put (sheet.headerSlot)
+			corner = { ... },                       -- beside the close button, top right (sheet.cornerSlot)
 			children = { ... },                     -- into sheet.body, which scrolls
 			footer = { ... },                       -- above the actions, stays put (sheet.footerSlot)
 			actions = {                             -- buttons along the bottom, like Dialog's
@@ -53,6 +54,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Heading = require(script.Parent.Heading)
 local Overlay = require(script.Parent.Parent.Core.Overlay)
+local PanelCorner = require(script.Parent.PanelCorner)
 local PanelFrame = require(script.Parent.Parent.Core.PanelFrame)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
@@ -182,9 +184,18 @@ local spec: Component.Spec = {
 			titleTag = "ui-sheet-title",
 			descriptionTag = "ui-sheet-description",
 		})
-		-- The close button sits in the top right corner: the top row stops short of it
-		local closeRoom = if showClose then 44 else 0
-		text.Size = UDim2.new(1, -closeRoom, 0, 0)
+		-- The close button (and the corner slot beside it) in the top right corner, the same place on
+		-- every sheet: the top row stops short of it. The corner is made with the panel, below.
+		local cornerRef: Reactive.Ref<PanelCorner.Corner?> = Reactive.ref(nil :: PanelCorner.Corner?)
+		local function cornerRoom(): number
+			local corner = cornerRef()
+			return if corner then corner.room() else 0
+		end
+		Element.hydrate(text, {
+			Size = function(): UDim2
+				return UDim2.new(1, -cornerRoom(), 0, 0)
+			end,
+		})
 		h.titleLabel = titleLabel
 		h.descriptionLabel = descriptionLabel
 
@@ -201,7 +212,7 @@ local spec: Component.Spec = {
 		-- With the heading's row gone (title on the edge, no description) the slot is the top row
 		Element.new("UIPadding", {
 			PaddingRight = function(): UDim
-				return UDim.new(0, if headingShown() then 0 else closeRoom)
+				return UDim.new(0, if headingShown() then 0 else cornerRoom())
 			end,
 		}).Parent =
 			headerSlot
@@ -223,15 +234,6 @@ local spec: Component.Spec = {
 			text,
 			headerSlot,
 		})
-		if showClose then
-			h.closeButton = Button.close({
-				app = app,
-				onClick = function()
-					h:close()
-				end,
-			})
-		end
-
 		-- The footer: the footer slot (stays put under the body), then the actions.
 		local footerSlot = Component.box({
 			Name = "FooterSlot",
@@ -388,14 +390,6 @@ local spec: Component.Spec = {
 			Tags = { "ui-sheet-content" :: any, ["ui-sheet-drawer"] = isDrawer },
 			inner,
 		}) :: Frame
-		if h.closeButton then
-			local inset = Component.space(app, "Space1", 4).Offset
-			local close = h.closeButton.Instance
-			close.AnchorPoint = Vector2.new(1, 0)
-			close.Position = UDim2.new(1, -inset, 0, inset)
-			close.ZIndex = 3
-			close.Parent = content
-		end
 
 		-- The frame the overlay places: the panel (filling it, or fitting its children in a
 		-- drawer), its shadow and an edge title's plate
@@ -408,6 +402,17 @@ local spec: Component.Spec = {
 			end,
 		})
 		parts = framed
+		local corner = PanelCorner.new(app, content, {
+			close = showClose,
+			onClose = function()
+				h:close()
+			end,
+			children = p.corner,
+			clear = framed.clear,
+		})
+		h.cornerSlot = corner.slot
+		h.closeButton = corner.closeButton
+		cornerRef(corner)
 		Element.hydrate(framed.frame, {
 			Size = UDim2.fromScale(1, 0),
 			AutomaticSize = function(): Enum.AutomaticSize

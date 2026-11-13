@@ -28,6 +28,7 @@
     "menu": "Actions that open as a list, a ring or a fan, close once one is picked",
     "number-field": "A number with minus and plus buttons, typed or stepped",
     "panel": "Card with header, content and footer",
+    "panel-corner": "The top right corner of a dialog or sheet: the close button and what sits beside it",
     "pressable": "Clickable surface that holds anything",
     "progress": "Bar that fills from 0 to a maximum",
     "radio-group": "Options where the player picks exactly one",

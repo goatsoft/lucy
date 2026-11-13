@@ -7,6 +7,7 @@
 			title = "Leave match?",
 			description = "You will drop your cash.",
 			header = { ... },                       -- under the title, stays put (dialog.headerSlot)
+			corner = { ... },                       -- beside the close button, top right (dialog.cornerSlot)
 			children = { ... },                     -- into dialog.body, which scrolls
 			footer = { ... },                       -- above the actions, stays put (dialog.footerSlot)
 			actions = {
@@ -64,6 +65,7 @@ local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Heading = require(script.Parent.Heading)
 local Overlay = require(script.Parent.Parent.Core.Overlay)
+local PanelCorner = require(script.Parent.PanelCorner)
 local PanelFrame = require(script.Parent.Parent.Core.PanelFrame)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
@@ -232,9 +234,26 @@ function Dialog.new(props: { [string]: any }?)
 				titleTag = "ui-dialog-title",
 				descriptionTag = "ui-dialog-description",
 			})
-			-- The close button sits in the top right corner: the top row stops short of it
-			local closeRoom = if showClose then 44 else 0
-			text.Size = UDim2.new(1, -closeRoom, 0, 0)
+			-- The close button (and the corner slot beside it) in the top right corner, the same place
+			-- on every dialog: the top row stops short of it
+			local corner = PanelCorner.new(h.app, content, {
+				close = showClose,
+				onClose = function()
+					h:close()
+				end,
+				children = p.corner,
+				clear = parts.clear,
+			})
+			h.cornerSlot = corner.slot
+			if corner.closeButton then
+				h.closeButton = corner.closeButton
+				h.maid:give(corner.closeButton)
+			end
+			Element.hydrate(text, {
+				Size = function(): UDim2
+					return UDim2.new(1, -corner.room(), 0, 0)
+				end,
+			})
 			text.LayoutOrder = 1
 			text.Parent = header
 			h.titleLabel = parts.titleLabel or titleLabel
@@ -250,7 +269,7 @@ function Dialog.new(props: { [string]: any }?)
 			-- With the heading's row gone (title on the edge, no description) the slot is the top row
 			Element.new("UIPadding", {
 				PaddingRight = function(): UDim
-					return UDim.new(0, if headingShown() then 0 else closeRoom)
+					return UDim.new(0, if headingShown() then 0 else corner.room())
 				end,
 			}).Parent =
 				headerSlot
@@ -258,21 +277,6 @@ function Dialog.new(props: { [string]: any }?)
 				Component.adopt(headerSlot, p.header)
 			end
 			Element.hydrate(headerSlot, { Visible = Composables.useHasVisibleChild(headerSlot) })
-
-			if showClose then
-				h.closeButton = Button.close({
-					app = h.app,
-					onClick = function()
-						h:close()
-					end,
-				})
-				local inset = Component.space(h.app, "Space1", 4).Offset
-				h.closeButton.Instance.AnchorPoint = Vector2.new(1, 0)
-				h.closeButton.Instance.Position = UDim2.new(1, -inset, 0, inset)
-				h.closeButton.Instance.ZIndex = 3
-				h.closeButton.Instance.Parent = content
-				h.maid:give(h.closeButton)
-			end
 
 			-- The body scrolls in what is left of the overlay's height (and maxHeight)
 			-- after the padding, header, footer and gaps.

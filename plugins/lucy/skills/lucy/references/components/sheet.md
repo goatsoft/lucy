@@ -36,6 +36,7 @@ settings:open()
 | `description` | string | `""` | yes | Text under the heading |
 | `actions` | table | | | Buttons along the bottom, the same as [Dialog actions](dialog.md#actions) |
 | `header` | table | | | Instances or handles under the title, such as filters. They stay put while the body scrolls |
+| `corner` | table | | | Instances or handles in the top right corner, left of the close button, such as a currency chip. See [The corner](#the-corner) |
 | `children` | table | | | Instances or handles to put in the scrolling body |
 | `footer` | table | | | Instances or handles under the body, above the actions. They stay put while the body scrolls |
 | `side` | string | `"right"` | | `left` or `right`: the edge the panel comes from |
@@ -83,6 +84,7 @@ whatever had it before.
 | `sheet.body` | The [ScrollArea](scroll-area.md) that holds `children` |
 | `sheet.bodyRoom()` | The height the body may take before it scrolls, in the sheet's own units. It follows the screen, the header and the footer |
 | `sheet.headerSlot` | The frame that holds `header` |
+| `sheet.cornerSlot` | The frame that holds `corner` |
 | `sheet.footerSlot` | The frame that holds `footer` |
 | `sheet.content` | The panel or drawer itself |
 | `sheet.frame` | The clear frame round it that the overlay places, with the shadow and the plate |
@@ -112,3 +114,29 @@ Lucy.Sheet.new({
 ## Preview
 
 In Studio, from the command bar: `Lucy.Preview.show("Sheet")`.
+
+## The corner
+
+As on a [dialog](./dialog.md#the-corner), the close button keeps the top right
+corner, in the same place and at the same size on every panel, and the `corner`
+slot puts more on its left.
+
+```luau
+local coins = Lucy.Badge.new({ text = "1,250", icon = "lucide-extended:coins-filled" })
+local bag = Lucy.Sheet.new({
+    title = "Inventory",
+    titlePlacement = "edge",
+    corner = { coins },
+    header = {
+        Lucy.Tabs.new({
+            variant = "line",
+            items = {
+                { value = "gear", text = "Gear" },
+                { value = "potions", text = "Potions" },
+            },
+        }).bar,
+    },
+    children = { Lucy.Text.new({ text = "Everything you own.", variant = "muted" }) },
+})
+bag:open()
+```
