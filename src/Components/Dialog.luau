@@ -296,7 +296,12 @@ function Dialog.new(props: { [string]: any }?)
 				if scale <= 0 then
 					scale = 1
 				end
-				local used = pad() * 2 + headerSize().Y / scale + gap.Offset + parts.rise() + parts.offset()
+				local used = pad() * 2
+					+ headerSize().Y / scale
+					+ gap.Offset
+					+ parts.rise()
+					+ parts.offset()
+					+ parts.clear()
 				if footerShown() then
 					used += footerSize().Y / scale + gap.Offset
 				end

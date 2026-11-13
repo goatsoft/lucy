@@ -410,6 +410,24 @@ return function()
 			expect((described.descriptionLabel.Parent :: GuiObject).Visible).to.equal(true)
 		end)
 
+		it("starts its content clear of an edge title's plate", function()
+			local row = Instance.new("Frame")
+			row.Size = UDim2.new(1, 0, 0, 20)
+			local panel = Sheet.new({ app = app, title = "Hi", titlePlacement = "edge", header = { row } })
+			panel:open()
+			for _ = 1, 30 do
+				task.wait()
+				if panel.plate and panel.plate.AbsolutePosition.Y < panel.content.AbsolutePosition.Y then
+					break
+				end
+			end
+			task.wait()
+			-- The plate comes down over the panel: the first row starts the panel's own padding (at
+			-- least the small one) under the plate, not under the panel's top edge
+			local plateBottom = panel.plate.AbsolutePosition.Y + panel.plate.AbsoluteSize.Y
+			expect(row.AbsolutePosition.Y - plateBottom >= 12).to.equal(true)
+		end)
+
 		it("keeps the header slot clear of the close button when it is the top row", function()
 			local function slotted(props: { [string]: any })
 				local row = Instance.new("Frame")

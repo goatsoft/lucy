@@ -308,7 +308,7 @@ local spec: Component.Spec = {
 			end
 			local used = pad * 2 + headerSize().Y / scale + gap
 			if parts then
-				used += parts.rise() + parts.offset()
+				used += parts.rise() + parts.offset() + parts.clear()
 			end
 			if hasFooter then
 				used += footerSize().Y / scale + gap

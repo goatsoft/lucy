@@ -9,7 +9,8 @@
 	  the plate    with titlePlacement "edge" (or the PanelTitleEdge token 1): the title on a
 	               plate standing on the panel's top edge, coming down over it by the
 	               PanelPlateOverlap token, with a shadow of its own. The frame keeps the room
-	               over the panel for it.
+	               over the panel for it, and the panel's content starts that much lower, so
+	               its first row clears the plate by the panel's own padding.
 
 		local parts = PanelFrame.new(app, content, {
 			kind = "dialog",               -- the tags' prefix: ui-dialog-frame, -shadow, -plate
@@ -22,7 +23,9 @@
 		PanelFrame.edge(app, placement) -> boolean   whether a panel's title goes on the edge
 		parts.frame  parts.shadow  parts.edge (boolean)  parts.plate?  parts.titleLabel?
 		parts.rise()    the room over the panel the plate takes, in the frame's own units
-		parts.offset()  the shadow's offset, likewise (both 0 when unused)
+		parts.offset()  the shadow's offset, likewise
+		parts.clear()   the room the plate takes inside the panel (its overlap), likewise (all three
+		                0 when unused)
 
 	A shadow takes the corners of what it is behind (the panel's, the plate's), whatever rule set
 	them: a square sheet panel has a square shadow, a rounded dialog a rounded one, and a theme
@@ -133,6 +136,7 @@ export type Parts = {
 	titleLabel: TextLabel?,
 	rise: () -> number,
 	offset: () -> number,
+	clear: () -> number,
 }
 
 -- A panel's own titlePlacement, else the theme's PanelTitleEdge token (1: on the edge)
@@ -179,6 +183,10 @@ function PanelFrame.new(app: any, content: GuiObject, options: { [string]: any }
 	local function shadowOffset(): number
 		return math.max(0, offset())
 	end
+	-- Inside the panel, the plate covers its top by the overlap: the content starts under that
+	local function clear(): number
+		return if edge then math.max(0, overlap()) else 0
+	end
 
 	-- The panel: below the plate's room, short of the shadow on the right (and the foot, when it
 	-- fills the frame)
@@ -196,6 +204,14 @@ function PanelFrame.new(app: any, content: GuiObject, options: { [string]: any }
 		ZIndex = 2,
 		[OUT_SIZE] = contentSize :: any,
 	})
+	if edge then
+		Element.new("UIPadding", {
+			PaddingTop = function(): UDim
+				return UDim.new(0, clear())
+			end,
+		}).Parent =
+			content
+	end
 	content.Parent = frame
 
 	local function sizeOf(size: Vector2): UDim2
@@ -226,6 +242,7 @@ function PanelFrame.new(app: any, content: GuiObject, options: { [string]: any }
 		edge = edge,
 		rise = rise,
 		offset = shadowOffset,
+		clear = clear,
 	}
 
 	if edge then
