@@ -26,6 +26,14 @@
 	Toasts live in AppState at "toasts" (newest last) so the app can read, clear
 	or drive them. Toaster.add / dismiss / expire are pure list functions.
 	The list renders into the app's "toast" portal, above every scene and dialog.
+
+	Each toast sits in a panel frame, as a dialog does (Core/PanelFrame): with the PanelShadow token
+	set, a hard shadow is drawn that many pixels right and down behind it (ui-toast-shadow, black
+	unless a rule colours it; the frame is tagged ui-toast-frame-kind-<kind>, so a game can colour
+	each kind's shadow). A theme that has a GradientToast<Kind> token (GradientToastSuccess,
+	GradientToastError, GradientToastDefault and so on) fills that kind's toasts with it, by
+	Lucy.Gradient; a kind without one keeps its flat fill.
+	How wide (desktop; touch runs full width): App.new({ toastWidth = 480 }), 356 by default.
 	Where: App.new({ toastPosition = "top-center" }), or later
 	app.state:set("ui.toaster.position", ...): top-left, top-center, top-right,
 	bottom-left, bottom-center or bottom-right (the default). On touch devices
@@ -40,6 +48,8 @@ local Button = require(script.Parent.Button)
 local Component = require(script.Parent.Parent.Core.Component)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
+local Gradient = require(script.Parent.Gradient)
+local PanelFrame = require(script.Parent.Parent.Core.PanelFrame)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Toaster = {}
@@ -113,6 +123,22 @@ local rules: { Component.Rule } = {
 		},
 	},
 }
+for _, rule in PanelFrame.rules("toast") do
+	table.insert(rules, rule)
+end
+-- The shadow's corners match the toast's (a rule, so there is no UICorner for the frame to copy):
+-- a theme that rounds toasts differently rounds both
+table.insert(
+	rules,
+	{ selector = ".ui-toast-shadow::UICorner", priority = 0, properties = { CornerRadius = "$RadiusLg" } }
+)
+-- A toast with its kind's gradient: the fill goes white under it (over the kind's own fill, below),
+-- so the gradient's colours show
+table.insert(rules, {
+	selector = ".ui-toast.ui-gradient-host",
+	priority = 201,
+	properties = { BackgroundColor3 = "$White" },
+})
 Toaster.rules = rules
 -- A kind colours the whole toast: background, border, text and the close icon
 -- (above the Button icon rules, which go up to 100).
@@ -198,6 +224,7 @@ function Toaster.install(app)
 				app = app,
 				id = "toaster",
 				position = app.config.toastPosition,
+				width = app.config.toastWidth,
 				Parent = app:portal("toast"),
 			})
 			app.maid:give(mounted)
@@ -327,6 +354,11 @@ end
 
 local EMPTY = table.freeze({})
 
+-- A kind's gradient token's name, after "Gradient": ToastSuccess, ToastDefault
+local function gradientName(kind: string): string
+	return "Toast" .. string.upper(string.sub(kind, 1, 1)) .. string.sub(kind, 2)
+end
+
 local function label(name: string, order: number, tag: string, text: () -> string, visible: any?): TextLabel
 	return Element.new("TextLabel", {
 		Name = name,
@@ -408,17 +440,9 @@ local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, in
 		return button
 	end)
 
-	local frame = Element.new("Frame", {
+	local panel = Element.new("Frame", {
 		Name = id,
-		Size = UDim2.fromScale(1, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
-		-- Only the newest visibleToasts show, and the newest is nearest the edge.
-		Visible = function()
-			return index() > #toasts() - visibleCount
-		end,
-		LayoutOrder = function()
-			return if h.atTop() then -index() else index()
-		end,
 		Tags = {
 			"ui-toast" :: any,
 			function(): string
@@ -459,8 +483,44 @@ local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, in
 			entry.close,
 		}),
 	})
-	Component.claimSelection(app, frame)
+
+	-- The kind's gradient, when the theme has one
+	local function hasGradient(): boolean
+		return app.theme:resolve("Gradient" .. gradientName(toast().kind)) ~= nil
+	end
+	Gradient.new({
+		app = app,
+		gradient = function(): string
+			return if hasGradient() then gradientName(toast().kind) else "Surface"
+		end,
+		visible = hasGradient,
+		Parent = panel,
+	})
+
+	-- The frame the list lays out: the panel, and its shadow when the theme draws one
+	local parts = PanelFrame.new(app, panel, { kind = "toast", placement = "inside" })
+	local frame = parts.frame
+	Element.hydrate(frame, {
+		Name = id .. "-frame",
+		Size = UDim2.fromScale(1, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		-- Only the newest visibleToasts show, and the newest is nearest the edge.
+		Visible = function()
+			return index() > #toasts() - visibleCount
+		end,
+		LayoutOrder = function()
+			return if h.atTop() then -index() else index()
+		end,
+		Tags = {
+			"ui-toast-frame" :: any,
+			function(): string
+				return "ui-toast-frame-kind-" .. toast().kind
+			end,
+		},
+	})
+	Component.claimSelection(app, panel)
 	entry.frame = frame
+	entry.panel = panel
 	return frame
 end
 

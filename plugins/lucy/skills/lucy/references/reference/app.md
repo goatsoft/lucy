@@ -29,6 +29,7 @@ Every option is optional.
 | `adaptive` | on | `false` turns scaling off; a table such as `{ max = 1.5 }` changes its numbers. See [Scaling](../architecture.md#scaling) |
 | `backKeys` | `{ ButtonB, Backspace }` | The keys that go back. See [Back keys](../architecture.md#back-keys) |
 | `toastPosition` | `"bottom-right"` | Where toasts show. See [Toaster](../components/toaster.md) |
+| `toastWidth` | `356` | How wide toasts are on a desktop, in pixels |
 | `parent` | the player's PlayerGui | Where the App's ScreenGuis go |
 | `namePrefix` | `"Lucy_"` | Starts the name of every ScreenGui and folder the App makes. A second App needs its own |
 | `setCurrent` | `true` | Makes this the App components use, and the one `Lucy.App.current()` returns |

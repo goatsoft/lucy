@@ -87,12 +87,27 @@ return function()
 			local first = app.toast("First")
 			local second = app.toast("Second")
 			local portal = app:portal("toast")
+			-- A toast's panel sits in its frame (Core/PanelFrame), which the list lays out
 			local function order(id)
-				return portal:FindFirstChild(id, true).LayoutOrder
+				return portal:FindFirstChild(id, true).Parent.LayoutOrder
 			end
 			expect(order(second) > order(first)).to.equal(true)
 			app.state:set("ui.toaster.position", "top-right")
 			expect(order(second) < order(first)).to.equal(true)
+		end)
+
+		it("takes its width from the app's toastWidth", function()
+			local other, stop = Harness.app({ namePrefix = "ToastWide_", toastWidth = 480 })
+			local ok, err = pcall(function()
+				other.toast("Hi")
+				local container = other:handle("toaster").container
+				-- The column, and its inset each side
+				expect(container.Size.X.Offset).to.equal(480 + 24 * 2)
+			end)
+			stop()
+			if not ok then
+				error(err, 0)
+			end
 		end)
 
 		it("rejects an unknown position", function()
@@ -153,8 +168,8 @@ return function()
 				app.toast("t" .. i)
 			end
 			local portal = app:portal("toast")
-			expect(portal:FindFirstChild("toast-1", true).Visible).to.equal(false)
-			expect(portal:FindFirstChild("toast-5", true).Visible).to.equal(true)
+			expect(portal:FindFirstChild("toast-1", true).Parent.Visible).to.equal(false)
+			expect(portal:FindFirstChild("toast-5", true).Parent.Visible).to.equal(true)
 		end)
 
 		it("runs the action and dismisses", function()
@@ -220,6 +235,85 @@ return function()
 			frame, title = parts(plain)
 			expect(is(frame, "BackgroundColor3", "Popover")).to.equal(true)
 			expect(is(title, "TextColor3", "PopoverForeground")).to.equal(true)
+		end)
+
+		it("puts each toast in a panel frame, with no shadow or gradient unless the theme asks", function()
+			local id = app.toast.success("Saved")
+			local panel = app:portal("toast"):FindFirstChild(id, true)
+			local frame = panel.Parent
+			expect(frame:HasTag("ui-toast-frame")).to.equal(true)
+			local shadow = frame:FindFirstChild("Shadow")
+			expect(shadow).to.be.ok()
+			expect(shadow:HasTag("ui-toast-shadow")).to.equal(true)
+			expect(shadow.Visible).to.equal(false)
+			local gradient = panel:FindFirstChildWhichIsA("UIGradient")
+			expect(gradient == nil or gradient.Enabled == false).to.equal(true)
+		end)
+	end)
+
+	describe("with a theme that frames toasts", function()
+		local Tokens = require(script.Parent.Parent.Core.Tokens)
+		local app, cleanup
+		beforeEach(function()
+			local primitives = table.clone(Tokens.primitives)
+			primitives.PanelShadow = 6
+			local themes = Tokens.themesFor("zinc")
+			for _, values in themes do
+				values.GradientToastSuccess = Tokens.gradient({ "$Green400", "$Green700" })
+			end
+			app, cleanup = Harness.app({ theme = "light", primitives = primitives, themes = themes })
+		end)
+		afterEach(function()
+			cleanup()
+		end)
+
+		it("rounds the shadow's corners as the toast's own", function()
+			-- The toast's corners are a style rule (no UICorner child to copy), so the shadow has its own
+			local function radius(selector)
+				for _, rule in Toaster.rules do
+					if rule.selector == selector then
+						return rule.properties.CornerRadius
+					end
+				end
+				return nil
+			end
+			expect(radius(".ui-toast::UICorner")).to.be.ok()
+			expect(radius(".ui-toast-shadow::UICorner")).to.equal(radius(".ui-toast::UICorner"))
+		end)
+
+		it("draws the PanelShadow token's shadow behind each toast, tagged with its kind", function()
+			local id = app.toast.success("Saved")
+			local panel = app:portal("toast"):FindFirstChild(id, true)
+			local frame = panel.Parent
+			task.wait()
+			local shadow = frame:FindFirstChild("Shadow")
+			expect(shadow.Visible).to.equal(true)
+			expect(shadow.ZIndex < panel.ZIndex).to.equal(true)
+			expect(frame:HasTag("ui-toast-frame-kind-success")).to.equal(true)
+			app.toast("Saved", { id = id, kind = "error" })
+			expect(frame:HasTag("ui-toast-frame-kind-error")).to.equal(true)
+			expect(frame:HasTag("ui-toast-frame-kind-success")).to.equal(false)
+		end)
+
+		it("fills a kind with the theme's GradientToast<Kind>, and only a kind that has one", function()
+			local saved = app.toast.success("Saved")
+			local warned = app.toast.warning("Low ammo")
+			local portal = app:portal("toast")
+			Harness.flush()
+			local panel = portal:FindFirstChild(saved, true)
+			local gradient = panel:FindFirstChildWhichIsA("UIGradient")
+			expect(gradient).to.be.ok()
+			expect(gradient.Enabled).to.equal(true)
+			-- A gradient tints the fill under it: the panel goes white so its colours show
+			expect(Harness.colorEq(Harness.styled(panel, "BackgroundColor3"), Color3.new(1, 1, 1))).to.equal(
+				true
+			)
+			local plain = portal:FindFirstChild(warned, true)
+			local none = plain:FindFirstChildWhichIsA("UIGradient")
+			expect(none == nil or none.Enabled == false).to.equal(true)
+			expect(Harness.colorEq(Harness.styled(plain, "BackgroundColor3"), app.theme:resolve("Warning"))).to.equal(
+				true
+			)
 		end)
 	end)
 

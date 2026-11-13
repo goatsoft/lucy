@@ -50,13 +50,39 @@ Change these before the first toast shows:
 |---|---|---|
 | `Lucy.Toaster.defaults.duration` | `4` | Seconds a toast stays when no `duration` is given |
 | `Lucy.Toaster.defaults.visibleToasts` | `3` | How many show at once; the newest win |
-| `Lucy.Toaster.defaults.width` | `356` | Width in pixels on desktop |
+| `Lucy.Toaster.defaults.width` | `356` | Width in pixels on desktop; `App.new({ toastWidth = 480 })` sets it for one app |
 
 A kind colours the whole toast with the theme's `Success`, `Destructive`,
 `Warning` or `Info` colour, and its text and close icon with the matching
 foreground, such as `SuccessForeground`: a dark or light shade of the toast's own
 colour, worked out to WCAG AA contrast (see [Theming](../reference/theming.md)).
 A plain toast uses the popover colours.
+
+## Shadow and gradient
+
+Each toast sits in the same frame as a dialog, so a theme that gives dialogs a
+hard offset shadow (the `PanelShadow` token) gives toasts one too. It is black
+unless a rule colours it; the frame is tagged with the toast's kind, so each kind
+can have its own:
+
+```luau
+app.theme:addRules("myToasts", {
+    {
+        selector = ".ui-toast-frame-kind-success > .ui-toast-shadow",
+        priority = 210,
+        properties = { BackgroundColor3 = "$Green900" },
+    },
+})
+```
+
+The shadow's corners follow the `RadiusLg` token, as the toast's do; a theme
+that rounds toasts with a rule of its own (`.ui-toast::UICorner`) sets
+`.ui-toast-shadow::UICorner` to match.
+
+A theme with a `GradientToast<Kind>` token (`GradientToastSuccess`,
+`GradientToastError`, `GradientToastDefault` and so on, made with
+`Tokens.gradient`) fills that kind's toasts with it. A kind without one keeps its
+flat colour. Pick text colours that read on all of the gradient.
 
 ## Position
 

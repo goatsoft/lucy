@@ -35,6 +35,7 @@
 		namePrefix    prefix for created instances ("Lucy_")
 		setCurrent    make this the default app for components (true)
 		toastPosition where toasts show ("bottom-right"; see Components/Toaster)
+		toastWidth    how wide toasts are on a desktop, in pixels (356)
 		devtools      false to skip the Devtools bridge Studio gets (ADR 0028)
 		server        true (or ServerLink options) to mirror a Lucy.Server at server.* (ADR 0033)
 ]]
