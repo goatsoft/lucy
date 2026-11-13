@@ -516,4 +516,81 @@ return function()
 			app.theme:resolve("OverlayTransparency")
 		)
 	end)
+	describe("the frame (ADR 0047)", function()
+		local Tokens = require(script.Parent.Parent.Core.Tokens)
+
+		local function framed(primitives: { [string]: any })
+			local all = table.clone(Tokens.primitives)
+			for k, v in primitives do
+				all[k] = v
+			end
+			cleanup()
+			app, cleanup = Harness.app({ theme = "light", primitives = all })
+		end
+
+		it("puts the panel in a frame the overlay places, the panel as it was", function()
+			local panel = Dialog.new({ app = app, title = "Hi" })
+			panel:open()
+			expect(panel.frame).to.be.ok()
+			expect(panel.content.Parent).to.equal(panel.frame)
+			expect(panel.content:HasTag("ui-dialog-content")).to.equal(true)
+			expect(panel.titleLabel.Text).to.equal("Hi")
+		end)
+
+		it("has no shadow and the title inside unless the theme asks", function()
+			local panel = Dialog.new({ app = app, title = "Hi" })
+			panel:open()
+			expect(panel.shadow.Visible).to.equal(false)
+			expect(panel.plate).to.equal(nil)
+			expect(panel.titleLabel:IsDescendantOf(panel.content)).to.equal(true)
+		end)
+
+		it("draws the shadow the PanelShadow token's pixels right and down, behind the panel", function()
+			framed({ PanelShadow = 6 })
+			local panel = Dialog.new({ app = app, title = "Hi" })
+			panel:open()
+			task.wait()
+			expect(panel.shadow.Visible).to.equal(true)
+			expect(panel.shadow:HasTag("ui-dialog-shadow")).to.equal(true)
+			expect(panel.shadow.Parent).to.equal(panel.frame)
+			expect(panel.shadow.ZIndex < panel.content.ZIndex).to.equal(true)
+			local moved = panel.shadow.AbsolutePosition - panel.content.AbsolutePosition
+			local scale = panel.content.AbsoluteSize.X / math.max(1, panel.shadow.AbsoluteSize.X)
+			expect(math.abs(scale - 1) < 0.01).to.equal(true)
+			expect(moved.X > 0 and moved.Y > 0 and math.abs(moved.X - moved.Y) < 0.5).to.equal(true)
+		end)
+
+		it("puts the title on a plate on the top edge, with titlePlacement edge", function()
+			local panel = Dialog.new({
+				app = app,
+				title = "Club Pass",
+				description = "Season one",
+				titlePlacement = "edge",
+			})
+			panel:open()
+			task.wait()
+			expect(panel.plate).to.be.ok()
+			expect(panel.plate:HasTag("ui-dialog-plate")).to.equal(true)
+			expect(panel.titleLabel:IsDescendantOf(panel.plate)).to.equal(true)
+			expect(panel.titleLabel.Text).to.equal("Club Pass")
+			expect(panel.titleLabel:HasTag("ui-dialog-title")).to.equal(true)
+			expect(panel.descriptionLabel:IsDescendantOf(panel.content)).to.equal(true)
+			-- Standing on the edge: its top above the panel's, its bottom over it
+			local plateTop = panel.plate.AbsolutePosition.Y
+			local plateBottom = plateTop + panel.plate.AbsoluteSize.Y
+			local panelTop = panel.content.AbsolutePosition.Y
+			expect(plateTop < panelTop).to.equal(true)
+			expect(plateBottom > panelTop).to.equal(true)
+		end)
+
+		it("takes the PanelTitle token as every panel's default", function()
+			framed({ PanelTitle = "edge" })
+			local panel = Dialog.new({ app = app, title = "Hi" })
+			panel:open()
+			expect(panel.plate).to.be.ok()
+			local inside = Dialog.new({ app = app, title = "Hi", titlePlacement = "inside" })
+			inside:open()
+			expect(inside.plate).to.equal(nil)
+		end)
+	end)
 end

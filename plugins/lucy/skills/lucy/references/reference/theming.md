@@ -101,6 +101,9 @@ The same in every theme.
 | `FontDisplay` | Fredoka, for headings |
 | `StrokeThin`, `StrokeThick` | 1 and 2 px |
 | `FocusRing` | 3 px |
+| `PanelShadow` | 0: a [Dialog](../components/dialog.md#the-frame) or [Sheet](../components/sheet.md)'s shadow, in px right and down (0 draws none) |
+| `PanelPlateOverlap` | 14: how far a title on the edge comes down over its panel, in px |
+| `PanelTitle` | `"inside"`: where dialog and sheet titles go when a panel does not say (`"edge"` puts every one on a plate on the top edge) |
 
 Every border and ring is drawn inside its element's edge, so a border never makes
 an element bigger than its size, and a scroll area or a tight row never cuts one

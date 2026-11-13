@@ -16,6 +16,8 @@
 			side = "right",           -- left | right (the panel; touch always uses the bottom)
 			width = 360,              -- the panel's width, at most 90% of the screen
 			presentation = "auto",    -- auto | panel | drawer
+			titlePlacement = nil,     -- "inside" | "edge": the title on a plate standing on the top
+			                          -- edge; nil: the PanelTitle token (Lucy's themes: inside)
 			dismissible = true,       -- back keys / outside press / close button
 			closeOnOverlay = true,
 			modal = true,             -- false: no focus trap, presses reach what is behind
@@ -38,6 +40,11 @@
 	top. The panel or drawer is decided each time it opens: a drawer when the
 	player last used touch, a panel otherwise. A long body scrolls inside it.
 
+	The panel sits in a frame (sheet.frame, Core/PanelFrame): with the PanelShadow token set, a
+	shadow offset behind it (sheet.shadow, ui-sheet-shadow); with the title on the edge, a plate
+	(sheet.plate, ui-sheet-plate) whose label is sheet.titleLabel, and the room for it comes off
+	the panel's top. sheet.content is the panel.
+
 	State keys: open, title, description.
 ]]
 
@@ -46,6 +53,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Heading = require(script.Parent.Heading)
 local Overlay = require(script.Parent.Parent.Core.Overlay)
+local PanelFrame = require(script.Parent.Parent.Core.PanelFrame)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
 local ScrollArea = require(script.Parent.ScrollArea)
@@ -112,6 +120,9 @@ Sheet.rules = {
 		properties = { BackgroundTransparency = 1, BorderSizePixel = 0 },
 	},
 } :: { Component.Rule }
+for _, rule in PanelFrame.rules("sheet") do
+	table.insert(Sheet.rules, rule)
+end
 
 local spec: Component.Spec = {
 	kind = "sheet",
@@ -160,8 +171,13 @@ local spec: Component.Spec = {
 		handleBar.Position = UDim2.fromScale(0.5, 0)
 
 		-- The title over its description (beside it on a short screen: Components/Heading)
+		-- (with the title on the edge, the description alone: the title is on the frame's plate)
+		local edge = PanelFrame.edge(app, p.titlePlacement)
+		local titleRef = h:ref("title")
 		local text, titleLabel, descriptionLabel = Heading.new(h.app, {
-			title = h:ref("title"),
+			title = function(): string
+				return if edge then "" else titleRef()
+			end,
 			description = h:ref("description"),
 			titleTag = "ui-sheet-title",
 			descriptionTag = "ui-sheet-description",
@@ -271,6 +287,7 @@ local spec: Component.Spec = {
 		-- and gaps. In a panel it fills what the header and footer leave (below), so the footer
 		-- sits at the bottom with no gap, however the panel is placed under the top bar.
 		local content: Frame
+		local parts: PanelFrame.Parts? = nil
 		local function bodyCap(): number
 			local overlay = overlayRef()
 			if not overlay then
@@ -281,6 +298,9 @@ local spec: Component.Spec = {
 				scale = 1
 			end
 			local used = pad * 2 + headerSize().Y / scale + gap
+			if parts then
+				used += parts.rise() + parts.offset()
+			end
 			if hasFooter then
 				used += footerSize().Y / scale + gap
 			end
@@ -352,7 +372,6 @@ local spec: Component.Spec = {
 		-- less the top bar), or it would grow past the bottom of the screen
 		content = Element.new("Frame", {
 			Name = "Content",
-			Size = UDim2.fromScale(1, 0),
 			AutomaticSize = function(): Enum.AutomaticSize
 				return if isDrawer() then Enum.AutomaticSize.Y else Enum.AutomaticSize.None
 			end,
@@ -369,9 +388,30 @@ local spec: Component.Spec = {
 			close.Parent = content
 		end
 
+		-- The frame the overlay places: the panel (filling it, or fitting its children in a
+		-- drawer), its shadow and an edge title's plate
+		local framed = PanelFrame.new(app, content, {
+			kind = "sheet",
+			title = titleRef,
+			placement = p.titlePlacement,
+			fill = function(): boolean
+				return not isDrawer()
+			end,
+		})
+		parts = framed
+		Element.hydrate(framed.frame, {
+			Size = UDim2.fromScale(1, 0),
+			AutomaticSize = function(): Enum.AutomaticSize
+				return if isDrawer() then Enum.AutomaticSize.Y else Enum.AutomaticSize.None
+			end,
+		})
+		if framed.titleLabel then
+			h.titleLabel = framed.titleLabel
+		end
+
 		local overlay = Overlay.use(app, {
 			open = open,
-			content = content,
+			content = framed.frame,
 			returnFocus = p.returnFocus,
 			presentation = p.presentation or "auto",
 			prefer = "panel",
@@ -407,6 +447,7 @@ local spec: Component.Spec = {
 
 		h.overlay, h.content, h.body, h.footer, h.actions =
 			overlay.scrim, content, body, footer, actionHandles
+		h.frame, h.shadow, h.plate = framed.frame, framed.shadow, framed.plate
 		h.bodyRoom = bodyCap
 		h.headerSlot, h.footerSlot, h.actionsRow = headerSlot, footerSlot, actionsRow
 		h.handleBar, h.presentation = handleBar, overlay.presentation

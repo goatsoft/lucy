@@ -48,6 +48,7 @@ settings:open()
 | `side` | string | `"right"` | | `left` or `right`: the edge the panel comes from |
 | `width` | number | `360` | | The panel's width in pixels, at most 90% of the screen |
 | `presentation` | string | `"auto"` | | `auto`, `panel` or `drawer` |
+| `titlePlacement` | string | the `PanelTitle` token | | `"inside"`, or `"edge"`: the title on a plate standing on the top edge, as a [Dialog's](dialog.md#the-frame); the room for it comes off the panel's top |
 | `dismissible` | boolean | `true` | | Whether B, Backspace, a press outside and the close button can close it |
 | `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it (off by default when `modal` is `false`) |
 | `modal` | boolean | `true` | | `false` lets clicks reach what is behind it and lets focus move out of it |
@@ -91,6 +92,9 @@ whatever had it before.
 | `sheet.headerSlot` | The frame that holds `header` |
 | `sheet.footerSlot` | The frame that holds `footer` |
 | `sheet.content` | The panel or drawer itself |
+| `sheet.frame` | The clear frame round it that the overlay places, with the shadow and the plate |
+| `sheet.shadow` | The shadow behind it (`ui-sheet-shadow`, shown when the `PanelShadow` token is above 0) |
+| `sheet.plate` | The plate the title stands on, with `titlePlacement = "edge"` (else `nil`) |
 
 ## Examples
 

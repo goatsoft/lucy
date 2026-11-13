@@ -23,6 +23,8 @@
 			returnFocus = nil,        -- focus on close: nil what opened it, an object, handle or
 			                          -- getter, or false for nothing
 			size = "md",              -- sm | md | lg | xl | full: how wide it gets
+			titlePlacement = nil,     -- "inside" | "edge": the title on a plate standing on the top
+			                          -- edge; nil: the PanelTitle token (Lucy's themes: inside)
 			maxWidth = nil,           -- pixels, instead of size
 			maxHeight = nil,          -- pixels (a number, ref or getter); the body scrolls past it
 			onOpenChange = function(open, dialog) end,
@@ -49,6 +51,10 @@
 	when that can't take focus any more. A non modal dialog given defaultFocus takes
 	focus and gives it back the same way, but traps nothing.
 
+	The panel sits in a frame (dialog.frame, Core/PanelFrame): with the PanelShadow token set, a
+	shadow offset behind it (dialog.shadow, ui-dialog-shadow); with the title on the edge, a plate
+	(dialog.plate, ui-dialog-plate) whose label is dialog.titleLabel. dialog.content is the panel.
+
 	State keys: open, title, description.
 ]]
 
@@ -58,6 +64,7 @@ local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Heading = require(script.Parent.Heading)
 local Overlay = require(script.Parent.Parent.Core.Overlay)
+local PanelFrame = require(script.Parent.Parent.Core.PanelFrame)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
 local ScrollArea = require(script.Parent.ScrollArea)
@@ -133,6 +140,9 @@ local rules: { Component.Rule } = {
 		},
 	},
 }
+for _, rule in PanelFrame.rules("dialog") do
+	table.insert(rules, rule)
+end
 Dialog.rules = rules
 
 function Dialog.new(props: { [string]: any }?)
@@ -160,15 +170,27 @@ function Dialog.new(props: { [string]: any }?)
 			local open = h:ref("open")
 			local content = Component.create("Frame", {
 				Name = "Content",
-				Size = UDim2.new(1, -32, 0, 0),
 				AutomaticSize = Enum.AutomaticSize.Y,
 				Active = true,
 				Tags = { "ui-dialog-content" },
 			})
-			Component.create(
-				"UISizeConstraint",
-				{ MaxSize = Vector2.new(width, math.huge), Parent = content }
-			)
+			-- The frame the overlay places: the panel, its shadow and an edge title's plate
+			local parts = PanelFrame.new(h.app, content, {
+				kind = "dialog",
+				title = h:ref("title"),
+				placement = p.titlePlacement,
+			})
+			local frame = parts.frame
+			Element.hydrate(frame, {
+				Size = UDim2.new(1, -32, 0, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+			})
+			Element.new("UISizeConstraint", {
+				MaxSize = function(): Vector2
+					return Vector2.new(width + parts.offset(), math.huge)
+				end,
+			}).Parent =
+				frame
 			-- Padding and layout live on an inner frame, so the close button can sit in
 			-- the content's own corner.
 			local short = Composables.useResponsive(h.app, { short = true, default = false })
@@ -200,8 +222,12 @@ function Dialog.new(props: { [string]: any }?)
 			header.Parent = inner
 			Component.list({ Padding = gap, Parent = header })
 			-- The title over its description (beside it on a short screen: Components/Heading)
+			-- (with the title on the edge, the description alone)
+			local titleRef = h:ref("title")
 			local text, titleLabel, descriptionLabel = Heading.new(h.app, {
-				title = h:ref("title"),
+				title = function(): string
+					return if parts.edge then "" else titleRef()
+				end,
 				description = h:ref("description"),
 				titleTag = "ui-dialog-title",
 				descriptionTag = "ui-dialog-description",
@@ -209,7 +235,7 @@ function Dialog.new(props: { [string]: any }?)
 			text.Size = UDim2.new(1, if showClose then -44 else 0, 0, 0)
 			text.LayoutOrder = 1
 			text.Parent = header
-			h.titleLabel = titleLabel
+			h.titleLabel = parts.titleLabel or titleLabel
 			h.descriptionLabel = descriptionLabel
 			-- The header slot: filters, tabs or anything else that stays put over the body.
 			-- Shown while anything in it is, so a slot whose children all hide takes no gap.
@@ -261,7 +287,7 @@ function Dialog.new(props: { [string]: any }?)
 				if scale <= 0 then
 					scale = 1
 				end
-				local used = pad() * 2 + headerSize().Y / scale + gap.Offset
+				local used = pad() * 2 + headerSize().Y / scale + gap.Offset + parts.rise() + parts.offset()
 				if footerShown() then
 					used += footerSize().Y / scale + gap.Offset
 				end
@@ -339,7 +365,7 @@ function Dialog.new(props: { [string]: any }?)
 			-- Stacking, back, focus and the dimmed backdrop (owned, so destroy pops them).
 			local overlay = Overlay.use(h.app, {
 				open = open,
-				content = content,
+				content = frame,
 				returnFocus = p.returnFocus,
 				presentation = "center",
 				modal = modal,
@@ -369,6 +395,7 @@ function Dialog.new(props: { [string]: any }?)
 			overlayRef(overlay)
 			h.overlay, h.content, h.body, h.footer, h.actions =
 				overlay.scrim, content, body, footer, actionHandles
+			h.frame, h.shadow, h.plate = frame, parts.shadow, parts.plate
 			h.headerSlot, h.footerSlot, h.actionsRow = headerSlot, footerSlot, actionsRow
 			Component.claimSelection(h.app, root)
 
