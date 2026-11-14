@@ -79,6 +79,24 @@ return function()
 		expect(math.abs(stripEnd - frameEnd) <= 1.5).to.equal(true)
 	end)
 
+	it("starts when its space shrinks below its text, and stops when it grows to fit again", function()
+		if not Harness.laysOutLive() then
+			return
+		end
+		local marquee = Marquee.new({ app = app, Parent = box, text = "Now playing", pause = 0, speed = 400 })
+		Harness.flush()
+		task.wait(0.1)
+		expect(marquee.scrolling).to.equal(false)
+		box.Size = UDim2.fromOffset(30, 40)
+		expect(Harness.waitFor(function()
+			return marquee.scrolling and offset(marquee) < 0
+		end)).to.equal(true)
+		box.Size = UDim2.fromOffset(600, 40)
+		expect(Harness.waitFor(function()
+			return not marquee.scrolling and offset(marquee) == 0
+		end)).to.equal(true)
+	end)
+
 	it("stays still when the player asks for reduced motion", function()
 		Preferences.setReducedMotion(true)
 		local marquee = Marquee.new({ app = app, Parent = box, text = LONG, pause = 0, speed = 400 })

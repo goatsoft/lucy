@@ -33,6 +33,12 @@ local Text = require(script.Parent.Text)
 
 local Marquee = {}
 
+-- Where GUI layout runs live (edit mode, a client). A running server lays guis out only when read
+-- and fires no AbsoluteSize changes, so there the Marquee looks every frame instead.
+local function laysOutLive(): boolean
+	return not (RunService:IsServer() and RunService:IsRunning())
+end
+
 Marquee.speed = 40
 Marquee.pause = 1.5
 Marquee.gap = 48
@@ -182,6 +188,8 @@ local spec: Component.Spec = {
 
 		-- Side effect: move the strip while visible, from the start each time the text changes. A
 		-- loop is a ticker: a new text carries on from where the old one was, so its clock lives here.
+		-- A frame step runs only while the text is too long: a board of short names costs nothing a
+		-- frame, and a size change (a resize, a longer name laid out) starts or stops it.
 		h.scrolling = false
 		local loopClock = 0
 		Reactive.watchEffect(function()
@@ -197,18 +205,27 @@ local spec: Component.Spec = {
 				return
 			end
 			local t = if loop then loopClock else 0
-			local function stepFrame(dt: number): boolean
-				-- Sizes on screen, in the offsets the strip moves by: a UIScale above (Lucy's own
-				-- on a phone) makes an offset smaller on screen, so divide it back out
+			local live = laysOutLive()
+			-- Sizes on screen, in the offsets the strip moves by: a UIScale above (Lucy's own on a
+			-- phone) makes an offset smaller on screen, so divide it back out
+			local function measure(): (number, number)
 				local scale = Marquee.scaleOf(frame)
 				local width = strip.AbsoluteSize.X / scale
-				local overflow = width - frame.AbsoluteSize.X / scale
+				return width, width - frame.AbsoluteSize.X / scale
+			end
+			local function rest()
+				t = 0
+				h.scrolling = false
+				offset(0)
+				looping(false)
+			end
+			-- One frame; true when the text fits now, which ends the stepping (where a size change
+			-- will start it again)
+			local function stepFrame(dt: number): boolean
+				local width, overflow = measure()
 				if overflow <= 1 then
-					t = 0
-					h.scrolling = false
-					offset(0)
-					looping(false)
-					return false
+					rest()
+					return live
 				end
 				t += dt
 				h.scrolling = true
@@ -223,17 +240,57 @@ local spec: Component.Spec = {
 				end
 				return false
 			end
-			local disconnect: () -> ()
-			if Animate.manual then
-				disconnect = Animate.drive(stepFrame)
-			else
-				local heartbeat = RunService.Heartbeat:Connect(stepFrame)
-				disconnect = function()
-					heartbeat:Disconnect()
+			local stop: (() -> ())? = nil
+			local function run()
+				if stop then
+					return
+				end
+				if Animate.manual then
+					local done = false
+					local disconnect = Animate.drive(function(dt: number): boolean
+						done = done or stepFrame(dt)
+						if done then
+							stop = nil
+						end
+						return done
+					end)
+					if not done then
+						stop = disconnect
+					end
+				else
+					local heartbeat: RBXScriptConnection
+					heartbeat = RunService.Heartbeat:Connect(function(dt: number)
+						if stepFrame(dt) then
+							heartbeat:Disconnect()
+							stop = nil
+						end
+					end)
+					stop = function()
+						heartbeat:Disconnect()
+					end
 				end
 			end
+			local function check()
+				local _, overflow = measure()
+				if overflow > 1 or not live then
+					run()
+				elseif not stop then
+					rest()
+				end
+			end
+			local sized = {
+				strip:GetPropertyChangedSignal("AbsoluteSize"):Connect(check),
+				frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(check),
+			}
+			check()
 			Reactive.onCleanup(function()
-				disconnect()
+				for _, connection in sized do
+					connection:Disconnect()
+				end
+				if stop then
+					stop()
+					stop = nil
+				end
 				h.scrolling = false
 				-- A loop's copy stays up across a text change (no blink); hiding it is the effect's job
 				if not loop then
