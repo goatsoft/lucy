@@ -61,6 +61,76 @@ return function()
 		expect(board.rankLabelFor(14).Visible).to.equal(true)
 	end)
 
+	it("shows a crowned rank as its number alone, and #4 on below the crowns", function()
+		local board = Leaderboard.new({
+			app = app,
+			Parent = gui,
+			rows = ROWS,
+			own = { userId = 99, name = "Me", value = 50, rank = 2 },
+			medals = { "lucide:heart", "lucide:play", "lucide:bold" },
+		})
+		expect(board.rankLabelFor(11).Text).to.equal("1")
+		expect(board.rankLabelFor(12).Text).to.equal("2")
+		expect(board.rankLabelFor(13).Text).to.equal("3")
+		expect(board.rankLabelFor(14).Text).to.equal("#4")
+		-- The pinned row has no crown, so it keeps its #
+		expect(board.ownRankLabel.Text).to.equal("#2")
+		local plain = Leaderboard.new({ app = app, Parent = gui, rows = ROWS })
+		expect(plain.rankLabelFor(11).Text).to.equal("#1")
+	end)
+
+	it("shows a long name in full, scrolling it, never cut short", function()
+		local Marquee = require(script.Parent.Marquee)
+		local pause = Marquee.pause
+		Marquee.pause = 0
+		local LONG = "vedxolbor1_the_dancing_machine_of_the_basement"
+		local column = Instance.new("Frame")
+		column.Size = UDim2.fromOffset(260, 400)
+		column.Parent = gui
+		local board = Leaderboard.new({
+			app = app,
+			Parent = column,
+			rows = { { userId = 11, name = "Sasha", value = 1 }, { userId = 15, name = LONG, value = 1 } },
+			own = { userId = 99, name = LONG, value = 1, rank = 40 },
+		})
+		Marquee.pause = pause
+		for _, label in { board.nameLabelFor(15), board.ownNameLabel } do
+			expect(label.Text).to.equal(LONG)
+			expect(label.TextTruncate).to.equal(Enum.TextTruncate.None)
+			expect(label.Parent:HasTag("ui-marquee")).to.equal(true)
+		end
+		if Harness.laysOutLive() then
+			expect(Harness.waitFor(function()
+				return board.nameLabelFor(15).Position.X.Offset < 0
+			end, 2)).to.equal(true)
+			-- A short name stays put
+			expect(board.nameLabelFor(11).Position.X.Offset).to.equal(0)
+		end
+	end)
+
+	it("styles a name as the board does, not as plain text", function()
+		local board = Leaderboard.new({ app = app, Parent = gui, rows = ROWS })
+		Harness.flush()
+		for _, id in { 11, 12, 14 } do
+			local name = board.nameLabelFor(id)
+			-- A label with only the board's name tags is what the board means a name to look like
+			local probe = Instance.new("TextLabel")
+			for _, tag in name:GetTags() do
+				if tag:sub(1, 15) == "ui-leaderboard-" then
+					probe:AddTag(tag)
+				end
+			end
+			probe.Parent = gui
+			Harness.flush()
+			expect(Harness.styled(name, "TextSize")).to.equal(Harness.styled(probe, "TextSize"))
+			expect(Harness.styled(name, "FontFace")).to.equal(Harness.styled(probe, "FontFace"))
+			expect(Harness.colorEq(Harness.styled(name, "TextColor3"), Harness.styled(probe, "TextColor3"))).to.equal(
+				true
+			)
+			probe:Destroy()
+		end
+	end)
+
 	it("keeps the number with no medal icons, still in the medal colours", function()
 		local board = Leaderboard.new({ app = app, Parent = gui, rows = ROWS })
 		expect(board.rankLabelFor(11).Visible).to.equal(true)

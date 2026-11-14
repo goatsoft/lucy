@@ -36,7 +36,7 @@ Lucy.Leaderboard.new({
 | `own` | table, ref or getter | | | The player's own entry. Lit when it is on the board, pinned at the bottom when it is not |
 | `unranked` | string, ref or getter | `"-"` | | The pinned row's rank when `own.rank` is `nil`, such as `"100+"` |
 | `format` | function | `14,850` | | Turns a value into text |
-| `medals` | table, `false`, ref or getter | | | Icons for 1st, 2nd and 3rd, before the number. `false` takes away the gold, silver and bronze too |
+| `medals` | table, `false`, ref or getter | | | Icons for 1st, 2nd and 3rd, before the number, which then leaves out its `#` (`1`, then `#4` on). `false` takes away the gold, silver and bronze too |
 | `podium` | boolean | `true` | | `false` makes every row the same size |
 | `avatars` | `"top"` or boolean | `"top"` | | Headshots on the podium and your row. `true` on every row, `false` on none |
 | `avatarShape` | string | `"circle"` | | `circle`, or `square` for rounded corners |
@@ -51,7 +51,8 @@ It also takes the [props every component takes](index.md#using-a-component).
 
 A player with no `userId` gets a monogram, like a bot in [Avatar](avatar.md).
 Rows are matched by `userId`, or `name` when there is none, so new scores move
-rows instead of rebuilding them.
+rows instead of rebuilding them. Names are never cut short: one too long for its
+row scrolls back and forth, like a [Marquee](marquee.md).
 
 1st, 2nd and 3rd are coloured with `$MedalGold`, `$MedalSilver` and
 `$MedalBronze`. Set them in your theme to match your game.
@@ -60,7 +61,8 @@ rows instead of rebuilding them.
 The handle has `board.list`, `board.pinned`, `board.scroller` (with `height`),
 `board.skeletons`, `board.emptyLabel`, and for each row `board.rowFor(id)`,
 `board.tierOf(id)`, `board.rankLabelFor(id)`, `board.medalFor(id)`,
-`board.avatarFor(id)`, `board.nameLabelFor(id)` and `board.valueLabelFor(id)`.
+`board.avatarFor(id)`, `board.nameLabelFor(id)` (the name's moving strip) and
+`board.valueLabelFor(id)`.
 
 ## Examples
 

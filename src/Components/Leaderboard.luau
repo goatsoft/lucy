@@ -11,8 +11,8 @@
 			own = mine,                -- the player's entry (or nil): lit when listed, else pinned
 			unranked = "100+",         -- the pinned rank when own.rank is nil (or a ref or getter)
 			format = function(value) return `{value} PTS` end, -- default: 14,850
-			medals = { "set:queen", "set:crown", "set:crown" }, -- icons for 1st to 3rd, beside
-			                           -- #1, #2, #3; false for no medal colours at all (a ref
+			medals = { "set:queen", "set:crown", "set:crown" }, -- icons for 1st to 3rd, in place
+			                           -- of the #: 1, 2, 3, then #4 on; false for no medal colours at all (a ref
 			                           -- or getter too: one board with medals, the next without)
 			podium = true,             -- false: every row the same, as a plain list
 			avatars = "top",           -- headshots on the podium and the player's row; true on
@@ -29,7 +29,8 @@
 
 	Each row has a tier: first, podium (2nd and 3rd), rest, or own (the player's row, listed past
 	the podium or pinned). A tier sets the headshot and type sizes, scaled by `size`. Ranks read
-	#1, #2, #3. Rows are keyed by userId (or name), so new data updates rows in place and moves
+	#1, #2, #3, or 1, 2, 3 beside medal icons (#4 on, and the pinned row, keep the #). A name is
+	shown in full: a long one scrolls back and forth (a Marquee; nameLabelFor gives its strip). Rows are keyed by userId (or name), so new data updates rows in place and moves
 	them. Colours come from style rules: $MedalGold, $MedalSilver, $MedalBronze for the top three,
 	$Accent and $Ring for the player's row; 1st's name and value are in $FontDisplay.
 
@@ -49,6 +50,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Icon = require(script.Parent.Icon)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
+local Marquee = require(script.Parent.Marquee)
 local ScrollArea = require(script.Parent.ScrollArea)
 local Skeleton = require(script.Parent.Skeleton)
 
@@ -106,6 +108,8 @@ local GAP = { sm = 8, md = 12, lg = 16 }
 local SKELETON_HEIGHT = { sm = 32, md = 40, lg = 56 }
 
 local BASE, TYPE, OWN, FIRST, MEDAL = 0, 10, 20, 30, 50
+-- A name is a Marquee's strip, styled as Text too (up to priority 10): its own rules sit above
+local NAME, NAME_TYPE = 15, 16
 
 local rules: { Component.Rule } = {
 	{
@@ -147,7 +151,7 @@ local rules: { Component.Rule } = {
 	},
 	{
 		selector = ".ui-leaderboard-name",
-		priority = BASE,
+		priority = NAME,
 		properties = { BackgroundTransparency = 1, TextColor3 = "$Foreground", FontFace = "$FontSansMedium" },
 	},
 	{
@@ -184,6 +188,11 @@ for token in typeTokens do
 	table.insert(rules, {
 		selector = `.ui-leaderboard-type-{token}`,
 		priority = TYPE,
+		properties = { TextSize = `${token}` },
+	})
+	table.insert(rules, {
+		selector = `.ui-leaderboard-name.ui-leaderboard-type-{token}`,
+		priority = NAME_TYPE,
 		properties = { TextSize = `${token}` },
 	})
 end
@@ -345,7 +354,11 @@ local spec: Component.Spec = {
 				LayoutOrder = 2,
 				Size = UDim2.fromOffset(0, 0),
 				AutomaticSize = Enum.AutomaticSize.XY,
-				Text = rankText,
+				-- Beside a crown the number stands alone: #4 on, and the pinned row, keep the #
+				Text = function()
+					local text = rankText()
+					return if medalIcon() ~= "" then (text:gsub("^#", "")) else text
+				end,
 				Tags = { "ui-leaderboard-rank" :: any, "ui-leaderboard-tint", typeTag, medalTag, displayTag },
 			})
 			local rankCell = Element.new("Frame", {
@@ -421,20 +434,23 @@ local spec: Component.Spec = {
 				})
 				else nil
 
-			local nameLabel = Element.new("TextLabel", {
-				Name = "Name",
-				LayoutOrder = 3,
-				Size = UDim2.fromScale(0, 0),
-				AutomaticSize = Enum.AutomaticSize.Y,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				TextTruncate = Enum.TextTruncate.AtEnd,
-				Text = function()
+			-- The name, in full: a long one scrolls back and forth in what the row leaves it
+			local nameMarquee = Marquee.new({
+				app = app,
+				text = function()
 					local e = entry()
 					return (e and e.name) or ""
 				end,
-				Tags = { "ui-leaderboard-name" :: any, typeTag, displayTag },
+			})
+			Element.hydrate(nameMarquee.Instance, {
+				Name = "Name",
+				LayoutOrder = 3,
+				Size = UDim2.fromOffset(0, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
 				Element.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill }),
 			})
+			local nameLabel: TextLabel = nameMarquee.strip
+			Element.hydrate(nameLabel, { Tags = { "ui-leaderboard-name" :: any, typeTag, displayTag } })
 			local valueLabel = Element.new("TextLabel", {
 				Name = "Value",
 				LayoutOrder = 4,
@@ -473,7 +489,7 @@ local spec: Component.Spec = {
 				}),
 				faceCell :: any,
 				rankCell,
-				nameLabel,
+				nameMarquee.Instance,
 				valueLabel,
 			})
 			-- Under each listed row but the last, and under none when pinned
