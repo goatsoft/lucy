@@ -268,13 +268,15 @@ end
 	where the left stick has to keep walking the character. With nothing selected, a key in
 	`options.keys` steps in: focus lands on the zone's first or last control (reading order),
 	the D-pad and keys stay inside it (a focus scope, and the zone a SelectionGroup that stops
-	at its edges), and B steps back out, leaving nothing selected. Focus going anywhere else
+	at its edges; with `trap = false` the D-pad moves on past its edges instead), and B steps
+	back out, leaving nothing selected. Focus going anywhere else
 	(a click, a panel opening, the zone hiding) leaves it too.
 
 		local zone = Lucy.useFocusZone(app, card, {
 			name = "hudCard",                                  -- unique in the app (its action set)
 			keys = { [Enum.KeyCode.DPadUp] = "first" },        -- "first" | "last" | (list) -> GuiObject?
 			enabled = function() return not onStage() end,     -- when stepping in is allowed
+			trap = true,                                       -- false: the D-pad can leave at its edges
 		})
 		zone.inside()   -- tracked: focus is in the zone
 		zone.enter("first")  zone.leave()
@@ -372,7 +374,10 @@ function Composables.useFocusZone(
 	end)
 
 	-- Inside: a focus scope on the zone (Tab and arrows stay in it; it lands on `target`), the
-	-- zone a SelectionGroup stopping at its edges (the D-pad), nothing selected after
+	-- zone a SelectionGroup stopping at its edges (the D-pad), nothing selected after. With
+	-- trap = false, none of that: focus lands on `target` and the D-pad moves on from the zone's
+	-- edges to whatever is next to it, which leaves the zone
+	local trap = options.trap ~= false
 	Reactive.watchEffect(function(onCleanup)
 		if not entered() then
 			return
@@ -380,6 +385,12 @@ function Composables.useFocusZone(
 		local zone = zoneNow()
 		if not zone then
 			entered(false)
+			return
+		end
+		if not trap then
+			if Reactive.untrack(selected) ~= target and target then
+				app.input:focus(target)
+			end
 			return
 		end
 		local before = { group = zone.SelectionGroup }

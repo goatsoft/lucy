@@ -38,6 +38,7 @@ local zone = Lucy.useFocusZone(app?, root, options)
 | `keys` | `{ [Enum.KeyCode]: "first" \| "last" \| (list) -> GuiObject? }` | `{}` | The keys that step in, and where each lands (reading order) |
 | `enabled` | `MaybeRef<boolean>` | `true` | When stepping in is allowed (the zone is shown, nothing else has the key) |
 | `priority` | `number` | the actions default | The action set's priority |
+| `trap` | `boolean` | `true` | `false` lets the D-pad move on from the zone's edges to the controls around it (which leaves the zone), for a zone that sits among other HUD buttons. B still steps out |
 
 The keys work only while `enabled` is true, nothing is selected and no modal is
 open. The rest of the time they reach whatever else binds them.

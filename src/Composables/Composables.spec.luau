@@ -208,6 +208,31 @@ return function()
 			scope:stop()
 		end)
 
+		it("with trap = false, lets the D-pad move on past its edges, and B still steps out", function()
+			local root, buttons = zoneOf()
+			local scope = Reactive.effectScope(true)
+			local zone
+			scope:run(function()
+				zone = Composables.useFocusZone(
+					app,
+					root,
+					{ name = "specZoneOpen", keys = { [Enum.KeyCode.DPadUp] = "last" }, trap = false }
+				)
+			end)
+			app.input:setMode("gamepad")
+			local scopes = #app.input._scopes
+			zone.enter("last")
+			expect(app.input:focused()).to.equal(buttons[3])
+			expect(zone.inside()).to.equal(true)
+			expect(root.SelectionGroup).to.equal(false)
+			expect(root.SelectionBehaviorDown).to.equal(Enum.SelectionBehavior.Escape)
+			expect(#app.input._scopes).to.equal(scopes)
+			expect(app.input:back()).to.equal(true)
+			expect(app.input:focused()).to.equal(nil)
+			expect(zone.inside()).to.equal(false)
+			scope:stop()
+		end)
+
 		it("leaves when focus goes anywhere else", function()
 			local root = zoneOf()
 			local other = Instance.new("TextButton")
