@@ -185,4 +185,21 @@ return function()
 			Marquee.new({ app = app, Parent = box, text = "x", variant = "giant" })
 		end).to.throw()
 	end)
+
+	it("keeps an auto-sized parent one width while it scrolls", function()
+		-- A card as wide as its words: the moving strip must not make it grow and shrink
+		local card = Instance.new("Frame")
+		card.Size = UDim2.fromOffset(0, 0)
+		card.AutomaticSize = Enum.AutomaticSize.XY
+		card.Parent = gui
+		local marquee = Marquee.new({ app = app, Parent = card, text = LONG, pause = 0, speed = 400 })
+		marquee.Instance.Size = UDim2.fromOffset(120, 0)
+		Harness.flush()
+		task.wait()
+		local before = card.AbsoluteSize.X
+		expect(marquee.Instance.AbsoluteSize.Y > 0).to.equal(true)
+		task.wait(0.4)
+		expect(marquee.strip.Position.X.Offset < 0).to.equal(true)
+		expect(math.abs(card.AbsoluteSize.X - before) <= 1).to.equal(true)
+	end)
 end

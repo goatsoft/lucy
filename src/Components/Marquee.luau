@@ -17,6 +17,12 @@
 	Text that fits stays still, left aligned. It only moves while visible, and stays
 	still, cut at the edge, when the player asks for reduced motion.
 
+	The strip moves inside a ScrollingFrame that never scrolls (handle.clip): Roblox's
+	AutomaticSize measures every descendant's reach, clipped or not, so a strip in a plain
+	frame made an auto-sized parent (a card as wide as its words) grow and shrink as it moved.
+	A ScrollingFrame's canvas is not measured. A hidden line of the same text style
+	(handle.line) gives the marquee its height.
+
 	State keys: text, variant, visible.
 	handle.strip is the moving TextLabel; handle.scrolling says whether it is moving.
 	handle.repeatStrip is the loop's copy: it follows the strip's text styling, so style the strip.
@@ -174,6 +180,37 @@ local spec: Component.Spec = {
 		end
 		h.repeatStrip = copy
 
+		-- The height: one line in the strip's style, never seen
+		local line = Element.new("TextLabel", {
+			Name = "Line",
+			Size = UDim2.fromOffset(0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			TextWrapped = false,
+			Text = "Ag",
+			TextTransparency = 1,
+			Tags = {
+				"ui-text" :: any,
+				function()
+					return "ui-text-variant-" .. variant()
+				end,
+			},
+		})
+		h.line = line
+		-- The strip's clip: a canvas the parent's AutomaticSize does not reach into (see above)
+		local clip = Element.new("ScrollingFrame", {
+			Name = "Clip",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			ScrollingEnabled = false,
+			ScrollBarThickness = 0,
+			CanvasSize = UDim2.new(),
+			Selectable = false,
+			strip,
+			copy,
+		})
+		h.clip = clip
+
 		local frame = Element.new("Frame", {
 			Size = UDim2.fromScale(1, 0),
 			AutomaticSize = Enum.AutomaticSize.Y,
@@ -182,8 +219,8 @@ local spec: Component.Spec = {
 			BorderSizePixel = 0,
 			Visible = visible,
 			Tags = { "ui-marquee" },
-			strip,
-			copy,
+			line,
+			clip,
 		})
 
 		-- Side effect: move the strip while visible, from the start each time the text changes. A
