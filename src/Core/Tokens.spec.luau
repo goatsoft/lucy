@@ -209,6 +209,18 @@ return function()
 			expect(math.abs(L - 0.5) < 0.01).to.equal(true)
 		end)
 
+		it("adjusts a colour in OKLCH, keeping what it does not move", function()
+			local values = { Base = "$Cyan400", Dim = Tokens.adjust("$Base", { l = -0.2 }) }
+			local resolved = Tokens.resolveTheme(values, Tokens.primitives)
+			local L1, C1, H1 = Oklab.toOklch(Oklab.palette("cyan", 400))
+			local L2, C2, H2 = Oklab.toOklch(resolved.Dim)
+			-- Darker by about what was asked, the same hue; a shade past what a screen shows is mapped
+			-- back into gamut, which trims its chroma and nudges the rest a little
+			expect(math.abs((L1 - L2) - 0.2) < 0.03).to.equal(true)
+			expect(C2 <= C1 + 0.01).to.equal(true)
+			expect(math.abs(H1 - H2) < 10).to.equal(true)
+		end)
+
 		it("works out readable text for a fill", function()
 			local values = { Fill = "$Amber400", Text = Tokens.readable("$Fill", "$White", "$Zinc950") }
 			local resolved = Tokens.resolveTheme(values, Tokens.primitives)

@@ -136,6 +136,7 @@ fit; see [Accessibility](accessibility.md#text-size).
 | `oklch(L, C, H)` | a colour from OKLCH lightness (0 to 1), chroma and hue (degrees) |
 | `over(fg, bg, alpha)` | `fg` at `alpha` over `bg`, as a theme value; worked out per theme |
 | `mix(a, b, t)` | an even mix of two tokens in Oklab; `t` 0 gives `a`, 1 gives `b` |
+| `adjust(a, { l?, c?, h? })` | `a` moved in OKLCH: the numbers added to its lightness (0 to 1), chroma and hue (degrees), so a dimmer shade keeps its hue (`{ l = -0.2 }`); worked out per theme |
 | `onColor(fill, { min?, tint? })` | text for `fill` in its own colour, at its darkest or lightest, readable to `min` (4.5 by default); `tint` takes the hue from another token, for a pale wash; worked out per theme |
 | `gradient(stops)` | a gradient, as a theme value: colours from first to last, or `{ position, colour }` pairs; each a token, a `Color3` or a blend; worked out per theme ([Gradient](../components/gradient.md)) |
 | `readable(fill, a, b, min?)` | text for `fill`: `a` or `b`, whichever reads better, moved in lightness if needed to reach `min` (4.5 by default); worked out per theme |

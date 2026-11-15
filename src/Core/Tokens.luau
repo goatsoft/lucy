@@ -11,6 +11,8 @@
 	              Tokens.over(fg, bg, a)   fg at opacity `a` over bg, composited like CSS
 	                                       (e.g. a white/10% border, a primary/90 hover)
 	              Tokens.mix(a, b, t)      perceptual Oklab mix, t = 0 gives a, 1 gives b
+	              Tokens.adjust(a, delta)  a moved in OKLCH: { l, c, h } added to its lightness,
+	                                       chroma and hue (a dimmer shade keeps its hue)
 	              Tokens.oklch(L, C, H)    a literal OKLCH colour
 	              Tokens.gradient(stops)   a ColorSequence, for Lucy.Gradient (see below)
 	            Every theme must define the same keys (Universal Styling requires it).
@@ -45,6 +47,13 @@ end
 
 function Tokens.mix(a: string, b: string, t: number)
 	return { kind = "mix", a = a, b = b, t = t }
+end
+
+-- A token moved in OKLCH: delta.l, delta.c and delta.h added to its lightness (0 to 1), chroma
+-- and hue (degrees). A shade of a colour that keeps its hue (a dimmer one: { l = -0.2 }). See
+-- Oklab.adjust.
+function Tokens.adjust(a: string, delta: { l: number?, c: number?, h: number? })
+	return { kind = "adjust", a = a, delta = delta }
 end
 
 function Tokens.over(fg: string, bg: string, alpha: number)
@@ -334,6 +343,13 @@ function Tokens.compute(derived: { [string]: any }, resolve: (string) -> any): a
 		end
 		-- Alpha compositing in gamma sRGB, as CSS does: bg * (1 - a) + fg * a
 		return b:Lerp(a, derived.t)
+	end
+	if kind == "adjust" then
+		local a = if isAlias(derived.a) then resolve(derived.a) else derived.a
+		if typeof(a) ~= "Color3" then
+			error(`[Lucy] adjust needs a colour, got {typeof(a)}`, 0)
+		end
+		return Oklab.adjust(a, derived.delta or {})
 	end
 	if kind == "readable" then
 		local function colour(value: any): any
