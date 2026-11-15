@@ -1,7 +1,6 @@
 return function()
 	local ToggleGroup = require(script.Parent.ToggleGroup)
 	local Toggle = require(script.Parent.Toggle)
-	local ScrollArea = require(script.Parent.ScrollArea)
 	local Composables = require(script.Parent.Parent.Composables)
 	local Reactive = require(script.Parent.Parent.Core.Reactive)
 	local Harness = require(script.Parent.Parent.Testing.Harness)
