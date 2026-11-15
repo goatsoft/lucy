@@ -13,7 +13,9 @@
 
 	Keyboard and mouse players see the keyboard key, gamepad players the
 	controller's button (the engine's picture for their controller, or text),
-	touch players the touch label or nothing. It hides itself when there is no
+	touch players the touch label or nothing. On a phone or tablet it never
+	shows a keyboard key, even after a key press: only the touch label, or a
+	controller's button while one is in use. It hides itself when there is no
 	key for the current input. With variant "color" (the default) the face
 	buttons take their controller's colours (Xbox A green, PlayStation cross
 	blue...); "mono" draws every button in the text colour.
@@ -234,7 +236,19 @@ local spec: Component.Spec = {
 		end
 		local keyboard, gamepad = fromAction(rawKeyboard), fromAction(rawGamepad)
 		local variant = h:ref("variant")
-		local mode = h.app.state:ref("input.mode")
+		local inputMode = h.app.state:ref("input.mode")
+		local device = h.app.state:ref("input.device")
+		-- A phone or tablet shows no keyboard keys, even after a key press (a keyboard plugged into
+		-- a phone, or Studio's device emulator): touch players see the touch label, a controller
+		-- its buttons
+		local function mode(): string
+			local m = inputMode()
+			local d = device()
+			if m ~= "gamepad" and (d == "mobile" or d == "tablet") then
+				return "touch"
+			end
+			return m
+		end
 		local density = Composables.useDensity(h.app)
 
 		-- The key for the current input, and its picture when it has one.
