@@ -80,7 +80,9 @@ local loading = Lucy.ref(true)
 Lucy.Switch.new({ label = "Light show", disabled = loading, Parent = settings })
 ```
 
-Pick a size to sit beside controls of that size, or to be easy to hit on a busy screen:
+A switch comes in the same sizes as the other controls, and each size is as tall as a Button
+of that size, so a row of controls lines up. Go a size up on a phone, where it needs to be easy
+to tap:
 
 <!-- preview -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-switch-4-light.webp" alt="Switch example" loading="lazy"><img class="example-dark" src="/images/examples/components-switch-4-dark.webp" alt="Switch example" loading="lazy"></figure>

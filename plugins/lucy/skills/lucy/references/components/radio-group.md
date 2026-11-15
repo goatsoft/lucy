@@ -70,16 +70,22 @@ Lucy.RadioGroup.new({
 })
 ```
 
-Pick a size to sit beside controls of that size, or to be easy to hit on a busy screen:
+A radio group comes in the same sizes as the other controls, and each size is as tall as a
+Switch or Button of that size, so they line up in a settings panel. Go a size up on a phone,
+where the options need to be easy to tap:
 
 ```luau
 Lucy.Stack.new({
     gap = "Space3",
     children = {
-        Lucy.RadioGroup.new({ items = { "Small", "Option" }, value = "Small", size = "sm", orientation = "horizontal" }),
-        Lucy.RadioGroup.new({ items = { "Medium", "Option" }, value = "Medium", size = "md", orientation = "horizontal" }),
-        Lucy.RadioGroup.new({ items = { "Large", "Option" }, value = "Large", size = "lg", orientation = "horizontal" }),
-        Lucy.RadioGroup.new({ items = { "Extra large", "Option" }, value = "Extra large", size = "xl", orientation = "horizontal" }),
+        Lucy.Switch.new({ label = "Crowd sounds", size = "lg", checked = true }),
+        Lucy.Text.new({ text = "Who can ask you to dance", variant = "large" }),
+        Lucy.RadioGroup.new({
+            items = { "Everyone", "Crew only", "Nobody" },
+            value = "Crew only",
+            orientation = "horizontal",
+            size = "lg",
+        }),
     },
     Parent = parent,
 })
