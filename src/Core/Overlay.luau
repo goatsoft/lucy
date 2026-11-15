@@ -318,6 +318,19 @@ local function resolveAnchor(anchor: any): GuiObject?
 	return nil
 end
 
+-- Whether a press closes an open overlay, from where it lands. Not modal: a press outside it
+-- and its anchor (a press on the anchor is the anchor's own). Modal: the scrim takes outside
+-- presses, but content placed over its own anchor (a ring or a fan round a button) covers the
+-- anchor, so a press on the anchor closes it, as the anchor would. A press on the content never
+-- does, even where the content covers the anchor: a phone's drawer can reach up over the select
+-- that opened it, and a tap on an option there closed the list unpicked
+function Overlay.closesOnPress(modal: boolean, onAnchor: boolean, onContent: boolean): boolean
+	if onContent then
+		return false
+	end
+	return if modal then onAnchor else not onAnchor
+end
+
 local function isShown(object: GuiObject): boolean
 	if not object:IsDescendantOf(game) then
 		return false
@@ -769,11 +782,8 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 				close("anchor")
 			end))
 		end
-		-- Presses while open. Not modal: one outside it and its anchor closes it (a press on the
-		-- anchor is the anchor's own). Modal: the scrim takes outside presses, but content placed
-		-- over its own anchor (a ring or a fan round a button) covers the anchor, so a press on
-		-- the anchor closes it here, as the anchor would. A press and AbsolutePosition share an
-		-- origin (under the top bar), so no inset is added.
+		-- Presses while open (Overlay.closesOnPress). A press and AbsolutePosition share an origin
+		-- (under the top bar), so no inset is added.
 		if closeOnOutside then
 			live:give(UserInputService.InputBegan:Connect(function(input: InputObject)
 				local kind = input.UserInputType
@@ -781,8 +791,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 					return
 				end
 				local point = Vector2.new(input.Position.X, input.Position.Y)
-				local onAnchor = inside(anchorObject, point)
-				if if modal then onAnchor else not onAnchor and not inside(content, point) then
+				if Overlay.closesOnPress(modal, inside(anchorObject, point), inside(content, point)) then
 					close("outside")
 				end
 			end))
