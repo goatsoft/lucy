@@ -10,9 +10,12 @@
 			corner = { ... },                       -- beside the close button, top right (dialog.cornerSlot)
 			children = { ... },                     -- into dialog.body, which scrolls
 			footer = { ... },                       -- above the actions, stays put (dialog.footerSlot)
+			footerPlacement = "above",              -- "above" the actions, or "beside": on their left,
+			                                        -- in one row (wraps under them when too narrow)
 			actions = {
 				{ text = "Stay", variant = "outline" },
 				{ text = "Leave", variant = "destructive", onClick = function(dialog) leave() end },
+				-- also id, size, icon and children (after the text), as for a Button
 			},
 			dismissible = true,       -- back keys / overlay / close button
 			closeOnOverlay = true,
@@ -334,12 +337,27 @@ function Dialog.new(props: { [string]: any }?)
 				[OUT_SIZE] = footerSize :: any,
 			})
 			footer.Parent = inner
-			Component.list({ Padding = gap, Parent = footer })
+			local beside = p.footerPlacement == "beside"
+			if beside then
+				-- The slot on the left, the actions on the right; under them when the row is too narrow
+				Component.list({
+					Padding = gap,
+					FillDirection = Enum.FillDirection.Horizontal,
+					HorizontalFlex = Enum.UIFlexAlignment.SpaceBetween,
+					VerticalAlignment = Enum.VerticalAlignment.Center,
+					Wraps = true,
+					Parent = footer,
+				})
+			else
+				Component.list({ Padding = gap, Parent = footer })
+			end
 			-- The footer slot stays put under the body, over the actions. Shown while
 			-- anything in it is (key hints hidden on touch leave no gap).
 			local footerSlot = Component.box({
 				Name = "FooterSlot",
 				LayoutOrder = 1,
+				Size = if beside then UDim2.new() else nil,
+				AutomaticSize = if beside then Enum.AutomaticSize.XY else nil,
 				Parent = footer,
 			})
 			Component.list({ Padding = gap, Parent = footerSlot })
@@ -348,7 +366,13 @@ function Dialog.new(props: { [string]: any }?)
 			end
 			local slotHasVisible = Composables.useHasVisibleChild(footerSlot)
 			Element.hydrate(footerSlot, { Visible = slotHasVisible })
-			local actionsRow = Component.box({ Name = "Actions", LayoutOrder = 2, Parent = footer })
+			local actionsRow = Component.box({
+				Name = "Actions",
+				LayoutOrder = 2,
+				Size = if beside then UDim2.new() else nil,
+				AutomaticSize = if beside then Enum.AutomaticSize.XY else nil,
+				Parent = footer,
+			})
 			Component.list({
 				FillDirection = Enum.FillDirection.Horizontal,
 				HorizontalAlignment = Enum.HorizontalAlignment.Right,
@@ -358,7 +382,11 @@ function Dialog.new(props: { [string]: any }?)
 			for index, action in p.actions or {} do
 				local actionHandle = Button.new({
 					app = h.app,
+					id = action.id,
 					text = action.text,
+					icon = action.icon,
+					children = action.children,
+					size = action.size,
 					variant = action.variant or (if index == #p.actions then "default" else "outline"),
 					disabled = action.disabled,
 					layoutOrder = index,

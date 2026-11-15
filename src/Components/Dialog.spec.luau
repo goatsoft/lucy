@@ -414,6 +414,41 @@ return function()
 			expect(picked.AbsolutePosition.Y < dialog.actions[1].Instance.AbsolutePosition.Y).to.equal(true)
 		end)
 
+		it("puts the footer beside the actions when asked, on the left in one row", function()
+			local tick = Instance.new("Frame")
+			tick.Size = UDim2.fromOffset(120, 24)
+			local dialog = Dialog.new({
+				app = app,
+				open = true,
+				size = "lg",
+				footer = { tick },
+				footerPlacement = "beside",
+				actions = { { text = "Go" } },
+			})
+			task.wait(0.1)
+			local button = dialog.actions[1].Instance
+			expect(tick.AbsolutePosition.X + tick.AbsoluteSize.X <= button.AbsolutePosition.X).to.equal(true)
+			-- One row: they overlap vertically
+			local tickBottom = tick.AbsolutePosition.Y + tick.AbsoluteSize.Y
+			expect(tickBottom > button.AbsolutePosition.Y).to.equal(true)
+			expect(tick.AbsolutePosition.Y < button.AbsolutePosition.Y + button.AbsoluteSize.Y).to.equal(true)
+		end)
+
+		it("gives an action a button's id, size, icon and children", function()
+			local caret = Instance.new("Frame")
+			caret.Size = UDim2.fromOffset(12, 12)
+			local dialog = Dialog.new({
+				app = app,
+				actions = {
+					{ id = "go", text = "Go", size = "lg", icon = "lucide:play", children = { caret } },
+				},
+			})
+			local button = dialog.actions[1]
+			expect(app.state:get("ui.go.size")).to.equal("lg")
+			expect(button.icon).to.be.ok()
+			expect(caret:IsDescendantOf(button.Instance)).to.equal(true)
+		end)
+
 		it("shows a footer slot with no actions, and hides empty slots", function()
 			local picked = Instance.new("Frame")
 			local dialog = Dialog.new({ app = app, footer = { picked } })
