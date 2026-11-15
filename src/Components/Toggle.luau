@@ -183,8 +183,10 @@ Toggle.rules = {
 		priority = VARIANT,
 		properties = { CornerRadius = UDim.new(0, 0) },
 	},
-	-- No side padding: the words (and the underline under them) start at the toggle's edge, so a
-	-- row of line tabs lines up with the content under it; a ToggleGroup spaces them instead
+	-- No padding: the words (and the underline under them) start at the toggle's edge, so a row
+	-- of line tabs lines up with the content under it (a ToggleGroup spaces them instead), and the
+	-- underline ends INDICATOR_DROP under the toggle's box, where the row's room under it ends
+	-- (so what follows a tab bar sits as far below its underline as anything else in its stack)
 	{
 		selector = ".ui-toggle-variant-line::UIPadding",
 		priority = VARIANT + 2,
@@ -192,7 +194,7 @@ Toggle.rules = {
 			PaddingLeft = UDim.new(0, 0),
 			PaddingRight = UDim.new(0, 0),
 			PaddingTop = UDim.new(0, 0),
-			PaddingBottom = UDim.new(0, 2),
+			PaddingBottom = UDim.new(0, 0),
 		},
 	},
 	-- Line tabs are about as tall as their words (not a control's height), with the words at the
