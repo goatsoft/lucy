@@ -45,7 +45,7 @@ or gamepad focus.
 | `channel` | string | `"default"` | What kind of message it is, for quiet mode |
 | `quiet` | string | `"hold"` | While its channel is quiet: `hold` shows it when quiet ends, `drop` throws it away, `show` shows it anyway |
 | `content` | function | | Your own UI in place of the title and description: called once with a getter for the toast (it follows updates by id), returns an Instance or a handle |
-| `bare` | boolean | `false` | With `content`: no panel, shadow or close button round it, so it keeps its own look, as wide as it is. It drops in from the edge (appears in place with reduced motion) |
+| `bare` | boolean | `false` | With `content`: no panel, shadow or close button round it, so it keeps its own look, as wide as it is. It slides in from the edge, eased out with no bounce (appears in place with reduced motion) |
 | `dismissOnTap` | boolean | `false` | A tap on it dismisses it (touch), for a toast with nothing in it to press |
 | `swipe` | boolean | `true` | On touch, a swipe up off the top (down at the bottom) or sideways dismisses it |
 
@@ -58,7 +58,7 @@ toasts on other channels wait and show when it ends, the newest
 A toast can hold anything: a countdown, a card with a face on it. `content` makes it
 once, and an update with the same `id` keeps it, so it can follow your state on its
 own. `bare = true` leaves out the toast's panel so your card keeps its look, and it
-drops in from the toaster's edge (it appears in place with reduced motion).
+slides in from the toaster's edge, eased out with no bounce (it appears in place with reduced motion).
 
 ```luau
 app.toast("Show in progress", {

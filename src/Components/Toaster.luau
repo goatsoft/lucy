@@ -20,7 +20,7 @@
 	called once with a getter for the toast (it follows updates in place by id) that returns
 	an Instance or a handle, put where the title and description go. With `bare = true` it
 	stands alone: no panel, shadow or close button round it, so it keeps its own look, as wide
-	as it is. A bare toast drops in from its edge (appears in place with reduced motion).
+	as it is. A bare toast slides in from its edge (appears in place with reduced motion).
 
 		app.toast("Show", { content = function(toast) return card end, bare = true,
 			duration = math.huge, dismissOnTap = true, id = "show-status" })
@@ -188,8 +188,9 @@ end
 Toaster.SWIPE = 32
 -- A press that moves less than this is a tap
 Toaster.TAP = 8
--- A bare toast dropping in from its edge
-Toaster.DROP = TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+-- A bare toast sliding in from its edge: eased out, no overshoot, so it reads as a slide and
+-- not a pop
+Toaster.DROP = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
 -- Whether a drag by `delta` throws a toast away: past its edge (up at the top, down at the
 -- bottom) by SWIPE, or sideways by twice that
@@ -586,7 +587,7 @@ local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, in
 	return frame
 end
 
--- A bare toast: the game's UI alone, as wide as it is, dropping in from the toaster's edge
+-- A bare toast: the game's UI alone, as wide as it is, sliding in from the toaster's edge
 function Toaster._bare(
 	h,
 	toasts: () -> { any },
@@ -682,9 +683,10 @@ function Toaster._gestures(h, toast: () -> { [string]: any }, frame: GuiObject, 
 				end
 				stop()
 				local latest = Reactive.untrack(toast)
-				if latest.swipe and Toaster.swiped(moved, h.atTop()) then
-					app.toast.dismiss(latest.id)
-				elseif latest.dismissOnTap and moved.Magnitude < Toaster.TAP then
+				-- Thrown away (a swipe past its edge) or tapped (when it asks for that): gone
+				local swiped = latest.swipe and Toaster.swiped(moved, h.atTop())
+				local tapped = latest.dismissOnTap and moved.Magnitude < Toaster.TAP
+				if swiped or tapped then
 					app.toast.dismiss(latest.id)
 				elseif slide then
 					TweenService:Create(slide, Toaster.DROP, { Position = UDim2.new() }):Play()
