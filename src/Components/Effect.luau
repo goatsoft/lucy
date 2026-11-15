@@ -4,7 +4,7 @@
 	behind or over it. One component with the plumbing, and effect types that only draw (ADR 0039).
 
 		Effect.new({
-			type = "rays",            -- a registered type (built in: rays, outline)
+			type = "rays",            -- a registered type (built in: rays, outline, shine)
 			variant = "primary",      -- primary | warning | success | foreground
 			size = UDim2.fromScale(1, 1),
 			visible = true,
@@ -229,6 +229,7 @@ end
 -- Built-in types
 Effect.register("rays", require(script.Parent.Effects.Rays))
 Effect.register("outline", require(script.Parent.Effects.Outline))
+Effect.register("shine", require(script.Parent.Effects.Shine))
 
 -- The shared textures (white, shape in the alpha) for effect types to draw with: streak, glow
 Effect.textures = require(script.Parent.Effects.Textures)

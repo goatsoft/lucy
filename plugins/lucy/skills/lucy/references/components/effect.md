@@ -3,7 +3,7 @@
 
 A little animated picture that celebrates something: a reward landing, a level
 up, a prize. Put it behind (or over) the thing it celebrates. Lucy comes with
-`rays` and `outline`, and you can add your own types.
+`rays`, `outline` and `shine`, and you can add your own types.
 
 ```luau
 local reward = Lucy.new("Frame", {
@@ -35,7 +35,7 @@ reduced motion, the picture is simply there, still.
 
 | Prop | Type | Default | State key | What it does |
 |---|---|---|---|---|
-| `type` | string | | | Which effect: `rays`, `outline`, or a type you registered |
+| `type` | string | | | Which effect: `rays`, `outline`, `shine`, or a type you registered |
 | `variant` | string | `"primary"` | yes | The colours: `primary`, `warning`, `success` or `foreground` |
 | `size` | UDim2 | the parent's size | | The effect's box |
 | `visible` | boolean | `true` | yes | Shows or hides it; showing it plays the opening again |
@@ -117,6 +117,43 @@ The parts are on the handle: `handle.glow`, `handle.rim` and `handle.light`
 (the three frames) and `handle.sweep` (the UIGradient that turns). They carry
 `ui-effect-outline-glow`, `ui-effect-outline-rim` and `ui-effect-outline-light`,
 and each `ui-effect-outline-<variant>`, for your own styling.
+
+## Shine
+
+A polished button or card catching the light. Now and then a slanted band of
+light sweeps across it, left to right, kept inside its rounded corners, then it
+rests until the next glint. Nothing is drawn outside its box, so a shiny button
+stays a button rather than gaining a ring: the quieter way to mark the better
+of two offers.
+
+```luau
+local box = Lucy.new("Frame", {
+    Size = UDim2.fromOffset(220, 48),
+    BackgroundTransparency = 1,
+    Parent = parent,
+})
+local plus = Lucy.Button.new({ text = "Unlock VIP+", size = "lg", Parent = box })
+plus.Instance.Size = UDim2.fromScale(1, 1)
+Lucy.Effect.new({ type = "shine", variant = "warning", radius = 8, Parent = plus.Instance })
+```
+
+Like the outline, it fills its whole box: put it over the thing's fill and under
+its words, and set `radius` to that thing's corner radius. With reduced motion
+there is no glint.
+
+| Option | Type | Default | What it does |
+|---|---|---|---|
+| `radius` | number | `8` | The corner radius, in pixels |
+| `every` | number | `2.8` | Seconds from one glint to the next |
+| `sweep` | number | `0.75` | Seconds a glint takes to cross |
+| `width` | number | `0.35` | The band's width, a share of the box's width |
+| `slant` | number | `20` | Degrees the band leans |
+| `strength` | number | `0.85` | How bright the band is at its middle, 0 to 1 |
+
+The parts are on the handle: `handle.clip` (the frame that keeps the light
+inside, inset from the edges by a share of `radius`), `handle.glint` (the band) and `handle.fade` (its
+UIGradient). The band carries `ui-effect-shine-glint` and
+`ui-effect-shine-<variant>`: white, warm white for `warning`.
 
 ## Your own types
 
