@@ -22,6 +22,15 @@ return function()
 			expect(Toaster.dismiss(list, "zzz")).to.equal(list)
 		end)
 
+		it("throws a toast away past its edge or far enough sideways", function()
+			local far = Toaster.SWIPE + 1
+			expect(Toaster.swiped(Vector2.new(0, -far), true)).to.equal(true)
+			expect(Toaster.swiped(Vector2.new(0, far), true)).to.equal(false)
+			expect(Toaster.swiped(Vector2.new(0, far), false)).to.equal(true)
+			expect(Toaster.swiped(Vector2.new(far, 0), true)).to.equal(false)
+			expect(Toaster.swiped(Vector2.new(-far * 2, 0), true)).to.equal(true)
+		end)
+
 		it("expires by duration and keeps sticky toasts", function()
 			local list = { toast("a", 0, 4), toast("b", 0, math.huge), toast("c", 3, 4) }
 			local after = Toaster.expire(list, 5)
@@ -143,6 +152,44 @@ return function()
 			local frame = portal:FindFirstChild(id, true)
 			expect(frame).to.be.ok()
 			expect(frame.Row.Body.Title.Text).to.equal("Hello")
+		end)
+
+		it("puts the game's own UI in a toast, in its panel or bare", function()
+			local made = 0
+			local function card(): Frame
+				made += 1
+				local f = Instance.new("Frame")
+				f.Name = "Card"
+				f.Size = UDim2.fromOffset(200, 40)
+				return f
+			end
+			local portal = app:portal("toast")
+			local inPanel = app.toast("Show", { content = card })
+			local panel = portal:FindFirstChild(inPanel, true)
+			expect(panel.Row.Body:FindFirstChild("Card")).to.be.ok()
+			expect(panel.Row.Body:FindFirstChild("Title")).to.equal(nil)
+			local bare =
+				app.toast("Show", { content = card, bare = true, duration = math.huge, id = "status" })
+			local frame = portal:FindFirstChild(bare .. "-frame", true)
+			expect(frame:HasTag("ui-toast-bare")).to.equal(true)
+			expect(frame:FindFirstChild("Card", true)).to.be.ok()
+			expect(frame:FindFirstChild("Close", true)).to.equal(nil)
+			expect(portal:FindFirstChild(bare, true)).to.equal(nil) -- no panel of Lucy's
+			-- Updated in place: the same card, not a new one
+			app.toast("Show again", { content = card, bare = true, duration = math.huge, id = "status" })
+			expect(made).to.equal(2)
+			app.toast.dismiss("status")
+			expect(portal:FindFirstChild("status-frame", true)).to.equal(nil)
+		end)
+
+		it("keeps the touch options on the toast", function()
+			local id = app.toast("x", { dismissOnTap = true, swipe = false })
+			local list = app.state:get("toasts")
+			expect(list[1].id).to.equal(id)
+			expect(list[1].dismissOnTap).to.equal(true)
+			expect(list[1].swipe).to.equal(false)
+			app.toast.success("y")
+			expect(app.state:get("toasts")[2].swipe).to.equal(true)
 		end)
 
 		it("updates in place by id", function()

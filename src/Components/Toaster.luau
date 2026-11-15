@@ -14,7 +14,20 @@
 		app.toast.dismiss(id)                    -- or app.toast.dismiss() for all
 
 	options: description, kind, duration (seconds, math.huge = until dismissed),
-	action { label, onClick }, id, channel, quiet.
+	action { label, onClick }, id, channel, quiet, content, bare, dismissOnTap, swipe.
+
+	Your own UI in a toast (a show's status card, a countdown): `content` is a function
+	called once with a getter for the toast (it follows updates in place by id) that returns
+	an Instance or a handle, put where the title and description go. With `bare = true` it
+	stands alone: no panel, shadow or close button round it, so it keeps its own look, as wide
+	as it is. A bare toast drops in from its edge (appears in place with reduced motion).
+
+		app.toast("Show", { content = function(toast) return card end, bare = true,
+			duration = math.huge, dismissOnTap = true, id = "show-status" })
+
+	On touch a toast is thrown away with a swipe: up off the top (down at the bottom), or
+	sideways (`swipe = false` keeps it). `dismissOnTap = true` dismisses it with a tap too,
+	for a toast with nothing in it to press.
 
 	Quiet mode (app.quiet, ADR 0038): a toast on a channel the app is quiet for
 	(channel defaults to "default") follows its quiet option:
@@ -43,6 +56,8 @@
 
 local GuiService = game:GetService("GuiService")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 local Button = require(script.Parent.Button)
 local Component = require(script.Parent.Parent.Core.Component)
@@ -50,6 +65,7 @@ local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Gradient = require(script.Parent.Gradient)
 local PanelFrame = require(script.Parent.Parent.Core.PanelFrame)
+local Preferences = require(script.Parent.Parent.Core.Preferences)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Toaster = {}
@@ -166,6 +182,22 @@ for kind, colours in KIND_COLOURS do
 		rule.priority = 200
 		table.insert(Toaster.rules, rule)
 	end
+end
+
+-- How far a touch drags a toast before it is thrown away, in pixels (twice as far sideways)
+Toaster.SWIPE = 32
+-- A press that moves less than this is a tap
+Toaster.TAP = 8
+-- A bare toast dropping in from its edge
+Toaster.DROP = TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+
+-- Whether a drag by `delta` throws a toast away: past its edge (up at the top, down at the
+-- bottom) by SWIPE, or sideways by twice that
+function Toaster.swiped(delta: Vector2, atTop: boolean): boolean
+	if math.abs(delta.X) >= Toaster.SWIPE * 2 then
+		return true
+	end
+	return if atTop then delta.Y <= -Toaster.SWIPE else delta.Y >= Toaster.SWIPE
 end
 
 -- Pure list operations -------------------------------------------------------
@@ -294,6 +326,10 @@ function Toaster.install(app)
 			duration = opts.duration or Toaster.defaults.duration,
 			action = opts.action,
 			channel = opts.channel or "default",
+			content = opts.content,
+			bare = opts.bare == true and opts.content ~= nil,
+			dismissOnTap = opts.dismissOnTap == true,
+			swipe = opts.swipe ~= false,
 		}
 		local allowed = Reactive.untrack(function()
 			return app.quiet:allows(toast.channel)
@@ -393,6 +429,26 @@ local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, in
 
 	local entry: { [string]: any } = {}
 	h.entries[id] = entry
+
+	-- The game's own UI for this toast, made once (an update in place keeps it)
+	local function built(): Instance
+		local made = Reactive.untrack(function()
+			return item.content(toast)
+		end)
+		if type(made) == "table" and made.Instance then
+			Reactive.onCleanup(function()
+				if not made.destroyed and made.destroy then
+					made:destroy()
+				end
+			end)
+			return made.Instance
+		end
+		return made :: Instance
+	end
+
+	if item.bare then
+		return Toaster._bare(h, toasts, toast, item, index, entry, built())
+	end
 	Reactive.onCleanup(function()
 		if h.entries[id] == entry then
 			h.entries[id] = nil
@@ -469,15 +525,20 @@ local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, in
 				LayoutOrder = 2,
 				Component.create("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill }) :: any,
 				Component.list({ Padding = UDim.new(0, 2) }) :: any,
-				label("Title", 1, "ui-toast-title", function()
-					return toast().title or ""
-				end),
-				label("Description", 2, "ui-toast-description", function()
-					return toast().description or ""
-				end, function()
-					local description = toast().description
-					return description ~= nil and description ~= ""
-				end),
+				-- The game's own UI, or the title over the description
+				if item.content
+					then built() :: any
+					else label("Title", 1, "ui-toast-title", function()
+						return toast().title or ""
+					end),
+				if item.content
+					then nil
+					else label("Description", 2, "ui-toast-description", function()
+						return toast().description or ""
+					end, function()
+						local description = toast().description
+						return description ~= nil and description ~= ""
+					end),
 			}),
 			action,
 			entry.close,
@@ -521,7 +582,119 @@ local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, in
 	Component.claimSelection(app, panel)
 	entry.frame = frame
 	entry.panel = panel
+	Toaster._gestures(h, toast, frame, nil)
 	return frame
+end
+
+-- A bare toast: the game's UI alone, as wide as it is, dropping in from the toaster's edge
+function Toaster._bare(
+	h,
+	toasts: () -> { any },
+	toast: () -> { [string]: any },
+	item: { [string]: any },
+	index: () -> number,
+	entry: { [string]: any },
+	content: Instance
+)
+	local app = h.app
+	local id = item.id
+	local visibleCount = h.props.visibleToasts or Toaster.defaults.visibleToasts
+	-- The content moves in this (the drop, a drag); the frame the list lays out stays put
+	local slide = Element.new("Frame", {
+		Name = "Slide",
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Size = UDim2.new(),
+		AutomaticSize = Enum.AutomaticSize.XY,
+	})
+	content.Parent = slide
+	local frame = Element.new("Frame", {
+		Name = id .. "-frame",
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Size = UDim2.new(),
+		AutomaticSize = Enum.AutomaticSize.XY,
+		Visible = function()
+			return index() > #toasts() - visibleCount
+		end,
+		LayoutOrder = function()
+			return if h.atTop() then -index() else index()
+		end,
+		Tags = { "ui-toast-frame" :: any, "ui-toast-bare" },
+		slide,
+	})
+	Component.claimSelection(app, content)
+	entry.frame = frame
+	entry.panel = content
+	entry.slide = slide
+	-- In from the edge it sits at
+	if not Preferences.reducedMotion() then
+		local from = if h.atTop() then -1 else 1
+		slide.Position = UDim2.new(0, 0, from, from * 12)
+		TweenService:Create(slide, Toaster.DROP, { Position = UDim2.new() }):Play()
+	end
+	Toaster._gestures(h, toast, frame, slide)
+	return frame
+end
+
+-- Touch on a toast: a swipe past its edge or sideways throws it away (the content follows the
+-- finger when it can move), a tap dismisses it when it asks for that
+function Toaster._gestures(h, toast: () -> { [string]: any }, frame: GuiObject, slide: GuiObject?)
+	local app = h.app
+	local maid: { RBXScriptConnection } = {}
+	local function stop()
+		for _, connection in maid do
+			connection:Disconnect()
+		end
+		table.clear(maid)
+	end
+	Reactive.onCleanup(stop)
+	local began = frame.InputBegan:Connect(function(input: InputObject)
+		if input.UserInputType ~= Enum.UserInputType.Touch then
+			return
+		end
+		local current = Reactive.untrack(toast)
+		if not current.swipe and not current.dismissOnTap then
+			return
+		end
+		stop()
+		local start = Vector2.new(input.Position.X, input.Position.Y)
+		local moved = Vector2.zero
+		table.insert(
+			maid,
+			UserInputService.TouchMoved:Connect(function(touch: InputObject)
+				if touch ~= input then
+					return
+				end
+				moved = Vector2.new(touch.Position.X, touch.Position.Y) - start
+				if slide and current.swipe then
+					-- Follows the finger outwards and sideways, never in past where it sits
+					local y = if h.atTop() then math.min(0, moved.Y) else math.max(0, moved.Y)
+					slide.Position = UDim2.fromOffset(moved.X, y)
+				end
+			end)
+		)
+		table.insert(
+			maid,
+			UserInputService.TouchEnded:Connect(function(touch: InputObject)
+				if touch ~= input then
+					return
+				end
+				stop()
+				local latest = Reactive.untrack(toast)
+				if latest.swipe and Toaster.swiped(moved, h.atTop()) then
+					app.toast.dismiss(latest.id)
+				elseif latest.dismissOnTap and moved.Magnitude < Toaster.TAP then
+					app.toast.dismiss(latest.id)
+				elseif slide then
+					TweenService:Create(slide, Toaster.DROP, { Position = UDim2.new() }):Play()
+				end
+			end)
+		)
+	end)
+	Reactive.onCleanup(function()
+		began:Disconnect()
+	end)
 end
 
 function Toaster.new(props: { [string]: any }?)

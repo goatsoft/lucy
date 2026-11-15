@@ -44,10 +44,37 @@ or gamepad focus.
 | `id` | string | made up for you | Pass the id of a toast that is showing to update it in place |
 | `channel` | string | `"default"` | What kind of message it is, for quiet mode |
 | `quiet` | string | `"hold"` | While its channel is quiet: `hold` shows it when quiet ends, `drop` throws it away, `show` shows it anyway |
+| `content` | function | | Your own UI in place of the title and description: called once with a getter for the toast (it follows updates by id), returns an Instance or a handle |
+| `bare` | boolean | `false` | With `content`: no panel, shadow or close button round it, so it keeps its own look, as wide as it is. It drops in from the edge (appears in place with reduced motion) |
+| `dismissOnTap` | boolean | `false` | A tap on it dismisses it (touch), for a toast with nothing in it to press |
+| `swipe` | boolean | `true` | On touch, a swipe up off the top (down at the bottom) or sideways dismisses it |
 
 While the app is quiet (a tutorial is running, see [Quiet mode](../guide/tutorials.md#quiet-mode)),
 toasts on other channels wait and show when it ends, the newest
 `visibleToasts` only.
+
+## Your own UI in a toast
+
+A toast can hold anything: a countdown, a card with a face on it. `content` makes it
+once, and an update with the same `id` keeps it, so it can follow your state on its
+own. `bare = true` leaves out the toast's panel so your card keeps its look, and it
+drops in from the toaster's edge (it appears in place with reduced motion).
+
+```luau
+app.toast("Show in progress", {
+    id = "show-status",
+    content = function(toast)
+        return statusCard()
+    end,
+    bare = true,
+    duration = math.huge,
+    dismissOnTap = true,
+})
+app.toast.dismiss("show-status")
+```
+
+On touch, every toast can be swiped away: up off the top, down off the bottom, or
+sideways. A bare toast follows the finger and springs back if let go short of that.
 
 ## Settings
 
