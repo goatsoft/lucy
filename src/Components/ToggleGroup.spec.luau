@@ -1,5 +1,6 @@
 return function()
 	local ToggleGroup = require(script.Parent.ToggleGroup)
+	local Toggle = require(script.Parent.Toggle)
 	local Composables = require(script.Parent.Parent.Composables)
 	local Reactive = require(script.Parent.Parent.Core.Reactive)
 	local Harness = require(script.Parent.Parent.Testing.Harness)
@@ -251,6 +252,21 @@ return function()
 			local item = group.items[1]
 			local windowBottom = frame.AbsolutePosition.Y + frame.AbsoluteWindowSize.Y
 			expect(item.AbsolutePosition.Y + item.AbsoluteSize.Y <= windowBottom + 1).to.equal(true)
+		end)
+
+		it("keeps the scroll bar's room under the row only while the row overflows", function()
+			if not Harness.laysOutLive() then
+				return -- the room follows layout: live layout only
+			end
+			local wide = Instance.new("Frame")
+			wide.Size = UDim2.fromOffset(2000, 200)
+			wide.Parent = gui
+			local fits = ToggleGroup.new({ app = app, Parent = wide, items = LONG, scroll = true })
+			local squeezed = ToggleGroup.new({ app = app, Parent = narrow(), items = LONG, scroll = true })
+			Harness.flush()
+			expect(fits.below()).to.equal(Toggle.INDICATOR_DROP)
+			local bar = (squeezed.scroller.frame :: ScrollingFrame).ScrollBarThickness
+			expect(squeezed.below()).to.equal(Toggle.INDICATOR_DROP + bar)
 		end)
 
 		it("brings the picked item into view", function()

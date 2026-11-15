@@ -31,8 +31,8 @@
 	picked, so a group can offer an item only some of the time without being made again.
 
 	With scroll, the row sits in a ScrollArea (group.scroller) as wide as its room and as tall as
-	its items, plus group.below() under them (the room kept for the scroll bar and a line tab's
-	underline). With hug it is only as wide as its items: give it a UIFlexItem Shrink in a row so
+	its items, plus group.below() under them (the room kept for a line tab's underline, and for
+	the scroll bar while the row is wider than its room). With hug it is only as wide as its items: give it a UIFlexItem Shrink in a row so
 	it still scrolls once the room runs out, and what follows it sits right after it. A player drags it on touch; a controller's D-pad and the keyboard's arrows move
 	through the items and the area follows the selection; picking an item any way (a press,
 	LB / RB in Tabs, game code) scrolls it into view.
@@ -276,19 +276,23 @@ local spec: Component.Spec = {
 		h.scroller = area
 		local scroller = area.frame :: ScrollingFrame
 		-- Side effects of the engine's layout: the row's height, in the area's own units, plus the
-		-- room the scroll bar keeps under it, so nothing at the row's bottom (a line tab's
-		-- underline) is cut
+		-- room under it for a line tab's underline, and for the scroll bar only while the row is
+		-- wider than its window (there is a bar to show). A row that fits keeps no empty band
+		-- under it, so what follows it sits as far below as anything else in its stack
 		local function measure()
 			local scale = Scroll.scaleOf(scroller)
 			local unit = if scale > 0 then scale else 1
-			below(scroller.ScrollBarThickness + Toggle.INDICATOR_DROP)
+			local overflows = frame.AbsoluteSize.X > scroller.AbsoluteWindowSize.X + 0.5
+			below((if overflows then scroller.ScrollBarThickness else 0) + Toggle.INDICATOR_DROP)
 			height(math.ceil(frame.AbsoluteSize.Y / unit) + below())
 			width(math.ceil(frame.AbsoluteSize.X / unit))
 		end
 		measure()
 		local connection = frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(measure)
+		local windowed = scroller:GetPropertyChangedSignal("AbsoluteWindowSize"):Connect(measure)
 		Reactive.onCleanup(function()
 			connection:Disconnect()
+			windowed:Disconnect()
 		end)
 		-- The picked item comes into view, however it was picked: in the row's own scroller only,
 		-- so a page the row sits in stays where the player scrolled it
