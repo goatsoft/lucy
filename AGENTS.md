@@ -17,6 +17,10 @@ Rules:
   `Lucy.watch` / `watchEffect` are for side effects only (tweens, callbacks into user code,
   focus scopes, back handlers, sounds), never to set a property, tag or attribute a
   binding could own. Review enforces this.
+- Docs, comments and commit messages are plain human English, in Australian spelling
+  (colour, behaviour, centre): say what a thing does and when to use it, as you would to a
+  person making a game. No buzzwords, no hyphenated words unless the word needs one, no
+  em-dash. Docs examples follow docs/development.md "Docs examples" (one game, Club Lucy).
 - Code and docs do not name third-party design systems or CSS frameworks; ADRs may.
 - ADRs are repo only: never mention or link them in `docs/` pages, the README or the website.
 - Scratch files go outside the repo (e.g. `/tmp`).

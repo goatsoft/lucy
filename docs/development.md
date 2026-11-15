@@ -195,6 +195,9 @@ confirm, a hotkey) in that setting, so the docs read as one game.
 - Icons come from the docs icon sheet, `assets/docs-icons/lucy-icons.json`. To
   use a new one, add it to `include` there and rebuild (see below).
 - Back keys are B and Backspace, never Escape.
+- Write for a person making a game, in plain English with Australian spelling (colour,
+  behaviour, centre). Say what the example shows and when you would use it. No buzzwords,
+  no hyphenated words unless the word needs one, no em-dash.
 
 ## Example pictures
 
