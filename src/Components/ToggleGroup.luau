@@ -31,8 +31,9 @@
 	picked, so a group can offer an item only some of the time without being made again.
 
 	With scroll, the row sits in a ScrollArea (group.scroller) as wide as its room and as tall as
-	its items, plus group.below() under them (the room kept for a line tab's underline, and for
-	the scroll bar while the row is wider than its room). With hug it is only as wide as its items: give it a UIFlexItem Shrink in a row so
+	its items, plus group.below() under them (the room kept for a line tab's underline). It shows
+	no scroll bar: its faded ends say there is more, so it sits as far from what follows it
+	whether it fits or not. With hug it is only as wide as its items: give it a UIFlexItem Shrink in a row so
 	it still scrolls once the room runs out, and what follows it sits right after it. A player drags it on touch; a controller's D-pad and the keyboard's arrows move
 	through the items and the area follows the selection; picking an item any way (a press,
 	LB / RB in Tabs, game code) scrolls it into view.
@@ -259,8 +260,8 @@ local spec: Component.Spec = {
 		-- it in a row sits right after it; otherwise as wide as its room.
 		local height = Reactive.ref(0)
 		local width = Reactive.ref(0)
-		-- The room under the items kept for the scroll bar and a line tab's underline: h.below, for a
-		-- row beside it that lines up with the items rather than the whole area
+		-- The room under the items kept for a line tab's underline: h.below, for a row beside it that
+		-- lines up with the items rather than the whole area
 		local below = Reactive.ref(0)
 		h.below = below
 		local area = ScrollArea.new({
@@ -281,15 +282,16 @@ local spec: Component.Spec = {
 		})
 		h.scroller = area
 		local scroller = area.frame :: ScrollingFrame
+		-- No bar (Toggle.rules): the faded ends show there is more, and a bar's room under the row
+		-- made the gap below an overflowing tab bar bigger than below one that fits
+		scroller:AddTag("ui-toggle-scroll")
 		-- Side effects of the engine's layout: the row's height, in the area's own units, plus the
-		-- room under it for a line tab's underline, and for the scroll bar only while the row is
-		-- wider than its window (there is a bar to show). A row that fits keeps no empty band
-		-- under it, so what follows it sits as far below as anything else in its stack
+		-- room under it for a line tab's underline, so what follows it sits as far below as
+		-- anything else in its stack
 		local function measure()
 			local scale = Scroll.scaleOf(scroller)
 			local unit = if scale > 0 then scale else 1
-			local overflows = frame.AbsoluteSize.X > scroller.AbsoluteWindowSize.X + 0.5
-			below((if overflows then scroller.ScrollBarThickness else 0) + Toggle.INDICATOR_DROP)
+			below(Toggle.INDICATOR_DROP)
 			height(math.ceil(frame.AbsoluteSize.Y / unit) + below())
 			width(math.ceil(frame.AbsoluteSize.X / unit))
 		end

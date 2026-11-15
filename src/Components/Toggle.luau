@@ -125,6 +125,13 @@ Toggle.rules = {
 		priority = VARIANT,
 		properties = { PaddingLeft = "$Space6", PaddingRight = "$Space6" },
 	},
+	-- A ToggleGroup's scrolling row (ToggleGroup scroll): no scroll bar, its faded ends say there
+	-- is more
+	{
+		selector = ".ui-scroll-area.ui-toggle-scroll",
+		priority = STATE,
+		properties = { ScrollBarThickness = 0 },
+	},
 	-- A ToggleGroup's segmented look: the group is a pill as tall as a control of its size, its
 	-- items fill the pill inside its padding, muted until picked, the picked one raised on the
 	-- background

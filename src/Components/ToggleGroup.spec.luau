@@ -255,7 +255,7 @@ return function()
 			expect(item.AbsolutePosition.Y + item.AbsoluteSize.Y <= windowBottom + 1).to.equal(true)
 		end)
 
-		it("keeps the scroll bar's room under the row only while the row overflows", function()
+		it("keeps the same room under the row whether it overflows or not, with no scroll bar", function()
 			if not Harness.laysOutLive() then
 				return -- the room follows layout: live layout only
 			end
@@ -266,14 +266,8 @@ return function()
 			local squeezed = ToggleGroup.new({ app = app, Parent = narrow(), items = LONG, scroll = true })
 			Harness.flush()
 			expect(fits.below()).to.equal(Toggle.INDICATOR_DROP)
-			local bar = (squeezed.scroller.frame :: ScrollingFrame).ScrollBarThickness
-			expect(squeezed.below()).to.equal(Toggle.INDICATOR_DROP + bar)
-		end)
-
-		it("fades a scrolling row's ends wider than a list's", function()
-			local group = ToggleGroup.new({ app = app, Parent = narrow(), items = LONG, scroll = true })
-			expect(ToggleGroup.fadeSize > ScrollArea.fadeSize).to.equal(true)
-			expect(group.scroller.props.fadeSize).to.equal(ToggleGroup.fadeSize)
+			expect(squeezed.below()).to.equal(Toggle.INDICATOR_DROP)
+			expect(Harness.styled(squeezed.scroller.frame, "ScrollBarThickness")).to.equal(0)
 		end)
 
 		it("brings the picked item into view", function()
