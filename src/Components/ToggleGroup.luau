@@ -52,6 +52,9 @@ local Toggle = require(script.Parent.Toggle)
 
 local ToggleGroup = {}
 
+-- How far the fade at a scrolling row's ends reaches in, in pixels
+ToggleGroup.fadeSize = 40
+
 -- The Toggle looks, and segmented: the group's own pill round toggles in the default look
 ToggleGroup.variants = { "default", "outline", "line", "segmented" }
 
@@ -264,6 +267,9 @@ local spec: Component.Spec = {
 			app = h.app,
 			direction = "horizontal",
 			scrollbar = "scroll",
+			-- A row of words needs a wider fade than a list to read as "more this way": a short one
+			-- looks like the last item is cut off
+			fadeSize = ToggleGroup.fadeSize,
 			visible = h:ref("visible"),
 			size = function(): UDim2
 				if Reactive.toValue(p.hug) == true then

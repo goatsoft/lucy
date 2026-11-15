@@ -1,6 +1,7 @@
 return function()
 	local ToggleGroup = require(script.Parent.ToggleGroup)
 	local Toggle = require(script.Parent.Toggle)
+	local ScrollArea = require(script.Parent.ScrollArea)
 	local Composables = require(script.Parent.Parent.Composables)
 	local Reactive = require(script.Parent.Parent.Core.Reactive)
 	local Harness = require(script.Parent.Parent.Testing.Harness)
@@ -267,6 +268,12 @@ return function()
 			expect(fits.below()).to.equal(Toggle.INDICATOR_DROP)
 			local bar = (squeezed.scroller.frame :: ScrollingFrame).ScrollBarThickness
 			expect(squeezed.below()).to.equal(Toggle.INDICATOR_DROP + bar)
+		end)
+
+		it("fades a scrolling row's ends wider than a list's", function()
+			local group = ToggleGroup.new({ app = app, Parent = narrow(), items = LONG, scroll = true })
+			expect(ToggleGroup.fadeSize > ScrollArea.fadeSize).to.equal(true)
+			expect(group.scroller.props.fadeSize).to.equal(ToggleGroup.fadeSize)
 		end)
 
 		it("brings the picked item into view", function()
