@@ -95,6 +95,24 @@ return function()
 			task.wait(0.1)
 			expect(text.Instance.AbsoluteSize.X).to.equal(held)
 		end)
+
+		it("measures a getter again when its words change, not as its digits tick", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local Reactive = require(script.Parent.Parent.Core.Reactive)
+			local line = Reactive.ref("Next 1:11")
+			local text = Text.new({ app = app, text = line, reserve = line, variant = "h1" })
+			text.Instance.Parent = gui
+			task.wait(0.3)
+			local held = text.Instance.AbsoluteSize.X
+			line("Next 1:08")
+			task.wait(0.2)
+			expect(text.Instance.AbsoluteSize.X).to.equal(held)
+			line("Next 1:08 and more words")
+			task.wait(0.2)
+			expect(text.Instance.AbsoluteSize.X > held).to.equal(true)
+		end)
 	end)
 
 	describe("reveal", function()

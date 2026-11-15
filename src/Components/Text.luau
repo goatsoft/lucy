@@ -10,7 +10,9 @@
 	value too: { short = true, default = false }).
 	reserve = "0:00" holds the width of the widest text of that shape (each digit tried as every
 	digit), in the label's styled font and size, so a timer or count never moves what is around
-	it as it changes. Align it (right, say) to say which side the number keeps to.
+	it as it changes. Align it (right, say) to say which side the number keeps to. A getter works
+	too, for a line whose words change as well as its digits: return the line itself and it holds
+	its widest for those words, so it only moves when the words do ("Next show 1:15 · 2 in").
 
 	Shortcuts for two text animations (each is a composable any label can use on its own):
 	reveal = 30 types the text out, 30 characters a second (true: Text.REVEAL_RATE), again from
@@ -191,8 +193,11 @@ local spec: Component.Spec = {
 				end,
 			},
 		}) :: TextLabel
-		if type(p.reserve) == "string" then
-			local sample: string = p.reserve
+		if type(p.reserve) == "string" or type(p.reserve) == "function" then
+			local reserve: any = p.reserve
+			local function sample(): string
+				return if type(reserve) == "function" then tostring(reserve()) else reserve
+			end
 			local measuring = false
 			local function measure()
 				if measuring then
@@ -201,7 +206,7 @@ local spec: Component.Spec = {
 				measuring = true
 				task.defer(function()
 					measuring = false
-					local ok, widest = pcall(Text.widestDigits, sample, function(text: string): number
+					local ok, widest = pcall(Text.widestDigits, sample(), function(text: string): number
 						local params = Instance.new("GetTextBoundsParams")
 						params.Text = text
 						params.Font = (label :: any):GetStyled("FontFace")
@@ -218,6 +223,12 @@ local spec: Component.Spec = {
 			pcall(function()
 				(label :: any).StyledPropertiesChanged:Connect(measure)
 			end)
+			if type(reserve) == "function" then
+				-- A getter: measured again when its shape changes, not as its digits tick
+				Reactive.watch(function()
+					return (string.gsub(sample(), "%d", "0"))
+				end, measure)
+			end
 			measure()
 		end
 		return label
