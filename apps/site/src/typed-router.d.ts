@@ -185,6 +185,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/icon-stack': RouteRecordInfo<
+      '/docs/components/icon-stack',
+      '/docs/components/icon-stack',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/image': RouteRecordInfo<
       '/docs/components/image',
       '/docs/components/image',
@@ -971,6 +978,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/icon.md': {
       routes:
         | '/docs/components/icon'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/icon-stack.md': {
+      routes:
+        | '/docs/components/icon-stack'
       views:
         | never
       pathParamNames:

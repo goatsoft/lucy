@@ -171,6 +171,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Effect](references/components/effect.md): An animated celebration behind a reward or a level up, in types you can add to.
 - [Gradient](references/components/gradient.md): One of the theme's gradients on a frame, a panel or a button.
 - [Grid](references/components/grid.md): Rows of equal cells, such as shop items or emotes.
+- [IconStack](references/components/icon-stack.md): Several icons drawn as one, overlapping, in a fan, a row, a pile or where you place them.
 - [Icon](references/components/icon.md): A small picture in the theme's colours, by name or asset id.
 - [Image](references/components/image.md): A picture from an asset id or a thumbnail.
 - [Inline Confirm](references/components/inline-confirm.md): Asks "Are you sure?" in place, with YES and NO.

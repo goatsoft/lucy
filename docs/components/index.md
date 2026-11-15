@@ -77,6 +77,7 @@ order: 0
 | [Badge](badge.md) | A small label for a status or count |
 | [Effect](effect.md) | An animated celebration behind a reward or a level up: rays, outline, or your own |
 | [Icon](icon.md) | A small picture in the theme's colours, by name or asset id |
+| [IconStack](icon-stack.md) | Several icons drawn as one, overlapping, in a fan, a row, a pile or where you place them |
 | [Image](image.md) | A picture from an asset id or a thumbnail |
 | [Kbd](kbd.md) | The key to press, for the player's keyboard or controller |
 | [Marquee](marquee.md) | One line of text that scrolls, back and forth or round like a ticker, when it is too long to fit |

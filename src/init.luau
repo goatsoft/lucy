@@ -167,6 +167,7 @@ local Lucy = {
 	Gradient = require(Components.Gradient),
 	Grid = require(Components.Grid),
 	Icon = require(Components.Icon),
+	IconStack = require(Components.IconStack),
 	Image = require(Components.Image),
 	InlineConfirm = require(Components.InlineConfirm),
 	Input = require(Components.Input),
