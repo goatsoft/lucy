@@ -23,6 +23,8 @@
 			dismissible = true,         -- back closes it (and outside presses, when modal)
 			onBack = nil,               -- runs on back in place of closing (an alert's cancel)
 			closeOnOutside = nil,       -- defaults to dismissible when modal, false otherwise
+			solid = true,               -- false (or a getter): the content has gaps (a ring or a fan of
+			                            -- buttons): a press there is outside it, no catcher fills its box
 			defaultFocus = fn,          -- what keyboard and gamepad select first
 			returnFocus = nil,          -- where focus goes when it closes: nil the anchor (or what
 			                            -- had it), an object, handle or getter, or false for nothing
@@ -356,6 +358,35 @@ local function inside(object: GuiObject?, point: Vector2): boolean
 	return point.X >= p.X and point.Y >= p.Y and point.X <= p.X + s.X and point.Y <= p.Y + s.Y
 end
 
+-- Whether `point` (in pixels) lands on something `content` draws: a button, a text, a picture, or
+-- a frame with its background showing, that is shown. A ring or a fan of buttons (solid = false)
+-- is mostly clear box, and a press in a gap of it is a press outside it
+function Overlay.hits(content: GuiObject, point: Vector2): boolean
+	local function shownUnder(object: GuiObject): boolean
+		local node: Instance? = object
+		while node and node ~= content.Parent do
+			if node:IsA("GuiObject") and not node.Visible then
+				return false
+			end
+			node = node.Parent
+		end
+		return true
+	end
+	for _, object in content:GetDescendants() do
+		if not object:IsA("GuiObject") then
+			continue
+		end
+		local draws = object:IsA("GuiButton")
+			or object:IsA("TextLabel")
+			or object:IsA("ImageLabel")
+			or object.BackgroundTransparency < 1
+		if draws and inside(object, point) and shownUnder(object) then
+			return true
+		end
+	end
+	return false
+end
+
 -- The first selectable object under `root` in tree order, judged only by its own
 -- visibility up to `root`: the overlay may not be shown yet when focus is pushed.
 function Overlay.firstSelectable(root: Instance): GuiObject?
@@ -458,6 +489,15 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 	local open: Reactive.Ref<boolean> = options.open
 	local content: GuiObject = options.content
 	local modal = options.modal ~= false
+	-- A ring or a fan: gaps between its buttons (Overlay.hits), and no catcher over its box. A
+	-- getter may change with the input (a menu's responsive variant)
+	local function solid(): boolean
+		local value = options.solid
+		if type(value) == "function" then
+			return value() ~= false
+		end
+		return value ~= false
+	end
 	local dismissible = options.dismissible ~= false
 	local closeOnOutside = if options.closeOnOutside ~= nil
 		then options.closeOnOutside == true
@@ -615,7 +655,9 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 
 		-- A clear button just behind the content, over the scrim and always its size: an Active
 		-- content does not stop the scrim's button in Roblox, so without it a press on an empty
-		-- part of a dialog (its body, its header text) would close it as an outside press.
+		-- part of a dialog (its body, its header text) would close it as an outside press. Not for
+		-- content with gaps: its box reaches over its anchor (and on a phone past the screen), and
+		-- a catcher that size took every press, so nothing closed it (JB 2026-11-16)
 		local sink = Instance.new("TextButton")
 		sink.Name = "ContentSink"
 		sink.Text = ""
@@ -629,7 +671,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		-- before it
 		local function follow()
 			local whole = root.AbsoluteSize
-			sink.Visible = content.Visible
+			sink.Visible = content.Visible and solid()
 			if whole.X <= 0 or whole.Y <= 0 then
 				return
 			end
@@ -791,7 +833,8 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 					return
 				end
 				local point = Vector2.new(input.Position.X, input.Position.Y)
-				if Overlay.closesOnPress(modal, inside(anchorObject, point), inside(content, point)) then
+				local onContent = if solid() then inside(content, point) else Overlay.hits(content, point)
+				if Overlay.closesOnPress(modal, inside(anchorObject, point), onContent) then
 					close("outside")
 				end
 			end))

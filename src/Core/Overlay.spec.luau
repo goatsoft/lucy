@@ -461,6 +461,47 @@ return function()
 			scope:stop()
 		end)
 
+		it("has no catcher when its content has gaps, so a press in a gap reaches the scrim", function()
+			-- A ring or a fan of buttons: its box is mostly empty, and on a phone bigger than the screen
+			local overlay, open, scope = make({ solid = false })
+			open(true)
+			Harness.flush()
+			task.wait()
+			local sink = overlay.root:FindFirstChild("ContentSink") :: GuiObject?
+			expect(sink == nil or not sink.Visible).to.equal(true)
+			scope:stop()
+		end)
+
+		it("knows a press on what content draws from one in a gap of it", function()
+			local content = Instance.new("Frame")
+			content.BackgroundTransparency = 1
+			content.Size = UDim2.fromOffset(300, 200)
+			local button = Instance.new("TextButton")
+			button.Size = UDim2.fromOffset(40, 40)
+			button.Position = UDim2.fromOffset(10, 10)
+			button.Parent = content
+			local holder = Instance.new("Frame")
+			holder.BackgroundTransparency = 1
+			holder.Size = UDim2.fromScale(1, 1)
+			holder.Parent = content
+			local label = Instance.new("TextLabel")
+			label.Size = UDim2.fromOffset(60, 20)
+			label.Position = UDim2.fromOffset(200, 150)
+			label.Parent = holder
+			local gui = Harness.mount(app)
+			content.Parent = gui
+			local at = content.AbsolutePosition
+			expect(Overlay.hits(content, at + Vector2.new(20, 20))).to.equal(true)
+			expect(Overlay.hits(content, at + Vector2.new(220, 160))).to.equal(true)
+			-- Empty: the box and a clear frame in it draw nothing there
+			expect(Overlay.hits(content, at + Vector2.new(150, 100))).to.equal(false)
+			button.Visible = false
+			expect(Overlay.hits(content, at + Vector2.new(20, 20))).to.equal(false)
+			-- A frame that draws its background counts
+			holder.BackgroundTransparency = 0
+			expect(Overlay.hits(content, at + Vector2.new(150, 100))).to.equal(true)
+		end)
+
 		it("has no catcher when not modal", function()
 			local overlay, open, scope = make({ modal = false })
 			open(true)

@@ -1020,6 +1020,9 @@ local spec: Component.Spec = {
 				return math.max(p.width or 220, fitWidth())
 			end,
 			name = "Menu",
+			-- A ring or a fan is buttons with gaps between them: a press in a gap (or on the anchor
+			-- under it) is outside it and closes it, as a list's outside presses do
+			solid = isList,
 			tags = { "ui-menu-overlay" },
 			id = h.id,
 			place = function(_presentation: string, input: Overlay.PlaceInput): Overlay.Placement?

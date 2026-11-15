@@ -319,6 +319,32 @@ return function()
 			expect(fan.presentation()).to.equal("popup")
 		end)
 
+		it("lets presses between a ring's or a fan's buttons close it, a list's never", function()
+			-- The box round a fan reaches over its anchor and, on a phone, past the screen: a catcher
+			-- that size took every press, so neither the anchor nor a press outside closed it
+			local anchor = Instance.new("TextButton")
+			anchor.Size = UDim2.fromOffset(120, 40)
+			anchor.Position = UDim2.new(0.5, -60, 1, -60)
+			anchor.Parent = gui
+			for _, variant in { "arc", "radial" } do
+				local menu = make({ variant = variant, anchor = anchor })
+				menu:open()
+				Harness.flush()
+				task.wait()
+				local root = menu.content.Parent :: Instance
+				local sink = root:FindFirstChild("ContentSink") :: GuiObject?
+				expect(sink == nil or not sink.Visible).to.equal(true)
+				menu:close()
+			end
+			local list = make({ variant = "list", anchor = anchor })
+			list:open()
+			Harness.flush()
+			task.wait()
+			local sink = (list.content.Parent :: Instance):FindFirstChild("ContentSink") :: GuiObject?
+			expect(sink ~= nil and sink.Visible).to.equal(true)
+			list:close()
+		end)
+
 		it("shows the rows for a list and the slices for a ring or arc", function()
 			local menu = make({ variant = "radial" })
 			menu:open()
