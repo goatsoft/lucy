@@ -123,8 +123,10 @@ app.state:set("ui.toaster.position", "bottom-left") -- move them later
 
 The positions are `top-left`, `top-center`, `top-right`, `bottom-left`,
 `bottom-center` and `bottom-right` (the default). The newest toast is the one
-nearest the edge. At the top, toasts also clear Roblox's own buttons. On touch
-devices they run full width, at the top or the bottom.
+nearest the edge. At the top, toasts sit just off the top of the screen where
+Roblox's top bar is free (the top centre, mostly), and drop below the bar only
+where they would reach Roblox's own buttons. On touch devices they run full
+width, at the top or the bottom.
 
 ## Examples
 

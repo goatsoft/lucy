@@ -92,6 +92,47 @@ return function()
 			assert(ok, err)
 		end)
 
+		it("sits just off the top where the top bar is free, under it only where its buttons are", function()
+			local Toaster = require(script.Parent.Toaster) :: any
+			local read = Toaster._topbar
+			-- Roblox's buttons on the left, 300 pixels of them; the bar is 40 tall
+			local bar = Rect.new(300, 0, 2000, 40)
+			Toaster._topbar = function()
+				return bar
+			end
+			local other, stop = Harness.app({ namePrefix = "ToastBar_", toastPosition = "top-center" })
+			local ok, err = pcall(function()
+				other.toast("Show in progress")
+				local toaster = other:handle("toaster")
+				local padding = toaster.container:FindFirstChildOfClass("UIPadding") :: UIPadding
+				-- A toast clear of the buttons sits just off the very top (measured, so only where the
+				-- screen lays out: not on a running server)
+				if Harness.laysOutLive() then
+					expect(Harness.waitFor(function()
+						return padding.PaddingTop.Offset == 24
+					end)).to.equal(true)
+				end
+				-- One that would reach under them drops below the bar
+				other.state:set("ui.toaster.position", "top-left")
+				expect(Harness.waitFor(function()
+					return padding.PaddingTop.Offset == 24 + 40
+				end)).to.equal(true)
+			end)
+			stop()
+			Toaster._topbar = read
+			assert(ok, err)
+		end)
+
+		it("knows whether a span fits the free part of the top bar", function()
+			local Toaster = require(script.Parent.Toaster) :: any
+			local free = Rect.new(300, 0, 1200, 40)
+			expect(Toaster.clearsTopbar(400, 900, free)).to.equal(true)
+			expect(Toaster.clearsTopbar(250, 900, free)).to.equal(false)
+			expect(Toaster.clearsTopbar(400, 1250, free)).to.equal(false)
+			-- No bar (a console, or no top bar at all): nothing to clear
+			expect(Toaster.clearsTopbar(0, 900, Rect.new(0, 0, 0, 0))).to.equal(true)
+		end)
+
 		it("puts the newest toast nearest its edge", function()
 			local first = app.toast("First")
 			local second = app.toast("Second")

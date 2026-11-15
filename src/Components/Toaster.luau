@@ -85,6 +85,20 @@ local function checkPosition(position: string)
 end
 
 -- How each side of a position anchors: x and y fractions, and the layout.
+-- The free part of Roblox's top bar, right of its buttons (GuiService.TopbarInset). Specs swap it
+Toaster._topbar = function(): Rect
+	return GuiService.TopbarInset
+end
+
+-- Whether toasts spanning `left` to `right` (screen pixels) fit the free part of the top bar, so
+-- they can sit at the very top. A bar with no height (a console, or no top bar): nothing to clear
+function Toaster.clearsTopbar(left: number, right: number, free: Rect): boolean
+	if free.Height <= 0 then
+		return true
+	end
+	return left >= free.Min.X and right <= free.Max.X
+end
+
 local HORIZONTAL: { [string]: { any } } = {
 	left = { 0, Enum.HorizontalAlignment.Left },
 	center = { 0.5, Enum.HorizontalAlignment.Center },
@@ -759,7 +773,29 @@ function Toaster.new(props: { [string]: any }?)
 				return Vector2.new(side[1], if top then 0 else 1)
 			end
 
+			-- At the top, where the toasts would sit against what Roblox's top bar has free: they sit
+			-- just off the very top where they clear its buttons (the top centre, mostly), and under
+			-- the bar only where they would reach them (JB 2026-11-16)
+			local bar = Reactive.ref(Toaster._topbar())
+			h.maid:give(GuiService:GetPropertyChangedSignal("TopbarInset"):Connect(function()
+				bar(Toaster._topbar())
+			end))
+			local contentSize = Reactive.ref(Vector2.zero)
+			local columnAt = Reactive.ref(Vector2.zero)
+			local columnSize = Reactive.ref(Vector2.zero)
+			local function clearsBar(): boolean
+				local _, side = parts()
+				local at, size, wide = columnAt(), columnSize(), contentSize().X
+				local left = at.X + (size.X - wide) * side[1]
+				return Toaster.clearsTopbar(left, left + wide, bar())
+			end
+			local function barHeight(): number
+				local free = bar()
+				return if free.Height > 0 then free.Max.Y else GuiService:GetGuiInset().Y
+			end
+
 			h.layout = Element.new("UIListLayout", {
+				[Element.out("AbsoluteContentSize")] = contentSize,
 				SortOrder = Enum.SortOrder.LayoutOrder,
 				VerticalAlignment = function()
 					return if atTop() then Enum.VerticalAlignment.Top else Enum.VerticalAlignment.Bottom
@@ -785,13 +821,16 @@ function Toaster.new(props: { [string]: any }?)
 						else UDim2.new(0, width + inset().Offset * 2, 1, 0)
 				end,
 				Visible = h:ref("visible"),
+				[Element.out("AbsolutePosition")] = columnAt,
+				[Element.out("AbsoluteSize")] = columnSize,
 				h.layout,
 				Element.new("UIPadding", {
-					-- At the top, clear Roblox's own buttons as well.
+					-- At the top, under Roblox's top bar only where they would reach its buttons
 					PaddingTop = function()
-						return if atTop()
-							then UDim.new(0, inset().Offset + GuiService:GetGuiInset().Y)
-							else UDim.new()
+						if not atTop() then
+							return UDim.new()
+						end
+						return UDim.new(0, inset().Offset + (if clearsBar() then 0 else barHeight()))
 					end,
 					PaddingBottom = function()
 						return if atTop() then UDim.new() else inset()
