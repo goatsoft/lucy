@@ -334,6 +334,8 @@ return function()
 				local root = menu.content.Parent :: Instance
 				local sink = root:FindFirstChild("ContentSink") :: GuiObject?
 				expect(sink == nil or not sink.Visible).to.equal(true)
+				-- Its box passes a press in a gap on to the scrim behind it
+				expect(menu.content.Active).to.equal(false)
 				menu:close()
 			end
 			local list = make({ variant = "list", anchor = anchor })
@@ -342,6 +344,7 @@ return function()
 			task.wait()
 			local sink = (list.content.Parent :: Instance):FindFirstChild("ContentSink") :: GuiObject?
 			expect(sink ~= nil and sink.Visible).to.equal(true)
+			expect(list.content.Active).to.equal(true)
 			list:close()
 		end)
 

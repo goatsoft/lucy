@@ -991,7 +991,9 @@ local spec: Component.Spec = {
 			Name = "Content",
 			Size = UDim2.fromOffset(0, 0),
 			AutomaticSize = Enum.AutomaticSize.XY,
-			Active = true,
+			-- A list takes every press on it; a ring or a fan only on its buttons and labels, so a
+			-- press in a gap (or on the anchor under it) reaches the scrim and closes it
+			Active = isList,
 			Tags = {
 				"ui-menu-content" :: any,
 				["ui-menu-ring"] = isRing,
