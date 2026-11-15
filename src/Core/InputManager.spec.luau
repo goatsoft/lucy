@@ -98,6 +98,36 @@ return function()
 			expect(app.state:get("input.orientation")).to.equal("portrait")
 		end)
 
+		it("looks again at what the device has when keys or a mouse are used", function()
+			local InputManager = require(script.Parent.InputManager) :: any
+			local read = InputManager._readCaps
+			local tabletAlone = { touch = true, viewport = Vector2.new(1180, 820) }
+			app.input:setCaps(tabletAlone)
+			expect(app.state:get("input.device")).to.equal("tablet")
+			local ok, err = pcall(function()
+				-- Keys from a device that still says it has no keyboard (Studio's device emulator):
+				-- it stays a tablet
+				InputManager._readCaps = function()
+					return tabletAlone
+				end
+				app.input:inputUsed(Enum.UserInputType.Keyboard)
+				expect(app.state:get("input.mode")).to.equal("keyboard")
+				expect(app.state:get("input.device")).to.equal("tablet")
+				expect(app.state:get("input.keyboard")).to.equal(false)
+				-- A keyboard paired with it
+				InputManager._readCaps = function()
+					return { touch = true, keyboard = true, viewport = Vector2.new(1180, 820) }
+				end
+				app.input:inputUsed(Enum.UserInputType.Keyboard)
+				expect(app.state:get("input.keyboard")).to.equal(true)
+				expect(app.state:get("input.device")).to.equal("desktop")
+				app.input:inputUsed(Enum.UserInputType.Touch)
+				expect(app.state:get("input.mode")).to.equal("touch")
+			end)
+			InputManager._readCaps = read
+			assert(ok, err)
+		end)
+
 		it("only shows the focus ring while navigating with keyboard or gamepad", function()
 			local gui = Harness.mount(app)
 			local button = Instance.new("TextButton")

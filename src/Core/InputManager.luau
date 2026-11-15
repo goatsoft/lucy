@@ -211,6 +211,9 @@ local function readCaps(): { [string]: any }
 	}
 end
 
+-- What the device has now. Specs swap it to stand in for the engine.
+InputManager._readCaps = readCaps
+
 --[[
 	options:
 		caps    fixed capabilities (tests); otherwise read from UserInputService
@@ -289,6 +292,25 @@ end
 function InputManager.setCaps(self: InputManager, caps: { [string]: any })
 	self._caps = caps
 	self:_publish()
+end
+
+--[[
+	The player used an input of this type (the engine's LastInputTypeChanged). Keys or a mouse
+	on a device that said it had none (a keyboard paired with a phone or tablet mid game) look
+	again at what it has, so `input.keyboard` and the device follow; then the mode follows.
+]]
+function InputManager.inputUsed(self: InputManager, inputType: Enum.UserInputType)
+	local mode = InputManager.modeFor(inputType)
+	if mode == nil then
+		return
+	end
+	if (mode == "keyboard" or mode == "mouse") and not self._caps[mode] then
+		local caps = InputManager._readCaps()
+		if caps[mode] then
+			self:setCaps(caps)
+		end
+	end
+	self:setMode(mode)
 end
 
 -- Focus ring -----------------------------------------------------------------
@@ -713,10 +735,7 @@ function InputManager._watch(self: InputManager)
 	local maid = self.maid
 
 	maid:give(UserInputService.LastInputTypeChanged:Connect(function(inputType)
-		local mode = InputManager.modeFor(inputType)
-		if mode then
-			self:setMode(mode)
-		end
+		self:inputUsed(inputType)
 	end))
 
 	maid:give(GuiService:GetPropertyChangedSignal("SelectedObject"):Connect(function()
@@ -746,7 +765,7 @@ function InputManager._watch(self: InputManager)
 	end))
 
 	local function refreshCaps()
-		self:setCaps(readCaps())
+		self:setCaps(InputManager._readCaps())
 	end
 	maid:give(UserInputService.GamepadConnected:Connect(refreshCaps))
 	maid:give(UserInputService.GamepadDisconnected:Connect(refreshCaps))
