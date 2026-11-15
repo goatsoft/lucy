@@ -8,6 +8,7 @@
 			value = "easy",          -- false for nothing picked yet
 			orientation = "vertical", -- vertical | horizontal
 			gap = "Space2",
+			size = "md",             -- sm | md | lg | xl: the circle, the label and the row's height
 			disabled = false,
 			visible = true,
 			onValueChange = function(value, group) end,
@@ -20,9 +21,11 @@
 	builders), in Foreground, faded when disabled; with children and no label, no text. Once
 	something is picked the player can change it but not clear it.
 
-	Each row's hit area is at least ControlSm tall and the circle grows with
-	density, like Checkbox.
-	State keys: value, disabled, visible.
+	Each row is as tall as a control of the same size (Component.controlTokens), so a radio
+	group lines up with a Switch, Button or Toggle of its size; the label takes that size's text
+	and the circle is a Switch's thumb at that size, growing with density (md: 16 desktop, 20
+	touch, 24 console).
+	State keys: value, size, disabled, visible.
 	Events: "select" with the value picked, for Lucy.useUiSound.
 	group.items holds one { root, circle, dot, label } per option, in order.
 ]]
@@ -36,7 +39,15 @@ local ToggleGroup = require(script.Parent.ToggleGroup)
 
 local RadioGroup = {}
 
-local CIRCLE = { default = 16, touch = 20, tv = 24 }
+RadioGroup.sizes = Component.controlSizes
+
+-- The circle at each size, for each density: a Switch's thumb at the same size
+RadioGroup.circles = {
+	sm = { default = 12, touch = 16, tv = 20 },
+	md = { default = 16, touch = 20, tv = 24 },
+	lg = { default = 20, touch = 24, tv = 28 },
+	xl = { default = 24, touch = 28, tv = 32 },
+} :: { [string]: { [string]: number } }
 local ACTIVATED = Element.on("Activated")
 local DIRECTION = {
 	horizontal = Enum.FillDirection.Horizontal,
@@ -76,6 +87,9 @@ RadioGroup.rules = {
 			TextSize = "$TextSm",
 		},
 	},
+	{ selector = ".ui-radio-label.ui-radio-size-sm", priority = 5, properties = { TextSize = "$TextXs" } },
+	{ selector = ".ui-radio-label.ui-radio-size-lg", priority = 5, properties = { TextSize = "$TextBase" } },
+	{ selector = ".ui-radio-label.ui-radio-size-xl", priority = 5, properties = { TextSize = "$TextLg" } },
 	{ selector = ".ui-radio.ui-disabled", priority = 30, properties = { BackgroundTransparency = 0.5 } },
 	{ selector = ".ui-radio-dot.ui-disabled", priority = 30, properties = { BackgroundTransparency = 0.5 } },
 	{ selector = ".ui-radio-label.ui-disabled", priority = 30, properties = { TextTransparency = 0.5 } },
@@ -88,7 +102,7 @@ end
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "radio-group",
-	defaults = { value = false, disabled = false, visible = true },
+	defaults = { value = false, size = "md", disabled = false, visible = true },
 	rules = RadioGroup.rules,
 	render = function(h)
 		local p: Component.Props = h.props
@@ -96,16 +110,25 @@ local spec: Component.Spec = {
 		if not direction then
 			error(`[Lucy] unknown RadioGroup orientation "{p.orientation}" (vertical or horizontal)`, 0)
 		end
-		local value, disabled = h:ref("value"), h:ref("disabled")
+		local value, disabled, sizeName = h:ref("value"), h:ref("disabled"), h:ref("size")
+		Component.checkControlSize(h:get("size"), "RadioGroup")
 		local density = Composables.useDensity(h.app)
 		local function side(): number
-			return CIRCLE[density()] or CIRCLE.default
+			local name = sizeName()
+			Component.checkControlSize(name, "RadioGroup")
+			local list = RadioGroup.circles[name]
+			return list[density()] or list.default
 		end
 		local function circleSize(): UDim2
 			return UDim2.fromOffset(side(), side())
 		end
+		-- As tall as a control of its size, so it lines up with them in a row or a form
 		local function rowSize(): UDim2
-			return UDim2.fromOffset(0, math.max(Component.metric(h.app, "ControlSm"), side()))
+			local height = Component.controlTokens[sizeName()].height
+			return UDim2.fromOffset(0, math.max(Component.metric(h.app, height), side()))
+		end
+		local function sizeTag(): string
+			return `ui-radio-size-{sizeName()}`
 		end
 
 		if p.onValueChange then
@@ -165,7 +188,13 @@ local spec: Component.Spec = {
 				Size = UDim2.fromScale(0, 1),
 				Text = item.text,
 				Visible = item.text ~= "",
-				Tags = { "ui-radio-label", ["ui-disabled"] = off },
+				Tags = function(): { string }
+					local tags = { "ui-radio-label", sizeTag() }
+					if off() then
+						table.insert(tags, "ui-disabled")
+					end
+					return tags
+				end,
 			})
 			local root = Element.new("TextButton", {
 				Name = `Option{index}`,

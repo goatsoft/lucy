@@ -29,6 +29,7 @@ Lucy.RadioGroup.new({
 | `value` | any | `false` | yes | The picked value, `false` when nothing is picked yet |
 | `orientation` | string | `"vertical"` | | `vertical` for a column, `horizontal` for a row |
 | `gap` | spacing | `"Space2"` | | Space between options |
+| `size` | `"sm"` \| `"md"` \| `"lg"` \| `"xl"` | `"md"` | yes | The circle, the label's text and the row's height, as a Switch or Button of the same size |
 | `disabled` | boolean | `false` | yes | Greys every option out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `onValueChange` | function | | | Called with `(value, handle)` when it changes |
@@ -66,6 +67,21 @@ Lucy.RadioGroup.new({
     items = { "House", "Disco", "Hip hop", "Techno" },
     value = app.state:ref("booth.genre"),
     Parent = booth,
+})
+```
+
+Pick a size to sit beside controls of that size, or to be easy to hit on a busy screen:
+
+```luau
+Lucy.Stack.new({
+    gap = "Space3",
+    children = {
+        Lucy.RadioGroup.new({ items = { "Small", "Option" }, value = "Small", size = "sm", orientation = "horizontal" }),
+        Lucy.RadioGroup.new({ items = { "Medium", "Option" }, value = "Medium", size = "md", orientation = "horizontal" }),
+        Lucy.RadioGroup.new({ items = { "Large", "Option" }, value = "Large", size = "lg", orientation = "horizontal" }),
+        Lucy.RadioGroup.new({ items = { "Extra large", "Option" }, value = "Extra large", size = "xl", orientation = "horizontal" }),
+    },
+    Parent = parent,
 })
 ```
 
