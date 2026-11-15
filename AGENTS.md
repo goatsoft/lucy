@@ -4,6 +4,31 @@ Start with [README.md](README.md); it links to the architecture, component and
 development docs. Read the relevant ADRs in `docs/adr/` before changing structure,
 and add a new ADR for any structural decision.
 
+## Never commit until every check passes
+
+A commit that turns CI red must never happen. It has happened (an unused `require` left in
+a spec failed selene and broke two Release runs in a row), and it is never acceptable. No
+commit, and so no push, until every one of these has been run on the final change and
+passed. Not "probably fine", not "only a comment changed", not "CI will tell us":
+
+1. `stylua --check src tests scripts examples`
+2. `selene src tests examples` (warnings fail CI too: it must say 0 warnings)
+3. `lune run scripts/add -- --check`
+4. `node scripts/skills.ts --check`
+5. luau-lsp, exactly as CI runs it, reporting nothing (docs/development.md "Static
+   checks"). It is not on the Mac's path: get CI's pinned version into a scratch folder
+   outside the repo (macOS build, version from `LUAU_LSP` in `.github/workflows/ci.yml`),
+   and the testez definitions as CI writes them.
+6. The test suite in the Lucy dev place, 0 failed:
+   `require(game.ReplicatedStorage.LucyTests.Runner).run()`. Run it at a desktop sized
+   viewport (Studio's device emulator off): some specs place things at fixed pixels and
+   fail on a phone sized screen.
+7. `pnpm site:typecheck` when the site or docs changed.
+
+If a check fails, fix it before committing, even when the failure was there before you.
+After a push, `gh run list --limit 3` must show Release and Pages green; if not, fixing
+that comes before anything else.
+
 Rules:
 
 - Never use the em-dash character anywhere (code, comments, docs, commits).
@@ -42,14 +67,9 @@ Rules:
     `plugins/lucy/skills/`.
   - A new component: give it a one line description in `registry.json`, as well as its
     export in `src/init.luau`, docs page and index row.
-  - Before every commit, run what CI runs and see each one pass:
-    `stylua --check src tests scripts examples`, `selene src tests examples`,
-    `lune run scripts/add -- --check`, `node scripts/skills.ts --check`, luau-lsp
-    (docs/development.md "Static checks"), and `pnpm site:typecheck` when the site or
-    docs changed.
+  - Before every commit, every check in "Never commit until every check passes" (top).
   - `pnpm site:build` rewrites `apps/site/src/typed-router.d.ts` when a docs page is added:
     commit it with the page.
-  - After a push, check the run: `gh run list --limit 3` shows Release and Pages green.
 - Commit messages are semantic: `type(scope): summary`, lower case, no full stop,
   in the imperative ("fix(select): close on back"). Types: `feat` (something new
   for games), `fix` (a bug), `docs`, `refactor`, `perf`, `test`, `build`, `ci`,
