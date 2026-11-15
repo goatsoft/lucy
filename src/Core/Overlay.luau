@@ -413,6 +413,26 @@ export type Overlay = {
 	close: (reason: string?) -> (),
 }
 
+-- Roblox can keep a text object's automatic size as it was measured while the overlay was hidden
+-- (its words then run past its edge, into the next tab or button) until something else makes it
+-- lay out again. Each text that is narrower than its words is measured again.
+function Overlay.remeasure(root: Instance)
+	for _, object in root:GetDescendants() do
+		if not (object:IsA("TextLabel") or object:IsA("TextButton")) then
+			continue
+		end
+		local text = object :: TextLabel
+		local automatic = text.AutomaticSize
+		if automatic == Enum.AutomaticSize.None or text.TextWrapped or text.TextScaled then
+			continue
+		end
+		if text.TextBounds.X > text.AbsoluteSize.X + 1 then
+			text.AutomaticSize = Enum.AutomaticSize.None
+			text.AutomaticSize = automatic
+		end
+	end
+end
+
 function Overlay.use(app: any, options: { [string]: any }): Overlay
 	if not Reactive._hasOwner() then
 		error("[Lucy] Overlay.use needs an owner: call it in a component's render or an effectScope", 2)
@@ -723,6 +743,14 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 			);
 			(slideTween :: Tween):Play()
 		end
+		-- Words measured while it was hidden, measured again once it shows (a frame, then once the
+		-- layout has settled)
+		task.defer(Overlay.remeasure, content)
+		task.delay(0.15, function()
+			if content.Parent then
+				Overlay.remeasure(content)
+			end
+		end)
 		live:give(root:GetPropertyChangedSignal("AbsoluteSize"):Connect(place))
 		live:give(root.AncestryChanged:Connect(place))
 		live:give(content:GetPropertyChangedSignal("AbsoluteSize"):Connect(place))

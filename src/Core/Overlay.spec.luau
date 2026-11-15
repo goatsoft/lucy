@@ -244,6 +244,35 @@ return function()
 		end)
 	end)
 
+	describe("remeasure", function()
+		it("keeps each text's automatic size, and leaves words that fit as they are", function()
+			local gui = Instance.new("ScreenGui")
+			gui.Parent = game:GetService("Players").LocalPlayer
+					and game:GetService("Players").LocalPlayer:FindFirstChildOfClass("PlayerGui")
+				or nil
+			local root = Instance.new("Frame")
+			root.Parent = gui
+			local label = Instance.new("TextLabel")
+			label.Text = "MOST WINS"
+			label.TextSize = 14
+			label.AutomaticSize = Enum.AutomaticSize.X
+			label.Size = UDim2.fromOffset(0, 20)
+			label.Parent = root
+			local wrapped = Instance.new("TextLabel")
+			wrapped.TextWrapped = true
+			wrapped.AutomaticSize = Enum.AutomaticSize.Y
+			wrapped.Parent = root
+			task.wait()
+			local width = label.AbsoluteSize.X
+			Overlay.remeasure(root)
+			task.wait()
+			expect(label.AutomaticSize).to.equal(Enum.AutomaticSize.X)
+			expect(wrapped.AutomaticSize).to.equal(Enum.AutomaticSize.Y)
+			expect(math.abs(label.AbsoluteSize.X - width) <= 1).to.equal(true)
+			gui:Destroy()
+		end)
+	end)
+
 	describe("use", function()
 		it("needs an owner", function()
 			expect(function()
