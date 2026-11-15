@@ -28,6 +28,7 @@ Lucy.ScrollArea.new({
 | `direction` | string | `"vertical"` | | `vertical`, `horizontal` or `both` |
 | `size` | UDim2 | fills the parent | | The area's size |
 | `maxHeight` | number, ref or getter | none | | Fits the content up to this height, then scrolls |
+| `minHeight` | number, ref or getter | none | | With `maxHeight`: never shorter than this (up to `maxHeight`), so it keeps its height when the content shrinks |
 | `padding` | spacing | none | | Space around the inside edge of the content |
 | `scrollbar` | string | `"hover"` | | When the scroll bar shows, see [Scroll bar](#scroll-bar) |
 | `hideDelay` | number | `0.6` | | Seconds the bar stays after scrolling stops |

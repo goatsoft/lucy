@@ -6,6 +6,8 @@
 			direction = "vertical",   -- vertical | horizontal | both
 			size = UDim2,             -- fills the parent when left out
 			maxHeight = 300,          -- optional: fit the content up to this height, then scroll
+			minHeight = 200,          -- optional, with maxHeight: never shorter than this (a panel
+			                          -- whose tabs hold more or less keeps its height)
 			padding = "Space4",       -- optional: a spacing token, pixels or a UDim
 			scrollbar = "hover",      -- hover | auto | always | scroll | glimpse
 			hideDelay = 0.6,          -- seconds the bar stays after scrolling (scroll, hover, glimpse)
@@ -312,7 +314,13 @@ local spec: Component.Spec = {
 			size = function(): UDim2
 				local height = measured().Y / Scroll.scaleOf(content)
 				local cap: number = Reactive.toValue(maxHeight)
-				return UDim2.new(width.Scale, width.Offset, 0, math.min(math.ceil(height), cap))
+				local floor: number = if p.minHeight ~= nil then Reactive.toValue(p.minHeight) else 0
+				return UDim2.new(
+					width.Scale,
+					width.Offset,
+					0,
+					math.max(math.min(math.ceil(height), cap), math.min(floor, cap))
+				)
 			end
 		end
 

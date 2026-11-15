@@ -99,6 +99,18 @@ return function()
 		expect(sheet.handleBar.Visible).to.equal(true)
 	end)
 
+	it("with fill, keeps a drawer as tall as it may be however little the body holds", function()
+		app.input:setMode("touch")
+		local short = Instance.new("Frame")
+		short.Size = UDim2.fromOffset(100, 20)
+		local sheet = Sheet.new({ app = app, open = true, fill = true, children = { short } })
+		Harness.flush()
+		task.wait(0.1)
+		local room = sheet.bodyRoom()
+		expect(room > 20).to.equal(true)
+		expect(math.abs(sheet.body.Instance.Size.Y.Offset - room) <= 1).to.equal(true)
+	end)
+
 	it("puts children in a scrolling body and shows actions in a footer", function()
 		local clicked = 0
 		local sheet = Sheet.new({

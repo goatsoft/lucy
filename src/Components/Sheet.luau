@@ -17,6 +17,8 @@
 			side = "right",           -- left | right (the panel; touch always uses the bottom)
 			width = 360,              -- the panel's width, at most 90% of the screen
 			presentation = "auto",    -- auto | panel | drawer
+			fill = false,             -- true: always as tall as it may be, whatever the body holds (a
+			                          -- drawer whose tabs hold more or less never grows or shrinks)
 			titlePlacement = nil,     -- "inside" | "edge": the title on a plate standing on the top
 			                          -- edge; nil: the PanelTitleEdge token (Lucy's themes: 0, inside)
 			dismissible = true,       -- back keys / outside press / close button
@@ -337,6 +339,7 @@ local spec: Component.Spec = {
 		local body = ScrollArea.new({
 			app = app,
 			maxHeight = bodyCap,
+			minHeight = if p.fill then bodyCap else nil,
 			children = p.children,
 			layoutOrder = 3,
 			name = "Body",

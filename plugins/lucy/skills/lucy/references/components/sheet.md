@@ -42,6 +42,7 @@ settings:open()
 | `side` | string | `"right"` | | `left` or `right`: the edge the panel comes from |
 | `width` | number | `360` | | The panel's width in pixels, at most 90% of the screen |
 | `presentation` | string | `"auto"` | | `auto`, `panel` or `drawer` |
+| `fill` | boolean | `false` | | Always as tall as it may be, whatever the body holds, so a sheet with tabs never grows or shrinks between them (a drawer on touch most of all) |
 | `titlePlacement` | string | the `PanelTitleEdge` token | | `"inside"`, or `"edge"`: the title on a plate standing on the top edge, as a [Dialog's](dialog.md#the-frame); the room for it comes off the panel's top |
 | `dismissible` | boolean | `true` | | Whether B, Backspace, a press outside and the close button can close it |
 | `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it (off by default when `modal` is `false`) |

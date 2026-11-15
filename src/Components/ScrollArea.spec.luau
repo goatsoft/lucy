@@ -87,6 +87,29 @@ return function()
 		expect(area.Instance.Size.X).to.equal(UDim.new(0, 200))
 	end)
 
+	it("keeps a minHeight under short content, never past maxHeight", function()
+		local area = ScrollArea.new({
+			app = app,
+			Parent = gui,
+			size = UDim2.fromOffset(200, 0),
+			maxHeight = 150,
+			minHeight = 120,
+			children = { block(40) },
+		})
+		Harness.flush()
+		expect(area.Instance.Size.Y.Offset).to.equal(120)
+		local capped = ScrollArea.new({
+			app = app,
+			Parent = gui,
+			size = UDim2.fromOffset(200, 0),
+			maxHeight = 100,
+			minHeight = 120,
+			children = { block(40) },
+		})
+		Harness.flush()
+		expect(capped.Instance.Size.Y.Offset).to.equal(100)
+	end)
+
 	it("stops at maxHeight and scrolls past it, and grows again as content changes", function()
 		local child = block(60)
 		local area = ScrollArea.new({
