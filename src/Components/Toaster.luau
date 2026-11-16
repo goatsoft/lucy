@@ -51,11 +51,12 @@
 	each kind's shadow). A theme that has a GradientToast<Kind> token (GradientToastSuccess,
 	GradientToastError, GradientToastDefault and so on) fills that kind's toasts with it, by
 	Lucy.Gradient; a kind without one keeps its flat fill.
-	How wide (desktop; touch runs full width): App.new({ toastWidth = 480 }), 356 by default.
+	How wide: App.new({ toastWidth = 480 }), 356 by default; on a screen narrower than that they
+	fill its width.
 	Where: App.new({ toastPosition = "top-center" }), or later
 	app.state:set("ui.toaster.position", ...): top-left, top-center, top-right,
 	bottom-left, bottom-center or bottom-right (the default). On touch devices
-	toasts run full width at the top or bottom. The newest is nearest the edge.
+	toasts sit centred at the top or bottom. The newest is nearest the edge.
 	Toasts are announced to gamepad/keyboard users but never steal focus.
 ]]
 
@@ -777,8 +778,8 @@ function Toaster.new(props: { [string]: any }?)
 				end
 			end)
 
-			-- Desktop: a 356px column at its position. Touch: full width at the top
-			-- or bottom.
+			-- A column as wide as toastWidth (356 by default), never wider than the screen: at its
+			-- position on desktop, centred at the top or bottom on touch.
 			checkPosition(h:get("position"))
 			local position = h:ref("position")
 			local touch = Composables.useResponsive(app, { mobile = true, default = false })
@@ -843,15 +844,16 @@ function Toaster.new(props: { [string]: any }?)
 					local a = anchor()
 					return UDim2.fromScale(a.X, a.Y)
 				end,
-				Size = function()
-					return if touch()
-						then UDim2.fromScale(1, 1)
-						else UDim2.new(0, width + inset().Offset * 2, 1, 0)
-				end,
+				Size = UDim2.fromScale(1, 1),
 				Visible = h:ref("visible"),
 				[Element.out("AbsolutePosition")] = columnAt,
 				[Element.out("AbsoluteSize")] = columnSize,
 				h.layout,
+				Element.new("UISizeConstraint", {
+					MaxSize = function()
+						return Vector2.new(width + inset().Offset * 2, math.huge)
+					end,
+				}),
 				Element.new("UIPadding", {
 					-- At the top, under Roblox's top bar only where they would reach its buttons
 					PaddingTop = function()

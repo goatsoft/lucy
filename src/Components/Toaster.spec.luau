@@ -151,8 +151,10 @@ return function()
 			local ok, err = pcall(function()
 				other.toast("Hi")
 				local container = other:handle("toaster").container
-				-- The column, and its inset each side
-				expect(container.Size.X.Offset).to.equal(480 + 24 * 2)
+				-- The column, and its inset each side, never wider than the screen
+				local limit = container:FindFirstChildOfClass("UISizeConstraint")
+				expect(limit.MaxSize.X).to.equal(480 + 24 * 2)
+				expect(container.Size).to.equal(UDim2.fromScale(1, 1))
 			end)
 			stop()
 			if not ok then

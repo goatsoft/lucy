@@ -11,7 +11,7 @@ app.toast("Now playing: Neon Nights", { description = "DJ Lucy, 124 BPM" })
 app.toast.success("Set complete", { description = "+250 coins" })
 ```
 
-Toasts sit in the bottom right corner on desktop and across the bottom on
+Toasts sit in the bottom right corner on desktop and centred at the bottom on
 touch devices, unless you move them (see Position). They never take keyboard
 or gamepad focus.
 
@@ -90,7 +90,7 @@ Change these before the first toast shows:
 |---|---|---|
 | `Lucy.Toaster.defaults.duration` | `4` | Seconds a toast stays when no `duration` is given |
 | `Lucy.Toaster.defaults.visibleToasts` | `3` | How many show at once; the newest win |
-| `Lucy.Toaster.defaults.width` | `356` | Width in pixels on desktop; `App.new({ toastWidth = 480 })` sets it for one app |
+| `Lucy.Toaster.defaults.width` | `356` | Width in pixels, never wider than the screen; `App.new({ toastWidth = 480 })` sets it for one app |
 
 A kind colours the whole toast with the theme's `Success`, `Destructive`,
 `Warning` or `Info` colour, and its text and close icon with the matching
@@ -138,8 +138,8 @@ The positions are `top-left`, `top-center`, `top-right`, `bottom-left`,
 `bottom-center` and `bottom-right` (the default). The newest toast is the one
 nearest the edge. At the top, toasts sit just off the top of the screen where
 Roblox's top bar is free (the top centre, mostly), and drop below the bar only
-where they would reach Roblox's own buttons. On touch devices they run full
-width, at the top or the bottom.
+where they would reach Roblox's own buttons. On touch devices they sit
+centred, at the top or the bottom.
 
 ## Examples
 
