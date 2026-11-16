@@ -39,6 +39,7 @@ or gamepad focus.
 |---|---|---|---|
 | `description` | string | | A second line under the title |
 | `kind` | string | `"default"` | `default`, `success`, `error`, `warning` or `info` |
+| `media` | slot | | Before the title and description: an [Icon](./icon.md), an image, a handle, an instance, a builder or a list. An icon in it takes the toast's text colour |
 | `duration` | number | `4` | Seconds before it closes. `math.huge` keeps it until dismissed |
 | `action` | table | | A button: `{ label = "Join", onClick = join }` |
 | `id` | string | made up for you | Pass the id of a toast that is showing to update it in place |
@@ -52,6 +53,18 @@ or gamepad focus.
 While the app is quiet (a tutorial is running, see [Quiet mode](../guide/tutorials.md#quiet-mode)),
 toasts on other channels wait and show when it ends, the newest
 `visibleToasts` only.
+
+## An icon
+
+An icon on the left makes a toast easier to notice and to read at a glance. Put it
+in the `media` slot, at the size you want:
+
+```luau
+app.toast.success("New record", {
+    description = "9,800 points",
+    media = Lucy.Icon.new({ icon = "lucide:trophy", size = 36 }),
+})
+```
 
 ## Your own UI in a toast
 

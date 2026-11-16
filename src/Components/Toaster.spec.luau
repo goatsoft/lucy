@@ -173,6 +173,25 @@ return function()
 			expect(close:FindFirstChild("Icon") ~= nil).to.equal(true)
 		end)
 
+		it("puts media before the title and description, in the toast's text colour", function()
+			local Icon = require(script.Parent.Icon)
+			local plain = app.toast("Saved")
+			local won = app.toast.success("Won", {
+				description = "+$250",
+				media = Icon.new({ app = app, icon = "lucy:check", size = 36 }),
+			})
+			Harness.flush()
+			local function row(id)
+				return app:portal("toast"):FindFirstChild(id, true).Row
+			end
+			expect(row(plain):FindFirstChild("Media")).to.equal(nil)
+			local media = row(won).Media
+			expect(media.LayoutOrder < row(won).Body.LayoutOrder).to.equal(true)
+			local icon = media:FindFirstChildWhichIsA("ImageLabel")
+			local colour = Harness.styled(icon, "ImageColor3")
+			expect(Harness.colorEq(colour, app.theme:resolve("SuccessForeground"))).to.equal(true)
+		end)
+
 		it("is installed on every app", function()
 			expect(app.toast).to.be.ok()
 			expect(app.state:get("toasts")).to.be.ok()

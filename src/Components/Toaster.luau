@@ -13,8 +13,13 @@
 		app.toast("Invite from JB", { action = { label = "Join", onClick = join } })
 		app.toast.dismiss(id)                    -- or app.toast.dismiss() for all
 
-	options: description, kind, duration (seconds, math.huge = until dismissed),
+	options: description, kind, media, duration (seconds, math.huge = until dismissed),
 	action { label, onClick }, id, channel, quiet, content, bare, dismissOnTap, swipe.
+
+	media is a slot (as Item's): an Icon, an image, a handle, an instance, a builder or a list,
+	before the title and description. An Icon in it takes the toast's text colour.
+
+		app.toast.success("You're in", { media = Lucy.Icon.new({ icon = "lucide:sparkles", size = 36 }) })
 
 	Your own UI in a toast (a show's status card, a countdown): `content` is a function
 	called once with a getter for the toast (it follows updates in place by id) that returns
@@ -60,6 +65,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Button = require(script.Parent.Button)
+local Slot = require(script.Parent.Slot)
 local Component = require(script.Parent.Parent.Core.Component)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
@@ -191,6 +197,7 @@ for kind, colours in KIND_COLOURS do
 				properties = { TextColor3 = text, TextTransparency = 0.15 },
 			},
 			{ selector = base .. " >> .ui-button-icon", properties = { ImageColor3 = text } },
+			{ selector = base .. " >> .ui-toast-media >> .ui-icon", properties = { ImageColor3 = text } },
 		} :: { any }
 	do
 		rule.priority = 200
@@ -338,6 +345,7 @@ function Toaster.install(app)
 			title = message,
 			description = opts.description,
 			kind = kind,
+			media = opts.media,
 			duration = opts.duration or Toaster.defaults.duration,
 			action = opts.action,
 			channel = opts.channel or "default",
@@ -511,6 +519,25 @@ local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, in
 		return button
 	end)
 
+	-- The media slot, before the title and description (not beside the game's own UI): made
+	-- once, as the toast is first seen
+	local media: Frame? = nil
+	if item.media ~= nil and not item.content then
+		media = Component.box({
+			Name = "Media",
+			Size = UDim2.fromOffset(0, 0),
+			AutomaticSize = Enum.AutomaticSize.XY,
+			LayoutOrder = 1,
+			Tags = { "ui-toast-media" },
+		})
+		Component.list({
+			FillDirection = Enum.FillDirection.Horizontal,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Parent = media,
+		})
+		Slot.fill(media :: Frame, item.media, { app = app })
+	end
+
 	local panel = Element.new("Frame", {
 		Name = id,
 		AutomaticSize = Enum.AutomaticSize.Y,
@@ -555,6 +582,7 @@ local function renderToast(h, toasts: () -> { any }, item: { [string]: any }, in
 						return description ~= nil and description ~= ""
 					end),
 			}),
+			media :: any,
 			action,
 			entry.close,
 		}),
