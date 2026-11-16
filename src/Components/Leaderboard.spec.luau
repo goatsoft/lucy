@@ -97,7 +97,17 @@ return function()
 		for _, label in { board.nameLabelFor(15), board.ownNameLabel } do
 			expect(label.Text).to.equal(LONG)
 			expect(label.TextTruncate).to.equal(Enum.TextTruncate.None)
-			expect(label.Parent:HasTag("ui-marquee")).to.equal(true)
+			-- Inside a Marquee (the strip sits in its clip, so not always the Marquee's own child)
+			local inMarquee = false
+			local at = label.Parent
+			while at and at ~= column do
+				if at:HasTag("ui-marquee") then
+					inMarquee = true
+					break
+				end
+				at = at.Parent
+			end
+			expect(inMarquee).to.equal(true)
 		end
 		if Harness.laysOutLive() then
 			expect(Harness.waitFor(function()
