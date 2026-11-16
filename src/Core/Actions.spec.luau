@@ -130,6 +130,64 @@ return function()
 		end)
 	end)
 
+	describe("onRelease", function()
+		beforeEach(function()
+			start()
+			app.actions:define("gameplay", { boost = { K.LeftShift }, shop = { K.B } })
+		end)
+
+		it("runs handlers when the action is let go, not when it is pressed", function()
+			local pressed, released = 0, 0
+			app.actions:on("boost", function()
+				pressed += 1
+			end)
+			local stop = app.actions:onRelease("boost", function()
+				released += 1
+			end)
+			app.actions:_press("boost")
+			expect(released).to.equal(0)
+			app.actions:_release("boost")
+			app.actions:_release("shop")
+			expect(pressed).to.equal(1)
+			expect(released).to.equal(1)
+			stop()
+			app.actions:_release("boost")
+			expect(released).to.equal(1)
+		end)
+
+		it("stops with the owner it was made in", function()
+			local count = 0
+			local scope = Reactive.effectScope(true)
+			scope:run(function()
+				app.actions:onRelease("boost", function()
+					count += 1
+				end)
+			end)
+			app.actions:_release("boost")
+			scope:stop()
+			app.actions:_release("boost")
+			expect(count).to.equal(1)
+		end)
+
+		it("listens to the InputAction's Released", function()
+			local action = context("gameplay"):FindFirstChild("boost") :: InputAction
+			local count = 0
+			app.actions:onRelease("boost", function()
+				count += 1
+			end)
+			action:Fire(true)
+			action:Fire(false)
+			task.wait()
+			expect(count).to.equal(1)
+		end)
+
+		it("errors for an action that does not exist", function()
+			expect(function()
+				app.actions:onRelease("nope", function() end)
+			end).to.throw()
+		end)
+	end)
+
 	describe("bind and keys", function()
 		beforeEach(function()
 			start()

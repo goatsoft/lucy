@@ -10,6 +10,7 @@
 		}, { priority = 1000, sink = false })            -- the options are optional
 
 		local stop = app.actions:on("inventory", function() inventory:toggle() end)
+		app.actions:onRelease("boost", function() boosting = false end)  -- let go
 
 		app.actions:bind("inventory", { Enum.KeyCode.Tab, Enum.KeyCode.ButtonL1 })
 		app.actions:bind({ inventory = { ... }, shop = { ... } })    -- several at once
@@ -75,6 +76,7 @@ type Entry = {
 	set: string,
 	keys: Reactive.Ref<Keys>,
 	handlers: { [{}]: () -> () },
+	releases: { [{}]: () -> () },
 }
 
 type Set = {
@@ -215,7 +217,7 @@ end
 -- the stick, so each binding matches its action's type.
 function Actions._defineMovement(self: Actions)
 	local keys = Reactive.ref(Actions.movementKeys :: Keys)
-	self._entries[MOVEMENT] = { set = MOVEMENT, keys = keys, handlers = {} }
+	self._entries[MOVEMENT] = { set = MOVEMENT, keys = keys, handlers = {}, releases = {} }
 	local held = self:_count(MOVEMENT)
 
 	local set = self:_set(MOVEMENT, { priority = Actions.movementPriority, sink = true }, function()
@@ -286,13 +288,15 @@ function Actions.define(self: Actions, set: string, actions: { [string]: Keys },
 			continue
 		end
 		local keysRef = Reactive.ref(table.clone(keys))
-		local handlers = {}
-		self._entries[name] = { set = set, keys = keysRef, handlers = handlers }
+		self._entries[name] = { set = set, keys = keysRef, handlers = {}, releases = {} }
 		self._scope:run(function()
 			local action = actionElement(name, Enum.InputActionType.Bool, keysRef)
 			Element.hydrate(action, {
 				[Element.on("Pressed")] = function()
 					self:_press(name)
+				end,
+				[Element.on("Released")] = function()
+					self:_release(name)
 				end,
 			})
 			action.Parent = entry.context
@@ -300,13 +304,10 @@ function Actions.define(self: Actions, set: string, actions: { [string]: Keys },
 	end
 end
 
-function Actions._press(self: Actions, name: string)
-	local entry = self._entries[name]
-	if not entry then
-		return
-	end
+-- Runs a list of handlers, from a copy, so a handler may stop itself or add another
+local function run(handlers: { [{}]: () -> () })
 	local list = {}
-	for _, handler in entry.handlers do
+	for _, handler in handlers do
 		table.insert(list, handler)
 	end
 	for _, handler in list do
@@ -314,20 +315,49 @@ function Actions._press(self: Actions, name: string)
 	end
 end
 
-function Actions.on(self: Actions, name: string, handler: () -> ()): () -> ()
-	if name == MOVEMENT then
-		error('[Lucy] "movement" has no handlers', 2)
+function Actions._press(self: Actions, name: string)
+	local entry = self._entries[name]
+	if entry then
+		run(entry.handlers)
 	end
-	local entry = self:_entry(name)
+end
+
+function Actions._release(self: Actions, name: string)
+	local entry = self._entries[name]
+	if entry then
+		run(entry.releases)
+	end
+end
+
+-- Adds a handler to an action's list (handlers or releases); stops with its owner
+function Actions._listen(
+	self: Actions,
+	name: string,
+	list: "handlers" | "releases",
+	handler: () -> ()
+): () -> ()
+	if name == MOVEMENT then
+		error('[Lucy] "movement" has no handlers', 3)
+	end
+	local handlers = (self:_entry(name) :: any)[list]
 	local token = {}
-	entry.handlers[token] = handler
+	handlers[token] = handler
 	local function stop()
-		entry.handlers[token] = nil
+		handlers[token] = nil
 	end
 	if Reactive._hasOwner() then
 		Reactive.onCleanup(stop)
 	end
 	return stop
+end
+
+function Actions.on(self: Actions, name: string, handler: () -> ()): () -> ()
+	return self:_listen(name, "handlers", handler)
+end
+
+-- The action was let go: for something held down, such as a boost or a long note
+function Actions.onRelease(self: Actions, name: string, handler: () -> ()): () -> ()
+	return self:_listen(name, "releases", handler)
 end
 
 function Actions.bind(self: Actions, nameOrMap: string | { [string]: Keys }, keys: Keys?)

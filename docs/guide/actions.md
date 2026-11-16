@@ -58,6 +58,28 @@ listening. Called inside a component's render or an effect, it stops by itself
 with that owner; at the top of a script it listens until you call `stop()`.
 Actions never fire while the player is typing in a text box.
 
+## Keys held down
+
+Some things last as long as a key is held: a sprint, charging a throw, a long
+note in a rhythm game. Listen for the press with `on` and for letting go with
+`onRelease`:
+
+```luau
+local sprinting = false
+
+app.actions:on("sprint", function()
+    sprinting = true
+end)
+
+app.actions:onRelease("sprint", function()
+    sprinting = false
+end)
+```
+
+`onRelease` stops the same way `on` does. Switching a set off while a key is
+held may not send a release, so end anything held when your own round or menu
+ends too.
+
 ## Touch players
 
 Touch screens have no keys, so an action alone leaves a touch player no way in.
