@@ -325,6 +325,16 @@ return function()
 		expect(board.nameLabelFor(12):HasTag("ui-leaderboard-display")).to.equal(false)
 	end)
 
+	it("keeps 1st's big name whole: the name's strip is as tall as the type it is set in", function()
+		local board = Leaderboard.new({ app = app, Parent = gui, rows = ROWS, size = "lg" })
+		Harness.flush()
+		for _, id in { 11, 12, 14 } do
+			local label = board.nameLabelFor(id)
+			local strip = (label.Parent :: any).Parent :: Frame
+			expect(strip.AbsoluteSize.Y >= label.AbsoluteSize.Y).to.equal(true)
+		end
+	end)
+
 	it("gives the player's own row its own tier, listed past the podium or pinned", function()
 		local listed = Leaderboard.new({
 			app = app,

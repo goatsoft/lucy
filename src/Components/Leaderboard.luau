@@ -451,6 +451,12 @@ local spec: Component.Spec = {
 			})
 			local nameLabel: TextLabel = nameMarquee.strip
 			Element.hydrate(nameLabel, { Tags = { "ui-leaderboard-name" :: any, typeTag, displayTag } })
+			-- The marquee is as tall as its hidden line (Marquee): the line takes the name's type too, or
+			-- 1st's big name in the display face is cut off at the bottom
+			Element.hydrate(
+				nameMarquee.line,
+				{ Tags = { "ui-leaderboard-name" :: any, typeTag, displayTag } }
+			)
 			local valueLabel = Element.new("TextLabel", {
 				Name = "Value",
 				LayoutOrder = 4,
