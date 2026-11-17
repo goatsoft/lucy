@@ -123,6 +123,9 @@ local Lucy = {
 	preload = require(Core.Preload).preload,
 	Preload = require(Core.Preload),
 
+	-- Content built on first show (Core/Deferred): build some of it ahead, a handle a frame
+	prebuild = require(Core.Deferred).prebuild,
+
 	-- Framework
 	App = App,
 	Server = Server,

@@ -238,6 +238,45 @@ return function()
 		end)
 	end)
 
+	describe("prebuild", function()
+		it("builds one handle a frame, skipping what is destroyed, and says how far it is", function()
+			local order = {}
+			local function fake(name: string, destroyed: boolean?): any
+				return {
+					destroyed = destroyed == true,
+					build = function()
+						table.insert(order, name)
+					end,
+				}
+			end
+			local job = Deferred.prebuild({ fake("inventory"), fake("gone", true), fake("settings"), {} })
+			expect(#order).to.equal(1)
+			expect(job.done()).to.equal(false)
+			expect(Harness.waitFor(job.done)).to.equal(true)
+			expect(table.concat(order, ",")).to.equal("inventory,settings")
+			expect(job.progress()).to.equal(1)
+		end)
+
+		it("is done at once with nothing to build, and reports a builder that throws", function()
+			expect(Deferred.prebuild({}).done()).to.equal(true)
+			local reported = 0
+			local report = Deferred.report
+			Deferred.report = function()
+				reported += 1
+			end
+			local job = Deferred.prebuild({
+				{
+					build = function()
+						error("no songs", 0)
+					end,
+				},
+			})
+			Deferred.report = report
+			expect(job.done()).to.equal(true)
+			expect(reported).to.equal(1)
+		end)
+	end)
+
 	describe("build", function()
 		it("builds once, when asked", function()
 			local handle, slot = thing()

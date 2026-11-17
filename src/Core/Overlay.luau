@@ -454,6 +454,8 @@ export type Overlay = {
 	presentation: () -> string,
 	maxHeight: () -> number,
 	safeBottom: () -> number,
+	-- Whether it is on screen: open, or closed and still sliding out (a drawer)
+	visible: () -> boolean,
 	close: (reason: string?) -> (),
 }
 
@@ -959,6 +961,9 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		end,
 		safeBottom = function(): number
 			return safeBottom()
+		end,
+		visible = function(): boolean
+			return open() or closing()
 		end,
 		close = close,
 	}

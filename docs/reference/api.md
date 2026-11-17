@@ -55,6 +55,7 @@ the [composables reference](composables/index.md).
 | Name | What it is | More |
 |---|---|---|
 | `Lucy.preload`, `Preload` | Fetches pictures before they are shown, in one shared queue | [Preloading](../components/image.md#preloading) |
+| `Lucy.prebuild(handles)` | Builds ahead the content of sheets, dialogs, tabs and long lists that build on first show, one handle a frame. Returns a job with `done()` and `progress()` | [Building on open](../components/sheet.md#building-on-open) |
 
 ## The App and its parts
 

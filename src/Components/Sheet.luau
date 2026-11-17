@@ -11,6 +11,11 @@
 			corner = { ... },                       -- beside the close button, top right (sheet.cornerSlot)
 			children = { ... },                     -- into sheet.body, which scrolls
 			footer = { ... },                       -- above the actions, stays put (sheet.footerSlot)
+			build = function(sheet) return { header, children, footer, corner } end,
+			                          -- in place of those four: called the first time the sheet opens,
+			                          -- so nothing in it is made until then (see below)
+			keep = true,              -- with build. false: the content is removed once the sheet has
+			                          -- closed, and built again on the next open
 			actions = {                             -- buttons along the bottom, like Dialog's
 				{ text = "Done" },
 			},
@@ -48,11 +53,19 @@
 	(sheet.plate, ui-sheet-plate) whose label is sheet.titleLabel, and the room for it comes off
 	the panel's top. sheet.content is the panel.
 
+	With `build` in place of the slots, the sheet's content is built on its first open
+	(Core/Deferred, ADR 0049): build(sheet) runs once, with the finished handle, and what it
+	returns goes into the slots in the order header, children, footer, corner. Nothing sees the
+	sheet as open (placing, focus, onOpenChange) until the content is there. The title, the
+	close button and the actions are made with the sheet. sheet:build() builds it ahead without
+	opening. Slots given directly are built at once, as ever; both is an error.
+
 	State keys: open, title, description.
 ]]
 
 local Button = require(script.Parent.Button)
 local Component = require(script.Parent.Parent.Core.Component)
+local Deferred = require(script.Parent.Parent.Core.Deferred)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Heading = require(script.Parent.Heading)
@@ -148,6 +161,8 @@ local spec: Component.Spec = {
 		local p: Component.Props = h.props
 		local app = h.app
 		local open = h:ref("open")
+		-- One build function in place of the slots: the content is made on the first open
+		local building = Deferred.building(p, "Sheet")
 		local dismissible = p.dismissible ~= false
 		local modal = p.modal ~= false
 		local closeOnOverlay = dismissible
@@ -304,8 +319,19 @@ local spec: Component.Spec = {
 			table.insert(actionHandles, actionHandle)
 		end
 		actionsRow.Visible = #actionHandles > 0
-		local hasFooter = #actionHandles > 0 or p.footer ~= nil
-		footer.Visible = hasFooter
+		local hasActions = #actionHandles > 0
+		-- With build the slots fill on open, so whether they show is followed, not fixed here
+		local footerFilled = if building then Composables.useHasVisibleChild(footerSlot) else nil
+		local function hasFooter(): boolean
+			return hasActions or p.footer ~= nil or (footerFilled ~= nil and footerFilled())
+		end
+		if building then
+			Element.hydrate(footer, { Visible = hasFooter })
+			Element.hydrate(footerSlot, { Visible = footerFilled })
+			Element.hydrate(headerSlot, { Visible = Composables.useHasVisibleChild(headerSlot) })
+		else
+			footer.Visible = hasFooter()
+		end
 
 		-- In a drawer the body may use what the overlay offers, less the header, footer, padding
 		-- and gaps. In a panel it fills what the header and footer leave (below), so the footer
@@ -325,7 +351,7 @@ local spec: Component.Spec = {
 			if parts then
 				used += parts.rise() + parts.offset() + parts.clear()
 			end
-			if hasFooter then
+			if hasFooter() then
 				used += footerSize().Y / scale + gap
 			end
 			if isDrawer() then
@@ -444,8 +470,32 @@ local spec: Component.Spec = {
 			h.titleLabel = framed.titleLabel
 		end
 
+		-- What the overlay, focus and the owner follow: `open` itself, or with build `shown`, which
+		-- is true only once the sheet is open and its content is built (and writes `open`)
+		local shown: Reactive.Ref<boolean> = open
+		if building then
+			local part = Deferred.slots(h, p, "Sheet", {
+				header = headerSlot,
+				children = body.content,
+				footer = footerSlot,
+				corner = corner.slot,
+			}, {
+				removed = function()
+					body.frame.CanvasPosition = Vector2.zero
+				end,
+			})
+			h._part = part
+			shown = part:follow(open, {
+				-- A drawer is still on screen while it slides out: its content goes after that
+				visible = function(): boolean
+					local overlay = overlayRef()
+					return overlay ~= nil and overlay.visible()
+				end,
+			})
+		end
+
 		local overlay = Overlay.use(app, {
-			open = open,
+			open = shown,
 			content = framed.frame,
 			returnFocus = p.returnFocus,
 			presentation = p.presentation or "auto",
@@ -488,8 +538,8 @@ local spec: Component.Spec = {
 		h.handleBar, h.presentation = handleBar, overlay.presentation
 		Component.claimSelection(app, overlay.root)
 
-		-- Side effects of opening: the owner hears.
-		Reactive.watch(open, function(isOpen, previous)
+		-- Side effects of opening: the owner hears (once the content is there, with build).
+		Reactive.watch(shown, function(isOpen, previous)
 			local wasOpen = previous == true
 			if (isOpen == true) ~= wasOpen then
 				if previous ~= nil then -- not at mount
@@ -503,6 +553,13 @@ local spec: Component.Spec = {
 		return overlay.root
 	end,
 }
+
+-- With build: builds the content now, without opening. Nothing happens once it is built.
+local function build(h: any)
+	if not h.destroyed then
+		h._part:build()
+	end
+end
 
 function Sheet.new(props: { [string]: any }?)
 	local handle = Component.mount(spec, props)
@@ -518,6 +575,12 @@ function Sheet.new(props: { [string]: any }?)
 	local p: Component.Props = props or {}
 	if not (p.Parent or p.parent) then
 		handle.Instance.Parent = handle.app:portal("modal")
+	end
+	-- With build: the handle is finished, so a sheet that starts open is built now
+	local part = handle._part
+	if part then
+		handle.build = build
+		part:start(handle:ref("open"))
 	end
 	return handle
 end

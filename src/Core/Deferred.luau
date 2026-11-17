@@ -45,6 +45,8 @@
 	Every part is listed in `handle._deferred`, where Devtools reads what is not built yet.
 ]]
 
+local RunService = game:GetService("RunService")
+
 local Component = require(script.Parent.Component)
 local Reactive = require(script.Parent.Reactive)
 local Scroll = require(script.Parent.Scroll)
@@ -61,6 +63,7 @@ export type Options = {
 	build: (part: any) -> (),
 	keep: boolean?,
 	name: any?,
+	removed: (() -> ())?, -- runs after `remove` has taken the content away
 }
 
 local Part = {}
@@ -73,6 +76,7 @@ type PartFields = {
 	keep: boolean,
 	built: Reactive.Ref<boolean>,
 	_build: (part: any) -> (),
+	_removed: (() -> ())?,
 	_scope: Reactive.Scope?,
 	_before: { [Instance]: boolean }?,
 	_building: boolean,
@@ -159,6 +163,7 @@ function Deferred.new(handle: any, options: Options): Part
 		keep = options.keep ~= false,
 		built = Reactive.ref(false),
 		_build = options.build,
+		_removed = options.removed,
 		_scope = nil,
 		_before = nil,
 		_building = false,
@@ -241,6 +246,89 @@ function Part.remove(self: Part)
 	end
 	self.built(false)
 	clear(self)
+	if self._removed then
+		self._removed()
+	end
+end
+
+-- The slots a Dialog or Sheet builds on open, in the order they are placed.
+local SLOTS = { "header", "children", "footer", "corner" }
+
+--[[
+	For Dialog and Sheet (slot components): whether `props` asks for its content to be built on
+	open, by giving one `build` function in place of the slots. Slots given: false, built at
+	once as ever. Both, or `keep` without `build`, is an error.
+]]
+function Deferred.building(props: { [string]: any }, what: string): boolean
+	local build = props.build
+	if build == nil then
+		if props.keep ~= nil then
+			error(`[Lucy] {what}: keep goes with build; slots given at once are always kept`, 0)
+		end
+		return false
+	end
+	if type(build) ~= "function" then
+		error(`[Lucy] {what}: build is a function returning \{ header, children, footer, corner \}`, 0)
+	end
+	local given = {}
+	for _, name in SLOTS do
+		if props[name] ~= nil then
+			table.insert(given, name)
+		end
+	end
+	if #given > 0 then
+		error(
+			`[Lucy] {what}: give build or the slots, not both; move {table.concat(given, ", ")} into what build returns`,
+			0
+		)
+	end
+	if props.keep ~= nil and type(props.keep) ~= "boolean" then
+		error(`[Lucy] {what}: keep is true or false, not "{tostring(props.keep)}"`, 0)
+	end
+	return true
+end
+
+--[[
+	The part for a Dialog or Sheet with `build` (Deferred.building said so): `props.build(handle)`
+	runs once on first open and returns { header, children, footer, corner }, each placed in its
+	slot in that order, so something made once (a Tabs: its bar in the header, itself in the
+	body) goes in both. `placed(made)` runs after, for what follows the content (which slots
+	show).
+]]
+function Deferred.slots(
+	handle: any,
+	props: { [string]: any },
+	what: string,
+	slots: { [string]: Instance },
+	options: { removed: (() -> ())?, placed: ((made: { [string]: any }) -> ())? }?
+): Part
+	local list = {}
+	for _, name in SLOTS do
+		table.insert(list, slots[name])
+	end
+	local placed = options and options.placed
+	return Deferred.new(handle, {
+		slots = list,
+		keep = props.keep,
+		removed = options and options.removed,
+		build = function()
+			local made = props.build(handle)
+			if made == nil then
+				made = {}
+			end
+			if type(made) ~= "table" or typeof(made.Instance) == "Instance" then
+				error(`[Lucy] {what}: build returns \{ header, children, footer, corner \} or nothing`, 0)
+			end
+			for _, name in SLOTS do
+				if made[name] ~= nil then
+					Component.adopt(slots[name], made[name])
+				end
+			end
+			if placed then
+				placed(made)
+			end
+		end,
+	})
 end
 
 local function buildOrClose(self: Part, open: Reactive.Ref<boolean>)
@@ -324,6 +412,41 @@ function Deferred.intersect(parts: { Part })
 			stop()
 		end
 	end)
+end
+
+--[[
+	Lucy.prebuild(handles): builds, ahead of time, the content of components that build on
+	first show (a Sheet or Dialog with `build`, a Tabs, a Stack with mount = "intersect"), one
+	handle a frame so no frame pays for more than one. For the panels players open first, once
+	they are in the game. Each handle's own `build()` is called, so a component that is built
+	already, was opened meanwhile or is destroyed costs nothing. Returns a job: `done()` and
+	`progress()` (0 to 1) are getters to follow.
+]]
+function Deferred.prebuild(handles: { any }): { done: () -> boolean, progress: () -> number }
+	local total = #handles
+	local finished = Reactive.ref(0)
+	task.spawn(function()
+		for index, handle in handles do
+			if not handle.destroyed and type(handle.build) == "function" then
+				local ok, err = pcall(handle.build, handle)
+				if not ok then
+					Deferred.report(err)
+				end
+			end
+			finished(index)
+			if index < total then
+				RunService.Heartbeat:Wait()
+			end
+		end
+	end)
+	return {
+		done = function(): boolean
+			return finished() >= total
+		end,
+		progress = function(): number
+			return if total == 0 then 1 else finished() / total
+		end,
+	}
 end
 
 -- Builds a component that is open from the start. Call it once the handle is finished.

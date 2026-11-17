@@ -735,4 +735,145 @@ return function()
 			expect(inside.plate).to.equal(nil)
 		end)
 	end)
+
+	describe("build", function()
+		local Devtools = require(script.Parent.Parent.Core.Devtools)
+		local Deferred = require(script.Parent.Parent.Core.Deferred)
+		local Button = require(script.Parent.Button)
+
+		-- A Dialog whose four slots come from one build function. Returns it, how often it built
+		-- and what the last build made.
+		local function deferred(extra: { [string]: any }?): (any, { number }, { [string]: any })
+			local count, made = { 0 }, {}
+			local props: { [string]: any } = {
+				app = app,
+				id = "booth",
+				title = "Booth",
+				build = function(panel)
+					count[1] += 1
+					made.panel = panel
+					made.header = Button.new({ app = app, text = "Filter" })
+					made.child = Button.new({ app = app, text = "Request" })
+					made.footer = Button.new({ app = app, text = "Queue" })
+					made.corner = Button.new({ app = app, text = "Help" })
+					return {
+						header = { made.header },
+						children = { made.child },
+						footer = { made.footer },
+						corner = { made.corner },
+					}
+				end,
+			}
+			local more: { [string]: any } = extra or {}
+			for key, value in more do
+				props[key] = value
+			end
+			return Dialog.new(props), count, made
+		end
+
+		it("builds nothing until it first opens, then once", function()
+			local panel, count, made = deferred()
+			expect(count[1]).to.equal(0)
+			expect(Devtools.tree({ app = app, root = "booth" })[1].built).to.equal(false)
+			panel:open()
+			expect(count[1]).to.equal(1)
+			expect(made.panel).to.equal(panel)
+			expect(panel.Instance.Visible).to.equal(true)
+			expect(made.header.Instance.Parent).to.equal(panel.headerSlot)
+			expect(made.child.Instance.Parent).to.equal(panel.body)
+			expect(made.footer.Instance.Parent).to.equal(panel.footerSlot)
+			expect(made.corner.Instance.Parent).to.equal(panel.cornerSlot)
+			expect(panel.headerSlot.Visible).to.equal(true)
+			expect(panel.footerSlot.Visible).to.equal(true)
+			expect(Devtools.tree({ app = app, root = "booth" })[1].built).to.equal(nil)
+			panel:close()
+			panel:open()
+			expect(count[1]).to.equal(1)
+			expect(made.child.destroyed).to.equal(false)
+		end)
+
+		it("tells the owner it is open only once the content is there", function()
+			local seen = {}
+			local panel, _, made
+			panel, _, made = deferred({
+				onOpenChange = function(isOpen)
+					table.insert(seen, `{isOpen}:{made.child ~= nil}`)
+				end,
+			})
+			panel:open()
+			panel:close()
+			expect(table.concat(seen, " ")).to.equal("true:true false:true")
+		end)
+
+		it("builds ahead with build(), without opening", function()
+			local panel, count = deferred()
+			panel:build()
+			panel:build()
+			expect(count[1]).to.equal(1)
+			expect(panel:get("open")).to.equal(false)
+			expect(panel.Instance.Visible).to.equal(false)
+			panel:open()
+			expect(count[1]).to.equal(1)
+		end)
+
+		it("builds at once when it starts open", function()
+			local panel, count = deferred({ open = true })
+			expect(count[1]).to.equal(1)
+			expect(panel.Instance.Visible).to.equal(true)
+		end)
+
+		it("removes the content after closing with keep = false, and builds it again", function()
+			local panel, count, made = deferred({ keep = false, presentation = "panel" })
+			panel:open()
+			local first = made.child
+			panel:close()
+			expect(Harness.waitFor(function()
+				return first.destroyed
+			end)).to.equal(true)
+			expect(#panel.headerSlot:GetChildren() <= 2).to.equal(true) -- its own layout and padding
+			panel:open()
+			expect(count[1]).to.equal(2)
+			expect(made.child.Instance.Parent).to.equal(panel.body)
+		end)
+
+		it("closes again and reports when build throws, and opens later", function()
+			local fail = true
+			local reported = 0
+			local report = Deferred.report
+			Deferred.report = function()
+				reported += 1
+			end
+			local panel = Dialog.new({
+				app = app,
+				build = function()
+					if fail then
+						error("no songs", 0)
+					end
+					return {}
+				end,
+			})
+			panel:open()
+			Deferred.report = report
+			expect(panel:get("open")).to.equal(false)
+			expect(panel.Instance.Visible).to.equal(false)
+			expect(reported).to.equal(1)
+			fail = false
+			panel:open()
+			expect(panel.Instance.Visible).to.equal(true)
+		end)
+
+		it("refuses build with slots, and keep without build", function()
+			expect(function()
+				Dialog.new({ app = app, build = function() end, children = { Instance.new("Frame") } })
+			end).to.throw("children")
+			expect(function()
+				Dialog.new({ app = app, keep = false })
+			end).to.throw("keep")
+		end)
+
+		it("has no build() when its slots are given", function()
+			local panel = Dialog.new({ app = app, children = { Instance.new("Frame") } })
+			expect(panel.build).to.equal(nil)
+		end)
+	end)
 end

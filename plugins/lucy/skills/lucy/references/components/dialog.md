@@ -31,6 +31,8 @@ quit:open()
 | `corner` | table | | | Instances or handles in the top right corner, left of the close button, such as a currency chip. See [The corner](#the-corner) |
 | `children` | table | | | Instances or handles to put in the content area |
 | `footer` | table | | | Instances or handles under the body, above the actions. They stay put while the body scrolls. When all of them are hidden (key hints on touch, say) the footer takes no room |
+| `build` | function | | | In place of `header`, `corner`, `children` and `footer`: called the first time the dialog opens, so nothing in it is made until then. See [Building on open](#building-on-open) |
+| `keep` | boolean | `true` | | With `build`. `false` removes the content once the dialog has closed and builds it again on the next open |
 | `footerPlacement` | string | `"above"` | | `"above"` the actions, or `"beside"`: on their left in one row, such as a "Don't show this again" checkbox next to the main button. On a screen too narrow for both, the actions wrap under it |
 | `dismissible` | boolean | `true` | | Whether B, Backspace, the overlay and the close button can close it |
 | `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it (off by default when `modal` is `false`) |
@@ -87,6 +89,7 @@ An action closes the dialog after its `onClick` runs, unless `onClick` returns
 | `dialog:open()` | Opens it |
 | `dialog:close()` | Closes it |
 | `dialog:toggle()` | Opens it if closed, closes it if open |
+| `dialog:build()` | With `build`: builds the content now, without opening. Does nothing once it is built |
 | `dialog.body` | The frame that holds `children` (hidden when there are none) |
 | `dialog.scroll` | The [ScrollArea](scroll-area.md) around the body |
 | `dialog.bodyRoom()` | The height the body may take before it scrolls, in the dialog's own units. It follows the screen, the header and the footer, so a body that should fit rather than scroll (a card shrunk to the room) can read it |
@@ -98,6 +101,33 @@ An action closes the dialog after its `onClick` runs, unless `onClick` returns
 | `dialog.shadow` | The shadow behind the panel (shown when the `PanelShadow` token is above 0) |
 | `dialog.plate` | The plate the title stands on, with `titlePlacement = "edge"` (else `nil`) |
 | `dialog.titleLabel` | The title's label, on the plate or in the header |
+
+## Building on open
+
+A dialog made with `children` and the other slots holds content you have
+already made, open or not. For a big dialog, give one `build` function in place
+of the slots and its content is made the first time it opens:
+
+```luau
+local songs = Lucy.Dialog.new({
+    id = "song-picker",
+    title = "Pick a song",
+    size = "lg",
+    build = function(dialog)
+        return {
+            header = { buildGenreFilter() },
+            children = { buildSongList() },
+        }
+    end,
+})
+```
+
+It works as it does for a [Sheet](sheet.md#building-on-open): `build` runs once
+with the dialog, what it returns goes into the slots in the order `header`,
+`children`, `footer`, `corner`, and nothing treats the dialog as open until the
+content is there. `keep = false` removes the content after it closes,
+`dialog:build()` builds it ahead, and `Lucy.prebuild` builds several, one each
+frame. A two line confirm needs none of this: give it `children` as before.
 
 ## Alert dialogs
 

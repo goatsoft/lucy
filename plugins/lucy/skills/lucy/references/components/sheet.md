@@ -39,6 +39,8 @@ settings:open()
 | `corner` | table | | | Instances or handles in the top right corner, left of the close button, such as a currency chip. See [The corner](#the-corner) |
 | `children` | table | | | Instances or handles to put in the scrolling body |
 | `footer` | table | | | Instances or handles under the body, above the actions. They stay put while the body scrolls |
+| `build` | function | | | In place of `header`, `corner`, `children` and `footer`: called the first time the sheet opens, so nothing in it is made until then. See [Building on open](#building-on-open) |
+| `keep` | boolean | `true` | | With `build`. `false` removes the content once the sheet has closed and builds it again on the next open |
 | `side` | string | `"right"` | | `left` or `right`: the edge the panel comes from |
 | `width` | number | `360` | | The panel's width in pixels, at most 90% of the screen |
 | `presentation` | string | `"auto"` | | `auto`, `panel` or `drawer` |
@@ -81,6 +83,7 @@ whatever had it before.
 | `sheet:open()` | Opens it |
 | `sheet:close()` | Closes it |
 | `sheet:toggle()` | Opens it if closed, closes it if open |
+| `sheet:build()` | With `build`: builds the content now, without opening. Does nothing once it is built |
 | `sheet.presentation()` | `"panel"` or `"drawer"`, for this opening |
 | `sheet.body` | The [ScrollArea](scroll-area.md) that holds `children` |
 | `sheet.bodyRoom()` | The height the body may take before it scrolls, in the sheet's own units. It follows the screen, the header and the footer |
@@ -91,6 +94,54 @@ whatever had it before.
 | `sheet.frame` | The clear frame round it that the overlay places, with the shadow and the plate |
 | `sheet.shadow` | The shadow behind it (`ui-sheet-shadow`, shown when the `PanelShadow` token is above 0) |
 | `sheet.plate` | The plate the title stands on, with `titlePlacement = "edge"` (else `nil`) |
+
+## Building on open
+
+A sheet made with `header`, `children` and the other slots holds content you
+have already made, so all of it exists from the moment the sheet does, open or
+not. A game with a dozen sheets pays for every one of them while it starts.
+
+Give one `build` function in place of the slots and the content is made the
+first time the sheet opens:
+
+```luau
+local inventory = Lucy.Sheet.new({
+    id = "inventory",
+    title = "Backstage",
+    build = function(sheet)
+        local tabs = Lucy.Tabs.new({
+            items = {
+                { value = "outfits", text = "Outfits", content = buildOutfits },
+                { value = "drinks", text = "Drinks", content = buildDrinks },
+            },
+        })
+        return { header = { tabs.bar }, children = { tabs } }
+    end,
+})
+```
+
+- `build` is called once, with the sheet. What it returns goes into the slots
+  in the order `header`, `children`, `footer`, `corner`, so something made once
+  (tabs: the bar in the header, the panels in the body) is placed in both.
+- The title, the close button and the `actions` are made with the sheet, as
+  always.
+- Nothing treats the sheet as open until its content is there: it is placed,
+  takes focus and calls `onOpenChange` after `build` has run.
+- Once built, the content is kept: opening again is instant and finds the sheet
+  as the player left it. `keep = false` removes it after the sheet has closed
+  (after a drawer has slid away) and builds it again next time. Use it for a big
+  sheet players seldom open, and keep what must last in
+  [app state](../guide/app-state.md).
+- `sheet:build()` builds the content ahead without opening, and
+  `Lucy.prebuild({ inventory, settings })` builds several, one each frame, so
+  the sheets players open first are ready by the time they do.
+- Until it is built, the components inside do not exist: code that reaches into
+  a sheet that has never opened calls `sheet:build()` first.
+- `build` together with a slot is an error. If `build` throws, the sheet closes
+  again and the error is reported.
+
+A module that makes its sheet with `build` costs almost nothing to require, so
+its hotkeys and state can be set up when the game starts.
 
 ## Examples
 

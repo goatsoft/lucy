@@ -64,6 +64,7 @@
 
 local Button = require(script.Parent.Button)
 local Component = require(script.Parent.Parent.Core.Component)
+local Deferred = require(script.Parent.Parent.Core.Deferred)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Heading = require(script.Parent.Heading)
@@ -150,6 +151,13 @@ for _, rule in PanelFrame.rules("dialog") do
 end
 Dialog.rules = rules
 
+-- With build: builds the content now, without opening. Nothing happens once it is built.
+local function build(h: any)
+	if not h.destroyed then
+		h._part:build()
+	end
+end
+
 function Dialog.new(props: { [string]: any }?)
 	local p: Component.Props = props or {}
 	local dismissible = p.dismissible ~= false
@@ -159,6 +167,8 @@ function Dialog.new(props: { [string]: any }?)
 		and (if modal then p.closeOnOverlay ~= false else p.closeOnOverlay == true)
 	local showClose = dismissible and p.showClose ~= false
 	local actionHandles = {}
+	-- One build function in place of the slots: the content is made on the first open
+	local building = Deferred.building(p, "Dialog")
 	local sizeName = p.size or "md"
 	local width = p.maxWidth or Dialog.sizes[sizeName]
 	if width == nil then
@@ -314,12 +324,14 @@ function Dialog.new(props: { [string]: any }?)
 				end
 				return math.max(0, math.floor(cap - used))
 			end
+			-- With build: whether the body shows follows what build returned
+			local bodyShown = Reactive.ref(false)
 			local scroll = ScrollArea.new({
 				app = h.app,
 				name = "Body",
 				layoutOrder = 2,
 				maxHeight = bodyCap,
-				visible = p.children ~= nil,
+				visible = if building then bodyShown else p.children ~= nil,
 				children = p.children,
 			})
 			scroll.Instance.Parent = inner
@@ -408,9 +420,36 @@ function Dialog.new(props: { [string]: any }?)
 			end
 			Element.hydrate(footer, { Visible = footerShown })
 
+			-- What the overlay, focus and the owner follow: `open` itself, or with build `shown`,
+			-- which is true only once the dialog is open and its content is built (and writes `open`)
+			local shown: Reactive.Ref<boolean> = open
+			if building then
+				local part = Deferred.slots(h, p, "Dialog", {
+					header = headerSlot,
+					children = body,
+					footer = footerSlot,
+					corner = corner.slot,
+				}, {
+					placed = function(made)
+						bodyShown(made.children ~= nil)
+					end,
+					removed = function()
+						bodyShown(false)
+						scroll.frame.CanvasPosition = Vector2.zero
+					end,
+				})
+				h._part = part
+				shown = part:follow(open, {
+					visible = function(): boolean
+						local overlay = overlayRef()
+						return overlay ~= nil and overlay.visible()
+					end,
+				})
+			end
+
 			-- Stacking, back, focus and the dimmed backdrop (owned, so destroy pops them).
 			local overlay = Overlay.use(h.app, {
-				open = open,
+				open = shown,
 				content = frame,
 				returnFocus = p.returnFocus,
 				presentation = "center",
@@ -445,8 +484,8 @@ function Dialog.new(props: { [string]: any }?)
 			h.headerSlot, h.footerSlot, h.actionsRow = headerSlot, footerSlot, actionsRow
 			Component.claimSelection(h.app, root)
 
-			-- Side effects of opening: the owner hears.
-			Reactive.watch(open, function(isOpen, previous)
+			-- Side effects of opening: the owner hears (once the content is there, with build).
+			Reactive.watch(shown, function(isOpen, previous)
 				local wasOpen = previous == true
 				if (isOpen == true) ~= wasOpen then
 					if previous ~= nil then -- not at mount
@@ -473,6 +512,12 @@ function Dialog.new(props: { [string]: any }?)
 
 	if not (p.Parent or p.parent) then
 		handle.Instance.Parent = handle.app:portal("modal")
+	end
+	-- With build: the handle is finished, so a dialog that starts open is built now
+	local part = handle._part
+	if part then
+		handle.build = build
+		part:start(handle:ref("open"))
 	end
 	return handle
 end
