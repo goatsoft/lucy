@@ -8,13 +8,15 @@
 			                      -- instances, builders); Foreground, faded when disabled
 			checked = false,
 			disabled = false,
+			size = "md",          -- sm | md | lg | xl: the box, the label and the row's height
 			onCheckedChange = function(checked, checkbox) end,
 		})
 		checkbox:toggle()
 
-	The hit area is at least ControlSm tall (32 desktop, 40 touch, 44 console) and
-	the box grows with density, so it is easy to hit with a thumb or a gamepad.
-	State keys: checked, label, disabled, visible.
+	The row is as tall as a control of the same size (Component.controlTokens), so a checkbox
+	lines up with a Button or Switch of its size; the label takes that size's text. The box grows
+	with size and with density (md: 16 desktop, 20 touch, 24 console), so it is easy to hit with
+	a thumb or a gamepad. State keys: checked, label, disabled, size, visible.
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
@@ -25,7 +27,15 @@ local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Checkbox = {}
 
-local BOX = { default = 16, touch = 20, tv = 24 }
+Checkbox.sizes = Component.controlSizes
+
+-- The box's side at each size, for each density
+Checkbox.boxes = {
+	sm = { default = 14, touch = 18, tv = 22 },
+	md = { default = 16, touch = 20, tv = 24 },
+	lg = { default = 20, touch = 24, tv = 28 },
+	xl = { default = 24, touch = 28, tv = 32 },
+} :: { [string]: { [string]: number } }
 
 local rules: { Component.Rule } = {
 	{
@@ -70,6 +80,37 @@ local rules: { Component.Rule } = {
 			TextSize = "$TextSm",
 		},
 	},
+	-- The tick and the label follow the size (md is the rules above)
+	{
+		selector = ".ui-checkbox-check.ui-checkbox-size-sm",
+		priority = 5,
+		properties = { TextSize = "$TextXs" },
+	},
+	{
+		selector = ".ui-checkbox-check.ui-checkbox-size-lg",
+		priority = 5,
+		properties = { TextSize = "$TextBase" },
+	},
+	{
+		selector = ".ui-checkbox-check.ui-checkbox-size-xl",
+		priority = 5,
+		properties = { TextSize = "$TextLg" },
+	},
+	{
+		selector = ".ui-checkbox-label.ui-checkbox-size-sm",
+		priority = 5,
+		properties = { TextSize = "$TextXs" },
+	},
+	{
+		selector = ".ui-checkbox-label.ui-checkbox-size-lg",
+		priority = 5,
+		properties = { TextSize = "$TextBase" },
+	},
+	{
+		selector = ".ui-checkbox-label.ui-checkbox-size-xl",
+		priority = 5,
+		properties = { TextSize = "$TextLg" },
+	},
 	{ selector = ".ui-checkbox.ui-disabled", priority = 30, properties = { BackgroundTransparency = 0.5 } },
 	{ selector = ".ui-checkbox-label.ui-disabled", priority = 30, properties = { TextTransparency = 0.5 } },
 }
@@ -82,15 +123,22 @@ end
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "checkbox",
-	defaults = { checked = false, label = "", disabled = false, visible = true },
+	defaults = { checked = false, label = "", disabled = false, size = "md", visible = true },
 	rules = Checkbox.rules,
 	render = function(h)
 		local p: Component.Props = h.props
 		local checked, disabled = h:ref("checked"), h:ref("disabled")
-		local label, visible = h:ref("label"), h:ref("visible")
+		local label, visible, sizeName = h:ref("label"), h:ref("visible"), h:ref("size")
+		Component.checkControlSize(h:get("size"), "Checkbox")
 		local density = Composables.useDensity(h.app)
 		local function side(): number
-			return BOX[density()] or BOX.default
+			local name = sizeName()
+			Component.checkControlSize(name, "Checkbox")
+			local list = Checkbox.boxes[name]
+			return list[density()] or list.default
+		end
+		local function sizeTag(): string
+			return `ui-checkbox-size-{sizeName()}`
 		end
 		local function enabled(): boolean
 			return not disabled()
@@ -101,7 +149,9 @@ local spec: Component.Spec = {
 			Text = "✓",
 			Size = UDim2.fromScale(1, 1),
 			Visible = checked,
-			Tags = { "ui-checkbox-check" },
+			Tags = function(): { string }
+				return { "ui-checkbox-check", sizeTag() }
+			end,
 		})
 		local box = Element.new("Frame", {
 			Name = "Box",
@@ -122,7 +172,13 @@ local spec: Component.Spec = {
 			Visible = function()
 				return label() ~= ""
 			end,
-			Tags = { "ui-checkbox-label", ["ui-disabled"] = disabled },
+			Tags = function(): { string }
+				local tags = { "ui-checkbox-label", sizeTag() }
+				if disabled() then
+					table.insert(tags, "ui-disabled")
+				end
+				return tags
+			end,
 		})
 		h.box, h.check, h.label = box, check, text
 
@@ -139,7 +195,9 @@ local spec: Component.Spec = {
 			BackgroundTransparency = 1,
 			AutomaticSize = Enum.AutomaticSize.X,
 			Size = function()
-				return UDim2.fromOffset(0, math.max(Component.metric(h.app, "ControlSm"), side()))
+				-- As tall as a control of its size, so it lines up with them in a row or a form
+				local height = Component.controlTokens[sizeName()].height
+				return UDim2.fromOffset(0, math.max(Component.metric(h.app, height), side()))
 			end,
 			Visible = visible,
 			Interactable = enabled,

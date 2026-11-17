@@ -3,7 +3,8 @@
 
 A box the player can check and uncheck, with an optional label. The whole row
 is the hit area, and it grows on touch and console so it is easy to hit with a
-thumb or a gamepad.
+thumb or a gamepad. It comes in the same sizes as the other controls, and a row is
+as tall as a Button of its size.
 
 ```luau
 Lucy.Stack.new({
@@ -30,6 +31,7 @@ Lucy.Stack.new({
 | `label` | string | `""` | yes | Text beside the box |
 | `children` | table | | | Anything after the label in its [slot](slot.md), such as a "NEW" badge. They take the label's look and fade when disabled |
 | `disabled` | boolean | `false` | yes | Greys it out and ignores clicks |
+| `size` | `"sm"` \| `"md"` \| `"lg"` \| `"xl"` | `"md"` | yes | The box, the tick, the label's text and the row's height, as a Button of the same size |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `onCheckedChange` | function | | | Called with `(checked, handle)` when it changes |
 
@@ -62,6 +64,23 @@ Lucy.Checkbox.new({ id = "rules", label = "I agree to the club rules", Parent = 
 if app.state:get("ui.rules.checked") then
     enterLobby()
 end
+```
+
+A checkbox comes in the same sizes as the other controls, and each size is as tall as a
+Button of that size, so it lines up beside them. Go a size up where it sits next to big
+buttons, such as a "don't show this again" beside a large ENTER THE CLUB:
+
+```luau
+Lucy.Stack.new({
+    gap = "Space3",
+    children = {
+        Lucy.Checkbox.new({ label = "Small", size = "sm", checked = true }),
+        Lucy.Checkbox.new({ label = "Medium", size = "md", checked = true }),
+        Lucy.Checkbox.new({ label = "Large", size = "lg", checked = true }),
+        Lucy.Checkbox.new({ label = "Extra large", size = "xl", checked = true }),
+    },
+    Parent = parent,
+})
 ```
 
 ## Preview
