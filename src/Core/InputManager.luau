@@ -24,7 +24,10 @@
 		it instead of following GuiService.SelectedObject themselves. Focus on something
 		that is hidden (its panel closed under it) is let go a moment later
 		(dropHidden, checked a few times a second), so the gamepad is never left on
-		nothing and a hidden selection never holds the keys.
+		nothing and a hidden selection never holds the keys. When what has focus inside a
+		focus scope is removed (a list filtered under it, a panel dropping its content),
+		focus goes to the scope's default on the next frame, or back to what had it before
+		the scope if the scope is closing.
 
 	Tiles:
 		A tile (an Item with focus = "tile", Core/Tiles) is one stop until the player steps
@@ -86,7 +89,15 @@ local Tiles = require(script.Parent.Tiles)
 local InputManager = {}
 InputManager.__index = InputManager
 
-export type Scope = { root: GuiObject | LayerCollector, defaultFocus: any?, returnFocus: any? }
+-- `holds` and `orphaned` are the manager's own: whether focus was last inside the scope, and
+-- whether what had it there was removed (see _followScope)
+export type Scope = {
+	root: GuiObject | LayerCollector,
+	defaultFocus: any?,
+	returnFocus: any?,
+	holds: boolean?,
+	orphaned: boolean?,
+}
 
 export type InputManager = typeof(setmetatable(
 	{} :: {
@@ -102,6 +113,9 @@ export type InputManager = typeof(setmetatable(
 		_stick: Vector2,
 		_backKeys: { Enum.KeyCode },
 		_lastFocused: GuiObject?,
+		_returning: boolean,
+		_focusLive: boolean,
+		_holding: boolean,
 		_focusRef: Reactive.Ref<GuiObject?>,
 	},
 	InputManager
@@ -236,6 +250,9 @@ function InputManager.new(app: any, options: { [string]: any }?): InputManager
 		_stick = Vector2.zero,
 		_backKeys = (opts.backKeys or InputManager.backKeys) :: { Enum.KeyCode },
 		_lastFocused = nil :: GuiObject?,
+		_returning = false,
+		_focusLive = false,
+		_holding = false,
 		_focusRef = Reactive.ref(nil :: GuiObject?),
 	}, InputManager)
 	self:_publish()
@@ -315,7 +332,7 @@ end
 
 -- Focus ring -----------------------------------------------------------------
 
--- How many frames a focus scope waits for a default that is not shown yet (see pushScope)
+-- How many frames a focus scope waits for its default to be ready for the engine (see pushScope)
 local SETTLE_FRAMES = 10
 
 local function isShown(object: GuiObject): boolean
@@ -345,7 +362,10 @@ function InputManager.markFocus(self: InputManager, object: GuiObject?)
 	if previous and previous ~= object then
 		previous:RemoveTag("ui-focus-visible")
 	end
+	-- Whether what had focus was in the game when it took focus: only then can it be removed
+	local wasLive = self._focusLive
 	self._focused = object
+	self._focusLive = object ~= nil and object:IsDescendantOf(game)
 	self._focusRef(object)
 	if object then
 		self._lastFocused = object
@@ -358,7 +378,78 @@ function InputManager.markFocus(self: InputManager, object: GuiObject?)
 	-- Tiles: a closed one takes focus that lands inside it, an open one closes when focus leaves
 	if object ~= previous then
 		Tiles.landed(self, object, previous)
+		self:_followScope(object, previous, wasLive)
 	end
+end
+
+--[[
+	Keeps the top focus scope's `holds` (focus was last inside it) and tells the player leaving
+	the scope from what had focus there being removed: a list filtered under the focus, a panel
+	dropping its content as it closes. The engine then selects nothing, or whatever is nearest,
+	which can be outside the scope. A removal marks the scope `orphaned`: if the scope pops it
+	gives focus back as if it still had it, else focus goes to its default on the next frame
+	(once what replaces the removed control exists), unless the engine found something inside.
+]]
+-- selene: allow(unused_variable)
+function InputManager._followScope(
+	self: InputManager,
+	object: GuiObject?,
+	previous: GuiObject?,
+	wasLive: boolean
+)
+	local scope = self:topScope()
+	if not scope then
+		return
+	end
+	local root = scope.root
+	local removed = previous ~= nil and wasLive and scope.holds == true and not previous:IsDescendantOf(game)
+	if not removed then
+		if object then
+			scope.holds = object:IsDescendantOf(root)
+		end
+		return
+	end
+	if self._returning or scope.orphaned or not self:isNavigating() then
+		return
+	end
+	scope.orphaned = true
+	local tries = 0
+	local function recover()
+		if not scope.orphaned then
+			return
+		end
+		if self._scopes[#self._scopes] ~= scope or not self:isNavigating() then
+			scope.orphaned = nil
+			return
+		end
+		local focused = self:_usable(self._focused)
+		if focused and focused:IsDescendantOf(root) and GuiService.SelectedObject == focused then
+			scope.orphaned = nil
+			return
+		end
+		self._returning = true
+		if not (focused and focused:IsDescendantOf(root)) then
+			self._holding = true
+			self:focusDefault()
+			self._holding = false
+		end
+		-- The scope's default may not be there yet (what replaces a filtered list comes a frame
+		-- later) or not laid out: then nothing is selected until it is
+		local target = self:_usable(self._focused)
+		local ready = target ~= nil
+			and target:IsDescendantOf(root)
+			and target.AbsoluteSize.X > 0
+			and target.AbsoluteSize.Y > 0
+		self:focus(if ready then target else nil)
+		self._returning = false
+		if ready or tries >= SETTLE_FRAMES then
+			scope.orphaned = nil
+		else
+			tries += 1
+			task.delay(0, recover)
+		end
+	end
+	task.delay(0, recover)
 end
 
 -- What has focus, for bindings: a tracked getter (read only)
@@ -372,9 +463,9 @@ end
 -- Selects `object` for gamepad/keyboard navigation (no-op where the engine refuses).
 function InputManager.focus(self: InputManager, object: GuiObject?)
 	-- The engine refuses what is not shown, with a warning in the output. So something still
-	-- hidden (a panel's default on the frame the panel opens) is recorded here and not handed to
-	-- the engine; its focus scope selects it once it shows (pushScope).
-	if object == nil or isShown(object) then
+	-- hidden is recorded here and not handed to the engine, and so is a focus scope's default on
+	-- the frame the scope opens (_holding); the scope hands it over once it is ready (pushScope).
+	if object == nil or (not self._holding and isShown(object)) then
 		pcall(function()
 			GuiService.SelectedObject = object
 		end)
@@ -392,31 +483,36 @@ function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
 		else nil
 	table.insert(self._scopes, scope)
 	if self:isNavigating() then
+		-- On the frame a panel opens its controls are hidden, or shown but not laid out, and the
+		-- engine refuses them with a warning in the output. So the default is only recorded now,
+		-- and handed to the engine below, once it is shown and has a size.
+		self._holding = true
 		self:focusDefault()
-		-- A default that was not shown yet (its panel shows later this frame) was only recorded:
-		-- the engine is given it below, once it shows.
-		local waiting: GuiObject? = self._focused
-		if waiting and isShown(waiting) then
-			waiting = nil
-		end
+		self._holding = false
 		local tries = 0
-		-- Roblox can undo a selection made on the frame a dialog first shows and put it back where
-		-- it was; once it has drawn (next frame), select the default again if focus ended up outside.
 		local function settle()
 			if self._scopes[#self._scopes] ~= scope or not self:isNavigating() then
 				return
 			end
-			local focused = self._focused
 			local root = scope.root
+			local focused = self._focused
+			-- Roblox can undo a selection made as a panel first shows and put it back where it was:
+			-- select the default again if focus ended up outside
 			if root and not (focused and focused.Parent and focused:IsDescendantOf(root)) then
+				self._holding = true
 				self:focusDefault()
-			elseif waiting and focused == waiting and GuiService.SelectedObject ~= waiting then
-				if isShown(waiting) then
-					self:focus(waiting)
-				elseif tries < SETTLE_FRAMES then
-					tries += 1
-					task.delay(0, settle)
-				end
+				self._holding = false
+				focused = self._focused
+			end
+			if not focused or GuiService.SelectedObject == focused then
+				return
+			end
+			local size = focused.AbsoluteSize
+			if isShown(focused) and size.X > 0 and size.Y > 0 then
+				self:focus(focused)
+			elseif tries < SETTLE_FRAMES then
+				tries += 1
+				task.delay(0, settle)
 			end
 		end
 		task.delay(0, settle)
@@ -427,7 +523,18 @@ function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
 			table.remove(self._scopes, index)
 		end
 		local focused = self._focused
-		if focused and scope.root and focused:IsDescendantOf(scope.root) then
+		-- What had focus in the scope was removed before the scope popped (a panel that drops its
+		-- content as it closes): the focus is still this scope's to give back
+		local orphaned = scope.orphaned == true
+			or (
+				focused ~= nil
+				and self._focusLive
+				and scope.holds == true
+				and not focused:IsDescendantOf(game)
+			)
+		scope.orphaned = nil
+		if orphaned or (focused and scope.root and focused:IsDescendantOf(scope.root)) then
+			self._returning = true
 			self:focus(nil)
 			if scope.returnFocus ~= false and self:isNavigating() then
 				local back = self:_usable(scope.returnFocus)
@@ -439,6 +546,7 @@ function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
 					self:focusDefault()
 				end
 			end
+			self._returning = false
 		end
 	end
 end

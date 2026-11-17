@@ -296,6 +296,123 @@ return function()
 			expect(refused).to.equal(0)
 		end)
 
+		it("hands the engine its default only after the frame its scope opens", function()
+			local GuiService = game:GetService("GuiService")
+			local gui = Harness.mount(app)
+			local opener = Instance.new("TextButton")
+			opener.Size = UDim2.fromOffset(50, 20)
+			opener.Position = UDim2.fromOffset(0, 300)
+			opener.Parent = gui
+			-- Shown, but on the frame it opens the engine refuses it (not laid out yet)
+			local panel = Instance.new("Frame")
+			panel.Size = UDim2.fromOffset(200, 200)
+			panel.Parent = gui
+			local inside = Instance.new("TextButton")
+			inside.Size = UDim2.fromOffset(50, 20)
+			inside.Parent = panel
+			app.input:setMode("gamepad")
+			app.input:focus(opener)
+			Harness.waitFor(function()
+				return GuiService.SelectedObject == opener
+			end)
+			local pop = app.input:pushScope({ root = panel, defaultFocus = inside })
+			local recorded = app.input:focused()
+			local engineAtOnce = GuiService.SelectedObject
+			local landed = Harness.waitFor(function()
+				return GuiService.SelectedObject == inside
+			end)
+			pop()
+			GuiService.SelectedObject = nil
+			expect(recorded).to.equal(inside)
+			expect(engineAtOnce).to.equal(opener)
+			expect(landed).to.equal(true)
+		end)
+
+		it("returns focus when what had it in the scope was removed before the scope pops", function()
+			local gui = Harness.mount(app)
+			local opener = Instance.new("TextButton")
+			opener.Size = UDim2.fromOffset(50, 20)
+			opener.Position = UDim2.fromOffset(0, 300)
+			opener.Parent = gui
+			local panel = Instance.new("Frame")
+			panel.Size = UDim2.fromOffset(200, 200)
+			panel.Parent = gui
+			-- A panel that drops its content as it closes (keep = false)
+			local content = Instance.new("Frame")
+			content.Size = UDim2.fromScale(1, 1)
+			content.Parent = panel
+			local inside = Instance.new("TextButton")
+			inside.Size = UDim2.fromOffset(50, 20)
+			inside.Parent = content
+			app.input:setMode("gamepad")
+			app.input:focus(opener)
+			local pop = app.input:pushScope({ root = panel, defaultFocus = inside })
+			expect(app.input:focused()).to.equal(inside)
+			content:Destroy()
+			pop()
+			expect(app.input:focused()).to.equal(opener)
+		end)
+
+		it("moves focus to the scope's default when what had it is removed", function()
+			local gui = Harness.mount(app)
+			local panel = Instance.new("Frame")
+			panel.Size = UDim2.fromOffset(200, 200)
+			panel.Parent = gui
+			local function item(): TextButton
+				local button = Instance.new("TextButton")
+				button.Size = UDim2.fromOffset(50, 20)
+				button.Parent = panel
+				return button
+			end
+			local current = item()
+			app.input:setMode("gamepad")
+			local pop = app.input:pushScope({
+				root = panel,
+				defaultFocus = function()
+					return current
+				end,
+			})
+			expect(app.input:focused()).to.equal(current)
+			-- A list filtered under the focus: every item goes, and others are made in their place
+			-- a frame later. The engine lets go of the removed selection, as GuiService does
+			current:Destroy()
+			app.input:markFocus(nil)
+			task.wait()
+			current = item()
+			local made = current
+			local landed = Harness.waitFor(function()
+				return app.input:focused() == made
+			end)
+			pop()
+			expect(landed).to.equal(true)
+		end)
+
+		it("leaves focus alone when the player moved it out of a scope that then pops", function()
+			local gui = Harness.mount(app)
+			local opener = Instance.new("TextButton")
+			opener.Size = UDim2.fromOffset(50, 20)
+			opener.Position = UDim2.fromOffset(0, 300)
+			opener.Parent = gui
+			local other = Instance.new("TextButton")
+			other.Size = UDim2.fromOffset(50, 20)
+			other.Position = UDim2.fromOffset(300, 300)
+			other.Parent = gui
+			local panel = Instance.new("Frame")
+			panel.Size = UDim2.fromOffset(200, 200)
+			panel.Parent = gui
+			local inside = Instance.new("TextButton")
+			inside.Size = UDim2.fromOffset(50, 20)
+			inside.Parent = panel
+			app.input:setMode("gamepad")
+			app.input:focus(opener)
+			local pop = app.input:pushScope({ root = panel, defaultFocus = inside })
+			-- A non modal panel: the player steps out of it, then it closes and drops its content
+			app.input:focus(other)
+			inside:Destroy()
+			pop()
+			expect(app.input:focused()).to.equal(other)
+		end)
+
 		it("takes returnFocus as a function and skips it when hidden", function()
 			local gui = Harness.mount(app)
 			local opener = Instance.new("TextButton")

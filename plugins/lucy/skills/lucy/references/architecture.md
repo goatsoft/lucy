@@ -158,7 +158,10 @@ To follow what has focus, read `app.input:focusRef()`: a getter that a computed
 or a getter prop tracks, holding the focused instance or nil. Don't follow
 `GuiService.SelectedObject` in a game. When the focused control is hidden (its
 panel closed under it), focus is let go a moment later, so the gamepad is never
-left on nothing.
+left on nothing. When the focused control is removed while a focus scope is
+open, such as a dance filtered out of a list, focus moves to the scope's
+`defaultFocus` as soon as it is there again. A dialog or sheet that removes its
+content as it closes (`keep = false`) still gives focus back to what opened it.
 
 ```luau
 local focused = app.input:focusRef()
