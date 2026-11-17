@@ -78,6 +78,12 @@ while a loading screen is up, or when a shop is about to open. Every call shares
 one queue: a picture fetched before, or waiting already, is not fetched again,
 and the queue works a few at a time so a long list never holds up the game.
 
+On a client, each picture is drawn once, tiny and nearly see-through, in a
+ScreenGui under everything else, until it has loaded. Downloading a picture is
+not enough: the first time it is drawn still takes up to a second or so, and
+that is the grey box a player sees. A picture drawn once this way shows at once
+from then on.
+
 ```luau
 local job = Lucy.preload(shopIcons)
 progressBar(job.progress)        -- 0 to 1, a getter

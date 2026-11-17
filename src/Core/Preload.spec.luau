@@ -1,11 +1,16 @@
 return function()
 	local Preload = require(script.Parent.Preload)
 
-	local real, batchSize
+	local real, batchSize, surface, warmTimeout
 	local calls: { { any } }
 	local gate: BindableEvent?
 	beforeEach(function()
 		real, batchSize = Preload.provider, Preload.batchSize
+		surface, warmTimeout = Preload.surface, Preload.warmTimeout
+		-- No player here: ids go to the provider (the drawn path has its own test)
+		Preload.surface = function()
+			return nil
+		end
 		calls = {}
 		gate = nil
 		Preload._reset()
@@ -20,6 +25,7 @@ return function()
 	end)
 	afterEach(function()
 		Preload.provider, Preload.batchSize = real, batchSize
+		Preload.surface, Preload.warmTimeout = surface, warmTimeout
 		if gate then
 			gate:Fire()
 		end
@@ -40,6 +46,35 @@ return function()
 		expect(again.done()).to.equal(true)
 		task.wait()
 		expect(#calls).to.equal(1)
+	end)
+
+	it("on a client, draws each url once, tiny, then takes the copies away", function()
+		local host = Instance.new("Folder")
+		Preload.surface = function()
+			return host
+		end
+		Preload.warmTimeout = 0.05 -- nothing renders here, so the copies wait it out
+		local decal = Instance.new("Decal")
+		local job = Preload.preload({ 5, 6, decal })
+		task.wait()
+		-- The urls are drawn, not sent; an instance still goes to the provider
+		expect(#calls).to.equal(1)
+		expect(#calls[1]).to.equal(1)
+		expect(calls[1][1]).to.equal(decal)
+		local drawn = {}
+		for _, child in host:GetChildren() do
+			expect(child.ClassName).to.equal("ImageLabel")
+			expect((child :: ImageLabel).Size).to.equal(UDim2.fromOffset(2, 2))
+			table.insert(drawn, (child :: ImageLabel).Image)
+		end
+		table.sort(drawn)
+		expect(table.concat(drawn, ",")).to.equal("rbxassetid://5,rbxassetid://6")
+		task.wait(0.15)
+		expect(#host:GetChildren()).to.equal(0)
+		expect(job.done()).to.equal(true)
+		expect(Preload.isLoaded(5)).to.equal(true)
+		decal:Destroy()
+		host:Destroy()
 	end)
 
 	it("works in batches", function()

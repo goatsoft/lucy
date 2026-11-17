@@ -34,8 +34,12 @@ return function()
 
 	it("pulses a placeholder until the picture loads, none when fetched already or asked not to", function()
 		local Preload = require(script.Parent.Parent.Core.Preload)
-		local real = Preload.provider
+		local real, surface = Preload.provider, Preload.surface
 		Preload.provider = { PreloadAsync = function() end }
+		-- Fetched, not drawn: a client in Play would draw the fake ids and wait for them
+		Preload.surface = function()
+			return nil
+		end
 		Preload._reset()
 		-- An id that never loads in a test
 		local waiting = Image.new({ app = app, Parent = gui, image = 987654321, rounded = "md" })
@@ -54,7 +58,7 @@ return function()
 		-- Asked not to
 		local plain = Image.new({ app = app, Parent = gui, image = 987654321, placeholder = false })
 		expect(plain.Instance:FindFirstChild("Placeholder")).to.equal(nil)
-		Preload.provider = real
+		Preload.provider, Preload.surface = real, surface
 		Preload._reset()
 	end)
 

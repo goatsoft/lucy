@@ -234,8 +234,12 @@ return function()
 
 		it("preloads every item's pictures, not only the cells it builds", function()
 			local Preload = require(script.Parent.Parent.Core.Preload)
-			local real = Preload.provider
+			local real, surface = Preload.provider, Preload.surface
 			local asked: { any } = {}
+			-- Fetched, not drawn: a client in Play would draw the fake ids and wait for them
+			Preload.surface = function()
+				return nil
+			end
 			Preload.provider = {
 				PreloadAsync = function(_, list)
 					for _, id in list do
@@ -256,7 +260,7 @@ return function()
 			expect(grid.cellCount() < 400).to.equal(true)
 			expect(#asked).to.equal(400)
 			expect(Preload.isLoaded(5400)).to.equal(true)
-			Preload.provider = real
+			Preload.provider, Preload.surface = real, surface
 			Preload._reset()
 		end)
 
