@@ -504,6 +504,25 @@ return function()
 			task.wait(0.1)
 			expect(area.frame.Selectable).to.equal(true)
 		end)
+
+		it("follows a control made selectable after it is added, among many rows", function()
+			local area = make({ text(400) })
+			local rows = Instance.new("Frame")
+			for _ = 1, 300 do
+				text(10).Parent = rows
+			end
+			local later = Instance.new("TextButton")
+			later.Selectable = false
+			later.Parent = rows
+			rows.Parent = area.content
+			later.Selectable = true
+			task.wait(0.1)
+			expect(area.frame.Selectable).to.equal(false)
+			-- Every row going at once: looked at again once, and the area is selectable again
+			rows:Destroy()
+			task.wait(0.1)
+			expect(area.frame.Selectable).to.equal(true)
+		end)
 	end)
 	describe("scrollbar", function()
 		-- A 200 x 100 area; `height` of content inside it.

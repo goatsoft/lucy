@@ -279,7 +279,11 @@ local spec: Component.Spec = {
 		h.content = content
 
 		-- Whether anything inside can take gamepad selection; followed as children
-		-- come and go (looked at once things settle, as removals fire before).
+		-- come and go. An addition can only make it true, so it is looked at alone; a
+		-- removal can make it false, so the content is looked at again once things
+		-- settle (removals fire before), one look however many go at once. A look for
+		-- every instance added or removed scanned the whole content each time: a list
+		-- of a few hundred rows rebuilt in a 6,500 instance panel took 1.8 s.
 		local hasSelectable = Reactive.ref(false)
 		local function recount()
 			for _, descendant in content:GetDescendants() do
@@ -291,15 +295,35 @@ local spec: Component.Spec = {
 			hasSelectable(false)
 		end
 		recount()
+		local pending = false
 		local function later()
+			if pending then
+				return
+			end
+			pending = true
 			task.defer(function()
+				pending = false
 				if not h.destroyed then
 					recount()
 				end
 			end)
 		end
-		local added = content.DescendantAdded:Connect(later)
-		local removing = content.DescendantRemoving:Connect(later)
+		local added = content.DescendantAdded:Connect(function(descendant: Instance)
+			if Reactive.peek(hasSelectable) then
+				return
+			end
+			if descendant:IsA("GuiObject") and descendant.Selectable then
+				hasSelectable(true)
+			else
+				-- Selectable may be set after it is parented
+				later()
+			end
+		end)
+		local removing = content.DescendantRemoving:Connect(function()
+			if Reactive.peek(hasSelectable) then
+				later()
+			end
+		end)
 		Reactive.onCleanup(function()
 			added:Disconnect()
 			removing:Disconnect()
