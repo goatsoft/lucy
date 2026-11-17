@@ -1,9 +1,10 @@
 --!strict
 --[[
-	Deferred: content a component builds the first time it shows, not when it is made
-	(ADR 0049). Shared by Tabs, and by every component that opens and closes.
+	Deferred: content a component builds later than it is made (ADR 0049): the first time it
+	shows (mount = "shown"), or the first time it is scrolled near (mount = "intersect").
+	Shared by Tabs, Stack, and every component that opens and closes.
 
-		local deferred, keep = Deferred.mode(props, "Tabs") -- reads and checks `mount` and `keep`
+		local mount, keep = Deferred.mode(props, "Tabs") -- reads and checks `mount` and `keep`
 
 		local part = Deferred.new(handle, {
 			slots = { panel },        -- where the content goes
@@ -28,6 +29,14 @@
 	them could otherwise find an empty panel. A builder that throws closes the component
 	again and reports the error. With keep = false the content is removed once `visible`
 	(`open` when left out) goes false while closed, so a drawer can slide out first.
+
+	For a list whose children are built as they are scrolled near (Stack):
+
+		Deferred.intersect(parts) -- in render; each part's first slot is the frame that is watched
+
+	A part is built the first time its slot is shown and within Deferred.overscan views of the
+	visible part of the ScrollingFrame around it (with none around it, as soon as it shows).
+	The slot must hold some room before it is built, or every slot is in view at once.
 
 	The content has a scope of its own under the component's, so it lives until it is removed
 	or the component is destroyed, whatever asked for the build. Removing destroys what the
@@ -69,32 +78,46 @@ type PartFields = {
 }
 export type Part = typeof(setmetatable({} :: PartFields, Part))
 
+-- How many views beyond each edge of the visible part count as near, for "intersect".
+Deferred.overscan = 1
+
+local SHOWN_MOUNTS = { "immediate", "shown" }
+
 --[[
-	`mount` and `keep` as a component's props give them: whether its content is built on
-	first show ("open", the default) or at once ("now"), and whether it is kept after.
-	`keep` with mount = "now" is an error: that content is always kept.
+	`mount` and `keep` as a component's props give them: when its content is built
+	("immediate" when the component is made, "shown" the first time it shows, "intersect" the
+	first time it is scrolled near), and whether it is kept after. `allowed` lists the values
+	the component takes (immediate and shown when left out) and `default` the one it takes when
+	the prop is left out ("shown"). `keep` goes with "shown" only: "immediate" content is always
+	kept, and so far "intersect" content is too.
 ]]
-function Deferred.mode(props: { [string]: any }, what: string): (boolean, boolean)
+function Deferred.mode(
+	props: { [string]: any },
+	what: string,
+	allowed: { string }?,
+	default: string?
+): (string, boolean)
+	local values = allowed or SHOWN_MOUNTS
 	local mount = props.mount
 	if mount == nil then
-		mount = "open"
+		mount = default or "shown"
 	end
-	if mount ~= "open" and mount ~= "now" then
-		error(`[Lucy] {what}: mount is "open" or "now", not "{tostring(mount)}"`, 0)
+	if type(mount) ~= "string" or not table.find(values, mount) then
+		error(`[Lucy] {what}: mount is "{table.concat(values, '" or "')}", not "{tostring(mount)}"`, 0)
 	end
 	local keep = props.keep
 	if keep ~= nil then
 		if type(keep) ~= "boolean" then
 			error(`[Lucy] {what}: keep is true or false, not "{tostring(keep)}"`, 0)
 		end
-		if mount == "now" then
+		if mount ~= "shown" then
 			error(
-				`[Lucy] {what}: keep goes with mount = "open"; with mount = "now" the content is always kept`,
+				`[Lucy] {what}: keep goes with mount = "shown"; with mount = "{mount}" the content is always kept`,
 				0
 			)
 		end
 	end
-	return mount == "open", keep ~= false
+	return mount, keep ~= false
 end
 
 -- Puts `item` (an Instance, a handle or a list of them) in `slot`, unless it is in there already.
@@ -275,6 +298,144 @@ function Part.follow(
 		end)
 	end
 	return shown
+end
+
+-- What hides `object`: itself or the nearest thing above it that is not visible, or a gui that
+-- is off. Nil when it shows. False when it is in no gui at all.
+local function hiddenBy(object: Instance): (Instance | boolean)?
+	local node: Instance? = object
+	while node do
+		if node:IsA("GuiObject") and not node.Visible then
+			return node
+		end
+		if node:IsA("LayerCollector") then
+			return if node.Enabled then nil else node
+		end
+		node = node.Parent
+	end
+	return false
+end
+
+-- True when `slot` (which shows) is within Deferred.overscan views of what `scroller` shows.
+local function isNear(slot: GuiObject, scroller: ScrollingFrame?): boolean
+	local from, size = slot.AbsolutePosition, slot.AbsoluteSize
+	if size.X <= 0 and size.Y <= 0 then
+		return false -- not laid out yet: a slot holds room until it is built
+	end
+	if not scroller then
+		return true
+	end
+	local window = scroller.AbsoluteWindowSize
+	if window.X <= 0 or window.Y <= 0 then
+		return false -- not laid out yet
+	end
+	local origin = scroller.AbsolutePosition
+	local pad = window * Deferred.overscan
+	return from.X + size.X >= origin.X - pad.X
+		and from.X <= origin.X + window.X + pad.X
+		and from.Y + size.Y >= origin.Y - pad.Y
+		and from.Y <= origin.Y + window.Y + pad.Y
+end
+
+--[[
+	Builds each part the first time its first slot is shown and near the visible part of the
+	ScrollingFrame around it. Call it in render. Nothing is looked at until layout has placed a
+	slot (a new frame sits at 0, 0 until then, which would read as in view), so every look comes
+	from a signal: the slot moved, changed size, was shown or was put somewhere, what hid it
+	showed, or the scroll area changed size.
+	A builder that throws is reported and that part is left alone (`part:build()` tries again).
+
+	Why signals and not a binding: building makes instances and a scope, and what triggers it
+	is layout the engine reports through property signals, which nothing reactive tracks.
+]]
+function Deferred.intersect(parts: { Part })
+	local watching: { [Part]: { RBXScriptConnection } } = {}
+	-- The scroll areas and the hidden things above the slots, each followed once
+	local followed: { [Instance]: RBXScriptConnection } = {}
+
+	local function release(part: Part)
+		local connections = watching[part]
+		if connections then
+			watching[part] = nil
+			for _, connection in connections do
+				connection:Disconnect()
+			end
+		end
+	end
+
+	local check: (part: Part) -> ()
+	local function checkAll()
+		for _, part in parts do
+			if watching[part] then
+				check(part)
+			end
+		end
+	end
+
+	-- Reading a slot's place can make the engine lay it out there and then, which fires the
+	-- signals this listens to: a look that starts inside another one is dropped
+	local looking: { [Part]: boolean } = {}
+
+	local function decide(part: Part): boolean
+		local slot = part.slots[1] :: GuiObject
+		local hider = hiddenBy(slot)
+		if hider ~= nil then
+			-- Hidden by something above it (a tab not picked, a closed sheet): look again when
+			-- that shows. Its place may not change then, so no other signal would say so.
+			if typeof(hider) == "Instance" and hider ~= slot and not followed[hider] then
+				local property = if hider:IsA("LayerCollector") then "Enabled" else "Visible"
+				followed[hider] = hider:GetPropertyChangedSignal(property):Connect(checkAll)
+			end
+			return false
+		end
+		local scroller = slot:FindFirstAncestorWhichIsA("ScrollingFrame")
+		if scroller and not followed[scroller] then
+			followed[scroller] = scroller:GetPropertyChangedSignal("AbsoluteWindowSize"):Connect(checkAll)
+		end
+		return isNear(slot, scroller)
+	end
+
+	function check(part: Part)
+		if looking[part] then
+			return
+		end
+		if part.handle.destroyed or Reactive.peek(part.built) then
+			release(part)
+			return
+		end
+		looking[part] = true
+		local near = decide(part)
+		looking[part] = nil
+		if near then
+			release(part)
+			local ok, err = pcall(part.build, part)
+			if not ok then
+				Deferred.report(err)
+			end
+		end
+	end
+
+	for _, part in parts do
+		local slot = part.slots[1] :: GuiObject
+		local function look()
+			check(part)
+		end
+		watching[part] = {
+			slot:GetPropertyChangedSignal("AbsolutePosition"):Connect(look),
+			slot:GetPropertyChangedSignal("AbsoluteSize"):Connect(look),
+			slot:GetPropertyChangedSignal("Visible"):Connect(look),
+			slot.AncestryChanged:Connect(look),
+		}
+	end
+	Reactive.onCleanup(function()
+		for _, part in parts do
+			release(part)
+		end
+		for _, connection in followed do
+			connection:Disconnect()
+		end
+		table.clear(followed)
+	end)
 end
 
 -- Builds a component that is open from the start. Call it once the handle is finished.

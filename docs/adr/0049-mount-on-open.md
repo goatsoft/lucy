@@ -44,8 +44,8 @@ Lab moves to it (Order of work, 5).
 their content themselves, from a function (`content`) or a table (`items`). They
 take `mount`:
 
-- `mount = "open"`, the default: built the first time it shows.
-- `mount = "now"`: built when the component is made, as before this ADR. The way
+- `mount = "shown"`, the default: built the first time it shows.
+- `mount = "immediate"`: built when the component is made, as before this ADR. The way
   back for a component whose content must exist before it shows.
 
 **Slot components (Dialog, Sheet)** hold content the game has already made
@@ -56,7 +56,7 @@ game hands over a function, so the opt-in is that function, not a prop:
 - `build` given: built on first open.
 - Both: an error naming the slots to move into `build`.
 
-`keep` (5) is valid with `mount = "open"` or `build`; given with `mount = "now"`
+`keep` (5) is valid with `mount = "shown"` or `build`; given with `mount = "immediate"`
 or with slots it is an error (it would be ignored).
 
 ### 2. Dialog and Sheet: one `build` function
@@ -66,7 +66,7 @@ Lucy.Sheet.new({
 	id = "inventory",
 	title = "INVENTORY",
 	build = function(sheet)
-		local tabs = Lucy.Tabs.new({ id = "inventory-tabs", mount = "open", items = { ... } })
+		local tabs = Lucy.Tabs.new({ id = "inventory-tabs", mount = "shown", items = { ... } })
 		return { header = { tabs.bar, line }, children = { tabs } }
 	end,
 })
@@ -102,7 +102,7 @@ and focus and placement would find an empty panel. So:
   callback. Back, outside press and anchor loss close through the setter, so
   `ui.<id>.open` goes false as today.
 - One watcher on `open` builds if needed, then sets the built flag `shown` reads.
-- With nothing deferred (`mount = "now"`, slots), `shown` is the `open` ref
+- With nothing deferred (`mount = "immediate"`, slots), `shown` is the `open` ref
   itself.
 - `open = true` at mount (`Dialog.alert`, `open = true` in props) builds right
   after the handle is finished in `X.new` (2), then sets the flag.
@@ -190,7 +190,7 @@ the MCP outline (libs/mcp outline.ts) prints the same.
 
 On deferred paths a builder is called as `builder(slot)`; what it parents to
 `slot` stays, and a returned instance or handle is adopted into `slot` unless it
-is already a descendant of it. `Component.adopt` and the `mount = "now"` and
+is already a descendant of it. `Component.adopt` and the `mount = "immediate"` and
 slot paths are not touched, so they stay identical to before.
 
 ### 11. Guidance for games (docs and the agent skills)
@@ -205,6 +205,36 @@ slot paths are not touched, so they stay identical to before.
   preloaded at the loading screen (`Lucy.preload` draws each picture once);
   what they open rarely is preloaded when its button is hovered or focused.
 
+### 12. Built when scrolled near: `mount = "intersect"`
+
+A long list in a panel that is showing is still built whole: Dance Lab's GEAR tab is
+6,171 instances, and building it the first time the tab shows takes two long frames
+(228 ms and 301 ms in Studio, against 66). Dance Lab's Club Pass board had its own
+code for building a card when its column came near the screen. Lucy owns that now,
+as a third value of `mount`, so no game writes it again:
+
+- `mount = "intersect"` on a component that holds a list of children (**Stack**
+  first, then Grid beside its `virtual`). A child given as a function is built the
+  first time its place comes near the visible part of the ScrollingFrame around it.
+  The name is the web's (IntersectionObserver): Lucy is for people who know the web.
+- Each function child has a slot frame from the start (`handle.slots[i]`), holding
+  `estimate` pixels along the stack until it is built, so unbuilt children are not
+  all in view at once and the scroll bar does not jump. A game sets a child's
+  `Visible` and `LayoutOrder` on its slot.
+- "Near" is one view ahead and one behind (`Deferred.overscan`), so what a
+  controller's next press lands on is already built. A hidden slot is not built.
+  With no ScrollingFrame around it, a child is built when it shows.
+- It is the same Core/Deferred part as Tabs: its own scope, `handle:build(i)` to
+  build one ahead (a game that opens a list at an item far down builds that
+  child first), Devtools `unbuilt = { indexes }`. Built children are kept;
+  `keep = false` is refused with `"intersect"` until removing on the way out is
+  needed and designed (the slot would have to hold its measured size).
+- The default for Stack and Grid stays `"immediate"`: a function child is called at
+  once, as before. Only content-owning components (1) default to `"shown"`.
+
+The three values are `"immediate"`, `"shown"` and `"intersect"` (JB, 2026-11-18;
+first written here as `"now"` and `"open"`).
+
 ## Order of work
 
 Each step finishes its specs, docs, skills, Devtools and MCP outline before the
@@ -212,12 +242,15 @@ next starts. Each Lucy step that changes a default is checked in Dance Lab
 before Dance Lab moves to it: nothing in Dance Lab may look or work differently.
 
 1. The shared Core helper (scope, `shown`, the one watcher, `handle:build()`,
-   removal by snapshot) and **Tabs**, default `"open"`. Specs both ways.
+   removal by snapshot) and **Tabs**, default `"shown"`. Specs both ways.
 2. **The first-frame check** in Dance Lab (Risk, below). Decide here whether a
    styling fix is needed before anything else defers.
 3. **`build` on Dialog and Sheet**, with Overlay's `visible()` and `shown`.
 4. **Collapsible and Accordion**, then **Select**, then **Menu** (with the
-   re-place in 7), each default `"open"`, specs both ways.
+   re-place in 7), each default `"shown"`, specs both ways.
+   Between 2 and 3 (JB, after step 2 showed GEAR's first show): **`"intersect"` on
+   Stack** (12), GEAR's sections moved onto it, then the Club Pass board's own
+   code replaced by it.
 5. **Dance Lab**, with every step: before Lucy moves in vendor/Lucy, screenshots
    of every tab, select and menu it changes, before and after; focus checked
    with keys and a gamepad; the suite run; code that reached into an unshown
@@ -238,7 +271,7 @@ those panels).
 ## Consequences
 
 - Tabs, Collapsible, Accordion, Select and Menu build on first show unless a
-  game asks for `mount = "now"`. Dialog and Sheet change only for a game that
+  game asks for `mount = "immediate"`. Dialog and Sheet change only for a game that
   gives `build`.
 - A game that opts in starts with far fewer instances and live bindings and
   pays for a panel only when it opens.
@@ -262,7 +295,13 @@ those panels).
 
 ## Alternatives considered
 
-- **Keeping `"now"` as the default and flipping it later.** After Lucy is
+- **Other names for the third value.** `"view"`, `"visible"` (reads as `shown`, and
+  as Roblox's `Visible`), `"inView"`, `"reached"`, `"onscreen"`, `"enter"` (a tile's
+  `entered` state and the Enter key). `"intersect"` is exact and clashes with nothing.
+- **A prop on ScrollArea that defers everything inside it.** The scroll area does not
+  know which descendants are whole sections; the list that holds them does.
+
+- **Keeping `"immediate"` as the default and flipping it later.** After Lucy is
   published the default is locked until 1.0, and every game would then have to
   change. Lucy has one game today, so it is changed now. Not applicable to
   Dialog and Sheet: their slots hold content the game already made, and a

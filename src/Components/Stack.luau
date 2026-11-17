@@ -12,6 +12,9 @@
 			wrap = false,
 			size = UDim2,             -- optional; defaults to filling width (column) or hugging (row)
 			children = { ... },       -- instances, handles or functions
+			mount = "immediate",      -- immediate | intersect: a child given as a function is built
+			                          -- the first time it is scrolled near (see below)
+			estimate = 240,           -- with intersect: the room an unbuilt child holds, in pixels
 		})
 
 	direction, gap, align, justify, padding, size and automaticSize also take responsive values
@@ -21,11 +24,20 @@
 
 	Stack.grow(child, when?) lets a child take the room left (see below).
 
+	mount = "intersect" is for a long list in a scroll area (Core/Deferred). Each child given as
+	a function gets a slot frame at once, holding `estimate` pixels along the stack, and is built
+	as child(slot) the first time its slot comes within a view of the visible part of the
+	ScrollingFrame around it; what it returns goes in the slot. Built children are kept. The
+	other children are placed at once. handle.slots lists the slots in order: set a child's
+	Visible and LayoutOrder on its slot. stack:build(i) builds child i now (every child when
+	left out), for code that needs something inside a child the player has not scrolled to.
+
 	handle.Instance is the container; parent more children into it any time.
 	State keys: visible.
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Deferred = require(script.Parent.Parent.Core.Deferred)
 local Composables = require(script.Parent.Parent.Composables)
 local Baseline = require(script.Parent.Parent.Core.Baseline)
 local Element = require(script.Parent.Parent.Core.Element)
@@ -46,6 +58,10 @@ local V = {
 	baseline = Enum.VerticalAlignment.Bottom,
 }
 local RESPONSIVE_KEYS = { "direction", "gap", "align", "justify", "padding", "size", "automaticSize" }
+local MOUNTS = { "immediate", "intersect" }
+
+-- The room an unbuilt child holds along the stack, in pixels, when `estimate` is left out.
+Stack.estimate = 240
 
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
@@ -157,7 +173,50 @@ local spec: Component.Spec = {
 			h.layout,
 			paddingChild,
 		})
-		Component.adopt(frame, p.children)
+		if Deferred.mode(p, "Stack", MOUNTS, "immediate") == "intersect" then
+			local estimate: number = if type(p.estimate) == "number" then p.estimate else Stack.estimate
+			local across = horizontal()
+			local slots: { Frame } = {}
+			local parts: { Deferred.Part } = {}
+			local order = 0
+			for _, child in ipairs(p.children or {}) do
+				if type(child) ~= "function" then
+					order = Component.adopt(frame, child, order)
+					continue
+				end
+				order += 1
+				local index = #slots + 1
+				local slot: Frame = Element.new("Frame", {
+					Name = `Slot{index}`,
+					LayoutOrder = order,
+					BackgroundTransparency = 1,
+					BorderSizePixel = 0,
+					Size = if across then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0),
+					AutomaticSize = if across then Enum.AutomaticSize.XY else Enum.AutomaticSize.Y,
+				})
+				-- Holds the child's room until it is built, so unbuilt children are not all in
+				-- view at once and the scroll bar does not jump as they build
+				local hold = Instance.new("UISizeConstraint")
+				hold.Name = "Estimate"
+				hold.MinSize = if across then Vector2.new(estimate, 0) else Vector2.new(0, estimate)
+				hold.Parent = slot
+				slot.Parent = frame
+				slots[index] = slot
+				parts[index] = Deferred.new(h, {
+					name = index,
+					slots = { slot },
+					build = function()
+						Deferred.place(slot, child)
+						hold:Destroy()
+					end,
+				})
+			end
+			h.slots = slots
+			h._parts = parts
+			Deferred.intersect(parts)
+		else
+			Component.adopt(frame, p.children)
+		end
 		-- Only a stack that can be "baseline" (that value, or one that can change) follows it
 		if p.align ~= nil and (p.align == "baseline" or type(p.align) ~= "string") then
 			Baseline.follow(frame, function(): boolean
@@ -168,8 +227,32 @@ local spec: Component.Spec = {
 	end,
 }
 
+-- With mount = "intersect": builds child `index` now (every child when left out) without
+-- waiting for it to be scrolled near. Nothing happens for a child that is built.
+local function build(h: any, index: number?)
+	local parts: { Deferred.Part } = h._parts
+	if h.destroyed then
+		return
+	end
+	if index ~= nil then
+		local part = parts[index]
+		if part then
+			part:build()
+		end
+		return
+	end
+	for _, part in parts do
+		part:build()
+	end
+end
+
 function Stack.new(props: { [string]: any }?)
-	return Component.mount(spec, props)
+	local handle = Component.mount(spec, props)
+	-- One shared function, and only on a stack that has something to build
+	if handle._parts then
+		handle.build = build
+	end
+	return handle
 end
 
 --[[

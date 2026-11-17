@@ -171,6 +171,128 @@ return function()
 		expect(child.AbsoluteSize.X).to.equal(stack.Instance.AbsoluteSize.X)
 	end)
 
+	describe("mount = intersect", function()
+		local Devtools = require(script.Parent.Parent.Core.Devtools)
+
+		-- A 400 px tall scroll area around a stack of a heading and `count` sections built by
+		-- functions, each holding 300 px until it is built
+		local function list(count: number, extra: { [string]: any }?)
+			local scroller = Instance.new("ScrollingFrame")
+			scroller.Size = UDim2.fromOffset(300, 400)
+			scroller.CanvasSize = UDim2.fromOffset(0, 0)
+			scroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			scroller.Parent = gui
+			local counts, made = {}, {}
+			local heading = Instance.new("TextLabel")
+			heading.Name = "Heading"
+			heading.Size = UDim2.new(1, 0, 0, 20)
+			local children: { any } = { heading }
+			for i = 1, count do
+				counts[i] = 0
+				table.insert(children, function()
+					counts[i] += 1
+					local section = Instance.new("Frame")
+					section.Name = `Section{i}`
+					section.Size = UDim2.new(1, 0, 0, 300)
+					made[i] = section
+					return section
+				end)
+			end
+			local props: { [string]: any } =
+				{ app = app, Parent = scroller, mount = "intersect", estimate = 300, children = children }
+			local more: { [string]: any } = extra or {}
+			for key, value in more do
+				props[key] = value
+			end
+			return Stack.new(props), counts, made, scroller, heading
+		end
+
+		it("calls a function child at once without it, as before", function()
+			local called = 0
+			local stack = Stack.new({
+				app = app,
+				Parent = gui,
+				children = {
+					function(parent)
+						called += 1
+						Instance.new("Frame").Parent = parent
+					end,
+				},
+			})
+			expect(called).to.equal(1)
+			expect(stack.slots).to.equal(nil)
+			expect(stack.build).to.equal(nil)
+		end)
+
+		it("gives each function child a slot holding its room, in order with the rest", function()
+			local stack, counts, _, _, heading = list(8)
+			expect(#stack.slots).to.equal(8)
+			expect(counts[8]).to.equal(0)
+			expect(heading.Parent).to.equal(stack.Instance)
+			expect(heading.LayoutOrder < stack.slots[1].LayoutOrder).to.equal(true)
+			expect(stack.slots[1].LayoutOrder < stack.slots[2].LayoutOrder).to.equal(true)
+			local hold = stack.slots[8]:FindFirstChildOfClass("UISizeConstraint") :: UISizeConstraint
+			expect(hold.MinSize).to.equal(Vector2.new(0, 300))
+		end)
+
+		it("builds the children near the view, then others as they are scrolled to", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local stack, counts, made, scroller = list(8)
+			expect(Harness.waitFor(function()
+				return counts[3] == 1
+			end)).to.equal(true)
+			expect(counts[5]).to.equal(0)
+			-- built in its slot, which no longer holds room of its own
+			expect(made[1].Parent).to.equal(stack.slots[1])
+			expect(stack.slots[1]:FindFirstChildOfClass("UISizeConstraint")).to.equal(nil)
+			scroller.CanvasPosition = Vector2.new(0, 900)
+			expect(Harness.waitFor(function()
+				return counts[6] == 1
+			end)).to.equal(true)
+			expect(counts[1]).to.equal(1)
+			expect(counts[8]).to.equal(0)
+		end)
+
+		it("builds one child, or all of them, when asked", function()
+			local stack, counts = list(8)
+			stack:build(7)
+			expect(counts[7]).to.equal(1)
+			expect(counts[8]).to.equal(0)
+			stack:build()
+			stack:build()
+			for i = 1, 8 do
+				expect(counts[i]).to.equal(1)
+			end
+		end)
+
+		it("holds room across a row", function()
+			local stack = list(8, { direction = "horizontal", estimate = 120 })
+			local hold = stack.slots[8]:FindFirstChildOfClass("UISizeConstraint") :: UISizeConstraint
+			expect(hold.MinSize).to.equal(Vector2.new(120, 0))
+		end)
+
+		it("takes only immediate or intersect, and no keep", function()
+			expect(function()
+				Stack.new({ app = app, Parent = gui, mount = "shown" })
+			end).to.throw("mount")
+			expect(function()
+				Stack.new({ app = app, Parent = gui, mount = "intersect", keep = false })
+			end).to.throw("keep")
+		end)
+
+		it("tells Devtools which children are not built yet", function()
+			local stack = list(8, { id = "gear" })
+			stack:build(7)
+			local node = Devtools.tree({ app = app, root = "gear" })[1]
+			local unbuilt = table.concat(node.unbuilt, ",")
+			-- the first few may be built already, being in view; 7 is not listed, 8 is
+			expect((string.find(unbuilt, "7", 1, true))).to.equal(nil)
+			expect(string.sub(unbuilt, -1)).to.equal("8")
+		end)
+	end)
+
 	it("accepts component handles as children", function()
 		local inner = Stack.new({ app = app })
 		local outer = Stack.new({ app = app, Parent = gui, children = { inner } })

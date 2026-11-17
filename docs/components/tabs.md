@@ -42,8 +42,8 @@ Lucy.Tabs.new({
 | `shoulderButtons` | boolean | `true` | | LB and RB switch tabs while focus is inside |
 | `hints` | boolean | follows `shoulderButtons` | | Shows LB and RB either side of the bar on a controller. `true` keeps them with `shoulderButtons = false`, for a game that handles LB and RB itself |
 | `scroll` | boolean | `true` | | A tab bar too long for its room scrolls sideways. `false` makes the bar as wide as its tabs; with no panels, the tabs then fit the bar, to sit in a row beside other controls |
-| `mount` | string | `"open"` | | When a panel made by a function is built: `"open"` the first time its tab shows, `"now"` when the tabs are made ([Building panels](#building-panels)) |
-| `keep` | boolean | `true` | | `false` removes a panel when another tab shows and builds it again when the player comes back. With `mount = "open"` only |
+| `mount` | string | `"shown"` | | When a panel made by a function is built: `"shown"` the first time its tab shows, `"immediate"` when the tabs are made ([Building panels](#building-panels)) |
+| `keep` | boolean | `true` | | `false` removes a panel when another tab shows and builds it again when the player comes back. With `mount = "shown"` only |
 | `disabled` | boolean | `false` | yes | Greys every tab out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `onValueChange` | function | | | Called with `(value, handle)` when it changes |
@@ -86,7 +86,7 @@ end }
   the player comes back. Use it for big panels the player seldom opens. A removed
   panel starts afresh, so keep what must last (a search box's text) in
   [app state](../guide/app-state.md).
-- `mount = "now"` builds every panel when the tabs are made, for a panel that must
+- `mount = "immediate"` builds every panel when the tabs are made, for a panel that must
   exist before its tab shows.
 - `tabs:build(value)` builds one tab's panel ahead of time without showing it, so
   the first switch to it is instant.

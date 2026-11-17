@@ -37,6 +37,8 @@ Lucy.Stack.new({
 | `size` | UDim2 | see below | | The stack's size |
 | `automaticSize` | AutomaticSize | see below | | Overrides how it grows to fit its children |
 | `children` | table | | | Instances, handles or functions to put in it |
+| `mount` | string | `"immediate"` | | When a child given as a function is built: `"immediate"` when the stack is made, or `"intersect"` the first time it is scrolled near ([Long lists](#long-lists)) |
+| `estimate` | number | `240` | | With `mount = "intersect"`: the room, in pixels along the stack, a child holds until it is built |
 | `visible` | boolean | `true` | yes | Shows or hides the stack |
 
 It also takes the [props every component takes](index.md#using-a-component).
@@ -110,6 +112,49 @@ Lucy.Stack.new({
     Parent = column,
 })
 ```
+
+## Long lists
+
+A long list in a [Scroll Area](scroll-area.md) is built whole by default, even
+the sections far below what the player sees. With `mount = "intersect"`, each
+child given as a function is built the first time it is scrolled near, the way
+a web page watches for an element to intersect the viewport. A wardrobe of a
+hundred outfits builds the first few sections when it shows, and the rest as
+the player scrolls or moves down with a controller.
+
+```luau
+local sections = {}
+for _, kind in { "Hats", "Shirts", "Shoes", "Glow sticks" } do
+    table.insert(sections, function()
+        return Lucy.Stack.new({ gap = "Space2", children = buildOutfitRows(kind) })
+    end)
+end
+
+Lucy.ScrollArea.new({
+    maxHeight = 400,
+    children = {
+        Lucy.Stack.new({ mount = "intersect", estimate = 320, gap = "Space4", children = sections }),
+    },
+    Parent = wardrobe,
+})
+```
+
+- A child is built when its place comes within one view of what the scroll area
+  shows, ahead or behind, so the next thing a controller lands on is already
+  there. A hidden child is not built until it shows. Once built it is kept.
+- Until then each function child is a slot frame holding `estimate` pixels, so
+  the scroll bar keeps its length. Give an `estimate` close to a child's real
+  size.
+- The function is called with its slot. What it parents there stays, and an
+  Instance or a handle it returns is put in the slot.
+- `handle.slots` lists the slots in order. To hide or reorder a section, set
+  `Visible` or `LayoutOrder` on its slot, not on what is built inside it.
+- `stack:build(i)` builds child `i` now, and `stack:build()` every child, for
+  code that needs something in a section the player has not scrolled to (opening
+  the wardrobe on one outfit, say).
+- Children that are not functions are placed when the stack is made, as always.
+
+With no scroll area around it, a child is built as soon as it shows.
 
 ## Examples
 

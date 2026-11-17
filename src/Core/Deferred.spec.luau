@@ -46,31 +46,195 @@ return function()
 	end
 
 	describe("mode", function()
-		it("builds on open and keeps by default", function()
-			local deferred, keep = Deferred.mode({}, "Tabs")
-			expect(deferred).to.equal(true)
+		it("builds on first show and keeps by default", function()
+			local mount, keep = Deferred.mode({}, "Tabs")
+			expect(mount).to.equal("shown")
 			expect(keep).to.equal(true)
 		end)
 
-		it("builds at once with mount = now", function()
-			local deferred, keep = Deferred.mode({ mount = "now" }, "Tabs")
-			expect(deferred).to.equal(false)
+		it("builds at once with mount = immediate", function()
+			local mount, keep = Deferred.mode({ mount = "immediate" }, "Tabs")
+			expect(mount).to.equal("immediate")
 			expect(keep).to.equal(true)
 		end)
 
-		it("takes keep = false with mount = open", function()
-			local deferred, keep = Deferred.mode({ mount = "open", keep = false }, "Tabs")
-			expect(deferred).to.equal(true)
+		it("takes keep = false with mount = shown", function()
+			local mount, keep = Deferred.mode({ mount = "shown", keep = false }, "Tabs")
+			expect(mount).to.equal("shown")
 			expect(keep).to.equal(false)
 		end)
 
-		it("refuses an unknown mount, and keep with mount = now", function()
+		it("refuses an unknown mount, and keep with mount = immediate", function()
 			expect(function()
 				Deferred.mode({ mount = "later" }, "Tabs")
 			end).to.throw("mount")
 			expect(function()
-				Deferred.mode({ mount = "now", keep = false }, "Tabs")
+				Deferred.mode({ mount = "immediate", keep = false }, "Tabs")
 			end).to.throw("keep")
+			-- the old names
+			expect(function()
+				Deferred.mode({ mount = "open" }, "Tabs")
+			end).to.throw("mount")
+		end)
+
+		it("takes only the values a component allows, and its own default", function()
+			local allowed = { "immediate", "intersect" }
+			expect((Deferred.mode({}, "Stack", allowed, "immediate"))).to.equal("immediate")
+			expect((Deferred.mode({ mount = "intersect" }, "Stack", allowed, "immediate"))).to.equal(
+				"intersect"
+			)
+			expect(function()
+				Deferred.mode({ mount = "shown" }, "Stack", allowed, "immediate")
+			end).to.throw("mount")
+			expect(function()
+				Deferred.mode({ mount = "intersect" }, "Tabs")
+			end).to.throw("mount")
+			expect(function()
+				Deferred.mode({ mount = "intersect", keep = false }, "Stack", allowed, "immediate")
+			end).to.throw("keep")
+		end)
+	end)
+
+	describe("intersect", function()
+		-- A 400 px tall scroll area holding `count` slots of 300 px, one under the other, each with
+		-- a part that puts a Button in it; slot `hidden` starts hidden. Returns the scroller, the
+		-- slots, the parts and the counts.
+		local function list(
+			count: number,
+			parent: Instance?,
+			hidden: number?
+		): (ScrollingFrame, { Frame }, { any }, { number })
+			local scroller = Instance.new("ScrollingFrame")
+			scroller.Size = UDim2.fromOffset(300, 400)
+			scroller.CanvasSize = UDim2.fromOffset(0, 0)
+			scroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			scroller.ScrollingDirection = Enum.ScrollingDirection.Y
+			local handle = Component.mount({
+				kind = "thing",
+				render = function()
+					local frame = Instance.new("Frame")
+					frame.Size = UDim2.fromScale(1, 0)
+					frame.AutomaticSize = Enum.AutomaticSize.Y
+					local layout = Instance.new("UIListLayout")
+					layout.SortOrder = Enum.SortOrder.LayoutOrder
+					layout.Parent = frame
+					return frame
+				end,
+			}, { app = app, Parent = scroller })
+			local slots, parts, counts = {}, {}, {}
+			for i = 1, count do
+				local slot = Instance.new("Frame")
+				slot.Name = `Slot{i}`
+				slot.LayoutOrder = i
+				slot.Size = UDim2.new(1, 0, 0, 300)
+				slot.Visible = i ~= hidden
+				slot.Parent = handle.Instance
+				slots[i] = slot
+				counts[i] = 0
+				parts[i] = Deferred.new(handle, {
+					name = i,
+					slots = { slot },
+					build = function()
+						counts[i] += 1
+						Button.new({ app = app, Parent = slot })
+					end,
+				})
+			end
+			handle.scope:run(Deferred.intersect, parts)
+			scroller.Parent = parent or gui
+			return scroller, slots, parts, counts
+		end
+
+		local function built(parts: { any }): string
+			local out = {}
+			for i, part in parts do
+				if part.built() then
+					table.insert(out, tostring(i))
+				end
+			end
+			return table.concat(out, ",")
+		end
+
+		it("builds what is within a view of the visible part, and more as it is scrolled to", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local scroller, _, parts, counts = list(8)
+			-- 400 px showing and 400 px ahead: the slots that start before 800 px
+			expect(Harness.waitFor(function()
+				return built(parts) == "1,2,3"
+			end)).to.equal(true)
+			scroller.CanvasPosition = Vector2.new(0, 600)
+			expect(Harness.waitFor(function()
+				return built(parts) == "1,2,3,4,5"
+			end)).to.equal(true)
+			scroller.CanvasPosition = Vector2.new(0, 0)
+			task.wait()
+			task.wait()
+			expect(built(parts)).to.equal("1,2,3,4,5")
+			expect(counts[1]).to.equal(1)
+			expect(counts[6]).to.equal(0)
+		end)
+
+		it("leaves a hidden slot alone until it shows", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local _, slots, parts = list(2, nil, 1)
+			expect(Harness.waitFor(function()
+				return built(parts) == "2"
+			end)).to.equal(true)
+			slots[1].Visible = true
+			expect(Harness.waitFor(function()
+				return built(parts) == "1,2"
+			end)).to.equal(true)
+		end)
+
+		it("waits for what hides it from above, a tab not picked", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local panel = Instance.new("Frame")
+			panel.Size = UDim2.fromOffset(300, 400)
+			panel.Visible = false
+			panel.Parent = gui
+			local _, _, parts = list(4, panel)
+			for _ = 1, 4 do
+				task.wait()
+			end
+			expect(built(parts)).to.equal("")
+			panel.Visible = true
+			expect(Harness.waitFor(function()
+				return built(parts) == "1,2,3"
+			end)).to.equal(true)
+		end)
+
+		it("builds whatever shows when no scroll area is around it", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local handle, slot = thing()
+			slot.Size = UDim2.fromOffset(100, 50)
+			local part = withButton(handle, slot)
+			handle.scope:run(Deferred.intersect, { part })
+			expect(Harness.waitFor(function()
+				return part.built()
+			end)).to.equal(true)
+		end)
+
+		it("stops looking with the component", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local scroller, _, parts, counts = list(8)
+			Harness.waitFor(function()
+				return built(parts) == "1,2,3"
+			end)
+			parts[1].handle:destroy()
+			scroller.CanvasPosition = Vector2.new(0, 600)
+			task.wait()
+			task.wait()
+			expect(counts[5]).to.equal(0)
 		end)
 	end)
 

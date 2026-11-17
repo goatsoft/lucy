@@ -19,10 +19,10 @@
 			                       -- shoulderButtons; true keeps them for a game that handles LB / RB)
 			scroll = true,         -- a tab bar too long for its room scrolls sideways (drag on
 			                       -- touch; the picked tab is brought into view)
-			mount = "open",        -- open: a panel is built the first time its tab shows | now: every
-			                       -- panel is built with the tabs
+			mount = "shown",       -- shown: a panel is built the first time its tab shows |
+			                       -- immediate: every panel is built with the tabs
 			keep = true,           -- false: a panel is removed when another tab shows, and built again
-			                       -- when the player comes back (mount = "open" only)
+			                       -- when the player comes back (mount = "shown" only)
 			onValueChange = function(value, tabs) end,
 			Parent = panel,
 		})
@@ -33,7 +33,7 @@
 	as content(panel) the first time its tab shows (Core/Deferred): what it parents to the panel
 	stays, and an Instance or handle it returns is put in the panel. A built panel is kept, so a
 	tab keeps its scroll position and state when the player comes back to it, unless
-	keep = false. mount = "now" calls every function when the tabs are made. Content made ahead
+	keep = false. mount = "immediate" calls every function when the tabs are made. Content made ahead
 	of time (an Instance, a handle) is placed at once and always kept.
 	Tabs fill the width and grow to fit
 	the shown panel; put a ScrollArea in a panel for long content. Just a bar (no tab has content)
@@ -70,7 +70,8 @@ local spec: Component.Spec = {
 		local items = ToggleGroup.normalize(p.items, "Tabs")
 		local value = h:ref("value")
 		local variant = h:ref("variant")
-		local deferred, keep = Deferred.mode(p, "Tabs")
+		local mount, keep = Deferred.mode(p, "Tabs")
+		local deferred = mount == "shown"
 
 		if p.onValueChange then
 			Reactive.watch(value, function(new)
