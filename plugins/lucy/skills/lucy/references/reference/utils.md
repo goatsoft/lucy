@@ -75,6 +75,11 @@ Lucy.Scroll.reveal(object, margin?, only?)
 | `margin` | `number?` | `8` | Extra padding in pixels around `object` |
 | `only` | `ScrollingFrame?` | every ancestor | Scroll only this frame and leave outer scrollers alone |
 
+When that leaves it within a quarter of a view of the start or the end of the
+canvas, it scrolls all the way there. So when a controller comes back up to the
+first control, the heading above it comes into view as well, and the same for
+what sits under the last control.
+
 Pass `only` when one scroller sits inside another: a tab bar scrolls its active
 tab into view inside its own strip without scrolling the whole page.
 
@@ -94,7 +99,7 @@ end
 Computes the new canvas offset along one axis needed to bring a span into view:
 
 ```luau
-local newOffset = Lucy.Scroll.offsetFor(position, view, top, bottom, margin?)
+local newOffset = Lucy.Scroll.offsetFor(position, view, top, bottom, margin?, extent?)
 ```
 
 | Argument | Type | Default | What it does |
@@ -104,6 +109,7 @@ local newOffset = Lucy.Scroll.offsetFor(position, view, top, bottom, margin?)
 | `top` | `number` | required | Start of the span in canvas space |
 | `bottom` | `number` | required | End of the span in canvas space |
 | `margin` | `number?` | `0` | Extra padding around the span |
+| `extent` | `number?` | none | The canvas's length. With it, an offset that would stop within a quarter of a view of the start or the end goes all the way there |
 
 Returns `position` unchanged when the span is already in view. When the span is
 taller than `view`, it aligns the top edge.

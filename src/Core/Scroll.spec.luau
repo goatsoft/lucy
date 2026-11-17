@@ -26,6 +26,27 @@ return function()
 		it("treats a missing margin as zero", function()
 			expect(Scroll.offsetFor(0, 200, 300, 340)).to.equal(140)
 		end)
+
+		it("goes all the way to the start when it would stop just short of it", function()
+			-- a heading above the first item: stopping at 32 would leave it cut off
+			expect(Scroll.offsetFor(300, 200, 40, 80, 8, 1000)).to.equal(0)
+			-- further down it stops at the item, as ever
+			expect(Scroll.offsetFor(300, 200, 100, 140, 8, 1000)).to.equal(92)
+		end)
+
+		it("goes all the way to the end when it would stop just short of it", function()
+			expect(Scroll.offsetFor(0, 200, 950, 990, 8, 1000)).to.equal(800)
+			expect(Scroll.offsetFor(0, 200, 700, 740, 8, 1000)).to.equal(548)
+		end)
+
+		it("stays put when the item is in view, however near an end", function()
+			expect(Scroll.offsetFor(30, 200, 100, 140, 8, 1000)).to.equal(30)
+			expect(Scroll.offsetFor(790, 200, 900, 940, 8, 1000)).to.equal(790)
+		end)
+
+		it("keeps the top of an item taller than the view at the end", function()
+			expect(Scroll.offsetFor(0, 200, 760, 1000, 0, 1000)).to.equal(760)
+		end)
 	end)
 
 	describe("scaleOf", function()
@@ -78,6 +99,23 @@ return function()
 			local bottom = top + item.AbsoluteSize.Y
 			expect(top >= 0).to.equal(true)
 			expect(bottom <= frame.AbsoluteWindowSize.Y).to.equal(true)
+		end)
+
+		it("shows what is above the first item when focus comes back up to it", function()
+			local frame = Instance.new("ScrollingFrame")
+			frame.Size = UDim2.fromOffset(200, 100)
+			frame.CanvasSize = UDim2.fromOffset(0, 1000)
+			frame.Parent = gui
+			-- a 20 px heading's worth of room above the first item
+			local item = Instance.new("Frame")
+			item.Size = UDim2.fromOffset(50, 40)
+			item.Position = UDim2.fromOffset(0, 20)
+			item.Parent = frame
+			frame.CanvasPosition = Vector2.new(0, 400)
+			Harness.flush()
+			Scroll.reveal(item)
+			Harness.flush()
+			expect(frame.CanvasPosition.Y).to.equal(0)
 		end)
 
 		it("scrolls only the ScrollingFrame it is given, never one around it", function()
