@@ -19,15 +19,23 @@
 			                       -- shoulderButtons; true keeps them for a game that handles LB / RB)
 			scroll = true,         -- a tab bar too long for its room scrolls sideways (drag on
 			                       -- touch; the picked tab is brought into view)
+			mount = "open",        -- open: a panel is built the first time its tab shows | now: every
+			                       -- panel is built with the tabs
+			keep = true,           -- false: a panel is removed when another tab shows, and built again
+			                       -- when the player comes back (mount = "open" only)
 			onValueChange = function(value, tabs) end,
 			Parent = panel,
 		})
 		tabs:select("moves")
 
 	A tab's `text`, `icon` and `children` go in its button's slot (ADR 0042, as ToggleGroup).
-	`content` is an Instance, a handle, or a function returning either; every
-	panel is built at mount and kept, so a tab keeps its scroll position and
-	state when the player comes back to it. Tabs fill the width and grow to fit
+	`content` is an Instance, a handle, or a function making the panel. A function is called
+	as content(panel) the first time its tab shows (Core/Deferred): what it parents to the panel
+	stays, and an Instance or handle it returns is put in the panel. A built panel is kept, so a
+	tab keeps its scroll position and state when the player comes back to it, unless
+	keep = false. mount = "now" calls every function when the tabs are made. Content made ahead
+	of time (an Instance, a handle) is placed at once and always kept.
+	Tabs fill the width and grow to fit
 	the shown panel; put a ScrollArea in a panel for long content. Just a bar (no tab has content)
 	with scroll = false fits the bar instead, to sit in a row beside other controls.
 
@@ -35,7 +43,8 @@
 	Events: "select" with the tab's value (sent by the tab bar), for Lucy.useUiSound.
 	tabs.list is the tab bar (a ToggleGroup); tabs.bar is the row it sits in with the LB / RB hints
 	(the list itself without hints); tabs.hints is { back, forward } (Kbd), nil without hints;
-	tabs.panels maps each value to its panel.
+	tabs.panels maps each value to its panel (the empty frame until that tab is built).
+	tabs:build(value) builds a tab's panel ahead of time (the shown tab's when left out).
 	In a Dialog or Sheet, pass tabs.bar in its header so the bar stays put while the body scrolls;
 	it is still the tabs' part (Core/Parts), so LB / RB switch tabs with focus on it.
 	The LB / RB hints sit either side of the tabs, centred on them; line tabs hug their words, so
@@ -43,6 +52,7 @@
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Deferred = require(script.Parent.Parent.Core.Deferred)
 local Element = require(script.Parent.Parent.Core.Element)
 local Kbd = require(script.Parent.Kbd)
 local Parts = require(script.Parent.Parent.Core.Parts)
@@ -60,6 +70,7 @@ local spec: Component.Spec = {
 		local items = ToggleGroup.normalize(p.items, "Tabs")
 		local value = h:ref("value")
 		local variant = h:ref("variant")
+		local deferred, keep = Deferred.mode(p, "Tabs")
 
 		if p.onValueChange then
 			Reactive.watch(value, function(new)
@@ -176,6 +187,8 @@ local spec: Component.Spec = {
 		Parts.own(h, bar)
 
 		local panels: { [any]: Frame } = {}
+		-- The panels built on first show: value -> its part (Core/Deferred)
+		local parts: { [any]: Deferred.Part } = {}
 		local holder = Element.new("Frame", {
 			Name = "Panels",
 			LayoutOrder = 2,
@@ -197,14 +210,45 @@ local spec: Component.Spec = {
 				Tags = { "ui-tabs-panel" },
 			})
 			local content = item.content
-			if type(content) == "function" then
-				content = content()
+			if deferred and type(content) == "function" then
+				parts[itemValue] = Deferred.new(h, {
+					name = itemValue,
+					slots = { panel },
+					keep = keep,
+					build = function()
+						Deferred.place(panel, content)
+					end,
+				})
+			else
+				if type(content) == "function" then
+					content = content()
+				end
+				Component.adopt(panel, { content })
 			end
-			Component.adopt(panel, { content })
 			panel.Parent = holder
 			panels[itemValue] = panel
 		end
 		h.panels = panels
+
+		-- Builds a tab's panel if it is not built yet. Every way a tab comes to show goes through
+		-- the watcher: a click on the bar, a write to ui.<id>.value, a bound ref, the first value.
+		local function ensure(target: any)
+			local part = parts[target]
+			if part then
+				part:build()
+			end
+		end
+		h._ensure = ensure
+		if next(parts) ~= nil then
+			Reactive.watch(value, function(new, old)
+				ensure(new)
+				local left = parts[old]
+				if left and not keep then
+					left:remove()
+				end
+			end)
+			ensure(Reactive.peek(value))
+		end
 
 		local root = Element.new("Frame", {
 			BackgroundTransparency = 1,
@@ -237,6 +281,15 @@ function Tabs.new(props: { [string]: any }?)
 	-- The player picked a tab (the tab bar sends "select").
 	function handle.select(h, picked: any)
 		h.list:select(picked)
+	end
+
+	-- Builds a tab's panel now without showing it: the shown tab's when `which` is left out.
+	-- Nothing happens for a panel that is built, or was made ahead of time.
+	function handle.build(h, which: any?)
+		if h.destroyed then
+			return
+		end
+		h._ensure(if which == nil then h:get("value") else which)
 	end
 
 	-- LB / RB while focus is inside (InputManager.shoulder): the next or previous
@@ -272,6 +325,9 @@ function Tabs.new(props: { [string]: any }?)
 		local oldPanel: Frame? = h.panels[current]
 		local inPanel = focused ~= nil and oldPanel ~= nil and focused:IsDescendantOf(oldPanel)
 		local value = entries[target].value
+		-- Built here as well as by the value's watcher: inside a Lucy.batch the watcher runs after
+		-- this, and focus needs the new panel's controls now
+		h._ensure(value)
 		h.list:select(value)
 		local focus: GuiObject = h.list.items[target]
 		if inPanel then

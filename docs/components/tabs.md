@@ -42,6 +42,8 @@ Lucy.Tabs.new({
 | `shoulderButtons` | boolean | `true` | | LB and RB switch tabs while focus is inside |
 | `hints` | boolean | follows `shoulderButtons` | | Shows LB and RB either side of the bar on a controller. `true` keeps them with `shoulderButtons = false`, for a game that handles LB and RB itself |
 | `scroll` | boolean | `true` | | A tab bar too long for its room scrolls sideways. `false` makes the bar as wide as its tabs; with no panels, the tabs then fit the bar, to sit in a row beside other controls |
+| `mount` | string | `"open"` | | When a panel made by a function is built: `"open"` the first time its tab shows, `"now"` when the tabs are made ([Building panels](#building-panels)) |
+| `keep` | boolean | `true` | | `false` removes a panel when another tab shows and builds it again when the player comes back. With `mount = "open"` only |
 | `disabled` | boolean | `false` | yes | Greys every tab out and ignores clicks |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `onValueChange` | function | | | Called with `(value, handle)` when it changes |
@@ -54,16 +56,47 @@ Each tab is a table:
 |---|---|
 | `value` | What the tab stands for. Required |
 | `text` | The tab's text. Defaults to the value. `label` works too |
-| `content` | The panel: an Instance, a handle, or a function that returns one. Leave it out of every tab for a bar on its own, picking what one shared view shows (a leaderboard's board) |
+| `content` | The panel: an Instance, a handle, or a function that makes it ([Building panels](#building-panels)). Leave it out of every tab for a bar on its own, picking what one shared view shows (a leaderboard's board) |
 | `icon` | An [icon](icon.md) name drawn before the tab's text |
 | `children` | Anything after the text in the tab's [slot](slot.md), such as a count badge. With an icon or children and no text, the tab shows no text. They take the tab's colours |
 | `disabled` | Greys this tab out |
 | `visible` | Shows or hides this tab: `true`, `false`, a ref or a getter. A hidden tab leaves the bar and cannot be picked. Defaults to `true` |
 
-Every panel is built when the tabs are, and kept: switching back to a tab finds
-it as the player left it, scrolled to the same place. Tabs fill the width and
-grow to fit the panel shown. Put a [Scroll Area](scroll-area.md) in a panel for
-long content.
+Tabs fill the width and grow to fit the panel shown. Put a
+[Scroll Area](scroll-area.md) in a panel for long content.
+
+## Building panels
+
+Give a tab's `content` as a function and its panel is built the first time the
+tab shows, however it comes to show: the player picks it, LB or RB reach it, or
+the game writes its value. A shop with six tabs builds one when it opens, and the
+others only if the player looks at them. Once built a panel is kept: switching
+back to a tab finds it as the player left it, scrolled to the same place.
+
+The function is called with the panel's frame. What it parents to the frame
+stays, and an Instance or a handle it returns is put in the frame:
+
+```luau
+{ value = "moves", text = "Moves", content = function(panel)
+    return Lucy.Stack.new({ gap = "Space2", children = buildMoveRows() })
+end }
+```
+
+- `keep = false` removes a panel when another tab shows, and builds it again when
+  the player comes back. Use it for big panels the player seldom opens. A removed
+  panel starts afresh, so keep what must last (a search box's text) in
+  [app state](../guide/app-state.md).
+- `mount = "now"` builds every panel when the tabs are made, for a panel that must
+  exist before its tab shows.
+- `tabs:build(value)` builds one tab's panel ahead of time without showing it, so
+  the first switch to it is instant.
+
+Content made ahead of time (an Instance or a handle, not a function) is placed
+when the tabs are made and always kept.
+
+Until a tab is built, the components inside it do not exist: code that reaches
+into a tab the player has not seen (`app:handle(id)`, `ui.<id>`) calls
+`tabs:build(value)` first.
 
 In a [Dialog](dialog.md) or a [Sheet](sheet.md), whose body scrolls, put the tab bar
 in its `header` so it stays put while a long panel scrolls under it. `tabs.bar`
@@ -97,13 +130,14 @@ brought into view, however it was picked.
 `handle.list` is the tab bar, `handle.bar` the row it sits in with its hints (the
 list itself without hints), `handle.hints` the two [Kbd](kbd.md) hints
 (`back` and `forward`, `nil` without hints), and `handle.panels` maps each
-tab's value to its panel frame.
+tab's value to its panel frame, empty until that tab is built.
 
 ## Methods
 
 | Name | What it does |
 |---|---|
 | `tabs:select(value)` | Shows that tab, as if the player picked it |
+| `tabs:build(value?)` | Builds that tab's panel now without showing it. Left out, the shown tab's. Does nothing for a panel already built |
 
 ## Examples
 

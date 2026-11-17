@@ -193,6 +193,24 @@ local function node(handle: any): { [string]: any }
 	if gui then
 		out.gui = gui.Name
 	end
+	-- Content built on first show (Core/Deferred) that is not built yet: the whole of it
+	-- (built = false), or the named parts of it (a Tabs' tab values)
+	local parts = handle._deferred
+	if parts then
+		local unbuilt = {}
+		for _, part in parts do
+			if not Reactive.peek(part.built) then
+				if part.name == nil then
+					out.built = false
+				else
+					table.insert(unbuilt, plain(part.name, 2, {}))
+				end
+			end
+		end
+		if #unbuilt > 0 then
+			out.unbuilt = unbuilt
+		end
+	end
 	return out
 end
 

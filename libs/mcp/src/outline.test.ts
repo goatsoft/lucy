@@ -31,6 +31,17 @@ test('outline quotes text on one line and keeps state values short', () => {
   assert.equal(outline(tree), 'text #note "Two\\nlines \\"quoted\\"" state: items=["a","b"] label="Hi"')
 })
 
+test('outline says what is not built yet', () => {
+  const tree = [
+    { id: 'inventory', kind: 'sheet', shown: false, built: false, flags: [], state: [], children: [] },
+    { id: 'sections', kind: 'tabs', shown: true, flags: [], state: { value: 'songs' }, unbuilt: ['moves', 'drinks'], children: [] },
+  ]
+  assert.equal(outline(tree), [
+    'sheet #inventory (hidden) (not built)',
+    'tabs #sections state: value="songs" unbuilt: "moves" "drinks"',
+  ].join('\n'))
+})
+
 test('outline says when there is nothing on screen', () => {
   assert.equal(outline([]), '(no components)')
 })

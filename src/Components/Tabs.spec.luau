@@ -178,6 +178,167 @@ return function()
 		expect(tabs.panels.a:FindFirstChild("Built")).to.be.ok()
 	end)
 
+	describe("building panels", function()
+		local Button = require(script.Parent.Button)
+		local Devtools = require(script.Parent.Parent.Core.Devtools)
+
+		-- Three tabs built by functions. Returns the items, how often each built, the buttons made.
+		local function built()
+			local counts: { [string]: number } = { songs = 0, moves = 0, drinks = 0 }
+			local buttons: { [string]: any } = {}
+			local items = {}
+			for _, name in { "songs", "moves", "drinks" } do
+				table.insert(items, {
+					value = name,
+					content = function()
+						counts[name] += 1
+						buttons[name] = Button.new({ app = app, text = name })
+						return buttons[name]
+					end,
+				})
+			end
+			return items, counts, buttons
+		end
+
+		it("builds only the tab that shows, and each other tab the first time it shows", function()
+			local items, counts, buttons = built()
+			local tabs = Tabs.new({ app = app, Parent = gui, items = items })
+			expect(counts.songs).to.equal(1)
+			expect(counts.moves).to.equal(0)
+			expect(buttons.songs.Instance.Parent).to.equal(tabs.panels.songs)
+			-- the panel frames are there from the start, empty
+			expect(#tabs.panels.moves:GetChildren()).to.equal(0)
+			tabs:select("moves")
+			expect(counts.moves).to.equal(1)
+			expect(buttons.moves.Instance.Parent).to.equal(tabs.panels.moves)
+			tabs:select("songs")
+			tabs:select("moves")
+			expect(counts.songs).to.equal(1)
+			expect(counts.moves).to.equal(1)
+			expect(counts.drinks).to.equal(0)
+		end)
+
+		it("builds a tab shown by a state write or a bound ref", function()
+			local items, counts = built()
+			local tabs = Tabs.new({ app = app, Parent = gui, id = "shop", items = items })
+			app.state:set("ui.shop.value", "drinks")
+			expect(counts.drinks).to.equal(1)
+			tabs:destroy()
+			local more, moreCounts = built()
+			local section = Reactive.ref("songs")
+			Tabs.new({ app = app, Parent = gui, items = more, value = section })
+			section("moves")
+			expect(moreCounts.moves).to.equal(1)
+		end)
+
+		it("builds the first tab of an empty bound value", function()
+			local items, counts = built()
+			local section = app.state:ref("shop.section")
+			Tabs.new({ app = app, Parent = gui, items = items, value = section })
+			expect(counts.songs).to.equal(1)
+			expect(counts.moves).to.equal(0)
+		end)
+
+		it("hands a builder its panel, and keeps what the builder parents there", function()
+			local got
+			local tabs = Tabs.new({
+				app = app,
+				Parent = gui,
+				items = {
+					{
+						value = "a",
+						content = function(panel)
+							got = panel
+							local label = Instance.new("TextLabel")
+							label.Name = "Made"
+							label.Parent = panel
+						end,
+					},
+				},
+			})
+			expect(got).to.equal(tabs.panels.a)
+			expect(tabs.panels.a:FindFirstChild("Made")).to.be.ok()
+		end)
+
+		it("builds every tab at once with mount = now", function()
+			local items, counts, buttons = built()
+			local tabs = Tabs.new({ app = app, Parent = gui, items = items, mount = "now" })
+			expect(counts.songs).to.equal(1)
+			expect(counts.moves).to.equal(1)
+			expect(counts.drinks).to.equal(1)
+			expect(buttons.drinks.Instance.Parent).to.equal(tabs.panels.drinks)
+			tabs:select("moves")
+			expect(counts.moves).to.equal(1)
+		end)
+
+		it("builds a tab ahead with build", function()
+			local items, counts = built()
+			local tabs = Tabs.new({ app = app, Parent = gui, items = items })
+			tabs:build("drinks")
+			expect(counts.drinks).to.equal(1)
+			expect(tabs:get("value")).to.equal("songs")
+			tabs:build()
+			tabs:build("drinks")
+			expect(counts.songs).to.equal(1)
+			expect(counts.drinks).to.equal(1)
+		end)
+
+		it("removes the tab left with keep = false, and builds it again on the way back", function()
+			local items, counts, buttons = built()
+			local tabs = Tabs.new({ app = app, Parent = gui, items = items, keep = false })
+			local first = buttons.songs
+			tabs:select("moves")
+			expect(first.destroyed).to.equal(true)
+			expect(#tabs.panels.songs:GetChildren()).to.equal(0)
+			tabs:select("songs")
+			expect(counts.songs).to.equal(2)
+			expect(buttons.songs.Instance.Parent).to.equal(tabs.panels.songs)
+			expect(buttons.moves.destroyed).to.equal(true)
+		end)
+
+		it("keeps content made ahead of time, whatever keep says", function()
+			local songs, _, items = panels()
+			local tabs = Tabs.new({ app = app, Parent = gui, items = items, keep = false })
+			tabs:select("moves")
+			expect(songs.Parent).to.equal(tabs.panels.songs)
+		end)
+
+		it("refuses keep with mount = now", function()
+			local items = built()
+			expect(function()
+				Tabs.new({ app = app, Parent = gui, items = items, mount = "now", keep = false })
+			end).to.throw("keep")
+		end)
+
+		it("builds the next tab before LB / RB move focus into it", function()
+			local items, counts, buttons = built()
+			local tabs = Tabs.new({ app = app, Parent = gui, items = items })
+			app.input:setMode("gamepad")
+			app.input:markFocus(buttons.songs.Instance)
+			expect(app.input:shoulder(1)).to.equal(true)
+			expect(tabs:get("value")).to.equal("moves")
+			expect(app.input:focused()).to.equal(buttons.moves.Instance)
+			-- built by the press itself, so a batch holding the value's watcher back cannot delay it
+			Reactive.batch(function()
+				app.input:shoulder(1)
+				expect(counts.drinks).to.equal(1)
+			end)
+		end)
+
+		it("tells Devtools which tabs are not built yet", function()
+			local items = built()
+			local tabs = Tabs.new({ app = app, Parent = gui, id = "shop", items = items })
+			local node = Devtools.tree({ app = app, root = "shop" })[1]
+			expect(table.concat(node.unbuilt, ",")).to.equal("moves,drinks")
+			tabs:select("drinks")
+			node = Devtools.tree({ app = app, root = "shop" })[1]
+			expect(table.concat(node.unbuilt, ",")).to.equal("moves")
+			tabs:select("moves")
+			node = Devtools.tree({ app = app, root = "shop" })[1]
+			expect(node.unbuilt).to.equal(nil)
+		end)
+	end)
+
 	it("reports changes and emits select once per pick", function()
 		local _, _, items = panels()
 		local seen, calls = {}, {}

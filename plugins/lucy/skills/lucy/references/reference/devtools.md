@@ -58,6 +58,8 @@ Each node in the tree has:
 | `shown` | Whether it is on screen (it and every parent visible) |
 | `size`, `position` | In pixels |
 | `gui` | The ScreenGui it is in |
+| `built` | `false` for a component whose content is built the first time it shows and has not been yet. Left out otherwise |
+| `unbuilt` | For [Tabs](../components/tabs.md), the values of the tabs not built yet. Left out when all are built |
 | `children` | The components inside it |
 
 Everything comes back as plain values: an Instance is its full name, a colour
