@@ -249,6 +249,53 @@ return function()
 			expect(app.input:focused()).to.equal(nil)
 		end)
 
+		it("selects a default that shows just after its scope opens", function()
+			local GuiService = game:GetService("GuiService")
+			local LogService = game:GetService("LogService")
+			local function refusals(): number
+				local count = 0
+				for _, entry in LogService:GetLogHistory() do
+					if string.find(entry.message, "invalid GuiObject", 1, true) then
+						count += 1
+					end
+				end
+				return count
+			end
+			local gui = Harness.mount(app)
+			local opener = Instance.new("TextButton")
+			opener.Size = UDim2.fromOffset(50, 20)
+			opener.Position = UDim2.fromOffset(0, 300)
+			opener.Parent = gui
+			-- A panel as an overlay has it the moment its focus scope opens: not shown yet
+			local panel = Instance.new("Frame")
+			panel.Size = UDim2.fromOffset(200, 200)
+			panel.Visible = false
+			panel.Parent = gui
+			local inside = Instance.new("TextButton")
+			inside.Size = UDim2.fromOffset(50, 20)
+			inside.Parent = panel
+			app.input:setMode("gamepad")
+			app.input:focus(opener)
+			Harness.waitFor(function()
+				return GuiService.SelectedObject == opener
+			end)
+			-- Let warnings from earlier specs reach the log first
+			task.wait(0.2)
+			local before = refusals()
+			local pop = app.input:pushScope({ root = panel, defaultFocus = inside })
+			panel.Visible = true
+			local landed = Harness.waitFor(function()
+				return GuiService.SelectedObject == inside
+			end)
+			-- The engine's warning reaches the log a moment after the refusal
+			task.wait(0.2)
+			local refused = refusals() - before
+			pop()
+			GuiService.SelectedObject = nil
+			expect(landed).to.equal(true)
+			expect(refused).to.equal(0)
+		end)
+
 		it("takes returnFocus as a function and skips it when hidden", function()
 			local gui = Harness.mount(app)
 			local opener = Instance.new("TextButton")

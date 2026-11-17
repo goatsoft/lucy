@@ -315,6 +315,23 @@ end
 
 -- Focus ring -----------------------------------------------------------------
 
+-- How many frames a focus scope waits for a default that is not shown yet (see pushScope)
+local SETTLE_FRAMES = 10
+
+local function isShown(object: GuiObject): boolean
+	local node: Instance? = object
+	while node do
+		if node:IsA("GuiObject") and not node.Visible then
+			return false
+		end
+		if node:IsA("LayerCollector") then
+			return node.Enabled
+		end
+		node = node.Parent
+	end
+	return true
+end
+
 function InputManager._clearRing(self: InputManager)
 	local focused = self._focused
 	if focused and focused.Parent then
@@ -354,9 +371,14 @@ end
 
 -- Selects `object` for gamepad/keyboard navigation (no-op where the engine refuses).
 function InputManager.focus(self: InputManager, object: GuiObject?)
-	pcall(function()
-		GuiService.SelectedObject = object
-	end)
+	-- The engine refuses what is not shown, with a warning in the output. So something still
+	-- hidden (a panel's default on the frame the panel opens) is recorded here and not handed to
+	-- the engine; its focus scope selects it once it shows (pushScope).
+	if object == nil or isShown(object) then
+		pcall(function()
+			GuiService.SelectedObject = object
+		end)
+	end
 	self:markFocus(object)
 end
 
@@ -371,9 +393,16 @@ function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
 	table.insert(self._scopes, scope)
 	if self:isNavigating() then
 		self:focusDefault()
+		-- A default that was not shown yet (its panel shows later this frame) was only recorded:
+		-- the engine is given it below, once it shows.
+		local waiting: GuiObject? = self._focused
+		if waiting and isShown(waiting) then
+			waiting = nil
+		end
+		local tries = 0
 		-- Roblox can undo a selection made on the frame a dialog first shows and put it back where
 		-- it was; once it has drawn (next frame), select the default again if focus ended up outside.
-		task.delay(0, function()
+		local function settle()
 			if self._scopes[#self._scopes] ~= scope or not self:isNavigating() then
 				return
 			end
@@ -381,8 +410,16 @@ function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
 			local root = scope.root
 			if root and not (focused and focused.Parent and focused:IsDescendantOf(root)) then
 				self:focusDefault()
+			elseif waiting and focused == waiting and GuiService.SelectedObject ~= waiting then
+				if isShown(waiting) then
+					self:focus(waiting)
+				elseif tries < SETTLE_FRAMES then
+					tries += 1
+					task.delay(0, settle)
+				end
 			end
-		end)
+		end
+		task.delay(0, settle)
 	end
 	return function()
 		local index = table.find(self._scopes, scope)
@@ -408,20 +445,6 @@ end
 
 function InputManager.topScope(self: InputManager): Scope?
 	return self._scopes[#self._scopes]
-end
-
-local function isShown(object: GuiObject): boolean
-	local node: Instance? = object
-	while node do
-		if node:IsA("GuiObject") and not node.Visible then
-			return false
-		end
-		if node:IsA("LayerCollector") then
-			return node.Enabled
-		end
-		node = node.Parent
-	end
-	return true
 end
 
 -- Lets go of focus on something no longer shown (its panel closed under it)
