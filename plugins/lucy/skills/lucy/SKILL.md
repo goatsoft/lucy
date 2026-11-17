@@ -240,6 +240,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [useFocusZone](references/reference/composables/use-focus-zone.md): A group of HUD controls nothing selects until the player steps in with a key; B steps out.
 - [useHasVisibleChild](references/reference/composables/use-has-visible-child.md): Follows whether any child of a frame has Visible on, so a slot whose contents all hide can drop out of its layout.
 - [useHoldArrows](references/reference/composables/use-hold-arrows.md): Keeps the gamepad's selection on a control while it takes the arrows itself, such as a grabbed clip.
+- [useIntersect](references/reference/composables/use-intersect.md): Whether something has been scrolled near yet, for building it only then.
 - [useMetric](references/reference/composables/use-metric.md): Computes a control size token in pixels following density.
 - [useRequest](references/reference/composables/use-request.md): Asks the server with app.server:call and keeps the answer, the loading flag and any error as state, asking again when its arguments change.
 - [useResponsive](references/reference/composables/use-responsive.md): Returns a getter for a responsive value keyed by device, input mode, breakpoint or orientation.

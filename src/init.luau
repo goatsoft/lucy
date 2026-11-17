@@ -113,6 +113,7 @@ local Lucy = {
 	useReveal = Composables.useReveal,
 	useCount = Composables.useCount,
 	useRequest = Composables.useRequest,
+	useIntersect = Composables.useIntersect,
 
 	-- Animation (Core/Animate)
 	spring = Animate.spring,

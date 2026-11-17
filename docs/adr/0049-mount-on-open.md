@@ -221,7 +221,7 @@ as a third value of `mount`, so no game writes it again:
   `estimate` pixels along the stack until it is built, so unbuilt children are not
   all in view at once and the scroll bar does not jump. A game sets a child's
   `Visible` and `LayoutOrder` on its slot.
-- "Near" is one view ahead and one behind (`Deferred.overscan`), so what a
+- "Near" is one view ahead and one behind (`Scroll.overscan`), so what a
   controller's next press lands on is already built. A hidden slot is not built.
   With no ScrollingFrame around it, a child is built when it shows.
 - It is the same Core/Deferred part as Tabs: its own scope, `handle:build(i)` to
@@ -229,6 +229,12 @@ as a third value of `mount`, so no game writes it again:
   child first), Devtools `unbuilt = { indexes }`. Built children are kept;
   `keep = false` is refused with `"intersect"` until removing on the way out is
   needed and designed (the slot would have to hold its measured size).
+- The looking is one function, `Scroll.whenNear(object, callback)`, under both
+  the Stack prop and a composable, `Lucy.useIntersect(target, { enabled })`, for
+  layouts that are not a Stack: the Club Pass board places its cards by hand on
+  a track, each cell an element with `Lucy.show(reached, card)`. `enabled`
+  holds the looking back until the track has been scrolled to the player's
+  tier, or the cards at its start would be built for nothing.
 - The default for Stack and Grid stays `"immediate"`: a function child is called at
   once, as before. Only content-owning components (1) default to `"shown"`.
 

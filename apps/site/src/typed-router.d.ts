@@ -682,6 +682,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/composables/use-intersect': RouteRecordInfo<
+      '/docs/reference/composables/use-intersect',
+      '/docs/reference/composables/use-intersect',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/composables/use-metric': RouteRecordInfo<
       '/docs/reference/composables/use-metric',
       '/docs/reference/composables/use-metric',
@@ -1546,6 +1553,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/composables/use-hold-arrows.md': {
       routes:
         | '/docs/reference/composables/use-hold-arrows'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-intersect.md': {
+      routes:
+        | '/docs/reference/composables/use-intersect'
       views:
         | never
       pathParamNames:

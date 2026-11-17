@@ -114,6 +114,27 @@ local newOffset = Lucy.Scroll.offsetFor(position, view, top, bottom, margin?, ex
 Returns `position` unchanged when the span is already in view. When the span is
 taller than `view`, it aligns the top edge.
 
+### Scroll.whenNear
+
+Calls a function once, the first time an object is shown and near what the
+scroll area around it shows. It returns a function that stops it looking:
+
+```luau
+local stop = Lucy.Scroll.whenNear(object, callback, overscan?)
+```
+
+| Argument | Type | Default | What it does |
+|---|---|---|---|
+| `object` | `GuiObject` | required | What to watch. It needs a size of its own |
+| `callback` | `() -> ()` | required | Called once, then it stops looking |
+| `overscan` | `number?` | `1` | How many views beyond each edge of the visible part count as near |
+
+Shown means the object and everything above it is visible, in a gui that is on.
+With no scroll area around the object, it calls back as soon as the object
+shows. In a component or a scene, use
+[useIntersect](composables/use-intersect.md), which stops with its owner; a
+[Stack](../components/stack.md#long-lists) does it for its children.
+
 ### Scroll.scaleOf
 
 Returns the combined scale factor of every `UIScale` above `object`:

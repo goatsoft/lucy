@@ -68,6 +68,147 @@ return function()
 		end)
 	end)
 
+	describe("whenNear", function()
+		local app, cleanup, gui
+		beforeEach(function()
+			app, cleanup = Harness.app()
+			gui = Harness.mount(app)
+		end)
+		afterEach(function()
+			cleanup()
+		end)
+
+		-- A 200 x 100 scroll area over a 1000 px canvas, and an item at `y`
+		local function build(y: number, parent: Instance?): (ScrollingFrame, Frame)
+			local frame = Instance.new("ScrollingFrame")
+			frame.Size = UDim2.fromOffset(200, 100)
+			frame.CanvasSize = UDim2.fromOffset(0, 1000)
+			local item = Instance.new("Frame")
+			item.Size = UDim2.fromOffset(50, 40)
+			item.Position = UDim2.fromOffset(0, y)
+			item.Parent = frame
+			frame.Parent = parent or gui
+			return frame, item
+		end
+
+		it("calls back at once for what is in view, once", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local frame, item = build(20)
+			local calls = 0
+			Scroll.whenNear(item, function()
+				calls += 1
+			end)
+			expect(Harness.waitFor(function()
+				return calls == 1
+			end)).to.equal(true)
+			frame.CanvasPosition = Vector2.new(0, 500)
+			frame.CanvasPosition = Vector2.new(0, 0)
+			task.wait()
+			task.wait()
+			expect(calls).to.equal(1)
+		end)
+
+		it("waits for what is more than a view away to be scrolled near", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			-- the view is 100 px: near is within 100 px of it, so up to 200
+			local frame, item = build(500)
+			local calls = 0
+			Scroll.whenNear(item, function()
+				calls += 1
+			end)
+			for _ = 1, 4 do
+				task.wait()
+			end
+			expect(calls).to.equal(0)
+			frame.CanvasPosition = Vector2.new(0, 250)
+			for _ = 1, 4 do
+				task.wait()
+			end
+			expect(calls).to.equal(0)
+			frame.CanvasPosition = Vector2.new(0, 320)
+			expect(Harness.waitFor(function()
+				return calls == 1
+			end)).to.equal(true)
+		end)
+
+		it("takes how many views count as near", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local _, item = build(500)
+			local calls = 0
+			Scroll.whenNear(item, function()
+				calls += 1
+			end, 5)
+			expect(Harness.waitFor(function()
+				return calls == 1
+			end)).to.equal(true)
+		end)
+
+		it("waits while it, or something above it, is hidden", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local panel = Instance.new("Frame")
+			panel.Size = UDim2.fromOffset(200, 100)
+			panel.Visible = false
+			panel.Parent = gui
+			local _, item = build(20, panel)
+			item.Visible = false
+			local calls = 0
+			Scroll.whenNear(item, function()
+				calls += 1
+			end)
+			panel.Visible = true
+			for _ = 1, 4 do
+				task.wait()
+			end
+			expect(calls).to.equal(0)
+			item.Visible = true
+			expect(Harness.waitFor(function()
+				return calls == 1
+			end)).to.equal(true)
+		end)
+
+		it("stops looking when told to", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local frame, item = build(500)
+			local calls = 0
+			local stop = Scroll.whenNear(item, function()
+				calls += 1
+			end)
+			stop()
+			frame.CanvasPosition = Vector2.new(0, 450)
+			for _ = 1, 4 do
+				task.wait()
+			end
+			expect(calls).to.equal(0)
+		end)
+
+		it("calls back for what shows with no scroll area around it", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			local item = Instance.new("Frame")
+			item.Size = UDim2.fromOffset(50, 40)
+			local calls = 0
+			Scroll.whenNear(item, function()
+				calls += 1
+			end)
+			expect(calls).to.equal(0) -- in no gui yet
+			item.Parent = gui
+			expect(Harness.waitFor(function()
+				return calls == 1
+			end)).to.equal(true)
+		end)
+	end)
+
 	describe("reveal", function()
 		local app, cleanup, gui
 		beforeEach(function()

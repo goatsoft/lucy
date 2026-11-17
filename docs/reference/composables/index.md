@@ -35,6 +35,7 @@ To write your own composables, see [Share logic with composables](../../guide/co
 | [`useReveal`](use-reveal.md) | Types text out character by character for dialogue and notices |
 | [`useCount`](use-count.md) | Animates a number smoothly toward a target value |
 | [`useRequest`](use-request.md) | Calls the server, keeps the answer and requests again when inputs change |
+| [`useIntersect`](use-intersect.md) | Whether something has been scrolled near yet, for building it only then |
 
 ## Lifetime and ownership
 

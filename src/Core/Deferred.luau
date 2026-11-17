@@ -34,7 +34,7 @@
 
 		Deferred.intersect(parts) -- in render; each part's first slot is the frame that is watched
 
-	A part is built the first time its slot is shown and within Deferred.overscan views of the
+	A part is built the first time its slot is shown and within Scroll.overscan views of the
 	visible part of the ScrollingFrame around it (with none around it, as soon as it shows).
 	The slot must hold some room before it is built, or every slot is in view at once.
 
@@ -47,6 +47,7 @@
 
 local Component = require(script.Parent.Component)
 local Reactive = require(script.Parent.Reactive)
+local Scroll = require(script.Parent.Scroll)
 
 local Deferred = {}
 
@@ -77,9 +78,6 @@ type PartFields = {
 	_building: boolean,
 }
 export type Part = typeof(setmetatable({} :: PartFields, Part))
-
--- How many views beyond each edge of the visible part count as near, for "intersect".
-Deferred.overscan = 1
 
 local SHOWN_MOUNTS = { "immediate", "shown" }
 
@@ -300,141 +298,31 @@ function Part.follow(
 	return shown
 end
 
--- What hides `object`: itself or the nearest thing above it that is not visible, or a gui that
--- is off. Nil when it shows. False when it is in no gui at all.
-local function hiddenBy(object: Instance): (Instance | boolean)?
-	local node: Instance? = object
-	while node do
-		if node:IsA("GuiObject") and not node.Visible then
-			return node
-		end
-		if node:IsA("LayerCollector") then
-			return if node.Enabled then nil else node
-		end
-		node = node.Parent
-	end
-	return false
-end
-
--- True when `slot` (which shows) is within Deferred.overscan views of what `scroller` shows.
-local function isNear(slot: GuiObject, scroller: ScrollingFrame?): boolean
-	local from, size = slot.AbsolutePosition, slot.AbsoluteSize
-	if size.X <= 0 and size.Y <= 0 then
-		return false -- not laid out yet: a slot holds room until it is built
-	end
-	if not scroller then
-		return true
-	end
-	local window = scroller.AbsoluteWindowSize
-	if window.X <= 0 or window.Y <= 0 then
-		return false -- not laid out yet
-	end
-	local origin = scroller.AbsolutePosition
-	local pad = window * Deferred.overscan
-	return from.X + size.X >= origin.X - pad.X
-		and from.X <= origin.X + window.X + pad.X
-		and from.Y + size.Y >= origin.Y - pad.Y
-		and from.Y <= origin.Y + window.Y + pad.Y
-end
-
 --[[
 	Builds each part the first time its first slot is shown and near the visible part of the
-	ScrollingFrame around it. Call it in render. Nothing is looked at until layout has placed a
-	slot (a new frame sits at 0, 0 until then, which would read as in view), so every look comes
-	from a signal: the slot moved, changed size, was shown or was put somewhere, what hid it
-	showed, or the scroll area changed size.
+	ScrollingFrame around it (Scroll.whenNear: within Scroll.overscan views). Call it in render.
 	A builder that throws is reported and that part is left alone (`part:build()` tries again).
 
 	Why signals and not a binding: building makes instances and a scope, and what triggers it
 	is layout the engine reports through property signals, which nothing reactive tracks.
 ]]
 function Deferred.intersect(parts: { Part })
-	local watching: { [Part]: { RBXScriptConnection } } = {}
-	-- The scroll areas and the hidden things above the slots, each followed once
-	local followed: { [Instance]: RBXScriptConnection } = {}
-
-	local function release(part: Part)
-		local connections = watching[part]
-		if connections then
-			watching[part] = nil
-			for _, connection in connections do
-				connection:Disconnect()
+	local stops: { () -> () } = {}
+	for index, part in parts do
+		stops[index] = Scroll.whenNear(part.slots[1] :: GuiObject, function()
+			if part.handle.destroyed or Reactive.peek(part.built) then
+				return
 			end
-		end
-	end
-
-	local check: (part: Part) -> ()
-	local function checkAll()
-		for _, part in parts do
-			if watching[part] then
-				check(part)
-			end
-		end
-	end
-
-	-- Reading a slot's place can make the engine lay it out there and then, which fires the
-	-- signals this listens to: a look that starts inside another one is dropped
-	local looking: { [Part]: boolean } = {}
-
-	local function decide(part: Part): boolean
-		local slot = part.slots[1] :: GuiObject
-		local hider = hiddenBy(slot)
-		if hider ~= nil then
-			-- Hidden by something above it (a tab not picked, a closed sheet): look again when
-			-- that shows. Its place may not change then, so no other signal would say so.
-			if typeof(hider) == "Instance" and hider ~= slot and not followed[hider] then
-				local property = if hider:IsA("LayerCollector") then "Enabled" else "Visible"
-				followed[hider] = hider:GetPropertyChangedSignal(property):Connect(checkAll)
-			end
-			return false
-		end
-		local scroller = slot:FindFirstAncestorWhichIsA("ScrollingFrame")
-		if scroller and not followed[scroller] then
-			followed[scroller] = scroller:GetPropertyChangedSignal("AbsoluteWindowSize"):Connect(checkAll)
-		end
-		return isNear(slot, scroller)
-	end
-
-	function check(part: Part)
-		if looking[part] then
-			return
-		end
-		if part.handle.destroyed or Reactive.peek(part.built) then
-			release(part)
-			return
-		end
-		looking[part] = true
-		local near = decide(part)
-		looking[part] = nil
-		if near then
-			release(part)
 			local ok, err = pcall(part.build, part)
 			if not ok then
 				Deferred.report(err)
 			end
-		end
-	end
-
-	for _, part in parts do
-		local slot = part.slots[1] :: GuiObject
-		local function look()
-			check(part)
-		end
-		watching[part] = {
-			slot:GetPropertyChangedSignal("AbsolutePosition"):Connect(look),
-			slot:GetPropertyChangedSignal("AbsoluteSize"):Connect(look),
-			slot:GetPropertyChangedSignal("Visible"):Connect(look),
-			slot.AncestryChanged:Connect(look),
-		}
+		end)
 	end
 	Reactive.onCleanup(function()
-		for _, part in parts do
-			release(part)
+		for _, stop in stops do
+			stop()
 		end
-		for _, connection in followed do
-			connection:Disconnect()
-		end
-		table.clear(followed)
 	end)
 end
 
