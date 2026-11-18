@@ -17,14 +17,18 @@ return function()
 		return math.abs(a - b) <= (within or 0.01)
 	end
 
-	-- Samples a function over `seconds` of frames, returning the lowest and highest value.
+	-- The motion specs step Animate's clock by hand, a frame at a time: on real frames, one long
+	-- frame under a full suite finishes a 0.45 s grow before a spec looks at it half way
+	local Animate = require(script.Parent.Parent.Core.Animate)
+	local FRAME = 1 / 60
+
+	-- Steps `seconds` of frames, returning the lowest and highest value read after each.
 	local function range(seconds: number, read: () -> number): (number, number)
 		local low, high = math.huge, -math.huge
-		local finish = os.clock() + seconds
-		while os.clock() < finish do
+		for _ = 1, math.ceil(seconds / FRAME) do
+			Animate.step(FRAME)
 			local value = read()
 			low, high = math.min(low, value), math.max(high, value)
-			task.wait()
 		end
 		return low, high
 	end
@@ -100,8 +104,14 @@ return function()
 		end)
 	end)
 
-	-- Motion runs on the frame clock: these need Play.
 	describe("motion", function()
+		beforeEach(function()
+			Animate.manual = true
+		end)
+		afterEach(function()
+			Animate.manual = false
+		end)
+
 		it("grows in, on a curve that overshoots and settles at 1", function()
 			local peak = 0
 			for i = 0, 100 do
@@ -112,19 +122,15 @@ return function()
 			expect(near(Arrow.ease(1), 1)).to.equal(true)
 
 			local arrow = Arrow.new({ app = app, Parent = gui, motion = "none" })
-			task.wait()
+			Animate.step(FRAME)
 			expect(arrow.scale.Scale < 1).to.equal(true)
-			task.wait(Arrow.timing.grow + 0.1)
-			-- Two more frames: it steps on Heartbeat, and after one long frame (a busy server) the
-			-- last step can still be inside the grow, on the overshoot
-			task.wait()
-			task.wait()
+			Animate.step(Arrow.timing.grow + 0.1)
 			expect(near(arrow.scale.Scale, 1)).to.equal(true)
 		end)
 
 		it("bounces toward its tip", function()
 			local arrow = Arrow.new({ app = app, Parent = gui, motion = "bounce", size = 40 })
-			task.wait(Arrow.timing.grow)
+			Animate.step(Arrow.timing.grow)
 			local low, high = range(Arrow.timing.period * 1.5, function()
 				return offset(arrow)
 			end)
@@ -134,7 +140,7 @@ return function()
 
 		it("pulses without moving", function()
 			local arrow = Arrow.new({ app = app, Parent = gui, motion = "pulse" })
-			task.wait(Arrow.timing.grow)
+			Animate.step(Arrow.timing.grow)
 			local low, high = range(Arrow.timing.period, function()
 				return arrow.scale.Scale
 			end)
@@ -144,7 +150,7 @@ return function()
 
 		it("stays still for none", function()
 			local arrow = Arrow.new({ app = app, Parent = gui, motion = "none" })
-			task.wait(Arrow.timing.grow + 0.05)
+			Animate.step(Arrow.timing.grow + 0.05)
 			local low, high = range(0.3, function()
 				return arrow.scale.Scale + offset(arrow)
 			end)
@@ -154,7 +160,7 @@ return function()
 		it("with reduced motion fades in and keeps still", function()
 			Preferences.setReducedMotion(true)
 			local arrow = Arrow.new({ app = app, Parent = gui, motion = "bounce" })
-			task.wait()
+			Animate.step(FRAME)
 			expect(arrow.scale.Scale).to.equal(1)
 			expect(arrow.fade() > 0).to.equal(true)
 			local low, high = range(Arrow.timing.period * 1.5, function()
@@ -167,15 +173,15 @@ return function()
 
 		it("plays again on replay and when shown again", function()
 			local arrow = Arrow.new({ app = app, Parent = gui, motion = "none" })
-			task.wait(Arrow.timing.grow + 0.05)
+			Animate.step(Arrow.timing.grow + 0.05)
 			arrow:replay()
-			task.wait()
+			Animate.step(FRAME)
 			expect(arrow.scale.Scale < 1).to.equal(true)
-			task.wait(Arrow.timing.grow + 0.05)
+			Animate.step(Arrow.timing.grow + 0.05)
 			arrow:set("visible", false)
-			task.wait()
+			Animate.step(FRAME)
 			arrow:set("visible", true)
-			task.wait()
+			Animate.step(FRAME)
 			expect(arrow.scale.Scale < 1).to.equal(true)
 		end)
 	end)
