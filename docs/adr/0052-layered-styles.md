@@ -1,6 +1,6 @@
 # 0052: Styles are declared up front, in layers; colours come from a palette
 
-- Status: accepted
+- Status: accepted (amended by 0053: a colour can name the groups it colours, and new elements do get dearer to style with more rules)
 - Date: 2026-11-18
 - Amends: 0003 (one Design sheet holding every rule, priority bands across Lucy and the game)
 

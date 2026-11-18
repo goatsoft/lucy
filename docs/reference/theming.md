@@ -305,3 +305,33 @@ A scoped rule with no `$Color` holds in any colour, so it is compiled once, on
 
 Roblox's tokens cannot be scoped below a ScreenGui, which is why a colour is a tag
 on the elements and its rules are compiled per colour (ADR 0052).
+
+### Colours that colour only some things
+
+Each colour gets its own copy of every rule written in `$Color`, Lucy's and
+yours. A game with many colours has many copies, and every copy is a rule the
+engine checks new elements against: Dance Lab's 38 colours made 3,572 of its
+4,904 rules, and a panel's first open paid for them (ADR 0053). Most colours are
+only ever put on a few kinds of thing, so say which:
+
+```luau
+colors = {
+    hype = "$Yellow400",                                            -- everything, as before
+    ["genre-house"] = { "$Orange500", on = { "shopCards", "badge" } }, -- only these groups
+}
+```
+
+`on` names groups of rules: a component's kind (`button`, `badge`,
+`progress`, `toggle`, `switch`...) or the key you gave `theme:addRules`. The
+colour is then compiled only for those groups' `$Color` rules; elsewhere an
+element in that colour shows Primary's look. To find what a colour's groups
+leave out, check a screen in Studio:
+
+```luau
+for _, miss in app.theme:uncoveredColors(playerGui) do
+    print(miss.color, miss.group, miss.instance:GetFullName())
+end
+```
+
+It lists every element in a colour that a group's `$Color` rule would style if
+the colour listed that group.

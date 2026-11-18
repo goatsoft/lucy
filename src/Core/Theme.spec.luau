@@ -734,6 +734,82 @@ return function()
 			end
 			expect(count).to.equal(0)
 		end)
+
+		-- ADR 0053: a colour with `on` is compiled only for the groups it lists
+		local function scopedColours(name: string): { [string]: any }
+			local options = table.clone(colours)
+			options.name = name
+			options.colors = { hype = "$Green", ["genre-house"] = { "$Blue", on = { "probe-cards" } } }
+			return options
+		end
+
+		it("compiles a colour with `on` only for the groups it lists", function()
+			theme = Theme.new(scopedColours("LucyTest_On"))
+			expect(theme:resolve("GenreHouse")).to.equal(hex("0000ff"))
+			expect(typeof(theme:resolve("GenreHouseSoft"))).to.equal("Color3")
+			theme:addRules("probe-cards", {
+				{ selector = ".probe-card", properties = { BackgroundColor3 = "$Color" } },
+			})
+			theme:addRules("probe-buttons", {
+				{ selector = ".probe-button", properties = { BackgroundColor3 = "$Color" } },
+			})
+			local cards = selectorsOf(theme:rulesOf("game"), "probe-cards")
+			local buttons = selectorsOf(theme:rulesOf("game"), "probe-buttons")
+			expect(cards[".probe-card.ui-color-genre-house"]).to.be.ok()
+			expect(cards[".probe-card.ui-color-hype"]).to.be.ok()
+			expect(buttons[".probe-button.ui-color-genre-house"]).to.equal(nil)
+			-- A colour without `on` still colours every group, and Primary's copy stays
+			expect(buttons[".probe-button.ui-color-hype"]).to.be.ok()
+			expect(buttons[".probe-button"]).to.be.ok()
+		end)
+
+		it("says what a colour with `on` must be", function()
+			local function make(value: any)
+				local options = table.clone(colours)
+				options.name = "LucyTest_OnBad"
+				options.colors = { hype = value }
+				local made = Theme.new(options)
+				made:destroy()
+			end
+			expect(function()
+				make({ on = { "probe-cards" } })
+			end).to.throw("a colour with `on`")
+			expect(function()
+				make({ "$Green", on = "probe-cards" })
+			end).to.throw("a colour with `on`")
+			expect(function()
+				make({ "$Green", on = { 1 } })
+			end).to.throw("a colour with `on`")
+		end)
+
+		it("lists the coloured elements a colour's groups leave out", function()
+			theme = Theme.new(scopedColours("LucyTest_Uncovered"))
+			theme:addRules("probe-cards", {
+				{ selector = ".probe-card", properties = { BackgroundColor3 = "$Color" } },
+			})
+			theme:addRules("probe-buttons", {
+				{ selector = ".probe-button:Hover", properties = { BackgroundColor3 = "$ColorHover" } },
+			})
+			local root = Instance.new("Frame")
+			local function element(tags: { string }): Frame
+				local frame = Instance.new("Frame")
+				for _, tag in tags do
+					frame:AddTag(tag)
+				end
+				frame.Parent = root
+				return frame
+			end
+			element({ "probe-card", "ui-colored", "ui-color-genre-house" })
+			local left = element({ "probe-button", "ui-colored", "ui-color-genre-house" })
+			element({ "probe-button", "ui-colored", "ui-color-hype" })
+			element({ "probe-button" })
+			local found = theme:uncoveredColors(root)
+			expect(#found).to.equal(1)
+			expect(found[1].instance).to.equal(left)
+			expect(found[1].color).to.equal("genre-house")
+			expect(found[1].group).to.equal("probe-buttons")
+			root:Destroy()
+		end)
 	end)
 
 	it("draws every focus ring inside its element, never past its edge", function()

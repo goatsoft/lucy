@@ -78,6 +78,8 @@ export type Theme = typeof(setmetatable(
 		_bands: { [string]: { [number]: StyleSheet } },
 		_values: StyleSheet,
 		_colorNames: { string },
+		_colorGroups: { [string]: { [string]: boolean } },
+		_colorCompounds: { [string]: { Compound } },
 		_rules: { [string]: { StyleRule } },
 		_themes: { [string]: StyleSheet },
 		_densities: { [string]: StyleSheet },
@@ -242,6 +244,10 @@ end
 	tokens (unless scoped = true) and once per colour, with .ui-color-<name> on its first compound,
 	so it applies to what a coloured container (Core/Color) has tagged. A scoped rule with no
 	$Color holds in any colour: one copy, on .ui-colored.
+
+	A colour may name the groups it colours (ADR 0053): { "$Orange500", on = { "danceLabTones" } }.
+	It is then compiled only for the $Color rules of those groups (a component's kind, a declared
+	key, an addRules key); a colour without `on` is compiled for every group.
 ]]
 Theme.SHADES = {
 	{
@@ -340,15 +346,86 @@ function Theme.colorSelector(selector: string, name: string): string
 	return onFirstCompound(selector, "ui-color-" .. name)
 end
 
+-- What the first compound of a selector part asks of an element: its class and tags, without
+-- states and pseudo instances (".a.b:Hover::UIStroke" -> tags a and b)
+export type Compound = { class: string?, tags: { string } }
+local function firstCompounds(selector: string): { Compound }
+	local out = {}
+	for _, part in string.split(selector, ",") do
+		local body = string.match(part, "^%s*(.-)%s*$") or ""
+		local stop = string.find(body, "[%s>]") or (#body + 1)
+		local compound = string.sub(body, 1, stop - 1)
+		local state = string.find(compound, ":", 1, true)
+		if state then
+			compound = string.sub(compound, 1, state - 1)
+		end
+		local tags = {}
+		for tag in string.gmatch(compound, "%.([%w%-_]+)") do
+			table.insert(tags, tag)
+		end
+		table.insert(out, { class = string.match(compound, "^(%a%w*)"), tags = tags })
+	end
+	return out
+end
+
+local function matchesCompound(instance: Instance, compound: Compound): boolean
+	if compound.class and not instance:IsA(compound.class) then
+		return false
+	end
+	for _, tag in compound.tags do
+		if not instance:HasTag(tag) then
+			return false
+		end
+	end
+	return true
+end
+
 -- Each theme's values with every named colour and its shades added, and the colours' names
 local function withColors(
 	themes: { [string]: { [string]: any } },
 	colors: { [string]: any }?,
 	recipes: { [string]: (string, (string) -> string) -> any }?
-): ({ [string]: { [string]: any } }, { string })
-	local named: { [string]: any } = colors or {}
+): ({ [string]: { [string]: any } }, { string }, { [string]: { [string]: boolean } })
 	local own: { [string]: (string, (string) -> string) -> any } = recipes or {}
 	local names = {}
+	-- Each colour's value, and the groups it colours when it names them (ADR 0053)
+	local named: { [string]: any } = {}
+	local groups: { [string]: { [string]: boolean } } = {}
+	local given: { [string]: any } = colors or {}
+	for name, entry in given do
+		-- A table with no `kind` is a colour with its groups; a derived token (Tokens.mix...) has one
+		if type(entry) == "table" and entry.kind == nil then
+			if entry[1] == nil then
+				error(
+					`[Lucy] colour "{tostring(name)}": a colour with \`on\` takes its value first, as in \{ "$Yellow400", on = \{ "danceLabTones" } }`,
+					4
+				)
+			end
+			local on = entry.on
+			if on ~= nil then
+				if type(on) ~= "table" then
+					error(
+						`[Lucy] colour "{tostring(name)}": a colour with \`on\` lists the names of rule groups`,
+						4
+					)
+				end
+				local set = {}
+				for _, group in on do
+					if type(group) ~= "string" then
+						error(
+							`[Lucy] colour "{tostring(name)}": a colour with \`on\` lists the names of rule groups`,
+							4
+						)
+					end
+					set[group] = true
+				end
+				groups[name] = set
+			end
+			named[name] = entry[1]
+		else
+			named[name] = entry
+		end
+	end
 	for name in named do
 		if type(name) ~= "string" or not string.match(name, "^%l[%l%d%-]*$") then
 			error(
@@ -402,7 +479,7 @@ local function withColors(
 		end
 		out[themeName] = v
 	end
-	return out, names
+	return out, names, groups
 end
 
 -- Groups of rules declared when their modules load, in the order they loaded: every theme made
@@ -483,7 +560,7 @@ end
 function Theme.new(config: { [string]: any }?): Theme
 	local options: { [string]: any } = config or {}
 	local primitives = options.primitives or Tokens.primitives
-	local themes, colorNames =
+	local themes, colorNames, colorGroups =
 		withColors(options.themes or Tokens.themes, options.colors, options.colorRecipes)
 	local densities = options.densities or Tokens.densities
 	validateSets(themes, "theme")
@@ -496,6 +573,8 @@ function Theme.new(config: { [string]: any }?): Theme
 	self.MetricsChanged = Signal.new()
 	self._densityValues = densities
 	self._colorNames = colorNames
+	self._colorGroups = colorGroups
+	self._colorCompounds = {}
 	self._rules = {}
 	self._themes = {}
 	self._densities = {}
@@ -771,11 +850,21 @@ function Theme.addRules(self: Theme, key: string, rules: { Rule }, options: { la
 			continue
 		end
 		-- A rule in $Color (ADR 0052): Primary's copy for where no colour is set (unless scoped),
-		-- then one copy per colour, each right after the one before so it wins a tie
+		-- then one copy per colour, each right after the one before so it wins a tie. A colour that
+		-- names its groups is compiled only for those (ADR 0053)
 		if not rule.scoped then
 			make(`{key}_{index}`, rule, rule.selector, recolor(rule.properties, "Primary"))
 		end
+		local compounds = self._colorCompounds[key] or {}
+		self._colorCompounds[key] = compounds
+		for _, compound in firstCompounds(rule.selector) do
+			table.insert(compounds, compound)
+		end
 		for _, name in self._colorNames do
+			local only = self._colorGroups[name]
+			if only and not only[key] then
+				continue
+			end
 			make(
 				`{key}_{index}_{name}`,
 				rule,
@@ -828,6 +917,52 @@ function Theme.removeRules(self: Theme, key: string)
 		rule:Destroy()
 	end
 	self._rules[key] = nil
+	self._colorCompounds[key] = nil
+end
+
+--[[
+	The coloured elements under `root` (and root itself) that a group's $Color rule would style if
+	their colour listed that group (ADR 0053): what a colour's `on` leaves out. A check for Studio
+	and specs; Lucy does not run it by itself. Each entry: { instance, color, group }.
+]]
+function Theme.uncoveredColors(
+	self: Theme,
+	root: Instance
+): { { instance: Instance, color: string, group: string } }
+	local found = {}
+	local keys = {}
+	for key in self._colorCompounds do
+		table.insert(keys, key)
+	end
+	table.sort(keys)
+	local function check(instance: Instance)
+		local colour: string? = nil
+		for _, tag in instance:GetTags() do
+			local name = string.match(tag, "^ui%-color%-(.+)$")
+			if name then
+				colour = name
+			end
+		end
+		local only = colour and self._colorGroups[colour]
+		if not only then
+			return
+		end
+		for _, key in keys do
+			if not only[key] then
+				for _, compound in self._colorCompounds[key] do
+					if matchesCompound(instance, compound) then
+						table.insert(found, { instance = instance, color = colour :: string, group = key })
+						break
+					end
+				end
+			end
+		end
+	end
+	check(root)
+	for _, instance in root:GetDescendants() do
+		check(instance)
+	end
+	return found
 end
 
 function Theme.destroy(self: Theme)
