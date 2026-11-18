@@ -127,6 +127,9 @@ function Composables.useResponsive(app: any, value: any): () -> any
 	end)
 end
 
+-- useSize leaves out a change smaller than this, in points
+local SIZE_NOISE = 0.01
+
 --[[
 	The size of a GUI object in the units you lay it out in: its AbsoluteSize
 	without the UIScales on it and above it (Lucy scales every scene to the
@@ -135,14 +138,23 @@ end
 	object or it is not laid out yet. `target` may be a ref or a getter.
 
 	For a size that depends on room only known once laid out (cards as tall as
-	the body under a header), bind to it instead of measuring by hand.
+	the body under a header), bind to it instead of measuring by hand. A change
+	of less than a hundredth of a point is left out.
 ]]
 function Composables.useSize(target: Reactive.MaybeRef<GuiObject?>): () -> Vector2
 	requireOwner("useSize")
 	local size = Reactive.ref(Vector2.zero)
 	local last = Vector2.zero
 	local function set(value: Vector2)
-		if value ~= last then
+		-- A change under SIZE_NOISE is left out: in a scaled panel, layout moves an object's size
+		-- back and forth by a tiny fraction of a point as it settles, and following that made
+		-- layouts that read the size chase it round and round
+		local moved = value - last
+		if
+			math.abs(moved.X) >= SIZE_NOISE
+			or math.abs(moved.Y) >= SIZE_NOISE
+			or (value == Vector2.zero) ~= (last == Vector2.zero)
+		then
 			last = value
 			size(value)
 		end

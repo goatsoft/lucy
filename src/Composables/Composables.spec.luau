@@ -301,6 +301,52 @@ return function()
 			gui:Destroy()
 		end)
 
+		it("leaves out a change of a tiny fraction of a point, as layout makes in a scaled panel", function()
+			if not Harness.laysOutLive() then
+				return -- sizes follow live layout only (Harness.laysOutLive)
+			end
+			local gui = Instance.new("ScreenGui")
+			gui.Parent = Harness.guiParent()
+			local room = Instance.new("Frame")
+			room.Size = UDim2.fromOffset(300, 100)
+			room.Parent = gui
+			local frame = Instance.new("Frame")
+			frame.Size = UDim2.new(0.5, 0, 0, 40)
+			frame.Parent = room
+			local scope = Reactive.effectScope(true)
+			local size = scope:run(function()
+				return Composables.useSize(frame)
+			end)
+			settle(function()
+				return near(size().X, 150)
+			end)
+			local changes = 0
+			scope:run(function()
+				Reactive.watch(size, function()
+					changes += 1
+				end)
+			end)
+			-- A few thousandths of a point: the object did change, but not in any way a layout
+			-- that reads its size should follow (a scaled panel's layout makes such changes back
+			-- and forth as it settles)
+			local before = frame.AbsoluteSize.X
+			frame.Size = UDim2.new(0.50001, 0, 0, 40)
+			settle(function()
+				return frame.AbsoluteSize.X ~= before
+			end)
+			expect(frame.AbsoluteSize.X).never.to.equal(before)
+			expect(changes).to.equal(0)
+			-- A real change still comes through
+			frame.Size = UDim2.new(0.6, 0, 0, 40)
+			settle(function()
+				return near(size().X, 180)
+			end)
+			expect(size().X).to.be.near(180, 0.5)
+			expect(changes).to.equal(1)
+			scope:stop()
+			gui:Destroy()
+		end)
+
 		it("is zero with no object, and follows a ref to one", function()
 			local target = Reactive.ref(nil :: Frame?)
 			local scope = Reactive.effectScope(true)

@@ -28,6 +28,11 @@ local size = Lucy.useSize(target)
 |---|---|---|
 | `size` | `() -> Vector2` | Its size in layout units. `Vector2.zero` while there is no object or it is not laid out yet |
 
+A change of less than a hundredth of a point is left out. Inside a scaled
+panel, layout can move an object's size back and forth by a tiny fraction of
+a point as it settles; a size that followed that would make a layout built on
+it chase it round and round.
+
 It needs an owner, like every composable: a component's render, a scene's
 `build`, or an effect scope.
 
