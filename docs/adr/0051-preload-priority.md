@@ -51,8 +51,9 @@ every player opens. Pins are counted (section 4), so the cost stays visible.
 
 ### 2. Anticipated: warmed just before they are needed
 
-Warming is what `Lucy.preload` does today: load, draw once, let go. Lucy warms ahead of the player
-in two places.
+Warming is what `Lucy.preload` does today: load, draw once, let go. A warmed picture counts as
+loaded for `Preload.fresh` seconds (120); asked for after that, it is drawn again, since Roblox may
+have dropped it. Lucy warms ahead of the player in two places.
 
 **Lists.** A virtual Grid with `preload` warms a window, not the whole list: the items in view,
 then `Grid.preloadAhead` screens (default 2) in the direction the player last scrolled and
@@ -91,6 +92,25 @@ the MCP's `memory` tool returns both. A change to what is pinned is checked agai
    buttons are hovered or focused, not kept); The Lab names its dance and pack sheets in `ahead`.
    Measured before and after: texture memory in the club, and first opens on a fresh start and
    after a long session.
+
+### Measured in Dance Lab
+
+Lucy d7e6163, Dance Lab c7ced4c, Studio Play, desktop, 2026-11-18:
+
+- **What is pinned:** 14 pictures in the club: the icon sheet, the Club Pass showcase tiers (the
+  intro pass and The Lab overview) and the cards of the player's tier and the next six
+  (`RewardTile.pinNear`, moved on as the tier changes).
+- **First opens:** before, on a fresh start The Lab drew its icons about a second late, and late
+  renders came back later in a session. After, on a fresh start and again after 141 s idle in the
+  club (past `Preload.fresh`), The Lab opened complete on its first frame, by its hotkey path
+  (nothing warmed ahead). The intro Club Pass drew its showcase cards on its first frame.
+- **Anticipation:** focusing MENU built the club menu (141 instances); opening it built the dance
+  menu (503) and the inventory (271), both still closed, and warmed the store pictures.
+- **Memory:** about 214 MB of textures in the club in Studio. No figure was taken before the
+  change, and Studio's are not a phone's: to be measured on a device.
+- **Not anticipated:** a hotkey (B for The Lab, I, N) has nothing to hover. Those panels build on
+  open as 0050 has them, with their pictures warmed on the entering screen and whenever the club
+  menu opens; a fresh start through a hotkey still showed every picture at once.
 
 ## Consequences
 
