@@ -67,6 +67,32 @@ colors = {
 - Group keys become part of a game's theme: renaming a group means updating the colours that
   list it. Lucy's component group names are its component kinds and stay stable.
 
+## Where the rest of a first open goes
+
+Measured in Dance Lab after this decision (Studio, Mac, 2026-11-19, Studio's window in front;
+cold first opens, a fresh Play session each, the baseline repeated three times within 3 ms):
+DJ Booth 72, The Lab 131, Inventory 123, Dances 138, Settings 33, Club Pass 180, Leaderboards
+34 ms.
+
+- With every rule taken out the same opens are 24, 67, 44, 49 and 19 ms. Rules are about half of
+  a big panel's first open; the rest is building, laying out and styling what it shows.
+- Each kind of rule costs about the same, about 0.025 ms per rule on a big panel's cold open:
+  the 897 rules on tags no element carried in a full tour, the 482 pseudo-instance rules and the
+  602 descendant (`>>`) rules each save in line with their count. Rules whose own tag nothing
+  carries are cheaper: the 147 copies of the unused `link` button variant saved 2 to 4 ms.
+- Dance Lab's tabs already build only when shown, and most of what a panel builds is on screen
+  (DJ Booth 70 of 98 GuiObjects, The Lab 278 of 319, Club Pass 919 of 975).
+- 500 of the 1,330 colour copies match no coloured element in a full tour (title, every panel and
+  tab, welcome, practice; colours the tour never showed kept every copy). Taking them out saved
+  8 to 15 ms on each big panel (Club Pass 180 to 167), about 10%.
+
+So narrowing colours below groups is not worth an API and a game's declarations, and what is left
+of a first open is the cost of what the panel shows. If a phone needs more, the next step is
+spreading a big panel's build over a few frames, which changes how it appears.
+
+Studio throttles to about 15 fps when its window is not in front, and a first open under 68 ms is
+then hidden in an ordinary frame: check that an idle second has about 60 frames before measuring.
+
 ## Alternatives considered
 
 - **Compile a colour's copies the first time it is used.** Adds rules while a game runs, which
@@ -77,3 +103,5 @@ colors = {
   own entry keeps everything about a colour in one place, as its value and shades already are.
 - **Name tags instead of groups.** Finer, but a game would have to know Lucy's internal tags;
   groups are what a game already names when it adds rules.
+- **Narrow a colour by variant as well as group (`on = { "button.outline" }`).** Measured above:
+  about 10% of a big panel's first open, not worth a game declaring every variant it colours.
