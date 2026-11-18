@@ -11,6 +11,7 @@
 		Devtools.state("player.coins")       -- the store, or one path
 		Devtools.focus()                     -- what is focused, and the input mode
 		Devtools.overlays()                  -- open dialogs, sheets and popups
+		Devtools.memory()                    -- pinned and warmed pictures, memory in MB
 		Devtools.actions()                   -- action sets, keys, on or off
 		Devtools.press("buy")                -- click it
 		Devtools.press("theme", "light")     -- pick a value in a group, tabs or select
@@ -30,6 +31,7 @@ local CollectionService = game:GetService("CollectionService")
 
 local Parts = require(script.Parent.Parts)
 local Reactive = require(script.Parent.Reactive)
+local Preload = require(script.Parent.Preload)
 
 local Devtools = {}
 
@@ -325,6 +327,26 @@ local function overlays(app: any): { [string]: any }
 	return { modalOpen = app:modalOpen(), open = open }
 end
 
+-- Pictures pinned, warmed and waiting (ADR 0051), and Roblox's own memory figures in MB
+local function memory(_app: any): { [string]: any }
+	local Stats = game:GetService("Stats")
+	local function tag(name: string): number
+		local ok, mb = pcall(function()
+			return Stats:GetMemoryUsageMbForTag((Enum.DeveloperMemoryTag :: any)[name])
+		end)
+		return if ok and type(mb) == "number" then math.floor(mb * 10 + 0.5) / 10 else 0
+	end
+	return {
+		preload = Preload.stats(),
+		mb = {
+			total = math.floor(Stats:GetTotalMemoryUsageMb() * 10 + 0.5) / 10,
+			textures = tag("GraphicsTexture"),
+			gui = tag("Gui"),
+			lua = tag("LuaHeap"),
+		},
+	}
+end
+
 local function actions(app: any): { [string]: any }
 	local sets = {}
 	local manager = app.actions
@@ -396,6 +418,7 @@ local SERVE: { [string]: (app: any, args: { [string]: any }) -> any } = {
 	end,
 	press = press,
 	overlays = overlays,
+	memory = memory,
 	actions = actions,
 }
 
@@ -543,6 +566,11 @@ end
 -- Open dialogs, sheets and popups, oldest first, and whether one is modal.
 function Devtools.overlays(options: Options): { [string]: any }
 	return call("overlays", {}, options)
+end
+
+-- Pictures pinned, warmed and waiting, and texture, gui and Lua memory in MB (ADR 0051).
+function Devtools.memory(options: Options): { [string]: any }
+	return call("memory", {}, options)
 end
 
 -- Action sets: on or off, and each action's keys.

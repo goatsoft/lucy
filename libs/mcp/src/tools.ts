@@ -196,6 +196,12 @@ export function createTools(studio: Studio): Tool[] {
       run: (args) => devtools(studio, args, { method: 'overlays', ...given(args, ['app']) }),
     },
     {
+      name: 'memory',
+      description: `Pictures pinned, warmed and waiting in Lucy's preload queue, and Roblox's own memory in MB: total, textures, gui and Lua. Check it before and after changing what a game pins. ${WHERE}`,
+      inputSchema: { type: 'object', properties: { ...STUDIO, ...APP } },
+      run: (args) => devtools(studio, args, { method: 'memory', ...given(args, ['app']) }),
+    },
+    {
       name: 'actions',
       description: `The app's action sets: on or off, priority, and each action's keys. ${WHERE}`,
       inputSchema: { type: 'object', properties: { ...STUDIO, ...APP } },

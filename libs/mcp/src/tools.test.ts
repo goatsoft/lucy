@@ -47,7 +47,7 @@ const text = (result: ToolResult) => result.content.map((c) => (c.type === 'text
 test('every tool has a description and an object schema', () => {
   const { studio } = fakeStudio()
   const names = createTools(studio).map((t) => t.name)
-  assert.deepEqual(names.sort(), ['actions', 'apps', 'focus', 'overlays', 'press', 'preview', 'screenshot', 'set', 'state', 'studios', 'tree'])
+  assert.deepEqual(names.sort(), ['actions', 'apps', 'focus', 'memory', 'overlays', 'press', 'preview', 'screenshot', 'set', 'state', 'studios', 'tree'])
   for (const tool of createTools(studio)) {
     assert.ok(tool.description.length > 20, tool.name)
     assert.equal(tool.inputSchema.type, 'object', tool.name)

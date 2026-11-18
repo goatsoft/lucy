@@ -49,6 +49,7 @@ it with `Lucy.App.new({ devtools = false })`.
 | `Devtools.state(path?, options?)` | A copy of the [store](store.md), or of one path in it |
 | `Devtools.focus(id?, options?)` | What is focused, the components around it, the input `mode` and whether the player is `navigating` with keys or a gamepad |
 | `Devtools.overlays(options?)` | The open dialogs, sheets and popups, oldest first, each with `id`, `kind` and `modal`, and `modalOpen` |
+| `Devtools.memory(options?)` | Pictures `pinned`, `warmed` and `waiting` in the preload queue, and Roblox's memory in MB: `total`, `textures`, `gui` and `lua` (ADR 0051) |
 | `Devtools.actions(options?)` | Every action set: whether it is `enabled`, its `priority`, and each action's key names |
 
 Each node in the tree has:

@@ -9,7 +9,7 @@ export type DataModel = 'Edit' | 'Client'
 
 /** A Devtools call: the function's name and its arguments, by name. */
 export interface DevtoolsRequest {
-  method: 'apps' | 'tree' | 'state' | 'set' | 'focus' | 'press' | 'overlays' | 'actions' | 'preview'
+  method: 'apps' | 'tree' | 'state' | 'set' | 'focus' | 'press' | 'overlays' | 'memory' | 'actions' | 'preview'
   [arg: string]: unknown
 }
 
@@ -131,6 +131,8 @@ local ok, result = pcall(function()
 		return Devtools.press(request.id, request.value, options)
 	elseif m == "overlays" then
 		return Devtools.overlays(options)
+	elseif m == "memory" then
+		return Devtools.memory(options)
 	elseif m == "actions" then
 		return Devtools.actions(options)
 	elseif m == "preview" then
