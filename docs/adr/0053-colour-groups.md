@@ -19,9 +19,10 @@ Measured in Dance Lab (Studio, Mac, 2026-11-19), after the club and its main pan
 - The DJ Booth's first open holds one frame for 112 ms. Its build is 5 ms of Luau; with the style
   links taken off it is 24 ms, and a second open is 17 ms. The rest is the engine styling 147 new
   instances against the rules.
-- Taking out the copies that match nothing (2,498 rules, leaving 2,406) brings that first open to
-  27 ms. Taking out the game layer instead (2,769 rules) brings it to 67 ms; the pseudo-instance
-  rules (855) to 92 ms.
+- Taking out the game layer (2,769 rules) brings that first open to 67 ms; the pseudo-instance
+  rules (855) to 92 ms. (Taking out the unused copies after other panels had opened gave 27 ms,
+  but those panels had styled most of the booth's elements already: styling is cached once done,
+  so only a cold first open measures it.)
 
 So ADR 0052's note that restyling does not get dearer with more rules held for retagging existing
 frames under throttled Studio frames; styling new instances, which is what a panel's first open
@@ -56,7 +57,10 @@ colors = {
 ## Consequences
 
 - A game declares, once, where each colour is used. Dance Lab's 38 colours drop from 3,572 copies
-  to about 1,100, and its rules from 4,904 to about 2,400.
+  to 1,330, and its rules from 4,904 to 2,655. Cold first opens, two Play sessions each, without
+  and with: DJ Booth 114/114 to 76/89 ms, The Lab 165/162 to 114/115, Inventory 231/209 to
+  138/139, Dances 231/228 to 144/178, Settings 55/40 to 34/33 (Studio, Mac, 2026-11-19). The
+  rest of each first open is the engine styling the elements themselves.
 - A colour put on a group it does not list shows Primary's look there. `uncoveredColors` finds it;
   a game checks every screen with it when it narrows a colour.
 - Start-up builds fewer rules (ADR 0052: building costs in proportion to a sheet's size).
