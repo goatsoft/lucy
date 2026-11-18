@@ -308,14 +308,14 @@ return function()
 	describe("slot", function()
 		it("puts an option's icon, label and children in a row past the tick", function()
 			local extra = Instance.new("Frame")
-			local select = Select.new({
+			local picker = Select.new({
 				app = app,
 				Parent = gui,
 				type = "check",
 				items = { { value = "eu", label = "Europe", icon = "lucy:close", children = { extra } } },
 			})
-			select:build()
-			local row = select.items[1]
+			picker:build()
+			local row = picker.items[1]
 			local slot = row.root:FindFirstChild("Slot") :: any
 			expect(row.label.Parent).to.equal(slot)
 			expect(extra.Parent).to.equal(slot)
@@ -342,14 +342,14 @@ return function()
 		end
 
 		it("is only its trigger until it first opens, and shows the value without options", function()
-			local select = make({ value = "na" })
-			expect(select.items).to.equal(nil)
-			expect(select.content).to.equal(nil)
+			local picker = make({ value = "na" })
+			expect(picker.items).to.equal(nil)
+			expect(picker.content).to.equal(nil)
 			expect(floating()).to.equal(0)
-			expect(select.valueLabel.Text).to.equal("North America")
-			select:open()
-			expect(#select.items).to.equal(4)
-			expect(select.content:IsDescendantOf(app:portal("modal"))).to.equal(true)
+			expect(picker.valueLabel.Text).to.equal("North America")
+			picker:open()
+			expect(#picker.items).to.equal(4)
+			expect(picker.content:IsDescendantOf(app:portal("modal"))).to.equal(true)
 		end)
 
 		it("builds its list when made with mount = immediate, or ahead with build()", function()
@@ -363,33 +363,33 @@ return function()
 
 		it("with keep = false, takes the list away once closed, and builds it again", function()
 			local built = 0
-			local select = make({
+			local picker = make({
 				keep = false,
 				onBuild = function(s)
 					built += 1
 					expect(#s.items).to.equal(4)
 				end,
 			})
-			select:open()
-			select:close()
+			picker:open()
+			picker:close()
 			expect(Harness.waitFor(function()
-				return select.items == nil
+				return picker.items == nil
 			end)).to.equal(true)
 			expect(floating()).to.equal(0)
-			select:open()
+			picker:open()
 			expect(built).to.equal(2)
-			expect(#select.items).to.equal(4)
+			expect(#picker.items).to.equal(4)
 		end)
 
 		it("opens over the dialog it sits in, and back closes it first", function()
 			local dialog = Dialog.new({ app = app, id = "form", title = "Form" })
 			dialog:open()
-			local select = make({ id = "region" })
-			select.Instance.Parent = dialog.body
-			select:open()
+			local picker = make({ id = "region" })
+			picker.Instance.Parent = dialog.body
+			picker:open()
 			expect(app.state:get("overlay.top")).to.equal("region")
 			expect(app.input:back()).to.equal(true)
-			expect(select:get("open")).to.equal(false)
+			expect(picker:get("open")).to.equal(false)
 			expect(dialog:get("open")).to.equal(true)
 		end)
 
