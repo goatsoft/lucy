@@ -578,7 +578,14 @@ return function()
 
 	describe("motion", function()
 		local Preferences = require(script.Parent.Parent.Core.Preferences)
+		local Animate = require(script.Parent.Parent.Core.Animate)
+		-- On Animate's clock, stepped by hand: a long frame under a full suite would otherwise
+		-- finish a 0.3 s glide before the spec looks at it half way
+		beforeEach(function()
+			Animate.manual = true
+		end)
 		afterEach(function()
+			Animate.manual = false
 			Preferences.setReducedMotion(nil)
 		end)
 
@@ -594,6 +601,7 @@ return function()
 			})
 			tour:start()
 			frame()
+			Animate.step(0)
 			return tour, join
 		end
 
@@ -605,10 +613,9 @@ return function()
 		it("glides the cut-out from one target to the next", function()
 			local tour, join = twoSteps()
 			tour:advance()
-			task.wait()
-			task.wait()
+			Animate.step(Tour.timing.glide / 3)
 			expect(onTarget(tour, join)).to.equal(false)
-			task.wait(Tour.timing.glide + 0.1)
+			Animate.step(Tour.timing.glide)
 			expect(onTarget(tour, join)).to.equal(true)
 			tour:stop()
 		end)
@@ -616,14 +623,14 @@ return function()
 		it("fades the callout in and pulses the ring", function()
 			local tour = twoSteps()
 			tour:advance()
-			task.wait()
+			Animate.step(Tour.timing.enter / 3)
 			expect(tour.cover.BackgroundTransparency < 1).to.equal(true)
-			task.wait(Tour.timing.enter + 0.1)
+			Animate.step(Tour.timing.enter)
 			expect(tour.cover.BackgroundTransparency).to.equal(1)
 			local sizes = {}
 			for _ = 1, 20 do
 				sizes[tour.pulse.Size.X.Offset] = true
-				task.wait(0.03)
+				Animate.step(0.03)
 			end
 			local first = next(sizes)
 			expect((next(sizes, first))).to.be.ok()
@@ -634,8 +641,7 @@ return function()
 			Preferences.setReducedMotion(true)
 			local tour, join = twoSteps()
 			tour:advance()
-			task.wait()
-			task.wait()
+			Animate.step(0)
 			expect(onTarget(tour, join)).to.equal(true)
 			expect(tour.pulse.Visible).to.equal(false)
 			tour:stop()
