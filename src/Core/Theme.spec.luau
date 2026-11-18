@@ -537,6 +537,133 @@ return function()
 		end)
 	end)
 
+	describe("colours (ADR 0052)", function()
+		local Tokens = require(script.Parent.Tokens)
+		local colours = {
+			name = "LucyTest_Colours",
+			primitives = {
+				Red = hex("ff0000"),
+				Blue = hex("0000ff"),
+				Green = hex("00ff00"),
+				White = hex("ffffff"),
+				Black = hex("000000"),
+			},
+			themes = {
+				light = { Primary = "$Red", Background = "$White", Card = "$White" },
+				dark = { Primary = "$Blue", Background = "$Black", Card = "$Black" },
+			},
+			default = "light",
+			baseRules = false,
+			colors = { hype = "$Green", ["genre-house"] = "$Blue" },
+		}
+
+		it("gives each named colour its shades as tokens, in every theme", function()
+			theme = Theme.new(colours)
+			expect(theme:resolve("Hype")).to.equal(hex("00ff00"))
+			for _, shade in { "Hover", "Foreground", "Soft", "MutedForeground", "Border", "Shadow" } do
+				if typeof(theme:resolve("Hype" .. shade)) ~= "Color3" then
+					error(`no Hype{shade}`, 0)
+				end
+			end
+			expect(typeof(theme:resolve("GenreHouseSoft"))).to.equal("Color3")
+			expect(theme:colors()).to.be.ok()
+			expect(table.concat(theme:colors(), ",")).to.equal("genre-house,hype")
+		end)
+
+		it("gives Primary the shades it lacks and keeps the ones the theme has", function()
+			theme = Theme.new(colours)
+			expect(typeof(theme:resolve("PrimarySoft"))).to.equal("Color3")
+			local kept = table.clone(colours)
+			kept.name = "LucyTest_Kept"
+			kept.themes = {
+				light = { Primary = "$Red", Background = "$White", Card = "$White", HypeHover = "$Red" },
+				dark = { Primary = "$Blue", Background = "$Black", Card = "$Black", HypeHover = "$Red" },
+			}
+			theme:destroy()
+			theme = Theme.new(kept)
+			expect(theme:resolve("HypeHover")).to.equal(hex("ff0000"))
+		end)
+
+		it("adds a game's own shades from its recipes", function()
+			local withRecipe = table.clone(colours)
+			withRecipe.name = "LucyTest_Recipe"
+			withRecipe.colorRecipes = {
+				Glow = function(colour: string): any
+					return Tokens.mix("$Background", colour, 0.5)
+				end,
+				GlowText = function(_colour: string, shade: (string) -> string): any
+					return Tokens.readable(shade("Glow"), "$White", "$Black")
+				end,
+			}
+			theme = Theme.new(withRecipe)
+			expect(typeof(theme:resolve("HypeGlow"))).to.equal("Color3")
+			expect(typeof(theme:resolve("HypeGlowText"))).to.equal("Color3")
+			-- Primary gets them too, for a game's rules with no colour around them
+			expect(typeof(theme:resolve("PrimaryGlow"))).to.equal("Color3")
+		end)
+
+		local function selectorsOf(sheet: StyleSheet, key: string): { [string]: StyleRule }
+			local out = {}
+			for _, child in sheet:GetChildren() do
+				if child:IsA("StyleRule") and string.sub(child.Name, 1, #key + 1) == key .. "_" then
+					out[child.Selector] = child
+				end
+			end
+			return out
+		end
+
+		it("compiles a $Color rule into Primary and a copy for each colour", function()
+			theme = Theme.new(colours)
+			theme:addRules("probe-colour", {
+				{
+					selector = ".probe-button:Hover > .probe-label",
+					priority = 20,
+					properties = { TextColor3 = "$ColorForeground", BackgroundColor3 = "$Color" },
+				},
+			})
+			local rules = selectorsOf(theme.folder.Game, "probe-colour")
+			local base = rules[".probe-button:Hover > .probe-label"]
+			local hype = rules[".probe-button.ui-color-hype:Hover > .probe-label"]
+			local house = rules[".probe-button.ui-color-genre-house:Hover > .probe-label"]
+			expect(base and hype and house).to.be.ok()
+			expect(base:GetProperty("TextColor3")).to.equal("$PrimaryForeground")
+			expect(hype:GetProperty("BackgroundColor3")).to.equal("$Hype")
+			expect(house:GetProperty("TextColor3")).to.equal("$GenreHouseForeground")
+			expect(hype.Priority).to.equal(20)
+		end)
+
+		it("compiles only the colours' copies of a scoped rule, and each part of a list", function()
+			theme = Theme.new(colours)
+			theme:addRules("probe-scoped", {
+				{
+					selector = ".probe-a::UIStroke, Frame.probe-b",
+					scoped = true,
+					properties = { Color = "$ColorBorder" },
+				},
+			})
+			local rules = selectorsOf(theme.folder.Game, "probe-scoped")
+			local count = 0
+			for _ in rules do
+				count += 1
+			end
+			expect(count).to.equal(2)
+			expect(rules[".probe-a.ui-color-hype::UIStroke, Frame.probe-b.ui-color-hype"]).to.be.ok()
+		end)
+
+		it("takes a colour's copies away with the rest of the group", function()
+			theme = Theme.new(colours)
+			theme:addRules("probe-gone", {
+				{ selector = ".probe-gone", properties = { BackgroundColor3 = "$Color" } },
+			})
+			theme:removeRules("probe-gone")
+			local count = 0
+			for _ in selectorsOf(theme.folder.Game, "probe-gone") do
+				count += 1
+			end
+			expect(count).to.equal(0)
+		end)
+	end)
+
 	it("draws every focus ring inside its element, never past its edge", function()
 		local found = 0
 		for _, rule in Theme.baseRules do

@@ -41,7 +41,7 @@ Icon.scale = { default = 1, touch = 1, tv = 1.25 }
 
 local COLOURS = {
 	muted = "$MutedForeground",
-	primary = "$Primary",
+	primary = "$Color",
 	destructive = "$Destructive",
 	success = "$Success",
 	warning = "$Warning",

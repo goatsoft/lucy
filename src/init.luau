@@ -119,6 +119,10 @@ local Lucy = {
 	spring = Animate.spring,
 	tween = Animate.tween,
 
+	-- Named colours on part of the UI (Core/Color, ADR 0052)
+	color = require(Core.Color).scope,
+	Color = require(Core.Color),
+
 	-- Images (Core/Preload): fetch pictures before they are shown
 	preload = require(Core.Preload).preload,
 	Preload = require(Core.Preload),

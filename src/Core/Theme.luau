@@ -57,6 +57,7 @@ export type Rule = {
 	selector: string,
 	priority: number?,
 	fixed: boolean?,
+	scoped: boolean?,
 	properties: { [string]: any },
 	transitions: { [string]: any }?,
 }
@@ -69,6 +70,7 @@ export type Theme = typeof(setmetatable(
 		folder: Folder,
 		design: StyleSheet,
 		_layers: { [string]: StyleSheet },
+		_colorNames: { string },
 		_rules: { [string]: { StyleRule } },
 		_themes: { [string]: StyleSheet },
 		_densities: { [string]: StyleSheet },
@@ -176,6 +178,175 @@ table.insert(Theme.baseRules, {
 -- The layers rules go in, by the name addRules takes (ADR 0052)
 local LAYERS = { lucy = "Lucy", game = "Game", live = "Design" }
 
+--[[
+	Named colours (ADR 0052). A theme's `colors` names them ({ hype = "$Yellow400" }); each gets a
+	token of its own (Hype) and the shades below, worked out as Primary's are, plus any a game adds
+	(`colorRecipes`, by name: Glow = function(colour, shade) return Tokens.mix(...) end, where
+	colour is "$Hype" and shade("Soft") is "$HypeSoft"). Primary gets the shades it lacks, and a
+	token the theme sets itself is kept.
+
+	A rule written in $Color, $ColorHover, $ColorForeground... is compiled: once with Primary's
+	tokens (unless scoped = true) and once per colour, with .ui-color-<name> on its first compound,
+	so it applies to what a coloured container (Core/Color) has tagged.
+]]
+Theme.SHADES = {
+	{
+		"Hover",
+		function(colour: string): any
+			return Tokens.over(colour, "$Background", 0.9)
+		end,
+	},
+	{
+		"Foreground",
+		function(colour: string): any
+			return Tokens.onColor(colour)
+		end,
+	},
+	-- A quiet wash of the colour on a card, and quiet words that read on it
+	{
+		"Soft",
+		function(colour: string): any
+			return Tokens.over(colour, "$Card", 0.16)
+		end,
+	},
+	{
+		"MutedTint",
+		function(colour: string): any
+			return Tokens.mix(colour, "$White", 0.55)
+		end,
+	},
+	{
+		"MutedForeground",
+		function(_colour: string, shade: (string) -> string): any
+			return Tokens.readable(shade("Soft"), shade("MutedTint"), shade("MutedTint"))
+		end,
+	},
+	{
+		"Border",
+		function(colour: string): any
+			return colour
+		end,
+	},
+	-- A deep shade of it, for a hard shadow that still belongs to the colour
+	{
+		"Shadow",
+		function(colour: string): any
+			return Tokens.mix(colour, "$Black", 0.62)
+		end,
+	},
+} :: { { any } }
+
+-- "genre-house" -> "GenreHouse", the colour's token
+function Theme.tokenOf(name: string): string
+	return (string.gsub(string.gsub(name, "^%l", string.upper), "%-(%w)", string.upper))
+end
+
+-- Whether a rule's properties are written in $Color...
+local function isColorToken(value: any): boolean
+	return type(value) == "string" and string.match(value, "^%$Color%u?%w*$") ~= nil
+end
+local function usesColor(properties: { [string]: any }): boolean
+	for _, value in properties do
+		if isColorToken(value) then
+			return true
+		end
+	end
+	return false
+end
+
+-- The properties with $Color... as the colour's own tokens: $ColorHover -> $HypeHover
+local function recolor(properties: { [string]: any }, token: string): { [string]: any }
+	local out = {}
+	for property, value in properties do
+		out[property] = if isColorToken(value) then "$" .. token .. string.sub(value, 7) else value
+	end
+	return out
+end
+
+-- The selector for a colour: .ui-color-<name> on the first compound of each part of a list,
+-- before its states and pseudo instances: ".a:Hover > .b" -> ".a.ui-color-hype:Hover > .b"
+function Theme.colorSelector(selector: string, name: string): string
+	local parts = {}
+	for _, part in string.split(selector, ",") do
+		local lead: string = string.match(part, "^%s*") or ""
+		local body = string.sub(part, #lead + 1)
+		local stop = string.find(body, "[%s>]") or (#body + 1)
+		local compound, rest = string.sub(body, 1, stop - 1), string.sub(body, stop)
+		local state = string.find(compound, ":", 1, true)
+		local tag = ".ui-color-" .. name
+		compound = if state
+			then string.sub(compound, 1, state - 1) .. tag .. string.sub(compound, state)
+			else compound .. tag
+		table.insert(parts, lead .. compound .. rest)
+	end
+	return table.concat(parts, ",")
+end
+
+-- Each theme's values with every named colour and its shades added, and the colours' names
+local function withColors(
+	themes: { [string]: { [string]: any } },
+	colors: { [string]: any }?,
+	recipes: { [string]: (string, (string) -> string) -> any }?
+): ({ [string]: { [string]: any } }, { string })
+	local named: { [string]: any } = colors or {}
+	local own: { [string]: (string, (string) -> string) -> any } = recipes or {}
+	local names = {}
+	for name in named do
+		if type(name) ~= "string" or not string.match(name, "^%l[%l%d%-]*$") then
+			error(
+				`[Lucy] a colour's name is lower case, words joined by "-" ("genre-house"), not "{tostring(
+					name
+				)}"`,
+				4
+			)
+		end
+		table.insert(names, name)
+	end
+	table.sort(names)
+	local shades: { { any } } = table.clone(Theme.SHADES)
+	local recipeNames = {}
+	for shadeName in own do
+		table.insert(recipeNames, shadeName)
+	end
+	table.sort(recipeNames)
+	for _, shadeName in recipeNames do
+		local entry: { any } = { shadeName }
+		entry[2] = own[shadeName]
+		table.insert(shades, entry)
+	end
+	local out = {}
+	for themeName, values in themes do
+		local v = table.clone(values)
+		local function add(token: string, base: any)
+			if v[token] == nil then
+				v[token] = base
+			end
+			if v[token] == nil then
+				return
+			end
+			local function shade(name: string): string
+				return "$" .. token .. name
+			end
+			for _, entry in shades do
+				local key = token .. entry[1]
+				if v[key] == nil then
+					v[key] = entry[2]("$" .. token, shade)
+				end
+			end
+		end
+		-- Primary's own shades where the theme has what they are made from (a theme of a few tokens,
+		-- in a spec, may not); a named colour's are always made, and say what is missing
+		if v.Primary ~= nil and v.Background ~= nil and v.Card ~= nil then
+			add("Primary", nil)
+		end
+		for _, name in names do
+			add(Theme.tokenOf(name), named[name])
+		end
+		out[themeName] = v
+	end
+	return out, names
+end
+
 -- Groups of rules declared when their modules load, in the order they loaded: every theme made
 -- afterwards builds them into its Lucy layer at once, so nothing is added while a game runs
 local declared: { { key: string, rules: { Rule } } } = {}
@@ -254,7 +425,8 @@ end
 function Theme.new(config: { [string]: any }?): Theme
 	local options: { [string]: any } = config or {}
 	local primitives = options.primitives or Tokens.primitives
-	local themes = options.themes or Tokens.themes
+	local themes, colorNames =
+		withColors(options.themes or Tokens.themes, options.colors, options.colorRecipes)
 	local densities = options.densities or Tokens.densities
 	validateSets(themes, "theme")
 	validateSets(densities, "density")
@@ -265,6 +437,7 @@ function Theme.new(config: { [string]: any }?): Theme
 	self.DensityChanged = Signal.new()
 	self.MetricsChanged = Signal.new()
 	self._densityValues = densities
+	self._colorNames = colorNames
 	self._rules = {}
 	self._themes = {}
 	self._densities = {}
@@ -511,12 +684,12 @@ function Theme.addRules(self: Theme, key: string, rules: { Rule }, options: { la
 	end
 	local layer = self._layers[sheetName]
 	local created = {}
-	for index, rule in rules do
+	local function make(name: string, rule: Rule, selector: string, properties: { [string]: any })
 		local styleRule = Instance.new("StyleRule")
-		styleRule.Name = `{key}_{index}`
-		styleRule.Selector = rule.selector
+		styleRule.Name = name
+		styleRule.Selector = selector
 		styleRule.Priority = rule.priority or 0
-		styleRule:SetProperties(rule.properties)
+		styleRule:SetProperties(properties)
 		if rule.transitions then
 			-- Transitions are newer API; never let them break a theme.
 			pcall(function()
@@ -525,11 +698,35 @@ function Theme.addRules(self: Theme, key: string, rules: { Rule }, options: { la
 		end
 		styleRule.Parent = if rule.fixed then self._layers.Fixed else layer
 		if styleRule.SelectorError ~= "" then
-			warn(`[Lucy] style selector "{rule.selector}" ({key}) error: {styleRule.SelectorError}`)
+			warn(`[Lucy] style selector "{selector}" ({key}) error: {styleRule.SelectorError}`)
 		end
 		table.insert(created, styleRule)
 	end
+	for index, rule in rules do
+		if not usesColor(rule.properties) then
+			make(`{key}_{index}`, rule, rule.selector, rule.properties)
+			continue
+		end
+		-- A rule in $Color (ADR 0052): Primary's copy for where no colour is set (unless scoped),
+		-- then one copy per colour, each right after the one before so it wins a tie
+		if not rule.scoped then
+			make(`{key}_{index}`, rule, rule.selector, recolor(rule.properties, "Primary"))
+		end
+		for _, name in self._colorNames do
+			make(
+				`{key}_{index}_{name}`,
+				rule,
+				Theme.colorSelector(rule.selector, name),
+				recolor(rule.properties, Theme.tokenOf(name))
+			)
+		end
+	end
 	self._rules[key] = created
+end
+
+-- The named colours, sorted (Primary, the colour where none is set, is not one of them)
+function Theme.colors(self: Theme): { string }
+	return table.clone(self._colorNames)
 end
 
 function Theme.removeRules(self: Theme, key: string)

@@ -58,14 +58,14 @@ local rules: { Component.Rule } = {
 			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
 		},
 	},
-	{ selector = ".ui-checkbox.ui-checked", priority = 10, properties = { BackgroundColor3 = "$Primary" } },
-	{ selector = ".ui-checkbox.ui-checked::UIStroke", priority = 10, properties = { Color = "$Primary" } },
+	{ selector = ".ui-checkbox.ui-checked", priority = 10, properties = { BackgroundColor3 = "$Color" } },
+	{ selector = ".ui-checkbox.ui-checked::UIStroke", priority = 10, properties = { Color = "$Color" } },
 	{
 		selector = ".ui-checkbox-check",
 		priority = 0,
 		properties = {
 			BackgroundTransparency = 1,
-			TextColor3 = "$PrimaryForeground",
+			TextColor3 = "$ColorForeground",
 			FontFace = "$FontSansBold",
 			TextSize = "$TextSm",
 		},

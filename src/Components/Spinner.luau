@@ -52,7 +52,7 @@ Spinner.rules = {
 		properties = { Color = "$Foreground", Thickness = "$StrokeThick" },
 	},
 	{ selector = ".ui-spinner-ring-muted", priority = 10, properties = { Color = "$MutedForeground" } },
-	{ selector = ".ui-spinner-ring-primary", priority = 10, properties = { Color = "$Primary" } },
+	{ selector = ".ui-spinner-ring-primary", priority = 10, properties = { Color = "$Color" } },
 	{ selector = ".ui-spinner-ring-sm", priority = 10, properties = { Thickness = 1.5 } },
 	{ selector = ".ui-spinner-ring-lg", priority = 10, properties = { Thickness = 3 } },
 } :: { Component.Rule }

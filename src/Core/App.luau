@@ -145,6 +145,9 @@ function App.new(config: { [string]: any }?): App
 		name = self.namePrefix .. "Styles",
 		primitives = options.primitives,
 		themes = options.themes or Tokens.themesFor(options.baseColor, { primary = options.primary }),
+		-- Named colours and a game's own shades of them (ADR 0052)
+		colors = options.colors,
+		colorRecipes = options.colorRecipes,
 		densities = options.densities,
 		default = options.theme,
 		density = options.density,

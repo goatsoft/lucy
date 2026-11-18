@@ -61,12 +61,12 @@ local rules: { Component.Rule } = {
 	{
 		selector = ".ui-effect-rays-ray",
 		priority = 0,
-		properties = { ImageColor3 = "$Primary", BackgroundTransparency = 1 },
+		properties = { ImageColor3 = "$Color", BackgroundTransparency = 1 },
 	},
 	{
 		selector = ".ui-effect-rays-core",
 		priority = 0,
-		properties = { ImageColor3 = "$Primary", BackgroundTransparency = 1 },
+		properties = { ImageColor3 = "$Color", BackgroundTransparency = 1 },
 	},
 	{ selector = ".ui-effect-rays-ray-warning", priority = 10, properties = { ImageColor3 = "$Warning" } },
 	{ selector = ".ui-effect-rays-ray-success", priority = 10, properties = { ImageColor3 = "$Success" } },

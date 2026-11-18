@@ -53,8 +53,8 @@ local rules: { Component.Rule } = {
 		selector = ".ui-button",
 		priority = BASE,
 		properties = {
-			BackgroundColor3 = "$Primary",
-			TextColor3 = "$PrimaryForeground",
+			BackgroundColor3 = "$Color",
+			TextColor3 = "$ColorForeground",
 			FontFace = "$FontSansMedium",
 			TextSize = "$TextSm",
 			BorderSizePixel = 0,
@@ -73,7 +73,7 @@ local rules: { Component.Rule } = {
 	{
 		selector = ".ui-button-variant-default:Hover",
 		priority = STATE,
-		properties = { BackgroundColor3 = "$PrimaryHover" },
+		properties = { BackgroundColor3 = "$ColorHover" },
 	},
 	{
 		selector = ".ui-button-variant-destructive",
@@ -128,7 +128,7 @@ local rules: { Component.Rule } = {
 	{
 		selector = ".ui-button-variant-link",
 		priority = VARIANT,
-		properties = { BackgroundTransparency = 1, TextColor3 = "$Primary" },
+		properties = { BackgroundTransparency = 1, TextColor3 = "$Color" },
 	},
 	{
 		selector = ".ui-button-variant-link:Hover",

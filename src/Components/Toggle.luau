@@ -244,7 +244,7 @@ Toggle.rules = {
 	{
 		selector = ".ui-toggle-indicator",
 		priority = BASE,
-		properties = { BackgroundColor3 = "$Primary", BorderSizePixel = 0 },
+		properties = { BackgroundColor3 = "$Color", BorderSizePixel = 0 },
 	},
 	{ selector = ".ui-toggle.ui-disabled", priority = DISABLED, properties = { TextTransparency = 0.5 } },
 	{

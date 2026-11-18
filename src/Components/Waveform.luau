@@ -168,6 +168,8 @@ local spec: Component.Spec = {
 	kind = "waveform",
 	-- levels stay out of state, as a Table's rows do: state merges arrays in place
 	defaults = { progress = 1, variant = "bars", visible = true },
+	-- Its `color` is its bars' (a token, a Color3 or a function of the column), not a named colour
+	colorScope = false,
 	render = function(h)
 		local p: Component.Props = h.props
 		local app = h.app

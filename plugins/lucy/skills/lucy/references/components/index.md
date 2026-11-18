@@ -98,6 +98,7 @@ Every component also takes these props:
 | `app` | The App it belongs to. Defaults to the current App |
 | `name` | The root Instance's Name |
 | `layoutOrder` | The root Instance's LayoutOrder |
+| `color` | A [named colour](../reference/theming.md#named-colours) for it and everything in it, or a ref or getter of one (Arrow and Waveform take `color` as their own colour) |
 | `persist` | Keep its state in the app after it is destroyed |
 
 Any state key can be changed from the app: `app.state:set("ui.<id>.<key>", value)`.

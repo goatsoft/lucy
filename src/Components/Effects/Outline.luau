@@ -41,7 +41,7 @@ local SWEEP = NumberSequence.new({
 
 local rules: { Component.Rule } = {
 	{ selector = ".ui-effect-outline-part", priority = 0, properties = { BackgroundTransparency = 1 } },
-	{ selector = ".ui-effect-outline-part::UIStroke", priority = 0, properties = { Color = "$Primary" } },
+	{ selector = ".ui-effect-outline-part::UIStroke", priority = 0, properties = { Color = "$Color" } },
 	{ selector = ".ui-effect-outline-warning::UIStroke", priority = 10, properties = { Color = "$Warning" } },
 	{ selector = ".ui-effect-outline-success::UIStroke", priority = 10, properties = { Color = "$Success" } },
 	{

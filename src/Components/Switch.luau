@@ -52,7 +52,7 @@ local rules: { Component.Rule } = {
 	{
 		selector = ".ui-switch.ui-checked",
 		priority = 10,
-		properties = { BackgroundColor3 = "$Primary" },
+		properties = { BackgroundColor3 = "$Color" },
 		transitions = { BackgroundColor3 = TweenInfo.new(0.15) },
 	},
 	{

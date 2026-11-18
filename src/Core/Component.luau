@@ -49,6 +49,7 @@
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 
+local Color = require(script.Parent.Color)
 local Context = require(script.Parent.Context)
 local Element = require(script.Parent.Element)
 local Maid = require(script.Parent.Maid)
@@ -448,6 +449,8 @@ export type Spec = {
 	defaults: State?,
 	rules: { Rule }?,
 	ruleKey: string?,
+	-- false: the component's `color` prop is its own, not a named colour (ADR 0052)
+	colorScope: boolean?,
 	render: (handle: Handle) -> any,
 	mounted: ((handle: Handle) -> ())?,
 }
@@ -565,6 +568,15 @@ function Component.mount(spec: Spec, props: Props?): Handle
 		root.LayoutOrder = props.layoutOrder
 	end
 	root:SetAttribute("LucyId", id)
+	-- `color`: a named colour for the component and everything in it (ADR 0052), unless the
+	-- component takes `color` for itself (a state key, or colorScope = false in its spec)
+	if
+		props.color ~= nil
+		and spec.colorScope ~= false
+		and not (spec.defaults and spec.defaults.color ~= nil)
+	then
+		scope:run(Color.scope, root, props.color)
+	end
 	Component.claimSelection(app, root)
 	app:registerHandle(handle)
 	scope:onCleanup(function()

@@ -70,11 +70,11 @@ RadioGroup.rules = {
 			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
 		},
 	},
-	{ selector = ".ui-radio.ui-selected::UIStroke", priority = 10, properties = { Color = "$Primary" } },
+	{ selector = ".ui-radio.ui-selected::UIStroke", priority = 10, properties = { Color = "$Color" } },
 	{
 		selector = ".ui-radio-dot",
 		priority = 0,
-		properties = { BackgroundColor3 = "$Primary", BorderSizePixel = 0 },
+		properties = { BackgroundColor3 = "$Color", BorderSizePixel = 0 },
 	},
 	{ selector = ".ui-radio-dot::UICorner", priority = 0, properties = { CornerRadius = "$RadiusFull" } },
 	{

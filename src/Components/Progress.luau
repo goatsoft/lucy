@@ -33,7 +33,7 @@ local rules: { Component.Rule } = {
 	{
 		selector = ".ui-progress-indicator",
 		priority = 0,
-		properties = { BackgroundColor3 = "$Primary", BorderSizePixel = 0 },
+		properties = { BackgroundColor3 = "$Color", BorderSizePixel = 0 },
 	},
 	{
 		selector = ".ui-progress-indicator::UICorner",
@@ -69,7 +69,7 @@ table.insert(
 table.insert(rules, {
 	selector = ".ui-progress-step-on",
 	priority = 5,
-	properties = { BackgroundColor3 = "$Primary", TextColor3 = "$PrimaryForeground" },
+	properties = { BackgroundColor3 = "$Color", TextColor3 = "$ColorForeground" },
 })
 Progress.rules = rules
 

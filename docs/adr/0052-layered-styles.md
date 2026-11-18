@@ -86,17 +86,31 @@ Rules are declarations, not effects of mounting:
 - A group first needed after start (a component a game defines later, a gradient or effect made
   for a name the game picks at run time) is added to its layer then, at that layer's cost.
 
-### 3. A palette, with accents compiled by Lucy
+### 3. Named colours, compiled by Lucy
 
-A theme declares named colours (`palette = { hype = "$Pink500", ... }`). From each, Lucy derives the
-same slots it derives for Primary (`<Name>`, `<Name>Foreground`, `<Name>Hover`, ...) as tokens.
-Components already colour themselves with `$Primary...`; for each palette colour Lucy compiles a
-copy of those rules with the colour's tokens, on compound selectors (`.ui-button.ui-color-hype`,
-never `>>`), in a layer of its own above Lucy's. A component takes its colour from a `color` prop,
-or from the nearest provider above it (a new `provide`/`inject` pair on the effect scope, as Vue
-has, the scope Radix Themes' accent colour gets from CSS); the provider is the scope that tokens
-cannot have in Roblox. A game's toned panel is then `color = "premium"` on the
-Sheet, and the 2,012 rules Dance Lab writes become Lucy's to generate, from a palette.
+(`Palette` is already Lucy's OKLCH hue scales, and `$Accent` shadcn's hover fill, so the concept
+is `color`, as Radix and MUI name it.)
+
+- **Shades.** A theme names its colours (`colors = { hype = "$Yellow400" }`). Each gets a token
+  (`Hype`) and Lucy's generic shades, worked out as Primary's are: Hover, Foreground, Soft,
+  MutedForeground (with MutedTint), Border, Shadow. A game adds its own by recipe
+  (`colorRecipes = { Glow = function(colour, shade) ... end }`). Primary gets the same shades; a
+  token the theme sets itself is kept.
+- **Rules.** A rule written in `$Color...` is compiled in the layer it is added to: a copy in Primary's
+  tokens for where no colour is set (unless `scoped = true`, for a look that belongs only inside a
+  coloured container), then one copy per colour with `.ui-color-<name>` on its first compound,
+  right after it so it wins a tie. Lucy's components moved every `$Primary` in their rules to
+  `$Color`, so everything that used Primary follows a colour; Ring (focus) is separate.
+- **Scope.** Lucy builds children before their parents (`children = { Lucy.Button.new(...) }`),
+  so a colour cannot follow creation (a Vue-style provide/inject would miss them): it follows
+  the instance tree. `Lucy.color(container, name)` and a component's `color` prop make a coloured
+  container (attribute LucyColor). It tags itself and every element in it that has a tag of its
+  own as `ui-color-<name>`, as they arrive; the nearest coloured container wins, as a CSS variable
+  does, and an element moved out loses it. Two listeners per coloured container (added, removing),
+  none per element.
+
+A game's toned panel is then `color = "premium"` on the Sheet, and the 2,012 rules Dance Lab
+writes by hand become Lucy's to generate.
 
 ## Consequences
 

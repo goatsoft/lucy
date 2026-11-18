@@ -76,7 +76,7 @@ local rules: { Component.Rule } = {
 	{
 		selector = ".ui-slider-fill",
 		priority = 0,
-		properties = { BackgroundColor3 = "$Primary", BorderSizePixel = 0 },
+		properties = { BackgroundColor3 = "$Color", BorderSizePixel = 0 },
 	},
 	{ selector = ".ui-slider-fill::UICorner", priority = 0, properties = { CornerRadius = "$RadiusFull" } },
 	{
@@ -89,7 +89,7 @@ local rules: { Component.Rule } = {
 		selector = ".ui-slider-thumb::UIStroke",
 		priority = 0,
 		properties = {
-			Color = "$Primary",
+			Color = "$Color",
 			Thickness = "$StrokeThin",
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 			BorderStrokePosition = Enum.BorderStrokePosition.Inner,

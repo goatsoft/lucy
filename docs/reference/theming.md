@@ -41,6 +41,8 @@ in place when the app is made, so nothing is added to the styles while a player 
 | `baseColor` | `"zinc"` | Base colour for the built in light and dark themes |
 | `primary` | the base colour | Palette hue that tints `Primary` and `Ring` (with none, `Ring` is blue) |
 | `themes` | built from `baseColor` and `primary` | Your own set of themes, replacing the built in ones |
+| `colors` | none | [Named colours](#named-colours): `{ hype = "$Yellow400" }` |
+| `colorRecipes` | none | Your own shades of every named colour, by name |
 | `primitives` | `Lucy.Tokens.primitives` | Your own primitives, replacing the whole set |
 | `densities` | `Lucy.Tokens.densities` | Your own densities, replacing the whole set |
 | `density` | follows the device | Pins a density |
@@ -197,6 +199,7 @@ A rule is a table:
 | `priority` | which rule wins when several in the same layer match; higher wins, and at equal priority the rule added later |
 | `properties` | property values; `$Name` for tokens |
 | `transitions` | optional `TweenInfo` per property, for smooth changes |
+| `scoped` | for a rule in `$Color`: only inside a coloured container ([Named colours](#named-colours)) |
 
 Priority only orders rules within a layer. Your layer is above Lucy's, so your
 rules need no priority to beat Lucy's: state what a thing looks like, and for its
@@ -224,3 +227,62 @@ reaches the root's own text.
 
 Styles apply a few frames after a change. Read what an instance shows with
 `instance:GetStyled(property)`; the plain property gives the unstyled value.
+
+## Named colours
+
+Name the colours your game uses, and Lucy works out their shades and colours its
+components with them wherever you say:
+
+```luau
+local app = Lucy.App.new({
+    colors = { hype = "$Yellow400", premium = "$Amber500", ["genre-house"] = "$Cyan400" },
+})
+```
+
+Each colour gets a token (`Hype`, `GenreHouse`) and these shades of it, worked out
+as Primary's are: `HypeHover`, `HypeForeground` (text on it), `HypeSoft` (a quiet
+wash of it on a card), `HypeMutedForeground` (quiet text on that wash),
+`HypeBorder` and `HypeShadow` (a deep shade, for a hard shadow). Primary gets the
+same shades. A token your theme sets itself is kept.
+
+Your own shades are recipes: a function of the colour's token and a way to name
+its other shades, made for every colour and for Primary.
+
+```luau
+colorRecipes = {
+    Glow = function(colour) return Lucy.Tokens.mix("$Background", colour, 0.24) end,
+    GlowText = function(_, shade) return Lucy.Tokens.readable(shade("Glow"), "$White", "$Black") end,
+}
+```
+
+To colour part of the UI, give a component `color`, or colour any container:
+
+```luau
+Lucy.Sheet.new({ title = "THE LAB", color = "premium", children = { ... } })
+Lucy.color(card, "hype") -- a name, a ref or getter of one, or nil; returns stop()
+```
+
+Lucy's components inside take the colour wherever they would use Primary: filled
+and outline buttons, the picked toggle and tab, switches, checkboxes, radios,
+progress, sliders, spinners and badges. The nearest coloured container wins, as a
+CSS variable does: a hype card in a premium sheet is hype inside, premium round it.
+What is added later takes the colour as it arrives.
+
+Write your own rules in `$Color`, `$ColorHover`, `$ColorForeground`, `$ColorSoft`
+or any shade, yours included (`$ColorGlow`). Lucy compiles them: once with
+Primary's tokens, for where no colour is set, and once per colour. `scoped = true`
+keeps a rule to coloured containers:
+
+```luau
+app.theme:addRules("shopCards", {
+    { selector = ".shop-card::UIStroke", scoped = true, properties = { Color = "$ColorBorder" } },
+    { selector = ".shop-card >> .shop-price", properties = { TextColor3 = "$Color" } },
+})
+```
+
+The colour goes on the first part of each selector (`.shop-card` here): a
+coloured container tags itself and every element in it that has a tag of its own,
+as `ui-color-<name>`, and the compiled rules match that.
+
+Roblox's tokens cannot be scoped below a ScreenGui, which is why a colour is a tag
+on the elements and its rules are compiled per colour (ADR 0052).
