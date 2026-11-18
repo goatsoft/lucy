@@ -19,7 +19,8 @@ Folder <namePrefix>Styles (ReplicatedStorage)
 ├─ Game                   your rules
 ├─ Fixed                  Lucy's rules for what a component is: an untinted icon keeps its own
 │                         colours, a gradient's host stays white under it
-└─ Design                 live rules, added and removed while the game runs; every gui links here
+├─ Design                 live rules, added and removed while the game runs; every gui links here
+└─ Lucy_0, Game_40...     a layer's rules of one priority, one sheet each
 ```
 
 The rule sheets are layers (ADR 0052): each derives the one
@@ -27,6 +28,11 @@ below, and a sheet's own rules beat every rule below it, whatever their priority
 beat Lucy's looks without a priority above Lucy's, Lucy's few fixed rules (marked `fixed = true`)
 beat yours, and a live rule beats all. Lucy's own rules are all
 in place when the app is made, so nothing is added to the styles while a player plays.
+
+Inside Lucy, Game and Fixed, each priority's rules are a sheet of their own, which the layer
+derives lowest priority first. They apply exactly as one sheet would, but adding a rule only
+pays for the rules of its own priority, so start-up stays quick with thousands of rules.
+`app.theme:rulesOf("game")` lists a layer's rules in the order they apply.
 
 ## App options
 
@@ -180,6 +186,7 @@ themes.dark.PrimaryForeground = Lucy.Tokens.onColor("$Primary")
 | `resolve(token)` | the value a token has right now, through aliases: `resolve("Primary")` is a `Color3` |
 | `addRules(key, rules, { layer? })` | adds style rules under a key, in your `Game` layer; `{ layer = "live" }` for rules you add and remove while playing (a setting switched on); does nothing if the key is there |
 | `removeRules(key)`, `hasRules(key)` | takes a key's rules out; checks for them |
+| `rulesOf(layer)` | a layer's rules (`"lucy"`, `"game"`, `"fixed"` or `"live"`) in the order they apply |
 | `link(gui)` | styles a ScreenGui you made yourself (scenes and portals are linked already) |
 | `Changed`, `DensityChanged` | signals, fired with the new name |
 | `MetricsChanged` | signal, fired when control heights change for text size |

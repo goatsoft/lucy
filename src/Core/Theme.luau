@@ -14,14 +14,19 @@
 		├─ StyleSheet "Game"              StyleDerive -> Lucy; the game's rules
 		├─ StyleSheet "Fixed"             StyleDerive -> Game; Lucy's rules for what a component is,
 		│                                 not how it looks (an untinted icon's own colours)
-		└─ StyleSheet "Design"            StyleDerive -> Fixed; live rules (added and removed in play)
+		├─ StyleSheet "Design"            StyleDerive -> Fixed; live rules (added and removed in play)
+		└─ StyleSheet "Game_40" ...       a layer's rules of one Priority, StyleDerive -> Values
 
 	The layers (ADR 0052): a sheet's own rules beat every rule of the sheet it derives, whatever
 	their Priority, so a game's rule beats Lucy's look, Lucy's fixed rules beat the game's (a
 	picture that keeps its own colours is not a look to restyle), and a live rule beats all.
-	Priority orders rules within a layer, and at equal Priority the rule added later wins. Each
-	layer is a sheet of its own because adding a rule costs in proportion to the rules already in
-	that sheet.
+	Priority orders rules within a layer, and at equal Priority the rule added later wins. Adding
+	a rule costs in proportion to the rules already in its sheet, so a layer keeps no rules of its
+	own: it derives a sheet per Priority, lowest first (of sibling derives the later wins, whatever
+	their rules' Priority, so the order is the Priority's), and a rule goes into its Priority's
+	sheet. Building the layers is then about the sum of each sheet's size squared, not the
+	layer's. Each of those sheets derives Values, where its tokens are. Design, the live layer,
+	is small and a sheet of its own (a designer's rules go straight into it).
 
 	ScreenGuis get a StyleLink to "Design" (theme:link). Switching theme or density only
 	re-points a StyleDerive on Values; tokens resolve through the derives, so every layer and every
@@ -70,6 +75,8 @@ export type Theme = typeof(setmetatable(
 		folder: Folder,
 		design: StyleSheet,
 		_layers: { [string]: StyleSheet },
+		_bands: { [string]: { [number]: StyleSheet } },
+		_values: StyleSheet,
 		_colorNames: { string },
 		_rules: { [string]: { StyleRule } },
 		_themes: { [string]: StyleSheet },
@@ -177,6 +184,52 @@ table.insert(Theme.baseRules, {
 
 -- The layers rules go in, by the name addRules takes (ADR 0052)
 local LAYERS = { lucy = "Lucy", game = "Game", live = "Design" }
+
+-- The sheet a rule of `priority` goes in, in the layer `name`: the layer itself if it is not
+-- split (Design), else its Priority's own sheet, made when first needed and derived by the layer
+-- in Priority order, after the layer below and every lower Priority's (see the top)
+local function sheetFor(self: any, name: string, priority: number): StyleSheet
+	local bands = self._bands[name]
+	if not bands then
+		return self._layers[name]
+	end
+	local sheet = bands[priority]
+	if sheet then
+		return sheet
+	end
+	sheet = Instance.new("StyleSheet")
+	sheet.Name = `{name}_{priority}`
+	local values = Instance.new("StyleDerive")
+	values.Name = "Values"
+	values.StyleSheet = self._values
+	values.Parent = sheet
+	sheet.Parent = self.folder
+	bands[priority] = sheet
+	-- The derives of higher Priorities step out, so this one lands before them
+	local layer = self._layers[name]
+	local later = {}
+	for _, child in layer:GetChildren() do
+		local of = child:GetAttribute("LucyPriority")
+		if child:IsA("StyleDerive") and type(of) == "number" and of > priority then
+			table.insert(later, child)
+		end
+	end
+	table.sort(later, function(a: Instance, b: Instance): boolean
+		return (a:GetAttribute("LucyPriority") :: number) < (b:GetAttribute("LucyPriority") :: number)
+	end)
+	for _, derive in later do
+		derive.Parent = nil
+	end
+	local derive = Instance.new("StyleDerive")
+	derive.Name = sheet.Name
+	derive.StyleSheet = sheet
+	derive:SetAttribute("LucyPriority", priority)
+	derive.Parent = layer
+	for _, derive in later do
+		derive.Parent = layer
+	end
+	return sheet
+end
 
 --[[
 	Named colours (ADR 0052). A theme's `colors` names them ({ hype = "$Yellow400" }); each gets a
@@ -500,10 +553,12 @@ function Theme.new(config: { [string]: any }?): Theme
 	values.Parent = folder
 	self._themeDerive = themeDerive
 	self._densityDerive = densityDerive
+	self._values = values
 
 	-- The layers, each deriving the one below: Lucy, the game, Lucy's fixed rules, then live rules
 	-- on top (ADR 0052)
 	self._layers = {}
+	self._bands = { Lucy = {}, Game = {}, Fixed = {} }
 	local below = values
 	for _, name in { "Lucy", "Game", "Fixed", "Design" } do
 		local sheet = Instance.new("StyleSheet")
@@ -687,7 +742,6 @@ function Theme.addRules(self: Theme, key: string, rules: { Rule }, options: { la
 	if self._rules[key] then
 		return
 	end
-	local layer = self._layers[sheetName]
 	local created = {}
 	local function make(name: string, rule: Rule, selector: string, properties: { [string]: any })
 		local styleRule = Instance.new("StyleRule")
@@ -701,7 +755,7 @@ function Theme.addRules(self: Theme, key: string, rules: { Rule }, options: { la
 				styleRule:SetPropertyTransitions(rule.transitions)
 			end)
 		end
-		styleRule.Parent = if rule.fixed then self._layers.Fixed else layer
+		styleRule.Parent = sheetFor(self, if rule.fixed then "Fixed" else sheetName, styleRule.Priority)
 		if styleRule.SelectorError ~= "" then
 			warn(`[Lucy] style selector "{selector}" ({key}) error: {styleRule.SelectorError}`)
 		end
@@ -731,6 +785,33 @@ function Theme.addRules(self: Theme, key: string, rules: { Rule }, options: { la
 		end
 	end
 	self._rules[key] = created
+end
+
+-- A layer's rules in the order they apply: "lucy", "game", "fixed" or "live"
+function Theme.rulesOf(self: Theme, layerName: string): { StyleRule }
+	local name = if layerName == "fixed" then "Fixed" else LAYERS[layerName]
+	local out = {}
+	local function from(sheet: StyleSheet)
+		for _, child in sheet:GetChildren() do
+			if child:IsA("StyleRule") then
+				table.insert(out, child)
+			end
+		end
+	end
+	local bands = self._bands[name]
+	if not bands then
+		from(self._layers[name])
+		return out
+	end
+	local priorities = {}
+	for priority in bands do
+		table.insert(priorities, priority)
+	end
+	table.sort(priorities)
+	for _, priority in priorities do
+		from(bands[priority])
+	end
+	return out
 end
 
 -- The named colours, sorted (Primary, the colour where none is set, is not one of them)

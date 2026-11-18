@@ -224,7 +224,7 @@ return function()
 			theme:addRules("x", rules)
 			theme:addRules("x", rules)
 			local count = 0
-			for _, child in theme.folder.Game:GetChildren() do
+			for _, child in theme:rulesOf("game") do
 				if child:IsA("StyleRule") and child.Selector == ".x" then
 					count += 1
 				end
@@ -378,6 +378,64 @@ return function()
 			expect(theme.design).to.equal(folder.Design)
 		end)
 
+		it("builds a layer as a sheet per Priority, lowest first, each reading the values", function()
+			theme = Theme.new(config)
+			theme:addRules("probe-bands", {
+				{ selector = ".probe-band", priority = 40, properties = { BackgroundColor3 = RED } },
+				{ selector = ".probe-band", priority = 0, properties = { BackgroundColor3 = BLUE } },
+				{ selector = ".probe-band", priority = 10, properties = { BackgroundColor3 = BLUE } },
+			})
+			local folder = theme.folder
+			local derived = {}
+			for _, child in folder.Game:GetChildren() do
+				if child:IsA("StyleDerive") then
+					table.insert(derived, child.StyleSheet)
+				end
+			end
+			-- The layer below, then its sheets by Priority; it holds no rules itself
+			expect(derived[1]).to.equal(folder.Lucy)
+			expect(derived[2]).to.equal(folder:FindFirstChild("Game_0"))
+			expect(derived[3]).to.equal(folder:FindFirstChild("Game_10"))
+			expect(derived[4]).to.equal(folder:FindFirstChild("Game_40"))
+			expect(folder.Game:FindFirstChildOfClass("StyleRule")).to.equal(nil)
+			local values = folder.Game_40:FindFirstChildOfClass("StyleDerive")
+			expect(values and values.StyleSheet).to.equal(folder.Values)
+		end)
+
+		it("keeps Priority inside a layer, whatever order its rules came in", function()
+			theme = Theme.new(config)
+			theme:addRules("probe-high", {
+				{ selector = ".probe-order", priority = 100, properties = { BackgroundColor3 = RED } },
+			})
+			theme:addRules("probe-low", {
+				{ selector = ".probe-order", priority = 0, properties = { BackgroundColor3 = BLUE } },
+			})
+			local frame, done = probe(theme.design, "probe-order")
+			expect(Harness.colorEq(colourOf(frame), RED)).to.equal(true)
+			-- At one Priority, the rule added later wins
+			theme:addRules("probe-high-later", {
+				{ selector = ".probe-order", priority = 100, properties = { BackgroundColor3 = BLUE } },
+			})
+			expect(Harness.waitFor(function()
+				return Harness.colorEq(colourOf(frame), BLUE)
+			end)).to.equal(true)
+			done()
+		end)
+
+		it("lists a layer's rules in the order they apply (rulesOf)", function()
+			theme = Theme.new(config)
+			theme:addRules("probe-list", {
+				{ selector = ".probe-b", priority = 5, properties = { BackgroundColor3 = RED } },
+				{ selector = ".probe-a", priority = 1, properties = { BackgroundColor3 = RED } },
+				{ selector = ".probe-c", priority = 5, properties = { BackgroundColor3 = RED } },
+			})
+			local selectors = {}
+			for _, rule in theme:rulesOf("game") do
+				table.insert(selectors, rule.Selector)
+			end
+			expect(table.concat(selectors, " ")).to.equal(".probe-a .probe-b .probe-c")
+		end)
+
 		it("puts a game's rules over Lucy's, whatever Lucy's Priority", function()
 			theme = Theme.new(config)
 			theme:addRules("lucy-probe", {
@@ -431,7 +489,7 @@ return function()
 			theme:addRules("game-look", {
 				{ selector = ".probe-fixed", priority = 1000, properties = { BackgroundColor3 = RED } },
 			})
-			expect(theme.folder.Fixed:FindFirstChildOfClass("StyleRule")).to.be.ok()
+			expect(theme:rulesOf("fixed")[1]).to.be.ok()
 			local frame, done = probe(theme.design, "probe-fixed")
 			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
 			done()
@@ -485,7 +543,7 @@ return function()
 			theme = Theme.new(config)
 			expect(theme:hasRules("probe-declared-a") and theme:hasRules("probe-declared-b")).to.equal(true)
 			local inLucy = 0
-			for _, child in theme.folder.Lucy:GetChildren() do
+			for _, child in theme:rulesOf("lucy") do
 				if child:IsA("StyleRule") and child.Selector == ".probe-declared" then
 					inLucy += 1
 				end
@@ -500,9 +558,9 @@ return function()
 			local rules = { { selector = ".probe-declared", properties = { BackgroundColor3 = RED } } }
 			Theme.declare("probe-declared-a", rules)
 			theme = Theme.new(config)
-			local before = #theme.folder.Lucy:GetChildren()
+			local before = #theme:rulesOf("lucy")
 			theme:addRules("probe-declared-a", rules, { layer = "lucy" })
-			expect(#theme.folder.Lucy:GetChildren()).to.equal(before)
+			expect(#theme:rulesOf("lucy")).to.equal(before)
 		end)
 
 		it("has every Lucy component's rules from the start, so mounting adds none", function()
@@ -510,8 +568,8 @@ return function()
 			local app, cleanup = Harness.app()
 			local function ruleCount(): number
 				local n = 0
-				for _, layer in { "Lucy", "Game", "Design" } do
-					for _, child in app.theme.folder[layer]:GetChildren() do
+				for _, layer in { "lucy", "game", "live" } do
+					for _, child in app.theme:rulesOf(layer) do
 						if child:IsA("StyleRule") then
 							n += 1
 						end
@@ -602,9 +660,9 @@ return function()
 			expect(typeof(theme:resolve("PrimaryGlow"))).to.equal("Color3")
 		end)
 
-		local function selectorsOf(sheet: StyleSheet, key: string): { [string]: StyleRule }
+		local function selectorsOf(rules: { StyleRule }, key: string): { [string]: StyleRule }
 			local out = {}
-			for _, child in sheet:GetChildren() do
+			for _, child in rules do
 				if child:IsA("StyleRule") and string.sub(child.Name, 1, #key + 1) == key .. "_" then
 					out[child.Selector] = child
 				end
@@ -621,7 +679,7 @@ return function()
 					properties = { TextColor3 = "$ColorForeground", BackgroundColor3 = "$Color" },
 				},
 			})
-			local rules = selectorsOf(theme.folder.Game, "probe-colour")
+			local rules = selectorsOf(theme:rulesOf("game"), "probe-colour")
 			local base = rules[".probe-button:Hover > .probe-label"]
 			local hype = rules[".probe-button.ui-color-hype:Hover > .probe-label"]
 			local house = rules[".probe-button.ui-color-genre-house:Hover > .probe-label"]
@@ -641,7 +699,7 @@ return function()
 					properties = { Color = "$ColorBorder" },
 				},
 			})
-			local rules = selectorsOf(theme.folder.Game, "probe-scoped")
+			local rules = selectorsOf(theme:rulesOf("game"), "probe-scoped")
 			local count = 0
 			for _ in rules do
 				count += 1
@@ -655,7 +713,7 @@ return function()
 			theme:addRules("probe-any", {
 				{ selector = ".probe-tab:Hover", scoped = true, properties = { TextColor3 = "$White" } },
 			})
-			local rules = selectorsOf(theme.folder.Game, "probe-any")
+			local rules = selectorsOf(theme:rulesOf("game"), "probe-any")
 			local count = 0
 			for _ in rules do
 				count += 1
@@ -671,7 +729,7 @@ return function()
 			})
 			theme:removeRules("probe-gone")
 			local count = 0
-			for _ in selectorsOf(theme.folder.Game, "probe-gone") do
+			for _ in selectorsOf(theme:rulesOf("game"), "probe-gone") do
 				count += 1
 			end
 			expect(count).to.equal(0)

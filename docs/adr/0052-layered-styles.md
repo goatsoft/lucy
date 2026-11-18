@@ -69,6 +69,15 @@ any screen (The Lab's and the Club Pass's panels went dark, the Karma coin went 
 kept them winning by repeating them at rising priorities (20, 90, 100, 201); they are now one rule
 each, `fixed = true`, in the Fixed layer over the game's.
 
+Inside a layer, rules are kept in a sheet per Priority. Adding a rule costs in proportion to the
+rules already in its sheet, and of two derives the later one wins whatever its rules' Priority,
+so a layer holds no rules itself: it derives the layer below, then one sheet per Priority,
+lowest first, each deriving Values for its tokens (`Game_0`, `Game_40`...). That orders rules
+exactly as one sheet would (Priority, then the order they were added) while each insert pays
+only for its own Priority's sheet. A Priority first used while a game runs gets its sheet then,
+slotted in by Priority. Design stays one sheet: it is small, and a designer's rules go straight
+into it. `theme:rulesOf(layer)` lists a layer's rules in the order they apply.
+
 - `theme:addRules(key, rules)` from a game goes to `Game`; `{ layer = "live" }` puts rules that
   are added and removed while playing in the live layer, a small sheet, so it stays cheap.
 - Within a layer, rules keep the order they were declared in (option (a) of the discussion), which
@@ -132,6 +141,10 @@ writes by hand become Lucy's to generate.
   adding them: a game layer of 2,841 rules is about 125 ms of start-up by the curve above. So
   section 3 (the palette) is for how a game is written, not for frame time; still to be
   confirmed on a phone.
+- Named colours multiply rules: Dance Lab's 39 colours made Lucy's 36 rules in `$Color` into
+  1,400 more, 4,815 in all. Built into one sheet per layer that was 390 ms of start-up; a sheet
+  per Priority (26 for Lucy's layer, 32 for the game's, the largest 727 rules) builds the same
+  rules in about 57 ms (Studio, Mac, 2026-11-18).
 
 ## Alternatives considered
 
