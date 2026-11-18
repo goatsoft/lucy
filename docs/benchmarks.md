@@ -11,38 +11,45 @@ The suites live in `tests/Bench` and anyone can run them.
 
 ## Results
 
-Lucy main (unreleased, October 2026) in Roblox Studio 0.745 (edit mode), on an
+Lucy main (unreleased, November 2026) in Roblox Studio 0.747 (edit mode), on an
 Apple M1 Max: 30 timed iterations after 5 warmups, the median of five such runs.
 Times are per run of the benchmark, not per item. Store suites repeat their
 operation 100 times per run.
 
 | Benchmark | Group | Size | Median (ms) | p95 (ms) | Heap (KB) |
 |---|---|---:|---:|---:|---:|
-| Mount a keyed list | Lists | 1,000 | 18.36 | 20.38 | 2160 |
-| Edit 100 rows, one write each | Lists | 1,000 | 0.44 | 0.53 | 0 |
-| Reverse a keyed list | Lists | 1,000 | 6.34 | 7.87 | 158 |
-| Append 100 rows | Lists | 1,000 | 3.13 | 5.41 | 480 |
-| Clear a keyed list | Lists | 1,000 | 6.10 | 7.08 | 0 |
-| Destroy a mounted list | Lists | 1,000 | 5.70 | 6.93 | 0 |
-| HUD frame: 50 values, 200 labels | HUD | 200 | 0.39 | 0.51 | 0 |
-| One value, 1,000 readers | HUD | 1,000 | 2.00 | 2.50 | 0 |
-| Mount Buttons | Components | 100 | 4.92 | 5.45 | 745 |
-| Mount Switches | Components | 100 | 12.16 | 14.37 | 1260 |
-| Toggle Switches | Components | 100 | 0.66 | 0.84 | 0 |
-| Set Button text | Components | 100 | 0.37 | 0.49 | 0 |
-| Set Button disabled | Components | 100 | 0.78 | 0.91 | 0 |
-| Set Button variant | Components | 100 | 0.61 | 0.82 | 0 |
-| Write one component, 10 mounted | Store | 10 | 0.08 | 0.08 | 0 |
+| Mount a keyed list | Lists | 1,000 | 15.14 | 21.14 | 2176 |
+| Edit 100 rows, one write each | Lists | 1,000 | 0.48 | 0.60 | 0 |
+| Reverse a keyed list | Lists | 1,000 | 6.25 | 7.44 | 158 |
+| Append 100 rows | Lists | 1,000 | 3.06 | 3.70 | 493 |
+| Clear a keyed list | Lists | 1,000 | 6.32 | 7.44 | 0 |
+| Destroy a mounted list | Lists | 1,000 | 5.84 | 7.30 | 0 |
+| HUD frame: 50 values, 200 labels | HUD | 200 | 0.36 | 0.48 | 0 |
+| One value, 1,000 readers | HUD | 1,000 | 1.97 | 2.35 | 0 |
+| Mount Buttons | Components | 100 | 4.92 | 6.26 | 784 |
+| Mount Switches | Components | 100 | 15.86 | 18.74 | 1515 |
+| Toggle Switches | Components | 100 | 0.76 | 0.94 | 17 |
+| Set Button text | Components | 100 | 0.36 | 0.46 | 0 |
+| Set Button disabled | Components | 100 | 0.63 | 0.77 | 0 |
+| Set Button variant | Components | 100 | 0.55 | 0.71 | 0 |
+| Write one component, 10 mounted | Store | 10 | 0.08 | 0.09 | 0 |
 | Write one component, 1,000 mounted | Store | 1,000 | 0.08 | 0.09 | 0 |
-| Subscribe 1,000 paths, write one | Store | 1,000 | 0.12 | 0.13 | 0 |
-| Read a table of 1,000 keys after one write | Store | 1,000 | 0.43 | 2.42 | 3205 |
-| Set a table equal to the stored one | Store | 1,000 | 2.83 | 2.95 | 0 |
-| Ref to computed to effect | Reactive core | 10,000 | 10.05 | 10.24 | 0 |
-| 1 ref, 1,000 computeds, 1 effect | Reactive core | 1,000 | 0.54 | 0.59 | 0 |
-| Mount 1,000 bound effects | Reactive core | 1,000 | 0.74 | 0.83 | 361 |
+| Subscribe 1,000 paths, write one | Store | 1,000 | 0.12 | 0.15 | 0 |
+| Read a table of 1,000 keys after one write | Store | 1,000 | 2.29 | 31.57 | 3205 |
+| Set a table equal to the stored one | Store | 1,000 | 2.83 | 2.96 | 0 |
+| Ref to computed to effect | Reactive core | 10,000 | 9.79 | 10.07 | 0 |
+| 1 ref, 1,000 computeds, 1 effect | Reactive core | 1,000 | 0.56 | 0.64 | 0 |
+| Mount 1,000 bound effects | Reactive core | 1,000 | 1.06 | 1.25 | 361 |
 
 Medians move by up to about 15% between runs on the same machine; mount times,
-which create the most garbage, move the most.
+which create the most garbage, move the most. Two move far more, set by when
+Roblox collects garbage rather than by Lucy: reading a table after a write
+(3.2 MB a run) takes about 0.5 ms, or 5 to 6 ms when a collection lands in it,
+and mounting 1,000 bound effects takes about 0.6 ms on its own (`only`) but up to
+1.1 ms after the suites before it.
+
+Since October a Switch costs about a third more to mount: it gained sizes (`sm` to
+`xl`), a slot for what follows its label, and [named colours](reference/colors.md).
 
 ## What the numbers mean
 
@@ -50,15 +57,15 @@ which create the most garbage, move the most.
   1,000 costs about 5 µs, and only that row's label runs again. A busy HUD
   frame, 50 values feeding 200 labels in one batch, takes 0.4 ms: under 3% of a
   60 FPS frame. Neither creates garbage.
-- **A bound label costs about 2.5 µs to update.** One value read by 1,000
-  labels updates all of them in 2.5 ms.
+- **A bound label costs about 2 µs to update.** One value read by 1,000
+  labels updates all of them in 2 ms.
 - **Components update only what changed.** Setting a Button's text sets
-  its `Text` again and nothing else: about 5 µs per Button, no garbage. Disabling one
-  (a tag, `Interactable` and `Selectable`) takes about 10 µs. A Switch toggle,
-  thumb animation included, takes about 7 µs.
+  its `Text` again and nothing else: about 4 µs per Button, no garbage. Disabling one
+  (a tag, `Interactable` and `Selectable`) takes about 6 µs. A Switch toggle,
+  thumb animation included, takes about 8 µs.
 - **Mounting is where the cost is paid.** A keyed row (a TextLabel with a bound
-  text) takes about 18 µs and 2.2 KB to build. A Button takes about 50 µs and
-  7.5 KB, a Switch about 120 µs and 12.6 KB, much of it creating and parenting
+  text) takes about 15 µs and 2.2 KB to build. A Button takes about 50 µs and
+  7.8 KB, a Switch about 160 µs and 15 KB, much of it creating and parenting
   instances. Each bound
   state key adds a binding, which is what lets later updates skip everything
   else. Build UI once and update it, rather than rebuilding it.
