@@ -259,11 +259,6 @@ for _, rule in Button.rules do
 		end
 	end
 end
-table.insert(iconRules, {
-	selector = ".ui-button-icon.ui-icon-untinted",
-	priority = 100,
-	properties = { ImageColor3 = "$White" },
-})
 for _, rule in iconRules do
 	table.insert(Button.rules, rule)
 end

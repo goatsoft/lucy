@@ -54,7 +54,9 @@ local rules: { Component.Rule } = {
 		priority = 0,
 		properties = { BackgroundTransparency = 1, BorderSizePixel = 0, ImageColor3 = "$Foreground" },
 	},
-	{ selector = ".ui-icon-untinted", priority = 20, properties = { ImageColor3 = "$White" } },
+	-- A picture with its own colours is never tinted, whatever a component or a game colours its
+	-- icons with: fixed, over every look (ADR 0052)
+	{ selector = ".ui-icon-untinted", fixed = true, properties = { ImageColor3 = "$White" } },
 }
 for variant, colour in COLOURS do
 	table.insert(rules, {

@@ -22,12 +22,15 @@ Folder <namePrefix>Styles (ReplicatedStorage)
 ├─ Values                 the active theme and density (switching re-points these)
 ├─ Lucy                   Lucy's base and component rules, all of them from the start
 ├─ Game                   your rules
+├─ Fixed                  Lucy's rules for what a component is: an untinted icon keeps its own
+│                         colours, a gradient's host stays white under it
 └─ Design                 live rules, added and removed while the game runs; every gui links here
 ```
 
 The rule sheets are layers (ADR 0052): each derives the one
 below, and a sheet's own rules beat every rule below it, whatever their priority. So your rules
-beat Lucy's without a priority above Lucy's, and a live rule beats both. Lucy's own rules are all
+beat Lucy's looks without a priority above Lucy's, Lucy's few fixed rules (marked `fixed = true`)
+beat yours, and a live rule beats all. Lucy's own rules are all
 in place when the app is made, so nothing is added to the styles while a player plays.
 
 ## App options

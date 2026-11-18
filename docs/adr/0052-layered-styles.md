@@ -53,13 +53,21 @@ insert pays only for its own layer's size (Core/Theme):
     Values    derives the active Theme_<name> and Density_<name> (re-pointed to switch); no rules
     Lucy      Lucy's base rules and every component's rules
     Game      the game's rules
+    Fixed     Lucy's rules for what a component is, not how it looks (`fixed = true`)
     Design    rules that come and go while the game runs (a setting switched on, say): the
               live layer, and the sheet linked to every gui
 
-A game rule beats every Lucy rule by its layer, with no Priority above Lucy's: the game sets its
+A game rule beats every Lucy look by its layer, with no Priority above Lucy's: the game sets its
 look, as an app's CSS layers over a component library's. That includes focus: Lucy's ring is a
-default the game may restyle (Dance Lab does, on its PLAY button and reward tiles), so there is no
-layer above the game's. Priority orders rules within a layer only.
+default the game may restyle (Dance Lab does, on its PLAY button and reward tiles). Priority
+orders rules within a layer only.
+
+Two of Lucy's rules are not looks but what a component is: an untinted icon keeps its picture's
+own colours (ImageColor3 white), and a gradient's host is white under it so the gradient's colours
+show. Moving Dance Lab's rules over Lucy's in a test session, these were the only real changes on
+any screen (The Lab's and the Club Pass's panels went dark, the Karma coin went purple). Lucy had
+kept them winning by repeating them at rising priorities (20, 90, 100, 201); they are now one rule
+each, `fixed = true`, in the Fixed layer over the game's.
 
 - `theme:addRules(key, rules)` from a game goes to `Game`; `{ layer = "live" }` puts rules that
   are added and removed while playing in the live layer, a small sheet, so it stays cheap.

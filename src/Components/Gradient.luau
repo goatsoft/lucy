@@ -30,8 +30,9 @@ local Gradient = {}
 local HOST = "ui-gradient-host"
 
 local rules: { Component.Rule } = {
-	-- Above a component's own fill (its variants and states), below focus
-	{ selector = "." .. HOST, priority = 90, properties = { BackgroundColor3 = "$White" } },
+	-- White under the gradient, so its own colours show, whatever fill a component or a game gives
+	-- the host: fixed, over every look (ADR 0052)
+	{ selector = "." .. HOST, fixed = true, properties = { BackgroundColor3 = "$White" } },
 }
 Gradient.rules = rules
 

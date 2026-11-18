@@ -12,12 +12,16 @@
 		├─ StyleSheet "Values"            StyleDerive -> active Theme_*, StyleDerive -> active Density_*
 		├─ StyleSheet "Lucy"              StyleDerive -> Values; Lucy's base and component rules
 		├─ StyleSheet "Game"              StyleDerive -> Lucy; the game's rules
-		└─ StyleSheet "Design"            StyleDerive -> Game; live rules (added and removed in play)
+		├─ StyleSheet "Fixed"             StyleDerive -> Game; Lucy's rules for what a component is,
+		│                                 not how it looks (an untinted icon's own colours)
+		└─ StyleSheet "Design"            StyleDerive -> Fixed; live rules (added and removed in play)
 
 	The layers (ADR 0052): a sheet's own rules beat every rule of the sheet it derives, whatever
-	their Priority, so a game's rule beats Lucy's and a live rule beats both. Priority orders
-	rules within a layer, and at equal Priority the rule added later wins. Each layer is a sheet of
-	its own because adding a rule costs in proportion to the rules already in that sheet.
+	their Priority, so a game's rule beats Lucy's look, Lucy's fixed rules beat the game's (a
+	picture that keeps its own colours is not a look to restyle), and a live rule beats all.
+	Priority orders rules within a layer, and at equal Priority the rule added later wins. Each
+	layer is a sheet of its own because adding a rule costs in proportion to the rules already in
+	that sheet.
 
 	ScreenGuis get a StyleLink to "Design" (theme:link). Switching theme or density only
 	re-points a StyleDerive on Values; tokens resolve through the derives, so every layer and every
@@ -31,6 +35,8 @@
 		{ selector = ".ui-button:Hover", priority = 20,
 		  properties = { BackgroundColor3 = "$PrimaryHover" },
 		  transitions = { BackgroundColor3 = TweenInfo.new(0.12) } }
+		{ selector = ".ui-icon-untinted", fixed = true, properties = { ImageColor3 = "$White" } }
+		                                     -- fixed: in the Fixed layer, over the game's rules
 
 		Theme.declare(key, rules)            -- Lucy's own groups, when their modules load: every
 		                                     -- theme made afterwards has them in its Lucy layer
@@ -50,6 +56,7 @@ Theme.__index = Theme
 export type Rule = {
 	selector: string,
 	priority: number?,
+	fixed: boolean?,
 	properties: { [string]: any },
 	transitions: { [string]: any }?,
 }
@@ -316,10 +323,11 @@ function Theme.new(config: { [string]: any }?): Theme
 	self._themeDerive = themeDerive
 	self._densityDerive = densityDerive
 
-	-- The layers, each deriving the one below: Lucy, the game, then live rules on top (ADR 0052)
+	-- The layers, each deriving the one below: Lucy, the game, Lucy's fixed rules, then live rules
+	-- on top (ADR 0052)
 	self._layers = {}
 	local below = values
-	for _, name in { "Lucy", "Game", "Design" } do
+	for _, name in { "Lucy", "Game", "Fixed", "Design" } do
 		local sheet = Instance.new("StyleSheet")
 		sheet.Name = name
 		local derive = Instance.new("StyleDerive")
@@ -488,7 +496,9 @@ end
 
 --[[
 	Adds a group of rules, once per key, to a layer: "game" (the default), "lucy" (Lucy's own) or
-	"live" (rules added and removed while a game runs: a small sheet, so cheap to change).
+	"live" (rules added and removed while a game runs: a small sheet, so cheap to change). A rule
+	with fixed = true goes to the Fixed layer, over the game's: for what a component is, not how it
+	looks (Lucy's own; a game's look never needs it).
 ]]
 function Theme.addRules(self: Theme, key: string, rules: { Rule }, options: { layer: string? }?)
 	local layerName = options and options.layer or "game"
@@ -513,7 +523,7 @@ function Theme.addRules(self: Theme, key: string, rules: { Rule }, options: { la
 				styleRule:SetPropertyTransitions(rule.transitions)
 			end)
 		end
-		styleRule.Parent = layer
+		styleRule.Parent = if rule.fixed then self._layers.Fixed else layer
 		if styleRule.SelectorError ~= "" then
 			warn(`[Lucy] style selector "{rule.selector}" ({key}) error: {styleRule.SelectorError}`)
 		end

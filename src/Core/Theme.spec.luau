@@ -364,14 +364,15 @@ return function()
 	end)
 
 	describe("layers (ADR 0052)", function()
-		it("stacks Values, Lucy, Game and Design, each deriving the one below", function()
+		it("stacks Values, Lucy, Game, Fixed and Design, each deriving the one below", function()
 			theme = Theme.new(config)
 			local folder = theme.folder
 			local function below(name: string): Instance?
 				local d = folder[name]:FindFirstChildOfClass("StyleDerive")
 				return d and d.StyleSheet
 			end
-			expect(below("Design")).to.equal(folder.Game)
+			expect(below("Design")).to.equal(folder.Fixed)
+			expect(below("Fixed")).to.equal(folder.Game)
 			expect(below("Game")).to.equal(folder.Lucy)
 			expect(below("Lucy")).to.equal(folder.Values)
 			expect(theme.design).to.equal(folder.Design)
@@ -420,6 +421,44 @@ return function()
 				return Harness.colorEq(colourOf(frame), hex("0000ff"))
 			end)).to.equal(true)
 			done()
+		end)
+
+		it("puts a fixed rule (what a component is, not its look) over the game's", function()
+			theme = Theme.new(config)
+			theme:addRules("lucy-fixed", {
+				{ selector = ".probe-fixed", fixed = true, properties = { BackgroundColor3 = BLUE } },
+			}, { layer = "lucy" })
+			theme:addRules("game-look", {
+				{ selector = ".probe-fixed", priority = 1000, properties = { BackgroundColor3 = RED } },
+			})
+			expect(theme.folder.Fixed:FindFirstChildOfClass("StyleRule")).to.be.ok()
+			local frame, done = probe(theme.design, "probe-fixed")
+			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			done()
+		end)
+
+		it("keeps an untinted icon's own colours and a gradient host's white under a game's look", function()
+			local Lucy = require(script.Parent.Parent)
+			local app, cleanup = Harness.app()
+			app.theme:addRules("game-tints", {
+				{ selector = ".ui-icon", priority = 500, properties = { ImageColor3 = RED } },
+				{ selector = ".probe-card", priority = 500, properties = { BackgroundColor3 = RED } },
+			})
+			local gui = Harness.mount(app)
+			local icon = Instance.new("ImageLabel")
+			icon:AddTag("ui-icon")
+			icon:AddTag("ui-icon-untinted")
+			icon.Parent = gui
+			local card = Instance.new("Frame")
+			card:AddTag("probe-card")
+			card.Parent = gui
+			Lucy.Gradient.new({ app = app, gradient = "Primary", Parent = card })
+			Harness.flush()
+			expect(Harness.colorEq(Harness.styled(icon, "ImageColor3"), Color3.new(1, 1, 1))).to.equal(true)
+			expect(Harness.colorEq(Harness.styled(card, "BackgroundColor3"), Color3.new(1, 1, 1))).to.equal(
+				true
+			)
+			cleanup()
 		end)
 
 		it("refuses a layer it does not have", function()

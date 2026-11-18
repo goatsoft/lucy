@@ -42,7 +42,6 @@ Slot.LIFT = 11
 
 Slot.rules = {
 	{ selector = ".ui-slot-text", priority = 0, properties = { BackgroundTransparency = 1 } },
-	{ selector = ".ui-icon.ui-icon-untinted", priority = 100, properties = { ImageColor3 = "$White" } },
 } :: { Component.Rule }
 
 local function pick(properties: { [string]: any }, names: { string }): { [string]: any }?

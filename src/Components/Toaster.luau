@@ -170,13 +170,6 @@ table.insert(
 	rules,
 	{ selector = ".ui-toast-shadow::UICorner", priority = 0, properties = { CornerRadius = "$RadiusLg" } }
 )
--- A toast with its kind's gradient: the fill goes white under it (over the kind's own fill, below),
--- so the gradient's colours show
-table.insert(rules, {
-	selector = ".ui-toast.ui-gradient-host",
-	priority = 201,
-	properties = { BackgroundColor3 = "$White" },
-})
 Toaster.rules = rules
 -- A kind colours the whole toast: background, border, text and the close icon
 -- (above the Button icon rules, which go up to 100).
