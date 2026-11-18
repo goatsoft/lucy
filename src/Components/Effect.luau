@@ -40,6 +40,7 @@ local Component = require(script.Parent.Parent.Core.Component)
 local Element = require(script.Parent.Parent.Core.Element)
 local Preferences = require(script.Parent.Parent.Core.Preferences)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
+local Theme = require(script.Parent.Parent.Core.Theme)
 
 local Effect = {}
 
@@ -70,6 +71,10 @@ function Effect.register(name: string, definition: Definition)
 	assert(type(name) == "string" and name ~= "", "[Lucy] an effect type needs a name")
 	assert(type(definition.render) == "function", `[Lucy] effect type "{name}" needs a render`)
 	Effect.types[name] = definition
+	-- Its looks are Lucy's, from the first theme made after it (ADR 0052)
+	if definition.rules then
+		Theme.declare("effect-" .. name, definition.rules)
+	end
 end
 
 local rules: { Component.Rule } = {
@@ -106,7 +111,7 @@ local spec: Component.Spec = {
 		local name = p.type
 		local definition = definitionOf(name)
 		if definition.rules then
-			h.app.theme:addRules("effect-" .. name, definition.rules)
+			h.app.theme:addRules("effect-" .. name, definition.rules, { layer = "lucy" })
 		end
 		checkVariant(h:get("variant"))
 		local variant, visible = h:ref("variant"), h:ref("visible")
@@ -233,5 +238,7 @@ Effect.register("shine", require(script.Parent.Effects.Shine))
 
 -- The shared textures (white, shape in the alpha) for effect types to draw with: streak, glow
 Effect.textures = require(script.Parent.Effects.Textures)
+
+Component.define(spec)
 
 return Effect

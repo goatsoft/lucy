@@ -227,4 +227,6 @@ function SortButton.new(props: Component.Props?): Component.Handle
 	return handle
 end
 
+Component.define(spec)
+
 return SortButton

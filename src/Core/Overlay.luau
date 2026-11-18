@@ -73,6 +73,7 @@ local Maid = require(script.Parent.Maid)
 local Preferences = require(script.Parent.Preferences)
 local Reactive = require(script.Parent.Reactive)
 local Scroll = require(script.Parent.Scroll)
+local Theme = require(script.Parent.Theme)
 
 local Overlay = {}
 
@@ -493,7 +494,7 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 	if not Reactive._hasOwner() then
 		error("[Lucy] Overlay.use needs an owner: call it in a component's render or an effectScope", 2)
 	end
-	app.theme:addRules("overlay", Overlay.rules)
+	app.theme:addRules("overlay", Overlay.rules, { layer = "lucy" })
 	if app.state:get("overlay") == nil then
 		app.state:set("overlay", { count = 0, modal = 0 })
 	end
@@ -1044,5 +1045,8 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		close = close,
 	}
 end
+
+-- Lucy's from the start (ADR 0052)
+Theme.declare("overlay", Overlay.rules)
 
 return Overlay

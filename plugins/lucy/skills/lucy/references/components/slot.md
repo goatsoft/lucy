@@ -73,8 +73,9 @@ badge.Instance:AddTag("my-legendary")
 ```
 
 It returns the rule and its twins (one for the slot's words, one for any Text
-below, one for any Icon below). Use a priority of 40 or more so it beats the
-component's variants.
+below, one for any Icon below). Added with `addRules`, it is in your layer, so it
+beats the component's variants whatever its priority; the priority orders it among
+your own rules.
 
 ## API
 

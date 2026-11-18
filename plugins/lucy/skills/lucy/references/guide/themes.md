@@ -124,6 +124,10 @@ Lucy.new "TextLabel" {
   use `instance:GetStyled("TextColor3")`.
 - `addRules` with a key that's already added does nothing; `removeRules(key)`
   takes them out.
+- Your rules are in a layer above Lucy's, so they win over a component's own look
+  without a high priority. Add them when your module loads, not while the player
+  plays. For rules that come and go during play (a setting switched on), pass
+  `{ layer = "live" }`: that layer is small, so changing it is cheap.
 
 ## Sizes on every device
 

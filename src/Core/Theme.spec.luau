@@ -84,7 +84,7 @@ return function()
 			theme:setDensity("touch")
 			expect(fired).to.equal("touch")
 			expect(theme:resolve("ControlMd").Y.Offset).to.equal(44)
-			local derive = theme.folder.Design:FindFirstChild("ActiveDensity")
+			local derive = theme.folder.Values:FindFirstChild("ActiveDensity")
 			expect(derive.StyleSheet).to.equal(theme.folder.Density_touch)
 		end)
 	end)
@@ -195,7 +195,7 @@ return function()
 			expect(theme:resolve("Gap")).to.equal(UDim.new(0, 8))
 		end)
 
-		it("swaps the design sheet's derive and fires Changed", function()
+		it("swaps the values sheet's derive and fires Changed", function()
 			theme = Theme.new(config)
 			local changedTo
 			theme.Changed:Connect(function(name)
@@ -205,7 +205,7 @@ return function()
 			expect(theme:get()).to.equal("dark")
 			expect(changedTo).to.equal("dark")
 			expect(theme:resolve("Primary")).to.equal(hex("0000ff"))
-			local derive = theme.folder.Design:FindFirstChildOfClass("StyleDerive")
+			local derive = theme.folder.Values:FindFirstChild("ActiveTheme")
 			expect(derive.StyleSheet).to.equal(theme.folder.Theme_dark)
 		end)
 
@@ -224,7 +224,7 @@ return function()
 			theme:addRules("x", rules)
 			theme:addRules("x", rules)
 			local count = 0
-			for _, child in theme.folder.Design:GetChildren() do
+			for _, child in theme.folder.Game:GetChildren() do
 				if child:IsA("StyleRule") and child.Selector == ".x" then
 					count += 1
 				end
@@ -279,6 +279,222 @@ return function()
 				true
 			)
 			gui:Destroy()
+		end)
+	end)
+
+	-- A linked gui with one frame tagged `tag`, styled by `sheet`; returns the frame and a cleanup
+	local function probe(sheet: StyleSheet, tag: string): (Frame, () -> ())
+		local gui = Instance.new("ScreenGui")
+		gui.Name = "LucyTest_LayerGui"
+		local link = Instance.new("StyleLink")
+		link.StyleSheet = sheet
+		link.Parent = gui
+		local frame = Instance.new("Frame")
+		frame:AddTag(tag)
+		frame.Parent = gui
+		gui.Parent = Harness.guiParent()
+		Harness.flush()
+		return frame, function()
+			gui:Destroy()
+		end
+	end
+	local RED, BLUE = Color3.new(1, 0, 0), Color3.new(0, 0, 1)
+	local function colourOf(frame: Frame): Color3
+		return Harness.styled(frame, "BackgroundColor3")
+	end
+
+	-- What Lucy's layers rest on and Roblox does not document (ADR 0052): a change here fails the
+	-- suite instead of a game's look
+	describe("the engine", function()
+		local made: { Instance } = {}
+		afterEach(function()
+			for _, instance in made do
+				instance:Destroy()
+			end
+			table.clear(made)
+		end)
+		local function sheet(): StyleSheet
+			local s = Instance.new("StyleSheet")
+			s.Parent = Harness.guiParent()
+			table.insert(made, s)
+			return s
+		end
+		local function derive(from: StyleSheet, to: StyleSheet)
+			local d = Instance.new("StyleDerive")
+			d.StyleSheet = to
+			d.Parent = from
+		end
+		local function rule(s: StyleSheet, selector: string, colour: any, priority: number?)
+			local r = Instance.new("StyleRule")
+			r.Selector = selector
+			r.Priority = priority or 0
+			r:SetProperties({ BackgroundColor3 = colour })
+			r.Parent = s
+		end
+
+		it("lets a sheet's own rules beat a derived sheet's, whatever their Priority", function()
+			local low, high = sheet(), sheet()
+			rule(low, ".probe-layer", RED, 100)
+			derive(high, low)
+			rule(high, ".probe-layer", BLUE, 0)
+			local frame, done = probe(high, "probe-layer")
+			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			done()
+		end)
+
+		it("lets the rule added later win a tie, with no specificity", function()
+			local s = sheet()
+			rule(s, "Frame.probe-tie", RED, 0)
+			rule(s, ".probe-tie", BLUE, 0)
+			local frame, done = probe(s, "probe-tie")
+			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			done()
+		end)
+
+		it("resolves tokens through derives at any depth", function()
+			local tokens, middle, top = sheet(), sheet(), sheet()
+			tokens:SetAttribute("ProbeColour", BLUE)
+			derive(middle, tokens)
+			derive(top, middle)
+			rule(top, ".probe-token", "$ProbeColour")
+			local frame, done = probe(top, "probe-token")
+			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			done()
+		end)
+	end)
+
+	describe("layers (ADR 0052)", function()
+		it("stacks Values, Lucy, Game and Design, each deriving the one below", function()
+			theme = Theme.new(config)
+			local folder = theme.folder
+			local function below(name: string): Instance?
+				local d = folder[name]:FindFirstChildOfClass("StyleDerive")
+				return d and d.StyleSheet
+			end
+			expect(below("Design")).to.equal(folder.Game)
+			expect(below("Game")).to.equal(folder.Lucy)
+			expect(below("Lucy")).to.equal(folder.Values)
+			expect(theme.design).to.equal(folder.Design)
+		end)
+
+		it("puts a game's rules over Lucy's, whatever Lucy's Priority", function()
+			theme = Theme.new(config)
+			theme:addRules("lucy-probe", {
+				{ selector = ".probe-game", priority = 100, properties = { BackgroundColor3 = RED } },
+			}, { layer = "lucy" })
+			theme:addRules("game-probe", {
+				{ selector = ".probe-game", priority = 0, properties = { BackgroundColor3 = BLUE } },
+			})
+			local frame, done = probe(theme.design, "probe-game")
+			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			done()
+		end)
+
+		it("puts live rules over the game's, in the small top sheet", function()
+			theme = Theme.new(config)
+			theme:addRules("game-probe", {
+				{ selector = ".probe-live", priority = 100, properties = { BackgroundColor3 = RED } },
+			})
+			theme:addRules("live-probe", {
+				{ selector = ".probe-live", properties = { BackgroundColor3 = BLUE } },
+			}, { layer = "live" })
+			expect(theme.folder.Design:FindFirstChildOfClass("StyleRule")).to.be.ok()
+			local frame, done = probe(theme.design, "probe-live")
+			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			theme:removeRules("live-probe")
+			expect(Harness.waitFor(function()
+				return Harness.colorEq(colourOf(frame), RED)
+			end)).to.equal(true)
+			done()
+		end)
+
+		it("lets a game rule use the theme's tokens from its layer", function()
+			theme = Theme.new(config)
+			theme:addRules("game-token", {
+				{ selector = ".probe-game-token", properties = { BackgroundColor3 = "$Primary" } },
+			})
+			local frame, done = probe(theme.design, "probe-game-token")
+			expect(Harness.colorEq(colourOf(frame), hex("ff0000"))).to.equal(true)
+			theme:set("dark")
+			expect(Harness.waitFor(function()
+				return Harness.colorEq(colourOf(frame), hex("0000ff"))
+			end)).to.equal(true)
+			done()
+		end)
+
+		it("refuses a layer it does not have", function()
+			theme = Theme.new(config)
+			expect(function()
+				theme:addRules("nowhere", {}, { layer = "top" })
+			end).to.throw()
+		end)
+	end)
+
+	describe("declared rules (ADR 0052)", function()
+		afterEach(function()
+			Theme._forget("probe-declared-a")
+			Theme._forget("probe-declared-b")
+		end)
+
+		it("builds every group declared so far into the Lucy layer, in declaration order", function()
+			Theme.declare("probe-declared-a", {
+				{ selector = ".probe-declared", properties = { BackgroundColor3 = RED } },
+			})
+			Theme.declare("probe-declared-b", {
+				{ selector = ".probe-declared", properties = { BackgroundColor3 = BLUE } },
+			})
+			theme = Theme.new(config)
+			expect(theme:hasRules("probe-declared-a") and theme:hasRules("probe-declared-b")).to.equal(true)
+			local inLucy = 0
+			for _, child in theme.folder.Lucy:GetChildren() do
+				if child:IsA("StyleRule") and child.Selector == ".probe-declared" then
+					inLucy += 1
+				end
+			end
+			expect(inLucy).to.equal(2)
+			local frame, done = probe(theme.design, "probe-declared")
+			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			done()
+		end)
+
+		it("adds nothing more when a declared group is added again", function()
+			local rules = { { selector = ".probe-declared", properties = { BackgroundColor3 = RED } } }
+			Theme.declare("probe-declared-a", rules)
+			theme = Theme.new(config)
+			local before = #theme.folder.Lucy:GetChildren()
+			theme:addRules("probe-declared-a", rules, { layer = "lucy" })
+			expect(#theme.folder.Lucy:GetChildren()).to.equal(before)
+		end)
+
+		it("has every Lucy component's rules from the start, so mounting adds none", function()
+			local Lucy = require(script.Parent.Parent)
+			local app, cleanup = Harness.app()
+			local function ruleCount(): number
+				local n = 0
+				for _, layer in { "Lucy", "Game", "Design" } do
+					for _, child in app.theme.folder[layer]:GetChildren() do
+						if child:IsA("StyleRule") then
+							n += 1
+						end
+					end
+				end
+				return n
+			end
+			for _, key in
+				{ "button", "toggle", "select", "switch", "dialog", "sheet", "menu", "overlay", "toaster" }
+			do
+				if not app.theme:hasRules(key) then
+					error(`no "{key}" rules at start`, 0)
+				end
+			end
+			local before = ruleCount()
+			local gui = Harness.mount(app)
+			Lucy.ToggleGroup.new({ app = app, items = { "A", "B" }, Parent = gui })
+			Lucy.Select.new({ app = app, items = { "A", "B" }, Parent = gui })
+			Lucy.Switch.new({ app = app, Parent = gui })
+			Lucy.Button.new({ app = app, text = "Go", Parent = gui })
+			expect(ruleCount()).to.equal(before)
+			cleanup()
 		end)
 	end)
 

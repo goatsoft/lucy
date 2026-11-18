@@ -409,4 +409,6 @@ function Arrow.new(props: { [string]: any }?)
 	return handle
 end
 
+Component.define(spec)
+
 return Arrow

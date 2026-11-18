@@ -74,6 +74,7 @@ local Gradient = require(script.Parent.Gradient)
 local PanelFrame = require(script.Parent.Parent.Core.PanelFrame)
 local Preferences = require(script.Parent.Parent.Core.Preferences)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
+local Theme = require(script.Parent.Parent.Core.Theme)
 
 local Toaster = {}
 
@@ -881,5 +882,8 @@ function Toaster.new(props: { [string]: any }?)
 		end,
 	})
 end
+
+-- Its rules are Lucy's from the start (ADR 0052): its spec is made in Toaster.new
+Theme.declare("toaster", Toaster.rules)
 
 return Toaster

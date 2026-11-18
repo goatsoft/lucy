@@ -1,6 +1,6 @@
 --!strict
 --[[
-	Theme: builds the Universal Styling sheet graph and switches themes (ADR 0003).
+	Theme: builds the Universal Styling sheet graph and switches themes (ADR 0003, 0052).
 
 		Folder <name>
 		├─ StyleSheet "Tokens"            attributes = primitives (palette, radius, space, fonts)
@@ -9,20 +9,34 @@
 		├─ StyleSheet "Density_default"   control heights + type scale
 		├─ StyleSheet "Density_touch"
 		├─ StyleSheet "Density_tv"
-		└─ StyleSheet "Design"            StyleDerive -> active Theme_*, StyleDerive -> active Density_*,
-		                                  plus every StyleRule (base rules + component rules)
+		├─ StyleSheet "Values"            StyleDerive -> active Theme_*, StyleDerive -> active Density_*
+		├─ StyleSheet "Lucy"              StyleDerive -> Values; Lucy's base and component rules
+		├─ StyleSheet "Game"              StyleDerive -> Lucy; the game's rules
+		└─ StyleSheet "Design"            StyleDerive -> Game; live rules (added and removed in play)
 
-	ScreenGuis get a StyleLink to "Design" (theme:link). Switching theme or density
-	only re-points a StyleDerive on Design, so every linked gui restyles at once.
+	The layers (ADR 0052): a sheet's own rules beat every rule of the sheet it derives, whatever
+	their Priority, so a game's rule beats Lucy's and a live rule beats both. Priority orders
+	rules within a layer, and at equal Priority the rule added later wins. Each layer is a sheet of
+	its own because adding a rule costs in proportion to the rules already in that sheet.
 
-	Base rules (always present) take control of Roblox defaults inside linked guis:
-	no default borders, no AutoButtonColor tinting, themed text, and our own
-	focus ring (".ui-focus-visible") in place of the engine's selection image.
+	ScreenGuis get a StyleLink to "Design" (theme:link). Switching theme or density only
+	re-points a StyleDerive on Values; tokens resolve through the derives, so every layer and every
+	linked gui restyles at once.
 
-	Components contribute rules through theme:addRules(key, rules); a rule is
+	Base rules take control of Roblox defaults inside linked guis: no default borders, no
+	AutoButtonColor tinting, themed text, and our own focus ring (".ui-focus-visible") in place of
+	the engine's selection image.
+
+	Rules come in groups, by key. A rule is
 		{ selector = ".ui-button:Hover", priority = 20,
 		  properties = { BackgroundColor3 = "$PrimaryHover" },
 		  transitions = { BackgroundColor3 = TweenInfo.new(0.12) } }
+
+		Theme.declare(key, rules)            -- Lucy's own groups, when their modules load: every
+		                                     -- theme made afterwards has them in its Lucy layer
+		theme:addRules(key, rules)           -- a game's group, in the Game layer
+		theme:addRules(key, rules, { layer = "live" })  -- one that comes and goes while playing
+		theme:removeRules(key) ; theme:hasRules(key)
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -47,6 +61,7 @@ export type Theme = typeof(setmetatable(
 		MetricsChanged: Signal.Signal,
 		folder: Folder,
 		design: StyleSheet,
+		_layers: { [string]: StyleSheet },
 		_rules: { [string]: { StyleRule } },
 		_themes: { [string]: StyleSheet },
 		_densities: { [string]: StyleSheet },
@@ -151,6 +166,41 @@ table.insert(Theme.baseRules, {
 	properties = { Transparency = 0 },
 })
 
+-- The layers rules go in, by the name addRules takes (ADR 0052)
+local LAYERS = { lucy = "Lucy", game = "Game", live = "Design" }
+
+-- Groups of rules declared when their modules load, in the order they loaded: every theme made
+-- afterwards builds them into its Lucy layer at once, so nothing is added while a game runs
+local declared: { { key: string, rules: { Rule } } } = {}
+local declaredKeys: { [string]: boolean } = {}
+
+--[[
+	Declares a group of Lucy's rules, once, when its module loads (Component.define does it for a
+	component's rules). A theme made afterwards has the group from the start. Declaring a key again
+	does nothing.
+]]
+function Theme.declare(key: string, rules: { Rule })
+	if declaredKeys[key] then
+		return
+	end
+	declaredKeys[key] = true
+	table.insert(declared, { key = key, rules = rules })
+end
+
+-- Takes a declared group off the list (for specs that declare their own)
+function Theme._forget(key: string)
+	if not declaredKeys[key] then
+		return
+	end
+	declaredKeys[key] = nil
+	for index, group in declared do
+		if group.key == key then
+			table.remove(declared, index)
+			break
+		end
+	end
+end
+
 local function keySet(t: { [string]: any }): string
 	local out = {}
 	for key in t do
@@ -253,24 +303,44 @@ function Theme.new(config: { [string]: any }?): Theme
 		self._densities[name] = sheet
 	end
 
-	local design = Instance.new("StyleSheet")
-	design.Name = "Design"
+	-- The values every layer reads its tokens from: the active theme and density
+	local values = Instance.new("StyleSheet")
+	values.Name = "Values"
 	local themeDerive = Instance.new("StyleDerive")
 	themeDerive.Name = "ActiveTheme"
-	themeDerive.Parent = design
+	themeDerive.Parent = values
 	local densityDerive = Instance.new("StyleDerive")
 	densityDerive.Name = "ActiveDensity"
-	densityDerive.Parent = design
-	design.Parent = folder
-	self.design = design
+	densityDerive.Parent = values
+	values.Parent = folder
 	self._themeDerive = themeDerive
 	self._densityDerive = densityDerive
+
+	-- The layers, each deriving the one below: Lucy, the game, then live rules on top (ADR 0052)
+	self._layers = {}
+	local below = values
+	for _, name in { "Lucy", "Game", "Design" } do
+		local sheet = Instance.new("StyleSheet")
+		sheet.Name = name
+		local derive = Instance.new("StyleDerive")
+		derive.Name = below.Name
+		derive.StyleSheet = below
+		derive.Parent = sheet
+		sheet.Parent = folder
+		self._layers[name] = sheet
+		below = sheet
+	end
+	self.design = self._layers.Design
 
 	self:_applyTheme(pickDefault(themes, options.default, Tokens.defaultTheme))
 	self:_applyDensity(pickDefault(densities, options.density, Tokens.defaultDensity))
 
+	-- Lucy's layer, whole, before any gui links to it: the base rules, then every declared group
 	if options.baseRules ~= false then
-		self:addRules("uikit-base", Theme.baseRules)
+		self:addRules("uikit-base", Theme.baseRules, { layer = "lucy" })
+	end
+	for _, group in declared do
+		self:addRules(group.key, group.rules, { layer = "lucy" })
 	end
 
 	folder.Parent = options.parent or ReplicatedStorage
@@ -416,10 +486,20 @@ function Theme.hasRules(self: Theme, key: string): boolean
 	return self._rules[key] ~= nil
 end
 
-function Theme.addRules(self: Theme, key: string, rules: { Rule })
+--[[
+	Adds a group of rules, once per key, to a layer: "game" (the default), "lucy" (Lucy's own) or
+	"live" (rules added and removed while a game runs: a small sheet, so cheap to change).
+]]
+function Theme.addRules(self: Theme, key: string, rules: { Rule }, options: { layer: string? }?)
+	local layerName = options and options.layer or "game"
+	local sheetName = LAYERS[layerName]
+	if not sheetName then
+		error(`[Lucy] addRules: unknown layer "{tostring(layerName)}" (lucy, game or live)`, 2)
+	end
 	if self._rules[key] then
 		return
 	end
+	local layer = self._layers[sheetName]
 	local created = {}
 	for index, rule in rules do
 		local styleRule = Instance.new("StyleRule")
@@ -433,7 +513,7 @@ function Theme.addRules(self: Theme, key: string, rules: { Rule })
 				styleRule:SetPropertyTransitions(rule.transitions)
 			end)
 		end
-		styleRule.Parent = self.design
+		styleRule.Parent = layer
 		if styleRule.SelectorError ~= "" then
 			warn(`[Lucy] style selector "{rule.selector}" ({key}) error: {styleRule.SelectorError}`)
 		end

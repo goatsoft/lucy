@@ -622,4 +622,6 @@ function Slider.new(props: { [string]: any }?)
 	return handle
 end
 
+Component.define(spec)
+
 return Slider

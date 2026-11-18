@@ -12,7 +12,7 @@
 			(> .ui-slot-text) get its colour, fade, font and size; any Text below (>> .ui-text)
 			its colour and fade; any Icon below (>> .ui-icon) the colour and fade as ImageColor3
 			and ImageTransparency. Each twin sits 11 above its rule: over Text's and Icon's own
-			variants (10), under a game's tone rules (40 and up).
+			variants (10). A game's rules are in a layer above Lucy's (ADR 0052) and beat both.
 
 		Slot.beside(".ui-checkbox-root")
 			the same for a slot beside a control (a label in a row): Foreground words, faded when

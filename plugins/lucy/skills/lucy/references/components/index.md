@@ -183,9 +183,11 @@ sideways or a short window), `default`. First match in that order wins.
 
 A component is a spec table passed to `Lucy.Component.mount` with each mount's
 props. `render` runs once to describe the instances, and bindings keep them in
-step with state from then on. For the full walkthrough, rules and performance
-notes, see [Build a component](../guide/components.md) and
-[Benchmarks](https://lucy.goatsoft.io/docs/benchmarks/).
+step with state from then on. A spec with style `rules` is declared once, at the
+end of its module, with `Lucy.Component.define(spec)`: an app made afterwards has
+its rules from the start, so none are added while a player plays. For the full
+walkthrough, rules and performance notes, see
+[Build a component](../guide/components.md) and [Benchmarks](https://lucy.goatsoft.io/docs/benchmarks/).
 
 ## Roadmap
 

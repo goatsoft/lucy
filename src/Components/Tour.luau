@@ -79,6 +79,7 @@ local Overlay = require(script.Parent.Parent.Core.Overlay)
 local Preferences = require(script.Parent.Parent.Core.Preferences)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
+local Theme = require(script.Parent.Parent.Core.Theme)
 local UiEvents = require(script.Parent.Parent.Core.UiEvents)
 
 local Tour = {}
@@ -312,7 +313,7 @@ function Tour.new(app: any, options: { [string]: any })
 		text[key] = value
 	end
 
-	app.theme:addRules("tour", Tour.rules)
+	app.theme:addRules("tour", Tour.rules, { layer = "lucy" })
 
 	local self: any = setmetatable({}, Tour)
 	self.app = app
@@ -1110,5 +1111,8 @@ function Tour.destroy(self: any)
 		self.root:Destroy()
 	end
 end
+
+-- Lucy's from the start (ADR 0052)
+Theme.declare("tour", Tour.rules)
 
 return Tour

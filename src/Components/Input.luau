@@ -250,4 +250,6 @@ function Input.new(props: { [string]: any }?)
 	return handle
 end
 
+Component.define(spec)
+
 return Input

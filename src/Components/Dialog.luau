@@ -85,6 +85,7 @@ local PanelFrame = require(script.Parent.Parent.Core.PanelFrame)
 local Reactive = require(script.Parent.Parent.Core.Reactive)
 local Scroll = require(script.Parent.Parent.Core.Scroll)
 local ScrollArea = require(script.Parent.ScrollArea)
+local Theme = require(script.Parent.Parent.Core.Theme)
 
 local Dialog = {}
 
@@ -624,5 +625,8 @@ function Dialog.alert(props: { [string]: any })
 	handle = Dialog.new(p)
 	return handle
 end
+
+-- Its rules are Lucy's from the start (ADR 0052): its spec is made in Dialog.new
+Theme.declare("dialog", Dialog.rules)
 
 return Dialog

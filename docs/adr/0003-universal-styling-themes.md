@@ -1,6 +1,6 @@
 # 0003: Universal Styling for themes and component visuals
 
-- Status: accepted
+- Status: accepted; amended by 0052 (rules in layers, declared up front)
 - Date: 2026-10-30
 
 ## Context

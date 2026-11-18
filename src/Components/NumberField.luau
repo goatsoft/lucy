@@ -102,8 +102,8 @@ local spec: Component.Spec = {
 	render = function(h)
 		local p: Component.Props = h.props
 		local app = h.app
-		-- The buttons wear Button's outline icon look.
-		app.theme:addRules("button", Button.rules)
+		-- The buttons wear Button's outline icon look (Button declares its rules: ADR 0052)
+		app.theme:addRules("button", Button.rules, { layer = "lucy" })
 		local value, min, max = h:ref("value"), h:ref("min"), h:ref("max")
 		local disabled = h:ref("disabled")
 		local format: (number) -> string = p.format or NumberField.format
@@ -326,5 +326,7 @@ function NumberField.new(props: { [string]: any }?)
 
 	return handle
 end
+
+Component.define(spec)
 
 return NumberField

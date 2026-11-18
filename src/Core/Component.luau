@@ -14,7 +14,7 @@
 		local spec = {                     -- one per kind, shared by every mount
 			kind = "switch",
 			defaults = { checked = false, ... }, -- the keys that live in state
-			rules = Switch.rules,          -- registered on the theme once per kind
+			rules = Switch.rules,          -- declared once per kind (Component.define, ADR 0052)
 			render = function(h)           -- runs once per mount, in the component's scope
 				local checked = h:ref("checked")
 				Lucy.watch(checked, function(on) ... end) -- side effects only
@@ -47,6 +47,7 @@
 ]]
 
 local CollectionService = game:GetService("CollectionService")
+local RunService = game:GetService("RunService")
 
 local Context = require(script.Parent.Context)
 local Element = require(script.Parent.Element)
@@ -451,13 +452,45 @@ export type Spec = {
 	mounted: ((handle: Handle) -> ())?,
 }
 
+--[[
+	Declares a spec's rules, when its module loads, under the key mount uses (its ruleKey, else its
+	kind): every App made afterwards has them in its theme's Lucy layer from the start, so no
+	component adds a rule while a game runs (ADR 0052). Call it once, at the end of the module:
+
+		local spec: Component.Spec = { kind = "switch", rules = Switch.rules, render = ... }
+		...
+		Component.define(spec)
+		return Switch
+
+	A game's own components call it too. Returns the spec.
+]]
+function Component.define(spec: Spec): Spec
+	if spec.rules then
+		Theme.declare(spec.ruleKey or spec.kind, spec.rules)
+	end
+	return spec
+end
+
+-- Kinds already warned about having no declared rules (once each)
+local undeclared: { [string]: boolean } = {}
+
 function Component.mount(spec: Spec, props: Props?): Handle
 	local props: Props = props or spec.props or {}
 	local app = Component.resolveApp(props)
 	local kind: string = spec.kind
 
 	if spec.rules then
-		app.theme:addRules(spec.ruleKey or kind, spec.rules)
+		local key = spec.ruleKey or kind
+		if not app.theme:hasRules(key) then
+			-- Not declared before the App was made: added now, mid-game, at the layer's cost
+			if not undeclared[key] and RunService:IsStudio() then
+				undeclared[key] = true
+				warn(
+					`[Lucy] "{kind}" added its rules on its first mount; call Component.define(spec) when its module loads (ADR 0052)`
+				)
+			end
+			app.theme:addRules(key, spec.rules, { layer = "lucy" })
+		end
 	end
 
 	local id = props.id or app:nextId(kind)

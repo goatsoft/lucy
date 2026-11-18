@@ -55,7 +55,7 @@ local spec: Component.Spec = {
 		-- The named gradient's tag; its rule joins the theme the first time the name is used
 		local function named(): string
 			local current = name()
-			h.app.theme:addRules("gradient-" .. current, rulesFor(current))
+			h.app.theme:addRules("gradient-" .. current, rulesFor(current), { layer = "lucy" })
 			return tagFor(current)
 		end
 		return Element.new("UIGradient", {
@@ -180,5 +180,7 @@ function Gradient.between(
 	end
 	return ColorSequence.new(points)
 end
+
+Component.define(spec)
 
 return Gradient

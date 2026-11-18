@@ -446,4 +446,6 @@ function Button.close(props: { [string]: any }?)
 	return handle
 end
 
+Component.define(spec)
+
 return Button

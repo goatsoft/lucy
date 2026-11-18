@@ -53,16 +53,16 @@ insert pays only for its own layer's size (Core/Theme):
     Values    derives the active Theme_<name> and Density_<name> (re-pointed to switch); no rules
     Lucy      Lucy's base rules and every component's rules
     Game      the game's rules
-    Live      rules that come and go while the game runs (a setting switched on, say)
-    Design    Lucy's must-win rules: the focus ring. Linked to every gui
+    Design    rules that come and go while the game runs (a setting switched on, say): the
+              live layer, and the sheet linked to every gui
 
 A game rule beats every Lucy rule by its layer, with no Priority above Lucy's: the game sets its
-look, as an app's CSS layers over a component library's. Lucy's focus ring sits above the game
-(as CSS `!important` reverses layers), so no game colour can hide where keyboard and gamepad focus
-is. Priority orders rules within a layer only.
+look, as an app's CSS layers over a component library's. That includes focus: Lucy's ring is a
+default the game may restyle (Dance Lab does, on its PLAY button and reward tiles), so there is no
+layer above the game's. Priority orders rules within a layer only.
 
 - `theme:addRules(key, rules)` from a game goes to `Game`; `{ layer = "live" }` puts rules that
-  are added and removed while playing in `Live`, a small sheet, so it stays cheap.
+  are added and removed while playing in the live layer, a small sheet, so it stays cheap.
 - Within a layer, rules keep the order they were declared in (option (a) of the discussion), which
   is now fixed: a later rule wins a tie. Priority stays for genuine exceptions.
 
@@ -95,9 +95,10 @@ Sheet, and the 2,012 rules Dance Lab writes become Lucy's to generate, from a pa
 - Nothing styles itself into the sheet while a game runs, unless the game asks for a live rule.
 - A game no longer needs Priorities above Lucy's to win; existing ones keep working, ordered
   within the game's layer.
-- A game rule that relied on losing to a Lucy rule (a state such as hover or disabled, with a
-  higher Priority than the game's) now wins and has to say its state itself, as CSS layers do.
-  Moving a game is checked by comparing every styled property on each screen before and after.
+- A game rule that relied on losing to a Lucy rule (Lucy's focus rules, Priority 100, over a
+  game's 40 to 99) now wins and has to say its state itself, as CSS layers do: a game that
+  recolours a stroke or a fill says what it looks like focused too. Moving a game is checked by
+  comparing every styled property on each screen before and after.
 - Equal-Priority ties no longer depend on the order screens were opened.
 - Every component's rules exist from the start, even for kinds a game never shows: a bigger Lucy
   layer, paid once at start, never during play.

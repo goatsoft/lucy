@@ -597,4 +597,6 @@ function Table.new(props: { [string]: any }?)
 	return Component.mount(spec, props)
 end
 
+Component.define(spec)
+
 return Table

@@ -278,7 +278,10 @@ its value whenever it changes.
 
 The Stepper sets `BackgroundTransparency` directly because a transparent frame
 is not a look. For colours, fonts and sizes, add tags and rules so themes and
-density apply. See [Writing a component](../components/index.md#writing-a-component)
+density apply. Put the rules in the spec (`rules = Stepper.rules`) and declare
+the spec at the end of the module, before `return Stepper`, with
+`Lucy.Component.define(spec)`: every app made afterwards has its rules from the
+start, so adding the first Stepper mid-game adds no styles. See [Writing a component](../components/index.md#writing-a-component)
 for rules, variants as tags, and why watchers are kept for side effects only.
 
 ## Next

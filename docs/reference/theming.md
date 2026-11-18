@@ -19,8 +19,16 @@ Folder <namePrefix>Styles (ReplicatedStorage)
 ├─ Tokens                 primitives: palette, radius, space, fonts, stroke
 ├─ Theme_light, _dark...  colour tokens, one sheet per theme
 ├─ Density_default, _touch, _tv   control heights and type scale
-└─ Design                 the active theme + density, and every style rule
+├─ Values                 the active theme and density (switching re-points these)
+├─ Lucy                   Lucy's base and component rules, all of them from the start
+├─ Game                   your rules
+└─ Design                 live rules, added and removed while the game runs; every gui links here
 ```
+
+The rule sheets are layers (ADR 0052): each derives the one
+below, and a sheet's own rules beat every rule below it, whatever their priority. So your rules
+beat Lucy's without a priority above Lucy's, and a live rule beats both. Lucy's own rules are all
+in place when the app is made, so nothing is added to the styles while a player plays.
 
 ## App options
 
@@ -170,7 +178,7 @@ themes.dark.PrimaryForeground = Lucy.Tokens.onColor("$Primary")
 | `getDensity()`, `setDensity(name)` | the current density |
 | `setTextGrowth(grow)` | grows `ControlSm`, `ControlMd` and `ControlLg` by `grow(size)` of their text size, in every density; `nil` takes it off. The app sets it from the player's text size |
 | `resolve(token)` | the value a token has right now, through aliases: `resolve("Primary")` is a `Color3` |
-| `addRules(key, rules)` | adds style rules under a key; does nothing if the key is there |
+| `addRules(key, rules, { layer? })` | adds style rules under a key, in your `Game` layer; `{ layer = "live" }` for rules you add and remove while playing (a setting switched on); does nothing if the key is there |
 | `removeRules(key)`, `hasRules(key)` | takes a key's rules out; checks for them |
 | `link(gui)` | styles a ScreenGui you made yourself (scenes and portals are linked already) |
 | `Changed`, `DensityChanged` | signals, fired with the new name |
@@ -183,12 +191,21 @@ A rule is a table:
 | Field | What it is |
 |---|---|
 | `selector` | which instances: a class (`TextLabel`), a tag (`.shop-price`), states (`:Hover`, `:Press`), children (`> .x`) and descendants (`>> .x`) |
-| `priority` | which rule wins when several match; higher wins |
+| `priority` | which rule wins when several in the same layer match; higher wins, and at equal priority the rule added later |
 | `properties` | property values; `$Name` for tokens |
 | `transitions` | optional `TweenInfo` per property, for smooth changes |
 
-Lucy's own rules use these priority bands, so pick yours to fit: reset -100,
-base 0, variant and size 10, state 20, disabled 30, focus ring 100.
+Priority only orders rules within a layer. Your layer is above Lucy's, so your
+rules need no priority to beat Lucy's: state what a thing looks like, and for its
+states (`:Hover`, `.ui-disabled`, `.ui-focus-visible`) add a rule of its own with a
+higher priority than your base rule. Lucy's layer uses reset -100, base 0, variant
+and size 10, state 20, disabled 30 and focus ring 100. Roblox has no CSS
+specificity: a more specific selector does not win by itself.
+
+Your own components declare their rules when their module loads, as Lucy's do:
+`Component.define(spec)` at the end of the module, so an app made afterwards has
+them from the start. A component that does not, adds them on its first mount (and
+warns in Studio).
 
 Components carry tags you can match too: `ui-<component>` (such as
 `ui-button`), `ui-<component>-<key>-<value>` for variants (`ui-button-variant-outline`),

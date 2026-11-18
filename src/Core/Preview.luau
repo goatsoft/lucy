@@ -43,6 +43,7 @@ local App = require(script.Parent.App)
 local Component = require(script.Parent.Component)
 local Context = require(script.Parent.Context)
 local Reactive = require(script.Parent.Reactive)
+local Theme = require(script.Parent.Theme)
 
 export type Control = {
 	name: string,
@@ -330,7 +331,7 @@ local function mountNow(story: Story, options: { [string]: any }?): Mounted
 		namePrefix = opts.namePrefix or "LucyPreview_",
 		input = inputFor(opts.device),
 	})
-	app.theme:addRules("preview", Preview.rules)
+	app.theme:addRules("preview", Preview.rules, { layer = "lucy" })
 
 	local gui = app:portal("preview", { displayOrder = opts.displayOrder or 5 })
 	local inset = opts.inset or {}
@@ -494,5 +495,8 @@ function Preview.clear()
 		shown = nil
 	end
 end
+
+-- Lucy's from the start (ADR 0052)
+Theme.declare("preview", Preview.rules)
 
 return Preview
