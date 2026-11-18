@@ -36,7 +36,7 @@
 		D-pad around tiles.
 
 	Scopes:
-		pushScope({ root, defaultFocus, returnFocus }) confines Tab/arrow navigation
+		pushScope({ root, defaultFocus, returnFocus, ready }) confines Tab/arrow navigation
 		to `root` (dialogs and modal scenes push one). When the player picks up a
 		gamepad or presses Tab with nothing selected, the top scope's defaultFocus
 		is selected, when it is pushed and again a frame later if focus ended up
@@ -97,6 +97,9 @@ export type Scope = {
 	returnFocus: any?,
 	holds: boolean?,
 	orphaned: boolean?,
+	-- false while its controls are not where the player will see them (a panel waiting off the
+	-- screen for the frame that measures it, ADR 0050): the default goes to the engine after
+	ready: (() -> boolean)?,
 }
 
 export type InputManager = typeof(setmetatable(
@@ -508,7 +511,9 @@ function InputManager.pushScope(self: InputManager, scope: Scope): () -> ()
 				return
 			end
 			local size = focused.AbsoluteSize
-			if isShown(focused) and size.X > 0 and size.Y > 0 then
+			-- The engine drops a selection off the screen: wait for the scope's panel to be placed
+			local placed = scope.ready == nil or scope.ready()
+			if placed and isShown(focused) and size.X > 0 and size.Y > 0 then
 				self:focus(focused)
 			elseif tries < SETTLE_FRAMES then
 				tries += 1

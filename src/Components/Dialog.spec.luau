@@ -995,6 +995,36 @@ return function()
 			expect(app.state:get("overlay.top")).to.equal("below")
 		end)
 
+		it("hands the engine its default focus once it is placed on the screen", function()
+			local GuiService = game:GetService("GuiService")
+			local RunService = game:GetService("RunService")
+			if not RunService:IsClient() then
+				return -- the engine's selection: a client only
+			end
+			local gui = Harness.mount(app)
+			local hud = Instance.new("TextButton")
+			hud.Size = UDim2.fromOffset(120, 40)
+			hud.Parent = gui
+			app.input:setMode("keyboard")
+			app.input:focus(hud)
+			local dialog = Dialog.new({
+				app = app,
+				title = "Done",
+				actions = { { text = "Again" }, { text = "Claim" } },
+				defaultFocus = function(d)
+					return d.actions[1]
+				end,
+			})
+			dialog:open()
+			for _ = 1, 12 do
+				RunService.RenderStepped:Wait()
+			end
+			expect(app.input:focused()).to.equal(dialog.actions[1].Instance)
+			expect(GuiService.SelectedObject).to.equal(dialog.actions[1].Instance)
+			dialog:close()
+			GuiService.SelectedObject = nil
+		end)
+
 		it("shows the first frame of a fresh open off the screen, and then where it belongs", function()
 			local Overlay = require(script.Parent.Parent.Core.Overlay)
 			local RunService = game:GetService("RunService")

@@ -983,6 +983,10 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 	if modal or options.focus == true then
 		Composables.useFocusScope(app, open, {
 			root = content,
+			-- measureFirst: the default goes to the engine once the content is placed on the screen
+			ready = function(): boolean
+				return measured
+			end,
 			defaultFocus = function(): any
 				local target = options.defaultFocus
 				if type(target) == "function" then
