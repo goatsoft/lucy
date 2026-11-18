@@ -167,7 +167,9 @@ Lucy.Stack.new({
   `app.state` subscribers and `handle:get` see them.
 - **Lifetime.** A component created inside an effect, a `show` branch, an `each`
   item or a scope is destroyed when that owner stops. Destroying it stops its
-  bindings.
+  bindings. Destroying its frame, or a panel or gui above it, destroys it too, so
+  nothing it watches keeps running; `app:destroy()` stops every component before
+  it removes their guis.
 - Callback and layout props (`onClick`, `children`, `gap`, ...) stay plain.
 
 ## Responsive values

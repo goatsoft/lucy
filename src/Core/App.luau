@@ -460,6 +460,15 @@ function App.destroy(self: App)
 		return
 	end
 	self.destroyed = true
+	-- Its components stop first, while their frames still stand: their size watchers are off
+	-- before the guis collapse, instead of answering every frame's removal on the way down
+	local handles = {}
+	for _, handle in self._handles do
+		table.insert(handles, handle)
+	end
+	for _, handle in handles do
+		handle:destroy()
+	end
 	self.maid:clean()
 	self._portals = {}
 	self._handles = {}

@@ -37,6 +37,15 @@ local Reactive = require(script.Parent.Reactive)
 
 local Element = {}
 
+-- The frame Roblox is destroying while the components in it stop (Component sets it): what is
+-- inside it is already going, and Destroy there throws (its Parent is locked)
+Element.dying = nil :: Instance?
+
+function Element.going(instance: Instance): boolean
+	local dying = Element.dying
+	return dying ~= nil and (instance == dying or instance:IsDescendantOf(dying))
+end
+
 local KEY = "__lucyKey"
 local ORDER_SLOT = 100000 -- LayoutOrder room per child position, for show/each slots
 local CALLBACKS = { OnInvoke = true, OnClientInvoke = true, OnServerInvoke = true }
@@ -466,7 +475,9 @@ local function grouped(owner: any, instance: Instance, props: { [any]: any }): I
 		Reactive.onCleanup(function()
 			groups[owner] = nil
 			for i = #list, 1, -1 do
-				list[i]:Destroy()
+				if not Element.going(list[i]) then
+					list[i]:Destroy()
+				end
 			end
 		end)
 	end

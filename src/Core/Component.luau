@@ -37,7 +37,9 @@
 	`checked = isOn` keeps a Switch and a ref in step. A read-only source is a
 	derived key: it follows the source, a local write overrides it, and the
 	source's next change wins. A component created inside an effect, a scope or an
-	`each` item is destroyed when that owner stops.
+	`each` item is destroyed when that owner stops. It is also destroyed when its
+	frame is (a panel or gui above it destroyed), and an app stops all of its
+	components before it destroys their guis.
 
 	A spec built once and shared costs nothing per mount; render reads per-mount
 	props (callbacks and the like) from `h.props`. `mount({ ..., props = props })`
@@ -47,6 +49,7 @@
 local CollectionService = game:GetService("CollectionService")
 
 local Context = require(script.Parent.Context)
+local Element = require(script.Parent.Element)
 local Maid = require(script.Parent.Maid)
 local Reactive = require(script.Parent.Reactive)
 local Signal = require(script.Parent.Signal)
@@ -364,8 +367,10 @@ function Handle.destroy(self: Handle)
 		scope:stop() -- first: render's bindings and watchers end before anything else
 	end
 	self.maid:clean()
-	if self.Instance then
-		self.Instance:Destroy()
+	-- Not when Roblox is already destroying it or a frame above it (Element.going): it goes anyway
+	local instance = self.Instance
+	if instance and not Element.going(instance) then
+		instance:Destroy()
 	end
 	if owner and not self.props.persist then
 		self.app.state:remove(self.path)
@@ -532,6 +537,17 @@ function Component.mount(spec: Spec, props: Props?): Handle
 	scope:onCleanup(function()
 		handle:destroy()
 	end)
+	-- Destroyed from above (its panel, its gui, the app): the component goes too, so its watchers
+	-- and frame steps do not run on for ever against a dead frame
+	handle.maid:give(root.Destroying:Connect(function()
+		local outer = Element.dying
+		Element.dying = root
+		local ok, err = pcall(handle.destroy, handle)
+		Element.dying = outer
+		if not ok then
+			error(err, 0)
+		end
+	end))
 
 	-- Each source drives its key; for a bound source this is the only copy, and the
 	-- store skips equal values, so nothing ping-pongs.

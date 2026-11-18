@@ -205,6 +205,46 @@ return function()
 			-- 1,000 mounts): the handle, its scope and maid, its state table, one bound key.
 			expect(least < 2400).to.equal(true)
 		end)
+
+		-- A frame destroyed from above (its panel, its gui, the app) takes its component with it:
+		-- watchers left running on a dead frame are memory and frame time that never come back
+		it("stops when an ancestor destroys its instance", function()
+			local Reactive = require(script.Parent.Reactive)
+			local text = Reactive.ref("one")
+			local holder = Instance.new("Frame")
+			holder.Parent = Harness.mount(app)
+			local handle, renders = mountThing({ app = app, id = "orphan", text = text, Parent = holder })
+			local before = renders()
+			holder:Destroy()
+			expect(handle.destroyed).to.equal(true)
+			expect(app.state:get("ui.orphan")).to.equal(nil)
+			text("two")
+			expect(renders()).to.equal(before)
+		end)
+
+		it("is stopped before its gui goes when the app is destroyed", function()
+			-- Its size watchers must be off before the frames collapse, or they answer every frame's
+			-- removal (an overlay placing itself, a sheet measuring its header) all the way down
+			local gui = Harness.mount(app)
+			local handle = mountThing({ app = app, Parent = gui })
+			local stoppedFirst = nil
+			gui.Destroying:Connect(function()
+				stoppedFirst = handle.destroyed
+			end)
+			app:destroy()
+			expect(stoppedFirst).to.equal(true)
+		end)
+
+		it("stops when its app is destroyed", function()
+			local Reactive = require(script.Parent.Reactive)
+			local text = Reactive.ref("one")
+			local handle, renders = mountThing({ app = app, text = text, Parent = Harness.mount(app) })
+			local before = renders()
+			app:destroy()
+			expect(handle.destroyed).to.equal(true)
+			text("two")
+			expect(renders()).to.equal(before)
+		end)
 	end)
 
 	describe("reactive props", function()
