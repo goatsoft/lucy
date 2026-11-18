@@ -456,6 +456,8 @@ export type Overlay = {
 	safeBottom: () -> number,
 	-- Whether it is on screen: open, or closed and still sliding out (a drawer)
 	visible: () -> boolean,
+	-- Places it again while open (nothing while closed)
+	place: () -> (),
 	close: (reason: string?) -> (),
 }
 
@@ -887,6 +889,17 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 			place()
 		end
 	end)
+	-- A width that changes while open places it again: a Menu's rows are measured once they are
+	-- built, after it opens (ADR 0049)
+	if type(options.width) == "function" then
+		Reactive.watch(function(): number?
+			return Reactive.toValue(options.width)
+		end, function()
+			if Reactive.peek(open) then
+				place()
+			end
+		end)
+	end
 
 	Reactive.watch(open, function(isOpen, previous)
 		if isOpen and not previous then
@@ -964,6 +977,13 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		end,
 		visible = function(): boolean
 			return open() or closing()
+		end,
+		-- Places it again while open, for an owner whose content changed size in a way the
+		-- content's own size does not show (a fan's labels measured after it opened)
+		place = function()
+			if Reactive.peek(open) then
+				place()
+			end
 		end,
 		close = close,
 	}

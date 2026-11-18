@@ -656,6 +656,42 @@ return function()
 			scope:stop()
 		end)
 
+		it("places it again when its width changes while open, and lets its owner place it again", function()
+			local gui = Harness.mount(app)
+			local trigger = Instance.new("TextButton")
+			trigger.Size = UDim2.fromOffset(160, 32)
+			trigger.Position = UDim2.fromOffset(40, 40)
+			trigger.Parent = gui
+			local width = Reactive.ref(200)
+			local calls = 0
+			local overlay, open, scope = make({
+				presentation = "popup",
+				anchor = trigger,
+				width = function(): number
+					return width()
+				end,
+				place = function()
+					calls += 1
+					return nil
+				end,
+			})
+			open(true)
+			expect(overlay.content.Size.X.Offset).to.equal(200)
+			width(320)
+			Harness.flush()
+			expect(overlay.content.Size.X.Offset).to.equal(320)
+			local before = calls
+			overlay.place()
+			expect(calls).to.equal(before + 1)
+			open(false)
+			width(260)
+			Harness.flush()
+			overlay.place()
+			expect(overlay.content.Size.X.Offset).to.equal(320)
+			expect(calls).to.equal(before + 1)
+			scope:stop()
+		end)
+
 		it("places the content and offers a height cap while open", function()
 			local gui = Harness.mount(app)
 			local trigger = Instance.new("TextButton")
