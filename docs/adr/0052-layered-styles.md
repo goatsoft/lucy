@@ -110,8 +110,12 @@ Sheet, and the 2,012 rules Dance Lab writes become Lucy's to generate, from a pa
 - Equal-Priority ties no longer depend on the order screens were opened.
 - Every component's rules exist from the start, even for kinds a game never shows: a bigger Lucy
   layer, paid once at start, never during play.
-- Not measured yet: whether fewer rules and fewer `>>` selectors also cut Roblox's per-frame
-  restyle cost. To be measured on a phone before and after Dance Lab moves to the palette.
+- Restyling does not get dearer with more rules or with `>>` selectors, as far as Studio shows:
+  retagging 20,000 frames under 3,400 descendant rules, 3,400 compound rules or none left every
+  frame within the throttled 67 ms (Studio, Mac, 2026-11-18). What the rule count costs is
+  adding them: a game layer of 2,841 rules is about 125 ms of start-up by the curve above. So
+  section 3 (the palette) is for how a game is written, not for frame time; still to be
+  confirmed on a phone.
 
 ## Alternatives considered
 
