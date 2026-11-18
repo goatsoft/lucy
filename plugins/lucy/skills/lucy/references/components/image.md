@@ -89,6 +89,10 @@ Ids are asset ids, urls or instances. `Lucy.Preload.isLoaded(id)` says whether
 a picture has been fetched. A virtual [Grid](grid.md#long-lists) takes a
 `preload` function and fetches every item's pictures for you.
 
+A picture warmed this way counts as loaded for `Lucy.Preload.fresh` seconds
+(120). Roblox may drop a picture nothing shows, so after that, asking for it
+again draws it again: warm close to when a picture is needed.
+
 ### Pinned pictures
 
 Roblox can unload a picture again once nothing on the screen uses it, so a

@@ -43,6 +43,8 @@ Preload.batchSize = 8
 Preload.provider = ContentProvider :: any
 -- Seconds a batch's drawn copies wait to load before the queue moves on
 Preload.warmTimeout = 5
+-- Seconds a warmed (not pinned) picture counts as loaded before it is warmed again when asked
+Preload.fresh = 120
 
 -- Where pictures are drawn once: a ScreenGui in the player's PlayerGui, under every other one.
 -- nil with no player (a server, edit mode)
@@ -107,9 +109,17 @@ export type Job = {
 
 type Entry = { key: any, jobs: { () -> () } }
 
-local loaded: { [any]: boolean } = {}
+-- When each picture was warmed (os.clock). Roblox may drop a picture nothing shows, so a warmed
+-- one counts as loaded for Preload.fresh seconds, then is warmed again when asked (ADR 0051);
+-- a pinned one stays loaded
+local loaded: { [any]: number } = {}
 -- Pinned pictures: how many jobs hold each, and its kept copy once it has loaded (ADR 0051)
 local pins: { [any]: { count: number, label: ImageLabel? } } = {}
+
+local function isFresh(key: any): boolean
+	local at = loaded[key]
+	return at ~= nil and (pins[key] ~= nil or os.clock() - at < Preload.fresh)
+end
 local waiting: { [any]: Entry } = {}
 local queue: { Entry } = {}
 local running = false
@@ -139,7 +149,7 @@ end
 
 function Preload.isLoaded(id: any): boolean
 	local key = keyOf(id)
-	return key ~= nil and loaded[key] == true
+	return key ~= nil and isFresh(key)
 end
 
 -- A pinned picture's copy, drawn for as long as it is pinned so Roblox never counts it unused.
@@ -164,7 +174,7 @@ local function keep(key: any)
 end
 
 local function finish(entry: Entry)
-	loaded[entry.key] = true
+	loaded[entry.key] = os.clock()
 	keep(entry.key)
 	waiting[entry.key] = nil
 	for _, notify in entry.jobs do
@@ -233,7 +243,7 @@ function Preload.preload(ids: { any }, options: { first: boolean?, pin: boolean?
 			table.insert(held, key)
 			keep(key)
 		end
-		if loaded[key] then
+		if isFresh(key) then
 			count(count() + 1)
 		elseif waiting[key] then
 			local entry = waiting[key]
@@ -294,8 +304,10 @@ function Preload.stats(): { pinned: number, warmed: number, waiting: number }
 	for _ in pins do
 		pinned += 1
 	end
-	for _ in loaded do
-		warmed += 1
+	for key in loaded do
+		if isFresh(key) then
+			warmed += 1
+		end
 	end
 	for _ in waiting do
 		waitingCount += 1

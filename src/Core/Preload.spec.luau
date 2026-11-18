@@ -77,6 +77,26 @@ return function()
 		host:Destroy()
 	end)
 
+	it("warms a picture again once Roblox may have dropped it, not before", function()
+		local fresh = Preload.fresh
+		Preload.fresh = 0.2
+		Preload.preload({ 21 })
+		task.wait()
+		expect(#calls).to.equal(1)
+		-- Still fresh: nothing to do
+		local again = Preload.preload({ 21 })
+		expect(again.done()).to.equal(true)
+		task.wait()
+		expect(#calls).to.equal(1)
+		task.wait(0.3)
+		-- Stale: warmed again
+		expect(Preload.isLoaded(21)).to.equal(false)
+		Preload.preload({ 21 })
+		task.wait()
+		expect(#calls).to.equal(2)
+		Preload.fresh = fresh
+	end)
+
 	describe("pinned (ADR 0051)", function()
 		local host: Folder
 		beforeEach(function()
