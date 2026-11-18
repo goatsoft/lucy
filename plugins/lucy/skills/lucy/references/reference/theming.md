@@ -112,7 +112,7 @@ The same in every theme.
 
 | Token | Value |
 |---|---|
-| `<Hue><Shade>` | every palette colour, such as `Violet500` or `Zinc950`; shades 50, 100, 200 to 900, 950 |
+| `<Hue><Shade>` | every palette colour, such as `Violet500` or `Zinc950`; shades 50, 100, 200 to 900, 950 ([Colours](colors.md) shows them all) |
 | `White`, `Black` | |
 | `RadiusXs`, `RadiusSm`, `RadiusMd`, `RadiusLg`, `RadiusXl`, `RadiusFull` | 3, 6, 8, 10, 14 px, and fully round |
 | `Space0` to `Space6`, `Space8` | 0 to 24 px in steps of 4, and 32 px |
