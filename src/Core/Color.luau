@@ -7,11 +7,11 @@
 		Lucy.Button.new({ color = "hype" })   -- the same on a component's root
 
 	A coloured container gives its colour to itself and to every tagged element inside it, as the
-	tag ui-color-<name>; the theme's rules written in $Color have a copy for each colour on that tag
-	(Core/Theme). The nearest coloured container wins, as a CSS variable does: a hype card in a
-	premium panel is hype inside, premium round it. Elements added later get the colour as they
-	arrive, and an element moved out of a container loses it. Roblox's tokens cannot be scoped below
-	a ScreenGui, so this is how a colour reaches part of one.
+	tag ui-color-<name> (and ui-colored, whatever the colour); the theme's rules written in $Color
+	have a copy for each colour on that tag (Core/Theme). The nearest coloured container wins, as a
+	CSS variable does: a hype card in a premium panel is hype inside, premium round it. Elements
+	added later get the colour as they arrive, and an element moved out of a container loses it.
+	Roblox's tokens cannot be scoped below a ScreenGui, so this is how a colour reaches part of one.
 
 	The container's colour is its attribute LucyColor; nil makes it no container (its elements take
 	the colour of the one round it). Inside an owner (a component's render, an effect scope) it stops
@@ -24,6 +24,8 @@ local Color = {}
 
 Color.attribute = "LucyColor"
 local PREFIX = "ui-color-"
+-- On everything coloured, whatever the colour: for a scoped rule that holds in any colour
+local COLORED = "ui-colored"
 
 -- The colour of the nearest coloured container at or above `instance`
 local function inherited(instance: Instance?): string?
@@ -38,26 +40,31 @@ local function inherited(instance: Instance?): string?
 	return nil
 end
 
+local function isColorTag(tag: string): boolean
+	return tag == COLORED or string.sub(tag, 1, #PREFIX) == PREFIX
+end
+
 -- Whether a rule could pick `instance` by a tag (it has one besides a colour)
 local function tagged(instance: Instance): boolean
 	for _, tag in instance:GetTags() do
-		if string.sub(tag, 1, #PREFIX) ~= PREFIX then
+		if not isColorTag(tag) then
 			return true
 		end
 	end
 	return false
 end
 
--- Gives `instance` exactly the colour tag for `colour`, or none
+-- Gives `instance` exactly the colour tag for `colour` and ui-colored, or neither
 local function paint(instance: Instance, colour: string?)
 	local want = if colour then PREFIX .. colour else nil
 	for _, tag in instance:GetTags() do
-		if string.sub(tag, 1, #PREFIX) == PREFIX and tag ~= want then
+		if isColorTag(tag) and tag ~= want and not (want and tag == COLORED) then
 			instance:RemoveTag(tag)
 		end
 	end
 	if want and tagged(instance) and not instance:HasTag(want) then
 		instance:AddTag(want)
+		instance:AddTag(COLORED)
 	end
 end
 
@@ -104,24 +111,22 @@ function Color.scope(container: Instance, name: any): () -> ()
 	local leaving: { [Instance]: boolean } = {}
 	local checking = false
 	local removing = container.DescendantRemoving:Connect(function(descendant: Instance)
-		for _, tag in descendant:GetTags() do
-			if string.sub(tag, 1, #PREFIX) == PREFIX then
-				leaving[descendant] = true
-				if not checking then
-					checking = true
-					task.defer(function()
-						checking = false
-						local list = leaving
-						leaving = {}
-						for instance in list do
-							if instance.Parent and not instance:IsDescendantOf(container) then
-								paint(instance, inherited(instance))
-							end
-						end
-					end)
+		if not descendant:HasTag(COLORED) then
+			return
+		end
+		leaving[descendant] = true
+		if not checking then
+			checking = true
+			task.defer(function()
+				checking = false
+				local list = leaving
+				leaving = {}
+				for instance in list do
+					if instance.Parent and not instance:IsDescendantOf(container) then
+						paint(instance, inherited(instance))
+					end
 				end
-				return
-			end
+			end)
 		end
 	end)
 

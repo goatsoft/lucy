@@ -187,7 +187,8 @@ local LAYERS = { lucy = "Lucy", game = "Game", live = "Design" }
 
 	A rule written in $Color, $ColorHover, $ColorForeground... is compiled: once with Primary's
 	tokens (unless scoped = true) and once per colour, with .ui-color-<name> on its first compound,
-	so it applies to what a coloured container (Core/Color) has tagged.
+	so it applies to what a coloured container (Core/Color) has tagged. A scoped rule with no
+	$Color holds in any colour: one copy, on .ui-colored.
 ]]
 Theme.SHADES = {
 	{
@@ -263,9 +264,9 @@ local function recolor(properties: { [string]: any }, token: string): { [string]
 	return out
 end
 
--- The selector for a colour: .ui-color-<name> on the first compound of each part of a list,
--- before its states and pseudo instances: ".a:Hover > .b" -> ".a.ui-color-hype:Hover > .b"
-function Theme.colorSelector(selector: string, name: string): string
+-- A tag on the first compound of each part of a selector list, before its states and pseudo
+-- instances: (".a:Hover > .b", "x") -> ".a.x:Hover > .b"
+local function onFirstCompound(selector: string, tag: string): string
 	local parts = {}
 	for _, part in string.split(selector, ",") do
 		local lead: string = string.match(part, "^%s*") or ""
@@ -273,13 +274,17 @@ function Theme.colorSelector(selector: string, name: string): string
 		local stop = string.find(body, "[%s>]") or (#body + 1)
 		local compound, rest = string.sub(body, 1, stop - 1), string.sub(body, stop)
 		local state = string.find(compound, ":", 1, true)
-		local tag = ".ui-color-" .. name
 		compound = if state
-			then string.sub(compound, 1, state - 1) .. tag .. string.sub(compound, state)
-			else compound .. tag
+			then string.sub(compound, 1, state - 1) .. "." .. tag .. string.sub(compound, state)
+			else compound .. "." .. tag
 		table.insert(parts, lead .. compound .. rest)
 	end
 	return table.concat(parts, ",")
+end
+
+-- The selector for a colour: ".a:Hover > .b" -> ".a.ui-color-hype:Hover > .b"
+function Theme.colorSelector(selector: string, name: string): string
+	return onFirstCompound(selector, "ui-color-" .. name)
 end
 
 -- Each theme's values with every named colour and its shades added, and the colours' names
@@ -704,7 +709,11 @@ function Theme.addRules(self: Theme, key: string, rules: { Rule }, options: { la
 	end
 	for index, rule in rules do
 		if not usesColor(rule.properties) then
-			make(`{key}_{index}`, rule, rule.selector, rule.properties)
+			-- Scoped with no $Color: one copy, for whatever is coloured (ui-colored)
+			local selector = if rule.scoped
+				then onFirstCompound(rule.selector, "ui-colored")
+				else rule.selector
+			make(`{key}_{index}`, rule, selector, rule.properties)
 			continue
 		end
 		-- A rule in $Color (ADR 0052): Primary's copy for where no colour is set (unless scoped),

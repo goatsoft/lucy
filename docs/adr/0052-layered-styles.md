@@ -99,15 +99,17 @@ is `color`, as Radix and MUI name it.)
 - **Rules.** A rule written in `$Color...` is compiled in the layer it is added to: a copy in Primary's
   tokens for where no colour is set (unless `scoped = true`, for a look that belongs only inside a
   coloured container), then one copy per colour with `.ui-color-<name>` on its first compound,
-  right after it so it wins a tie. Lucy's components moved every `$Primary` in their rules to
-  `$Color`, so everything that used Primary follows a colour; Ring (focus) is separate.
+  right after it so it wins a tie. A scoped rule with no `$Color` holds in any colour: one copy,
+  on `.ui-colored`, which every coloured element also has. Lucy's components moved every
+  `$Primary` in their rules to `$Color`, so everything that used Primary follows a colour; Ring
+  (focus) is separate.
 - **Scope.** Lucy builds children before their parents (`children = { Lucy.Button.new(...) }`),
   so a colour cannot follow creation (a Vue-style provide/inject would miss them): it follows
   the instance tree. `Lucy.color(container, name)` and a component's `color` prop make a coloured
   container (attribute LucyColor). It tags itself and every element in it that has a tag of its
-  own as `ui-color-<name>`, as they arrive; the nearest coloured container wins, as a CSS variable
-  does, and an element moved out loses it. Two listeners per coloured container (added, removing),
-  none per element.
+  own as `ui-color-<name>` and `ui-colored`, as they arrive; the nearest coloured container wins,
+  as a CSS variable does, and an element moved out loses it. Two listeners per coloured container
+  (added, removing), none per element.
 
 A game's toned panel is then `color = "premium"` on the Sheet, and the 2,012 rules Dance Lab
 writes by hand become Lucy's to generate.

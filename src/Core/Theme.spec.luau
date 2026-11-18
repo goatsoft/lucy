@@ -650,6 +650,20 @@ return function()
 			expect(rules[".probe-a.ui-color-hype::UIStroke, Frame.probe-b.ui-color-hype"]).to.be.ok()
 		end)
 
+		it("compiles a scoped rule with no $Color into one copy, for any coloured element", function()
+			theme = Theme.new(colours)
+			theme:addRules("probe-any", {
+				{ selector = ".probe-tab:Hover", scoped = true, properties = { TextColor3 = "$White" } },
+			})
+			local rules = selectorsOf(theme.folder.Game, "probe-any")
+			local count = 0
+			for _ in rules do
+				count += 1
+			end
+			expect(count).to.equal(1)
+			expect(rules[".probe-tab.ui-colored:Hover"]).to.be.ok()
+		end)
+
 		it("takes a colour's copies away with the rest of the group", function()
 			theme = Theme.new(colours)
 			theme:addRules("probe-gone", {

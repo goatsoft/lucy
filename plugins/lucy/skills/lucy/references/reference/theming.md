@@ -279,5 +279,13 @@ The colour goes on the first part of each selector (`.shop-card` here): a
 coloured container tags itself and every element in it that has a tag of its own,
 as `ui-color-<name>`, and the compiled rules match that.
 
+A scoped rule with no `$Color` holds in any colour, so it is compiled once, on
+`ui-colored`, which every coloured element also has:
+
+```luau
+{ selector = ".shop-tab:Hover", scoped = true, properties = { TextColor3 = "$White" } }
+-- one rule: .shop-tab.ui-colored:Hover
+```
+
 Roblox's tokens cannot be scoped below a ScreenGui, which is why a colour is a tag
 on the elements and its rules are compiled per colour (ADR 0052).
