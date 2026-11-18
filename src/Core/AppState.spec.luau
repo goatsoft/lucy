@@ -1,5 +1,6 @@
 return function()
 	local AppState = require(script.Parent.AppState)
+	local Harness = require(script.Parent.Parent.Testing.Harness)
 
 	describe("get/set", function()
 		it("reads initial values by dot path", function()
@@ -468,7 +469,8 @@ return function()
 
 		it("links a reader to the key it reads, not to the tables above it", function()
 			local state = AppState.new({ shallow = 1, a = { b = { c = { d = 1 } } } })
-			local function cost(path: string?, key: string): number
+			-- One round binding 1,000 readers of a key: KB, bytes per reader
+			local function cost(path: string?, key: string): () -> number
 				local segments = state:_segments(path)
 				local function read()
 					state:_trackedKey(segments, key)
@@ -478,19 +480,21 @@ return function()
 						Reactive.watchEffect(read)
 					end
 				end
-				local least = math.huge
-				for _ = 1, 5 do
+				return function(): number
 					local scope = Reactive.effectScope(true)
 					local before = gcinfo()
 					scope:run(bind)
-					least = math.min(least, gcinfo() - before)
+					local kb = gcinfo() - before
 					scope:stop()
+					return kb
 				end
-				return least -- KB per 1,000 readers: bytes per reader
 			end
 			local shallow = cost(nil, "shallow")
 			local deep = cost("a.b.c", "d")
-			expect(deep - shallow < 24).to.equal(true)
+			-- Side by side in each round, so both sides meet the same collector
+			expect(Harness.allocated(function()
+				return deep() - shallow()
+			end) < 24).to.equal(true)
 		end)
 
 		it("re-runs a ref onto a table when anything under it changes", function()
@@ -659,18 +663,18 @@ return function()
 				keys[i] = `k{i}`
 				fields[keys[i]] = 0
 			end
-			local least = math.huge
-			for _ = 1, 5 do
+			local kb = Harness.allocated(function(): number
 				local state = AppState.new({ ui = { play = fields } })
 				local segments = state:_segments("ui.play")
 				local before = gcinfo()
 				for i = 1, 1000 do
 					state:_writeKey(segments, keys[i], 1)
 				end
-				least = math.min(least, gcinfo() - before)
+				local grew = gcinfo() - before
 				expect(state:get("ui.play.k1000")).to.equal(1)
-			end
-			expect(least < 2).to.equal(true) -- KB over 1,000 first writes
+				return grew
+			end)
+			expect(kb < 2).to.equal(true) -- KB over 1,000 first writes
 		end)
 	end)
 end

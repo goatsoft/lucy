@@ -98,6 +98,25 @@ function Harness.waitFor(check: () -> boolean, timeout: number?): boolean
 end
 
 --[[
+	A round's usual heap growth, in KB: runs `round` once to warm up, then `rounds` times (9 by
+	default, keep it odd), and returns the median of what each round returns (its own
+	`gcinfo() - before` around the work it measures). A collection step inside a round frees memory
+	and pulls that reading down, often below zero, and a table resize pushes one up: the median
+	leaves both out, where the least of a few rounds measures the collector (and a difference of
+	two leasts fails whenever a step lands on one side only).
+]]
+function Harness.allocated(round: () -> number, rounds: number?): number
+	local count = rounds or 9
+	round()
+	local readings = table.create(count)
+	for i = 1, count do
+		readings[i] = round()
+	end
+	table.sort(readings)
+	return readings[(count + 1) // 2]
+end
+
+--[[
 	The value a property actually renders with. Reading a styled property
 	directly returns the unstyled value by design; GetStyled returns the
 	resolved one.

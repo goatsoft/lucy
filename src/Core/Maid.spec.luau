@@ -1,5 +1,6 @@
 return function()
 	local Maid = require(script.Parent.Maid)
+	local Harness = require(script.Parent.Parent.Testing.Harness)
 
 	describe("Maid", function()
 		it("cleans every kind of task, in reverse order", function()
@@ -77,16 +78,15 @@ return function()
 		end)
 
 		it("is one table", function()
-			local least = math.huge
-			for _ = 1, 5 do
+			local kb = Harness.allocated(function(): number
 				local maids = table.create(1000)
 				local before = gcinfo()
 				for i = 1, 1000 do
 					maids[i] = Maid.new()
 				end
-				least = math.min(least, gcinfo() - before)
-			end
-			expect(least < 80).to.equal(true) -- bytes per empty maid (KB over 1,000)
+				return gcinfo() - before
+			end)
+			expect(kb < 80).to.equal(true) -- bytes per empty maid (KB over 1,000)
 		end)
 	end)
 end

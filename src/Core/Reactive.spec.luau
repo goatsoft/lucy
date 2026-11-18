@@ -1,5 +1,6 @@
 return function()
 	local Reactive = require(script.Parent.Reactive)
+	local Harness = require(script.Parent.Parent.Testing.Harness)
 	local ref, computed, reactive = Reactive.ref, Reactive.computed, Reactive.reactive
 	local watch, watchEffect = Reactive.watch, Reactive.watchEffect
 
@@ -260,20 +261,20 @@ return function()
 					end
 				end
 			end
-			local least = math.huge
-			for _ = 1, 5 do
+			local kb = Harness.allocated(function(): number
 				local scope = Reactive.effectScope(true)
 				local before = gcinfo()
 				scope:run(bind)
-				least = math.min(least, gcinfo() - before)
+				local grew = gcinfo() - before
 				runs = 0
 				source(source() + 1)
 				expect(runs).to.equal(1000)
 				scope:stop()
-			end
+				return grew
+			end)
 			expect(returned).to.equal(0)
 			-- Under 400 bytes per effect, closure included (gcinfo is in KB, 1,000 effects).
-			expect(least < 400).to.equal(true)
+			expect(kb < 400).to.equal(true)
 		end)
 
 		it("keeps an effect's sources in the effect itself", function()
@@ -281,8 +282,7 @@ return function()
 			for i = 1, 1000 do
 				sources[i] = ref(i)
 			end
-			local least = math.huge
-			for _ = 1, 5 do
+			local kb = Harness.allocated(function(): number
 				local scope = Reactive.effectScope(true)
 				local before = gcinfo()
 				scope:run(function()
@@ -293,12 +293,13 @@ return function()
 						end)
 					end
 				end)
-				least = math.min(least, gcinfo() - before)
+				local grew = gcinfo() - before
 				scope:stop()
-			end
+				return grew
+			end)
 			-- Under 290 bytes for an effect reading one ref, closure included: no separate
 			-- table for its sources (gcinfo is in KB, 1,000 effects).
-			expect(least < 290).to.equal(true)
+			expect(kb < 290).to.equal(true)
 		end)
 
 		it("disposes effects created inside it when it re-runs", function()
@@ -458,8 +459,7 @@ return function()
 		end)
 
 		it("keeps each tracked key to one small table", function()
-			local least = math.huge
-			for _ = 1, 5 do
+			local kb = Harness.allocated(function(): number
 				local raw = table.create(1000, 0)
 				local scope = Reactive.effectScope(true)
 				local before = 0
@@ -471,7 +471,7 @@ return function()
 						end
 					end)
 				end)
-				least = math.min(least, gcinfo() - before)
+				local grew = gcinfo() - before
 				local runs = 0
 				scope:run(function()
 					Reactive._effect(function()
@@ -483,10 +483,11 @@ return function()
 				Reactive._changedKey(raw, 501, false)
 				scope:stop()
 				expect(runs).to.equal(2)
-			end
+				return grew
+			end)
 			-- Under 150 bytes per key: the key's set of readers, its map entry and its
 			-- place in the reader's sources (gcinfo is in KB, 1,000 keys).
-			expect(least < 150).to.equal(true)
+			expect(kb < 150).to.equal(true)
 		end)
 	end)
 

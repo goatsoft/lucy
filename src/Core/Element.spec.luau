@@ -1,6 +1,7 @@
 return function()
 	local Reactive = require(script.Parent.Reactive)
 	local Element = require(script.Parent.Element)
+	local Harness = require(script.Parent.Parent.Testing.Harness)
 	local ref, computed = Reactive.ref, Reactive.computed
 	local new, hydrate = Element.new, Element.hydrate
 
@@ -194,15 +195,14 @@ return function()
 			})
 			which(2)
 			which(1) -- warm up
-			local least = math.huge
-			for _ = 1, 3 do
+			local kb = Harness.allocated(function(): number
 				local before = gcinfo()
 				for i = 1, 1000 do
 					which(if i % 2 == 0 then 1 else 2)
 				end
-				least = math.min(least, gcinfo() - before)
-			end
-			expect(least < 8).to.equal(true)
+				return gcinfo() - before
+			end)
+			expect(kb < 8).to.equal(true)
 			expect(frame:HasTag("btn-a")).to.equal(true)
 			frame:Destroy()
 		end)
@@ -427,7 +427,6 @@ return function()
 				return hydrate(frame)({ [Element.color] = colour })
 			end)
 			colour("lab")
-			local Harness = require(script.Parent.Parent.Testing.Harness)
 			expect(Harness.waitFor(function()
 				return frame:HasTag("ui-color-lab") and not frame:HasTag("ui-color-hype")
 			end)).to.equal(true)
