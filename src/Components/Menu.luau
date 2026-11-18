@@ -74,6 +74,7 @@
 	Menu.pick and Menu.itemBounds are the geometry it uses.
 ]]
 
+local RunService = game:GetService("RunService")
 local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
 
@@ -114,6 +115,8 @@ Menu.fanGap = 10
 Menu.fanCurveGap = 34
 -- How far the stick must be pushed before it points at an item.
 Menu.deadzone = 0.5
+-- Where a ring or fan waits for the frame its new labels are measured in (built on open)
+Menu.offscreen = UDim2.fromOffset(-100000, -100000)
 
 local ACTIVATED = Element.on("Activated")
 
@@ -786,6 +789,32 @@ local spec: Component.Spec = {
 		-- A fan built as it opens has its labels measured a frame later: once they are, it is
 		-- placed again (rows built on open only: a menu built long before it opens has its labels
 		-- measured by then, and is placed as ever). At most once a frame.
+		-- With rows built on open, the first time a ring or fan shows after they are built it is
+		-- placed off the screen until a frame has laid out and measured its labels, then placed
+		-- for them: no frame shows it placed for labels not measured yet (ADR 0049, Risk). Its
+		-- focus and "open" do not wait. A list is placed as ever.
+		local measured = true
+		local function measuredNow()
+			if measured or h.destroyed then
+				return
+			end
+			measured = true
+			local overlay = overlayRef()
+			if overlay then
+				overlay.place()
+			end
+		end
+		local function settle()
+			-- After a frame has been drawn (its layout measured the labels): Heartbeat alone can come
+			-- before the next frame is drawn. A server draws nothing, so it waits a Heartbeat.
+			if RunService:IsClient() then
+				RunService.RenderStepped:Once(function()
+					RunService.Heartbeat:Once(measuredNow)
+				end)
+			else
+				RunService.Heartbeat:Once(measuredNow)
+			end
+		end
 		local replacing = false
 		local function replace()
 			if replacing or p._menuMount == "immediate" or variant() ~= "arc" then
@@ -1075,6 +1104,7 @@ local spec: Component.Spec = {
 				keep = p._menuKeep,
 				build = function()
 					make()
+					measured = false
 					if p.onBuild then
 						p.onBuild(h)
 					end
@@ -1189,7 +1219,9 @@ local spec: Component.Spec = {
 				end
 				return {
 					anchorPoint = Vector2.new(0.5, 0.5),
-					position = UDim2.fromOffset(math.floor(center.X + 0.5), math.floor(center.Y + 0.5)),
+					position = if measured
+						then UDim2.fromOffset(math.floor(center.X + 0.5), math.floor(center.Y + 0.5))
+						else Menu.offscreen,
 					maxHeight = view.Y,
 				}
 			end,
@@ -1225,6 +1257,9 @@ local spec: Component.Spec = {
 		end)
 
 		Reactive.watch(shown, function(isOpen, previous)
+			if isOpen and not measured then
+				settle()
+			end
 			if previous ~= nil and (isOpen == true) ~= (previous == true) then
 				h:emit(if isOpen then "open" else "close")
 			end

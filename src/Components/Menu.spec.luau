@@ -616,6 +616,43 @@ return function()
 				expect((lazy - built).Magnitude < 1).to.equal(true)
 			end)
 
+			it("keeps a fan off the screen until its labels are measured, on its first show", function()
+				-- A frame drawn, the Heartbeat after it and what that defers
+				local function nextFrame()
+					local RunService = game:GetService("RunService")
+					if RunService:IsClient() then
+						RunService.RenderStepped:Wait()
+					end
+					RunService.Heartbeat:Wait()
+					task.wait()
+				end
+				local function onScreen(menu: any): boolean
+					return menu.content.Position.X.Offset > Menu.offscreen.X.Offset / 2
+				end
+				local menu = make({ variant = "arc" })
+				menu:open()
+				expect(onScreen(menu)).to.equal(false)
+				nextFrame()
+				expect(onScreen(menu)).to.equal(true)
+				-- Kept: the next open shows it at once
+				menu:close()
+				menu:open()
+				expect(onScreen(menu)).to.equal(true)
+
+				-- Built ahead: still measured on its first show
+				local ahead = make({ variant = "radial" })
+				ahead:build()
+				ahead:open()
+				expect(onScreen(ahead)).to.equal(false)
+				nextFrame()
+				expect(onScreen(ahead)).to.equal(true)
+
+				-- Built with the menu: on screen at once, as ever
+				local now = make({ variant = "arc", mount = "immediate" })
+				now:open()
+				expect(onScreen(now)).to.equal(true)
+			end)
+
 			it("refuses keep with mount = immediate, an unknown mount and a bad onBuild", function()
 				expect(function()
 					make({ mount = "immediate", keep = false })

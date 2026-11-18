@@ -196,6 +196,10 @@ before anything hears that it opened: focus lands on the first action, it is
 placed round its rows, and `open` is reported once they are there. Once built
 they are kept, so opening it again is instant.
 
+The first time a ring or fan shows after it is built, it appears one frame
+later than it opens: that frame measures its labels, so it never shows placed
+for labels it has not measured. Focus and `open` do not wait.
+
 To style the rows (tags for the game's own look), do it in `onBuild`, which is
 called with the menu once `menu.items` and `menu.slices` exist:
 

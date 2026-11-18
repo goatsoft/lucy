@@ -168,6 +168,14 @@ the deferred path each label's size change places the fan again
 (`overlay.place()`, at most once a frame); a menu built with `mount = "immediate"`
 is placed as before.
 
+The first frame of a fan's first show measured its labels unstyled (Dance Lab's
+club fan: its right column 44 px short of where it lands). On the deferred path
+a ring or fan is placed at `Menu.offscreen` until the Heartbeat after the next
+drawn frame (Heartbeat alone can come before it), then for
+its measured labels, so it shows one frame after it opens (about 16 ms, 33 on a
+30 fps device) and never misplaced. Focus and "open" do not wait. A list is
+placed as before (JB, 2026-11-18).
+
 A game styles a menu's rows (Dance Lab tags every row, button, label and
 caption with its tone) in `onBuild = function(menu)`, called once `menu.items`
 and `menu.slices` exist, each time they are built, before the menu shows. With
