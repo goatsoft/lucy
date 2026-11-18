@@ -30,6 +30,11 @@
 			                            -- had it), an object, handle or getter, or false for nothing
 			onClose = fn,               -- (reason) "back" | "outside" | "anchor" | "code"
 			parent = nil,               -- defaults to the app's "modal" portal; false leaves it
+			host = nil,                 -- a frame in the portal to sit in (a presence's, ADR 0050): the
+			                            -- host takes the overlay's place in the stack
+			measureFirst = false,       -- true: the first time it opens, the content waits off the
+			                            -- screen until a drawn frame has measured it (content just
+			                            -- built), then is placed, and a drawer slides in
 			id = "settings",            -- shown as overlay.top in app state
 			name = "Settings",          -- the root's Name; tags = { ... } adds tags to it
 		})
@@ -58,6 +63,7 @@
 	so nothing sits under a phone's home bar.
 ]]
 
+local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
@@ -78,6 +84,8 @@ Overlay.drawerShare = 0.85 -- of the viewport height
 Overlay.slideTime = 0.2 -- seconds a drawer takes to slide in or out
 Overlay.fadeTime = 0.15 -- seconds the dimming takes to fade in or out
 Overlay.panelWidth = 360
+-- Where content waits for the frame that measures it (measureFirst)
+Overlay.offscreen = UDim2.fromOffset(-100000, -100000)
 Overlay.panelShare = 0.9 -- of the viewport width
 
 Overlay.rules = {
@@ -703,8 +711,10 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 	local slide = Instance.new("NumberValue")
 	local slideTween: Tween? = nil
 	local placedAt: UDim2? = nil
+	-- measureFirst: false until a drawn frame has measured the content (ADR 0050, 6)
+	local measured = options.measureFirst ~= true
 	local slideConnection = slide.Changed:Connect(function()
-		if placedAt then
+		if placedAt and measured then
 			content.Position = placedAt + UDim2.fromOffset(0, slide.Value)
 		end
 	end)
@@ -753,7 +763,9 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 			or Overlay.place(presentation(), input)
 		content.AnchorPoint = at.anchorPoint
 		placedAt = at.position
-		content.Position = at.position + UDim2.fromOffset(0, slide.Value)
+		content.Position = if measured
+			then at.position + UDim2.fromOffset(0, slide.Value)
+			else Overlay.offscreen
 		safeBottom(if presentation() == "drawer" then Overlay.measureSafeBottom(root, scale) else 0)
 		-- Whatever this presentation does not set comes from the content's own size,
 		-- so a drawer opened after a panel is not left full height.
@@ -769,6 +781,45 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 
 	local live = Maid.new()
 	local opener: GuiObject? = nil
+
+	-- A drawer slides up from below the screen, from its measured height.
+	local function slideIn()
+		if presentation() ~= "drawer" or Preferences.reducedMotion() then
+			return
+		end
+		local scale = Scroll.scaleOf(root)
+		local height = if scale > 0 then content.AbsoluteSize.Y / scale else 0
+		slide.Value = if height > 0 then height else (Reactive.peek(maxHeight) :: any) :: number
+		slideTween = TweenService:Create(
+			slide,
+			TweenInfo.new(Overlay.slideTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ Value = 0 }
+		);
+		(slideTween :: Tween):Play()
+	end
+
+	-- measureFirst: once a frame has been drawn (its layout measured the content), placed for
+	-- what it measured, and a drawer slides in. Heartbeat alone can come before the next frame is
+	-- drawn; a server draws nothing and waits a Heartbeat.
+	local function settle()
+		local function measuredNow()
+			if measured then
+				return
+			end
+			measured = true
+			if Reactive.peek(open) then
+				place()
+				slideIn()
+			end
+		end
+		if RunService:IsClient() then
+			RunService.RenderStepped:Once(function()
+				RunService.Heartbeat:Once(measuredNow)
+			end)
+		else
+			RunService.Heartbeat:Once(measuredNow)
+		end
+	end
 
 	local function opened()
 		live:clean()
@@ -791,16 +842,10 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		place()
 		fadeLevel.Value = 1
 		fadeTo(0, Overlay.fadeTime)
-		if presentation() == "drawer" and not Preferences.reducedMotion() then
-			local scale = Scroll.scaleOf(root)
-			local height = if scale > 0 then content.AbsoluteSize.Y / scale else 0
-			slide.Value = if height > 0 then height else (Reactive.peek(maxHeight) :: any) :: number
-			slideTween = TweenService:Create(
-				slide,
-				TweenInfo.new(Overlay.slideTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-				{ Value = 0 }
-			);
-			(slideTween :: Tween):Play()
+		if measured then
+			slideIn()
+		else
+			settle()
 		end
 		-- Words measured while it was hidden, measured again once it shows (a frame, then once the
 		-- layout has settled)
@@ -957,9 +1002,16 @@ function Overlay.use(app: any, options: { [string]: any }): Overlay
 		})
 	end
 
-	local parent = options.parent
-	if parent ~= false then
-		root.Parent = if parent then parent else app:portal("modal")
+	local host: GuiObject? = options.host
+	if host then
+		-- The host is the overlay's place among the portal's children
+		Element.hydrate(host, { ZIndex = zIndex })
+		root.Parent = host
+	else
+		local parent = options.parent
+		if parent ~= false then
+			root.Parent = if parent then parent else app:portal("modal")
+		end
 	end
 
 	return {

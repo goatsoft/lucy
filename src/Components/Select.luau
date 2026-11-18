@@ -36,12 +36,19 @@
 	when it closes. A long list scrolls. The trigger draws lucy:chevron-down
 	(see Icon to change it).
 
+	The list and its options are built the first time it opens (ADR 0050): mount = "immediate"
+	builds them with the select, keep = false takes them away once it has closed, onBuild =
+	function(select) runs once they exist, and select:build() builds them ahead. The trigger
+	shows the value from the items' data, so it needs no options while closed.
+
 	State keys: value, open, placeholder, size, disabled, visible.
 	Events: "select" with the value picked, for Lucy.useUiSound.
-	select.items holds one { root, label, check? } per option, in order.
+	select.items holds one { root, label, check? } per option, in order; select.content and
+	select.list are the list. All three are nil until built.
 ]]
 
 local Component = require(script.Parent.Parent.Core.Component)
+local Deferred = require(script.Parent.Parent.Core.Deferred)
 local Slot = require(script.Parent.Slot)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
@@ -321,178 +328,218 @@ local spec: Component.Spec = {
 		})
 		caret.Instance.Parent = trigger
 
-		-- The list.
 		local overlayRef: Reactive.Ref<Overlay.Overlay?> = Reactive.ref(nil :: Overlay.Overlay?)
-		local function isDrawer(): boolean
+		-- What the overlay, focus and the owner follow: true once it is open and its presence is
+		-- built (and a write to it writes `open`). Set below, before anything is built
+		local shown: Reactive.Ref<boolean> = open
+		h.presentation = function(): string?
 			local overlay = overlayRef()
-			return overlay ~= nil and overlay.presentation() == "drawer"
+			return if overlay then overlay.presentation() else nil
 		end
-		-- The content's own padding, top and bottom, as the rules set it.
-		local padSmall = Component.space(app, "Space1", 4).Offset
-		local padLarge = Component.space(app, "Space4", 16).Offset
-		local rows = {}
-		local listFrame = Element.new("Frame", {
-			Name = "Options",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromScale(1, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
-			Component.list({ Padding = UDim.new(0, 2) }) :: any,
-		})
-		for index, item in entries do
-			local itemValue = item.value
-			local function isPicked(): boolean
-				return has(value(), itemValue)
-			end
-			local function off(): boolean
-				return item.disabled == true
-			end
-			local function on(): boolean
-				return not off()
-			end
-			local check = nil
-			if kind == "check" then
-				check = Icon.new({
-					app = app,
-					icon = "lucy:check",
-					size = "sm",
-					name = "Check",
-					visible = isPicked,
-				})
-				check.Instance.AnchorPoint = Vector2.new(0, 0.5)
-				check.Instance.Position = UDim2.fromScale(0, 0.5)
-			end
-			local indent = if check then TICK else 0
-			local label = Element.new("TextLabel", {
-				Name = "Label",
-				LayoutOrder = 1,
-				Size = UDim2.fromScale(0, 1),
-				TextXAlignment = Enum.TextXAlignment.Left,
-				TextTruncate = Enum.TextTruncate.AtEnd,
-				Text = item.text,
-				Visible = item.text ~= "",
-				Tags = { "ui-select-option-label" :: any, Slot.TEXT_TAG, ["ui-disabled"] = off },
-			})
-			local fill = Instance.new("UIFlexItem")
-			fill.FlexMode = Enum.UIFlexMode.Fill
-			fill.Parent = label
-			-- The slot: icon, label (filling) and children in a row past the tick
-			local slot = Element.new("Frame", {
-				Name = "Slot",
-				Position = UDim2.fromOffset(indent, 0),
-				Size = UDim2.new(1, -indent, 1, 0),
-				Tags = { "ui-select-slot" },
-				Element.new("UIListLayout", {
-					SortOrder = Enum.SortOrder.LayoutOrder,
-					FillDirection = Enum.FillDirection.Horizontal,
-					VerticalAlignment = Enum.VerticalAlignment.Center,
-					Padding = UDim.new(0, 6),
-				}) :: any,
-				label,
-			})
-			if item.icon ~= nil then
-				local mark =
-					Icon.new({ app = app, icon = item.icon, size = "sm", name = "Icon", layoutOrder = 0 })
-				mark.Instance.Parent = slot
-			end
-			Slot.fill(slot, item.children, { app = app, startOrder = 1 })
-			local root = Element.new("TextButton", {
-				Name = `Option{index}`,
-				LayoutOrder = index,
-				Text = "",
-				AutoButtonColor = false,
-				Size = function(): UDim2
-					return UDim2.new(1, 0, 0, height())
-				end,
-				Interactable = on,
-				Selectable = on,
-				Tags = {
-					"ui-select-option" :: any,
-					if check then "ui-select-checks" else "ui-select-plain",
-					["ui-selected"] = isPicked,
-					["ui-disabled"] = off,
-				},
-				[ACTIVATED] = function()
-					h:select(itemValue)
-				end,
-				slot,
-			})
-			if check then
-				check.Instance.Parent = root
-			end
-			root.Parent = listFrame
-			rows[index] = { root = root, label = label, check = check }
-		end
-		h.items = rows
 
-		local list = ScrollArea.new({
-			app = app,
-			name = "List",
-			scrollbar = "auto",
-			maxHeight = function(): number
+		-- The presence (ADR 0050): the list, its options and its overlay, built on the first open (or
+		-- when made, mount = "immediate"), in its own scope (Core/Deferred)
+		local function presence()
+			-- The list.
+			local function isDrawer(): boolean
 				local overlay = overlayRef()
-				if not overlay then
-					return math.huge
-				end
-				local pad = if isDrawer() then padLarge else padSmall
-				return math.max(0, overlay.maxHeight() - pad * 2 - overlay.safeBottom())
-			end,
-			children = { listFrame },
-		})
-		h.list = list
-
-		local content = Element.new("Frame", {
-			Name = "Content",
-			Size = UDim2.fromScale(1, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
-			Active = true,
-			Tags = { "ui-select-content" :: any, ["ui-select-drawer"] = isDrawer },
-			Element.new("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder }),
-			list.Instance,
-			-- Room for a phone's home bar under a drawer; the background still runs to the edge.
-			Element.new("Frame", {
-				Name = "SafeArea",
-				LayoutOrder = 2147483647, -- last, whatever order the list was given
+				return overlay ~= nil and overlay.presentation() == "drawer"
+			end
+			-- The content's own padding, top and bottom, as the rules set it.
+			local padSmall = Component.space(app, "Space1", 4).Offset
+			local padLarge = Component.space(app, "Space4", 16).Offset
+			local rows = {}
+			local listFrame = Element.new("Frame", {
+				Name = "Options",
 				BackgroundTransparency = 1,
-				Size = function(): UDim2
-					local overlay = overlayRef()
-					return UDim2.new(1, 0, 0, if overlay then overlay.safeBottom() else 0)
-				end,
-				Visible = function(): boolean
-					local overlay = overlayRef()
-					return isDrawer() and overlay ~= nil and overlay.safeBottom() > 0
-				end,
-			}),
-		}) :: Frame
-		h.content = content
-
-		local overlay = Overlay.use(app, {
-			open = open,
-			content = content,
-			presentation = "auto",
-			prefer = "popup",
-			anchor = trigger,
-			side = p.side,
-			align = p.align,
-			name = "SelectList",
-			tags = { "ui-select-overlay" },
-			id = h.id,
-			defaultFocus = function()
-				local current = value()
-				local first
-				for index, item in entries do
-					if not item.disabled then
-						if has(current, item.value) then
-							return rows[index].root
-						end
-						first = first or rows[index].root
-					end
+				Size = UDim2.fromScale(1, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				Component.list({ Padding = UDim.new(0, 2) }) :: any,
+			})
+			for index, item in entries do
+				local itemValue = item.value
+				local function isPicked(): boolean
+					return has(value(), itemValue)
 				end
-				return first
+				local function off(): boolean
+					return item.disabled == true
+				end
+				local function on(): boolean
+					return not off()
+				end
+				local check = nil
+				if kind == "check" then
+					check = Icon.new({
+						app = app,
+						icon = "lucy:check",
+						size = "sm",
+						name = "Check",
+						visible = isPicked,
+					})
+					check.Instance.AnchorPoint = Vector2.new(0, 0.5)
+					check.Instance.Position = UDim2.fromScale(0, 0.5)
+				end
+				local indent = if check then TICK else 0
+				local label = Element.new("TextLabel", {
+					Name = "Label",
+					LayoutOrder = 1,
+					Size = UDim2.fromScale(0, 1),
+					TextXAlignment = Enum.TextXAlignment.Left,
+					TextTruncate = Enum.TextTruncate.AtEnd,
+					Text = item.text,
+					Visible = item.text ~= "",
+					Tags = { "ui-select-option-label" :: any, Slot.TEXT_TAG, ["ui-disabled"] = off },
+				})
+				local fill = Instance.new("UIFlexItem")
+				fill.FlexMode = Enum.UIFlexMode.Fill
+				fill.Parent = label
+				-- The slot: icon, label (filling) and children in a row past the tick
+				local slot = Element.new("Frame", {
+					Name = "Slot",
+					Position = UDim2.fromOffset(indent, 0),
+					Size = UDim2.new(1, -indent, 1, 0),
+					Tags = { "ui-select-slot" },
+					Element.new("UIListLayout", {
+						SortOrder = Enum.SortOrder.LayoutOrder,
+						FillDirection = Enum.FillDirection.Horizontal,
+						VerticalAlignment = Enum.VerticalAlignment.Center,
+						Padding = UDim.new(0, 6),
+					}) :: any,
+					label,
+				})
+				if item.icon ~= nil then
+					local mark =
+						Icon.new({ app = app, icon = item.icon, size = "sm", name = "Icon", layoutOrder = 0 })
+					mark.Instance.Parent = slot
+				end
+				Slot.fill(slot, item.children, { app = app, startOrder = 1 })
+				local root = Element.new("TextButton", {
+					Name = `Option{index}`,
+					LayoutOrder = index,
+					Text = "",
+					AutoButtonColor = false,
+					Size = function(): UDim2
+						return UDim2.new(1, 0, 0, height())
+					end,
+					Interactable = on,
+					Selectable = on,
+					Tags = {
+						"ui-select-option" :: any,
+						if check then "ui-select-checks" else "ui-select-plain",
+						["ui-selected"] = isPicked,
+						["ui-disabled"] = off,
+					},
+					[ACTIVATED] = function()
+						h:select(itemValue)
+					end,
+					slot,
+				})
+				if check then
+					check.Instance.Parent = root
+				end
+				root.Parent = listFrame
+				rows[index] = { root = root, label = label, check = check }
+			end
+			h.items = rows
+
+			local list = ScrollArea.new({
+				app = app,
+				name = "List",
+				scrollbar = "auto",
+				maxHeight = function(): number
+					local overlay = overlayRef()
+					if not overlay then
+						return math.huge
+					end
+					local pad = if isDrawer() then padLarge else padSmall
+					return math.max(0, overlay.maxHeight() - pad * 2 - overlay.safeBottom())
+				end,
+				children = { listFrame },
+			})
+			h.list = list
+
+			local content = Element.new("Frame", {
+				Name = "Content",
+				Size = UDim2.fromScale(1, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				Active = true,
+				Tags = { "ui-select-content" :: any, ["ui-select-drawer"] = isDrawer },
+				Element.new("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder }),
+				list.Instance,
+				-- Room for a phone's home bar under a drawer; the background still runs to the edge.
+				Element.new("Frame", {
+					Name = "SafeArea",
+					LayoutOrder = 2147483647, -- last, whatever order the list was given
+					BackgroundTransparency = 1,
+					Size = function(): UDim2
+						local overlay = overlayRef()
+						return UDim2.new(1, 0, 0, if overlay then overlay.safeBottom() else 0)
+					end,
+					Visible = function(): boolean
+						local overlay = overlayRef()
+						return isDrawer() and overlay ~= nil and overlay.safeBottom() > 0
+					end,
+				}),
+			}) :: Frame
+			h.content = content
+
+			local overlay = Overlay.use(app, {
+				open = shown,
+				content = content,
+				-- Built as it opens: its first show waits off the screen until measured (ADR 0050, 6)
+				measureFirst = true,
+				presentation = "auto",
+				prefer = "popup",
+				anchor = trigger,
+				side = p.side,
+				align = p.align,
+				name = "SelectList",
+				tags = { "ui-select-overlay" },
+				id = h.id,
+				defaultFocus = function()
+					local current = value()
+					local first
+					for index, item in entries do
+						if not item.disabled then
+							if has(current, item.value) then
+								return rows[index].root
+							end
+							first = first or rows[index].root
+						end
+					end
+					return first
+				end,
+			})
+			overlayRef(overlay)
+			Component.claimSelection(app, overlay.root)
+		end
+
+		local part = Deferred.new(h, {
+			slots = { trigger },
+			keep = p._selectKeep,
+			build = function()
+				presence()
+				if p.onBuild then
+					p.onBuild(h)
+				end
+			end,
+			-- keep = false: the overlay floats in the portal, so it goes by hand; the rest with the scope
+			removed = function()
+				local overlay = Reactive.peek(overlayRef) :: any
+				overlayRef(nil)
+				if overlay then
+					overlay.root:Destroy()
+				end
+				h.items, h.list, h.content = nil, nil, nil
 			end,
 		})
-		overlayRef(overlay)
-		h.presentation = overlay.presentation
-		Component.claimSelection(app, overlay.root)
+		h._part = part
+		shown = part:follow(open, {
+			visible = function(): boolean
+				local overlay = overlayRef()
+				return overlay ~= nil and overlay.visible()
+			end,
+		})
 
 		-- A disabled select closes and cannot open.
 		Reactive.watch(disabled, function(off)
@@ -524,6 +571,10 @@ function Select.new(props: { [string]: any }?)
 	end
 	-- Read by render (the spec is shared, so it goes through the props).
 	given._selectKind, given._selectMultiple = kind, multiple
+	given._selectMount, given._selectKeep = Deferred.mode(given, "Select")
+	if given.onBuild ~= nil and type(given.onBuild) ~= "function" then
+		error(`[Lucy] Select: onBuild is a function, not "{tostring(given.onBuild)}"`, 2)
+	end
 	local handle = Component.mount(spec, given)
 	Component.clickable(handle)
 	function handle.open(h)
@@ -581,6 +632,19 @@ function Select.new(props: { [string]: any }?)
 	handle.Activated:Connect(function()
 		handle:toggle()
 	end)
+	-- Builds the list now, without opening. Nothing happens once it is built.
+	function handle.build(h)
+		if not h.destroyed then
+			h._part:build()
+		end
+	end
+	-- The handle is finished: the presence is built now with mount = "immediate", or if it starts
+	-- open
+	local part = handle._part
+	if given._selectMount == "immediate" then
+		part:build()
+	end
+	part:start(handle:ref("open"))
 	return handle
 end
 

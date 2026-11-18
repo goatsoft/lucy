@@ -22,8 +22,8 @@ return function()
 		local sheet = Sheet.new({ app = app, id = "settings", title = "Settings" })
 		expect(sheet.Instance.Parent).to.equal(app:portal("modal"))
 		expect(sheet.Instance.Visible).to.equal(false)
-		expect(sheet.titleLabel.Text).to.equal("Settings")
 		sheet:open()
+		expect(sheet.titleLabel.Text).to.equal("Settings")
 		expect(sheet.Instance.Visible).to.equal(true)
 		app.state:set("ui.settings.open", false)
 		expect(sheet.Instance.Visible).to.equal(false)
@@ -652,7 +652,9 @@ return function()
 			expect(Harness.waitFor(function()
 				return first.destroyed
 			end)).to.equal(true)
-			expect(#panel.headerSlot:GetChildren() <= 2).to.equal(true) -- its own layout and padding
+			-- The whole presence went with it (ADR 0050)
+			expect(panel.headerSlot).to.equal(nil)
+			expect(#panel.Instance:GetDescendants()).to.equal(0)
 			panel:open()
 			expect(count[1]).to.equal(2)
 			expect(made.child.Instance.Parent).to.equal(panel.body.content)
@@ -684,18 +686,111 @@ return function()
 			expect(panel.Instance.Visible).to.equal(true)
 		end)
 
-		it("refuses build with slots, and keep without build", function()
-			expect(function()
-				Sheet.new({ app = app, build = function() end, children = { Instance.new("Frame") } })
-			end).to.throw("children")
-			expect(function()
-				Sheet.new({ app = app, keep = false })
-			end).to.throw("keep")
+		it(
+			"refuses build with slots, keep with mount = immediate, an unknown mount and a bad onBuild",
+			function()
+				expect(function()
+					Sheet.new({ app = app, build = function() end, children = { Instance.new("Frame") } })
+				end).to.throw("children")
+				expect(function()
+					Sheet.new({ app = app, mount = "immediate", keep = false })
+				end).to.throw("keep")
+				expect(function()
+					Sheet.new({ app = app, mount = "later" })
+				end).to.throw("mount")
+				expect(function()
+					Sheet.new({ app = app, onBuild = true })
+				end).to.throw("onBuild")
+			end
+		)
+	end)
+
+	describe("the presence (ADR 0050)", function()
+		local Devtools = require(script.Parent.Parent.Core.Devtools)
+		local Dialog = require(script.Parent.Dialog)
+		local Overlay = require(script.Parent.Parent.Core.Overlay)
+		local Text = require(script.Parent.Text)
+		local RunService = game:GetService("RunService")
+		local function nextFrame()
+			if RunService:IsClient() then
+				RunService.RenderStepped:Wait()
+			end
+			RunService.Heartbeat:Wait()
+			task.wait()
+		end
+
+		it("is only its host until it first opens, slots and all", function()
+			local line = Text.new({ app = app, text = "Body" })
+			local sheet = Sheet.new({ app = app, id = "slotted", title = "Hi", children = { line } })
+			expect(sheet.Instance.Parent).to.equal(app:portal("modal"))
+			expect(#sheet.Instance:GetDescendants()).to.equal(0)
+			expect(sheet.content).to.equal(nil)
+			expect(Devtools.tree({ app = app, root = "slotted" })[1].built).to.equal(false)
+			sheet:open()
+			expect(sheet.titleLabel.Text).to.equal("Hi")
+			expect(line.Instance:IsDescendantOf(sheet.body.content)).to.equal(true)
+			expect(sheet.Instance.Visible).to.equal(true)
 		end)
 
-		it("has no build() when its slots are given", function()
-			local panel = Sheet.new({ app = app, children = { Instance.new("Frame") } })
-			expect(panel.build).to.equal(nil)
+		it("builds it all when it is made with mount = immediate, or ahead with build()", function()
+			local now = Sheet.new({ app = app, title = "Now", mount = "immediate" })
+			expect(now.titleLabel.Text).to.equal("Now")
+			local ahead = Sheet.new({ app = app, title = "Ahead" })
+			ahead:build()
+			expect(ahead.titleLabel.Text).to.equal("Ahead")
+			expect(ahead:get("open")).to.equal(false)
+		end)
+
+		it(
+			"with keep = false, takes the whole presence away once it has slid out, and builds it again",
+			function()
+				local built = 0
+				local sheet = Sheet.new({
+					app = app,
+					title = "Once",
+					keep = false,
+					onBuild = function(s)
+						built += 1
+						expect(s.content).to.be.ok()
+					end,
+				})
+				sheet:open()
+				sheet:close()
+				expect(Harness.waitFor(function()
+					return #sheet.Instance:GetDescendants() == 0
+				end)).to.equal(true)
+				expect(sheet.content).to.equal(nil)
+				expect(app.state:get("overlay.count")).to.equal(0)
+				sheet:open()
+				expect(built).to.equal(2)
+				expect(sheet.titleLabel.Text).to.equal("Once")
+			end
+		)
+
+		it("stacks a dialog opened over it, and back closes the dialog first", function()
+			local sheet = Sheet.new({ app = app, id = "shop", title = "Shop" })
+			local confirm = Dialog.new({ app = app, id = "confirm", title = "Buy?" })
+			sheet:open()
+			confirm:open()
+			expect(app.state:get("overlay.top")).to.equal("confirm")
+			expect(confirm.Instance.ZIndex > sheet.Instance.ZIndex).to.equal(true)
+			expect(app.input:back()).to.equal(true)
+			expect(confirm:get("open")).to.equal(false)
+			expect(sheet:get("open")).to.equal(true)
+		end)
+
+		it("slides a fresh drawer in from where it measured, after a frame off the screen", function()
+			app.input:setMode("touch")
+			local sheet = Sheet.new({
+				app = app,
+				title = "Drawer",
+				children = { Text.new({ app = app, text = "Hi" }) },
+			})
+			sheet:open()
+			expect(sheet.presentation()).to.equal("drawer")
+			expect(sheet.frame.Position).to.equal(Overlay.offscreen)
+			nextFrame()
+			expect(sheet.frame.Position).never.to.equal(Overlay.offscreen)
 		end)
 	end)
 end

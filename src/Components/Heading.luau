@@ -23,6 +23,7 @@ local Baseline = require(script.Parent.Parent.Core.Baseline)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Marquee = require(script.Parent.Marquee)
+local Reactive = require(script.Parent.Parent.Core.Reactive)
 
 local Heading = {}
 
@@ -74,22 +75,6 @@ function Heading.new(app: any, props: { [string]: any }): (Frame, TextLabel, Tex
 		Tags = { props.descriptionTag },
 	}) :: TextLabel
 
-	-- Beside it: the rest of the line, scrolling when it is longer
-	local line = Marquee.new({
-		app = app,
-		text = descriptionText,
-		variant = "muted",
-		visible = function()
-			return hasDescription() and beside()
-		end,
-	})
-	Element.hydrate(line.Instance, {
-		Size = UDim2.fromOffset(0, 0),
-		AutomaticSize = Enum.AutomaticSize.Y,
-		LayoutOrder = 3,
-		Element.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill }),
-	})
-
 	-- With neither (a title on the panel's edge, ADR 0047, and no description) the row drops out, so
 	-- the header slot sits at the top
 	local frame = Element.new("Frame", {
@@ -114,8 +99,38 @@ function Heading.new(app: any, props: { [string]: any }): (Frame, TextLabel, Tex
 		}),
 		title,
 		description,
-		line.Instance,
 	}) :: Frame
+
+	-- Beside it: the rest of the line, scrolling when it is longer. Made the first time a
+	-- description shows beside the title (a short screen), and kept (ADR 0050, 8)
+	local function besideLine(): boolean
+		return hasDescription() and beside()
+	end
+	local lineScope = Reactive.effectScope()
+	local made = false
+	local function makeLine()
+		local line = Marquee.new({
+			app = app,
+			text = descriptionText,
+			variant = "muted",
+			visible = besideLine,
+		})
+		Element.hydrate(line.Instance, {
+			Size = UDim2.fromOffset(0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			LayoutOrder = 3,
+			Element.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill }),
+		})
+		line.Instance.Parent = frame
+	end
+	-- Why a watch: making the line is a side effect done once, the first time it is needed, in a
+	-- scope of its own so it outlives the watch's run; nothing declarative builds later and keeps
+	Reactive.watch(besideLine, function(needed)
+		if needed and not made then
+			made = true
+			lineScope:run(makeLine)
+		end
+	end, { immediate = true })
 	Baseline.follow(frame, beside)
 	return frame, title, description, shown
 end

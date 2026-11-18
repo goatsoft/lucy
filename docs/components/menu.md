@@ -206,8 +206,9 @@ Lucy.Menu.new({
 
 ## Building its rows
 
-A menu builds its rows and buttons the first time it opens, so a game with
-menus on its HUD pays for them only when a player opens one. They are built
+A menu is built the first time it opens: its overlay, its list or ring and
+every row and button. Until then nothing of it floats, so a game with menus on
+its HUD pays for them only when a player opens one. They are built
 before anything hears that it opened: focus lands on the first action, it is
 placed round its rows, and `open` is reported once they are there. Once built
 they are kept, so opening it again is instant.

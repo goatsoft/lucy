@@ -125,6 +125,7 @@ return function()
 
 	it("draws no ticks by default", function()
 		local picker = make({ value = "eu" })
+		picker:build()
 		expect(picker.items[1].check).to.equal(nil)
 		picker:open()
 		Harness.flush()
@@ -202,6 +203,7 @@ return function()
 		local picker = make({ value = "eu" })
 		picker:select("as")
 		expect(picker:get("value")).to.equal("eu")
+		picker:build()
 		expect(picker.items[3].root.Interactable).to.equal(false)
 		local off = make({ disabled = true })
 		off:click()
@@ -312,6 +314,7 @@ return function()
 				type = "check",
 				items = { { value = "eu", label = "Europe", icon = "lucy:close", children = { extra } } },
 			})
+			select:build()
 			local row = select.items[1]
 			local slot = row.root:FindFirstChild("Slot") :: any
 			expect(row.label.Parent).to.equal(slot)
@@ -322,6 +325,81 @@ return function()
 			Harness.flush()
 			local fg = app.theme:resolve("PopoverForeground")
 			expect(Harness.colorEq(Harness.styled(slot.Icon, "ImageColor3"), fg)).to.equal(true)
+		end)
+	end)
+
+	describe("the presence (ADR 0050)", function()
+		local Dialog = require(script.Parent.Dialog)
+		-- What floats in the modal portal (its StyleLink aside)
+		local function floating(): number
+			local count = 0
+			for _, child in app:portal("modal"):GetChildren() do
+				if child:IsA("GuiObject") then
+					count += 1
+				end
+			end
+			return count
+		end
+
+		it("is only its trigger until it first opens, and shows the value without options", function()
+			local select = make({ value = "na" })
+			expect(select.items).to.equal(nil)
+			expect(select.content).to.equal(nil)
+			expect(floating()).to.equal(0)
+			expect(select.valueLabel.Text).to.equal("North America")
+			select:open()
+			expect(#select.items).to.equal(4)
+			expect(select.content:IsDescendantOf(app:portal("modal"))).to.equal(true)
+		end)
+
+		it("builds its list when made with mount = immediate, or ahead with build()", function()
+			local now = make({ mount = "immediate" })
+			expect(#now.items).to.equal(4)
+			local ahead = make()
+			ahead:build()
+			expect(#ahead.items).to.equal(4)
+			expect(ahead:get("open")).to.equal(false)
+		end)
+
+		it("with keep = false, takes the list away once closed, and builds it again", function()
+			local built = 0
+			local select = make({
+				keep = false,
+				onBuild = function(s)
+					built += 1
+					expect(#s.items).to.equal(4)
+				end,
+			})
+			select:open()
+			select:close()
+			expect(Harness.waitFor(function()
+				return select.items == nil
+			end)).to.equal(true)
+			expect(floating()).to.equal(0)
+			select:open()
+			expect(built).to.equal(2)
+			expect(#select.items).to.equal(4)
+		end)
+
+		it("opens over the dialog it sits in, and back closes it first", function()
+			local dialog = Dialog.new({ app = app, id = "form", title = "Form" })
+			dialog:open()
+			local select = make({ id = "region" })
+			select.Instance.Parent = dialog.body
+			select:open()
+			expect(app.state:get("overlay.top")).to.equal("region")
+			expect(app.input:back()).to.equal(true)
+			expect(select:get("open")).to.equal(false)
+			expect(dialog:get("open")).to.equal(true)
+		end)
+
+		it("refuses keep with mount = immediate and a bad onBuild", function()
+			expect(function()
+				make({ mount = "immediate", keep = false })
+			end).to.throw("keep")
+			expect(function()
+				make({ onBuild = true })
+			end).to.throw("onBuild")
 		end)
 	end)
 end

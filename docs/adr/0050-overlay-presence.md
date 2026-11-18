@@ -147,8 +147,9 @@ entry joins the stack, and a removed presence leaves the stack before it is dest
 
 ### 8. Smaller parts inside the presence
 
-The description marquee is made only when there is a description (a string, a ref or a getter).
-The corner and its slot only when there is something for it.
+The one-line description beside the title (a Marquee, on a short screen) is made the first time a
+description shows there, and kept. The corner and its slot stay: `build` returns its corner content
+after the panel is made, and inside an opened panel they are two instances.
 
 ### 9. Devtools and the MCP
 

@@ -255,16 +255,12 @@ end
 local SLOTS = { "header", "children", "footer", "corner" }
 
 --[[
-	For Dialog and Sheet (slot components): whether `props` asks for its content to be built on
-	open, by giving one `build` function in place of the slots. Slots given: false, built at
-	once as ever. Both, or `keep` without `build`, is an error.
+	For Dialog and Sheet (slot components): whether `props` gives one `build` function that
+	makes its content, in place of the slots. Both is an error. (When it is built is `mount`.)
 ]]
 function Deferred.building(props: { [string]: any }, what: string): boolean
 	local build = props.build
 	if build == nil then
-		if props.keep ~= nil then
-			error(`[Lucy] {what}: keep goes with build; slots given at once are always kept`, 0)
-		end
 		return false
 	end
 	if type(build) ~= "function" then
@@ -282,10 +278,34 @@ function Deferred.building(props: { [string]: any }, what: string): boolean
 			0
 		)
 	end
-	if props.keep ~= nil and type(props.keep) ~= "boolean" then
-		error(`[Lucy] {what}: keep is true or false, not "{tostring(props.keep)}"`, 0)
-	end
 	return true
+end
+
+--[[
+	For a Dialog or Sheet with `build`, inside its presence: runs `props.build(handle)` and puts
+	what it returns, { header, children, footer, corner }, in those slots in that order, so
+	something made once (a Tabs: its bar in the header, itself in the body) goes in both. Returns
+	what it made.
+]]
+function Deferred.placeBuild(
+	handle: any,
+	props: { [string]: any },
+	what: string,
+	slots: { [string]: Instance }
+): { [string]: any }
+	local made = props.build(handle)
+	if made == nil then
+		made = {}
+	end
+	if type(made) ~= "table" or typeof(made.Instance) == "Instance" then
+		error(`[Lucy] {what}: build returns \{ header, children, footer, corner \} or nothing`, 0)
+	end
+	for _, name in SLOTS do
+		if made[name] ~= nil then
+			Component.adopt(slots[name], made[name])
+		end
+	end
+	return made
 end
 
 --[[

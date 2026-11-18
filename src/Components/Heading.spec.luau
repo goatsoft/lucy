@@ -72,4 +72,35 @@ return function()
 		expect(text.Visible).to.equal(false)
 		scope:stop()
 	end)
+
+	it("makes the one-line description only once one shows beside the title (ADR 0050, 8)", function()
+		local function lines(frame: Frame): number
+			local count = 0
+			for _, child in frame:GetChildren() do
+				if child:IsA("GuiObject") then
+					count += 1
+				end
+			end
+			return count
+		end
+		app.state:set("input.height", "tall")
+		local frame, _, _, scope = make("Dances, packs and potions")
+		-- The title and the wrapping description; no marquee yet
+		expect(lines(frame)).to.equal(2)
+		app.state:set("input.height", "short")
+		Harness.flush()
+		expect(lines(frame)).to.equal(3)
+		-- Kept once made
+		app.state:set("input.height", "tall")
+		Harness.flush()
+		expect(lines(frame)).to.equal(3)
+		scope:stop()
+
+		-- No description: never made, even on a short screen
+		app.state:set("input.height", "short")
+		local bare, _, _, bareScope = make("")
+		Harness.flush()
+		expect(lines(bare)).to.equal(2)
+		bareScope:stop()
+	end)
 end

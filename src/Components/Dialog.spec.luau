@@ -35,7 +35,9 @@ return function()
 		local dialog = Dialog.new({ app = app, title = "Hi" })
 		expect(dialog.Instance.Parent).to.equal(app:portal("modal"))
 		expect(dialog.Instance.Visible).to.equal(false)
+		dialog:build()
 		expect(dialog.titleLabel.Text).to.equal("Hi")
+		expect(dialog.Instance.Visible).to.equal(false)
 	end)
 
 	it("opens and closes from methods and app state", function()
@@ -316,6 +318,13 @@ return function()
 	end)
 
 	describe("sizing", function()
+		-- Its panel is built on its first open (ADR 0050): these look at the panel, so build it
+		local function built(props: { [string]: any }): any
+			local dialog = Dialog.new(props)
+			dialog:build()
+			return dialog
+		end
+
 		local Scroll = require(script.Parent.Parent.Core.Scroll)
 		local function rows(count: number): { Frame }
 			local out = {}
@@ -333,18 +342,18 @@ return function()
 		end
 
 		it("takes a size for its width, md by default", function()
-			expect(widthCap(Dialog.new({ app = app }))).to.equal(Dialog.sizes.md)
-			expect(widthCap(Dialog.new({ app = app, size = "sm" }))).to.equal(Dialog.sizes.sm)
-			expect(widthCap(Dialog.new({ app = app, size = "xl" }))).to.equal(Dialog.sizes.xl)
-			expect(widthCap(Dialog.new({ app = app, size = "full" }))).to.equal(math.huge)
-			expect(widthCap(Dialog.new({ app = app, size = "lg", maxWidth = 500 }))).to.equal(500)
+			expect(widthCap(built({ app = app }))).to.equal(Dialog.sizes.md)
+			expect(widthCap(built({ app = app, size = "sm" }))).to.equal(Dialog.sizes.sm)
+			expect(widthCap(built({ app = app, size = "xl" }))).to.equal(Dialog.sizes.xl)
+			expect(widthCap(built({ app = app, size = "full" }))).to.equal(math.huge)
+			expect(widthCap(built({ app = app, size = "lg", maxWidth = 500 }))).to.equal(500)
 			expect(function()
 				Dialog.new({ app = app, size = "huge" })
 			end).to.throw()
 		end)
 
 		it("keeps children in dialog.body", function()
-			local dialog = Dialog.new({ app = app, children = rows(2) })
+			local dialog = built({ app = app, children = rows(2) })
 			expect(dialog.body:FindFirstChild("Row1")).to.be.ok()
 			expect(dialog.scroll.frame:IsA("ScrollingFrame")).to.equal(true)
 		end)
@@ -443,6 +452,7 @@ return function()
 					{ id = "go", text = "Go", size = "lg", icon = "lucide:play", children = { caret } },
 				},
 			})
+			dialog:build()
 			local button = dialog.actions[1]
 			expect(app.state:get("ui.go.size")).to.equal("lg")
 			expect(button.icon).to.be.ok()
@@ -451,11 +461,11 @@ return function()
 
 		it("shows a footer slot with no actions, and hides empty slots", function()
 			local picked = Instance.new("Frame")
-			local dialog = Dialog.new({ app = app, footer = { picked } })
+			local dialog = built({ app = app, footer = { picked } })
 			expect(dialog.footer.Visible).to.equal(true)
 			expect(dialog.actionsRow.Visible).to.equal(false)
 			expect(dialog.headerSlot.Visible).to.equal(false)
-			local plain = Dialog.new({ app = app })
+			local plain = built({ app = app })
 			expect(plain.footer.Visible).to.equal(false)
 		end)
 
@@ -494,7 +504,7 @@ return function()
 		it("keeps the actions when the footer slot's children are hidden", function()
 			local hints = Instance.new("Frame")
 			hints.Visible = false
-			local dialog = Dialog.new({ app = app, footer = { hints }, actions = { { text = "OK" } } })
+			local dialog = built({ app = app, footer = { hints }, actions = { { text = "OK" } } })
 			expect(dialog.footerSlot.Visible).to.equal(false)
 			expect(dialog.footer.Visible).to.equal(true)
 			expect(dialog.actionsRow.Visible).to.equal(true)
@@ -502,7 +512,7 @@ return function()
 
 		it("hides a header slot whose children are all hidden", function()
 			local filters = Instance.new("Frame")
-			local dialog = Dialog.new({ app = app, header = { filters } })
+			local dialog = built({ app = app, header = { filters } })
 			expect(dialog.headerSlot.Visible).to.equal(true)
 			filters.Visible = false
 			expect(Harness.waitFor(function()
@@ -511,7 +521,7 @@ return function()
 		end)
 
 		it("fits the screen with a long body even without maxHeight", function()
-			local dialog = Dialog.new({ app = app, open = true, title = "Rules", children = rows(60) })
+			local dialog = built({ app = app, open = true, title = "Rules", children = rows(60) })
 			task.wait(0.3)
 			local view = dialog.Instance.AbsoluteSize.Y
 			expect(dialog.content.AbsoluteSize.Y <= view).to.equal(true)
@@ -520,7 +530,7 @@ return function()
 		end)
 
 		it("pads less on a short screen, and gives the body that room", function()
-			local dialog = Dialog.new({ app = app, open = true, title = "Rules", children = rows(60) })
+			local dialog = built({ app = app, open = true, title = "Rules", children = rows(60) })
 			local inner = dialog.content:FindFirstChild("Inner") :: Frame
 			app.state:set("input.height", "tall")
 			task.wait(0.3)
@@ -537,7 +547,7 @@ return function()
 		end)
 
 		it("fits short content with no scrolling", function()
-			local dialog = Dialog.new({ app = app, open = true, maxHeight = 600, children = rows(2) })
+			local dialog = built({ app = app, open = true, maxHeight = 600, children = rows(2) })
 			task.wait(0.3)
 			local scroll = dialog.scroll.frame
 			expect(scroll.AbsoluteCanvasSize.Y <= scroll.AbsoluteSize.Y + 1).to.equal(true)
@@ -830,7 +840,9 @@ return function()
 			expect(Harness.waitFor(function()
 				return first.destroyed
 			end)).to.equal(true)
-			expect(#panel.headerSlot:GetChildren() <= 2).to.equal(true) -- its own layout and padding
+			-- The whole presence went with it (ADR 0050)
+			expect(panel.headerSlot).to.equal(nil)
+			expect(#panel.Instance:GetDescendants()).to.equal(0)
 			panel:open()
 			expect(count[1]).to.equal(2)
 			expect(made.child.Instance.Parent).to.equal(panel.body)
@@ -862,18 +874,139 @@ return function()
 			expect(panel.Instance.Visible).to.equal(true)
 		end)
 
-		it("refuses build with slots, and keep without build", function()
-			expect(function()
-				Dialog.new({ app = app, build = function() end, children = { Instance.new("Frame") } })
-			end).to.throw("children")
-			expect(function()
-				Dialog.new({ app = app, keep = false })
-			end).to.throw("keep")
+		it(
+			"refuses build with slots, keep with mount = immediate, an unknown mount and a bad onBuild",
+			function()
+				expect(function()
+					Dialog.new({ app = app, build = function() end, children = { Instance.new("Frame") } })
+				end).to.throw("children")
+				expect(function()
+					Dialog.new({ app = app, mount = "immediate", keep = false })
+				end).to.throw("keep")
+				expect(function()
+					Dialog.new({ app = app, mount = "later" })
+				end).to.throw("mount")
+				expect(function()
+					Dialog.new({ app = app, onBuild = true })
+				end).to.throw("onBuild")
+			end
+		)
+	end)
+
+	describe("the presence (ADR 0050)", function()
+		local Devtools = require(script.Parent.Parent.Core.Devtools)
+		local Text = require(script.Parent.Text)
+
+		it("is only its host until it first opens, slots and all", function()
+			local line = Text.new({ app = app, text = "Body" })
+			local dialog = Dialog.new({
+				app = app,
+				id = "slotted",
+				title = "Hi",
+				children = { line },
+				actions = { { text = "OK" } },
+			})
+			expect(dialog.Instance.Parent).to.equal(app:portal("modal"))
+			expect(#dialog.Instance:GetDescendants()).to.equal(0)
+			expect(dialog.content).to.equal(nil)
+			expect(dialog.actions).to.equal(nil)
+			expect(Devtools.tree({ app = app, root = "slotted" })[1].built).to.equal(false)
+			dialog:open()
+			expect(dialog.content:IsDescendantOf(dialog.Instance)).to.equal(true)
+			expect(dialog.titleLabel.Text).to.equal("Hi")
+			expect(line.Instance:IsDescendantOf(dialog.body)).to.equal(true)
+			expect(#dialog.actions).to.equal(1)
+			expect(dialog.Instance.Visible).to.equal(true)
+			dialog:close()
+			expect(dialog.Instance.Visible).to.equal(false)
 		end)
 
-		it("has no build() when its slots are given", function()
-			local panel = Dialog.new({ app = app, children = { Instance.new("Frame") } })
-			expect(panel.build).to.equal(nil)
+		it("builds it all when it is made with mount = immediate", function()
+			local dialog = Dialog.new({ app = app, title = "Now", mount = "immediate" })
+			expect(dialog.titleLabel.Text).to.equal("Now")
+			expect(dialog.Instance.Visible).to.equal(false)
+		end)
+
+		it("builds it ahead with build(), without opening", function()
+			local dialog = Dialog.new({ app = app, title = "Ahead" })
+			dialog:build()
+			expect(dialog.titleLabel.Text).to.equal("Ahead")
+			expect(dialog:get("open")).to.equal(false)
+			expect(dialog.Instance.Visible).to.equal(false)
+		end)
+
+		it("with keep = false, takes the whole presence away once closed, and builds it again", function()
+			local dialog =
+				Dialog.new({ app = app, title = "Once", keep = false, actions = { { text = "OK" } } })
+			dialog:open()
+			local first = dialog.actions[1]
+			dialog:close()
+			expect(Harness.waitFor(function()
+				return #dialog.Instance:GetDescendants() == 0
+			end)).to.equal(true)
+			expect(first.destroyed).to.equal(true)
+			expect(dialog.content).to.equal(nil)
+			expect(app.state:get("overlay.count")).to.equal(0)
+			dialog:open()
+			expect(dialog.titleLabel.Text).to.equal("Once")
+			expect(dialog.actions[1]).never.to.equal(first)
+			expect(app.state:get("overlay.count")).to.equal(1)
+		end)
+
+		it("hands onBuild the dialog once its parts exist, before it shows, each time it builds", function()
+			local seen = {}
+			local dialog
+			dialog = Dialog.new({
+				app = app,
+				keep = false,
+				actions = { { text = "OK" } },
+				onBuild = function(d)
+					table.insert(
+						seen,
+						`{d == dialog}:{d.content ~= nil}:{d.actions[1] ~= nil}:{d:get("open")}`
+					)
+				end,
+				onOpenChange = function(isOpen)
+					table.insert(seen, `open:{isOpen}`)
+				end,
+			})
+			expect(#seen).to.equal(0)
+			dialog:open()
+			dialog:close()
+			Harness.waitFor(function()
+				return dialog.content == nil
+			end)
+			dialog:open()
+			expect(table.concat(seen, " ")).to.equal(
+				"true:true:true:true open:true open:false true:true:true:true open:true"
+			)
+		end)
+
+		it("stacks a dialog opened over a dialog, and back closes the top one first", function()
+			local below = Dialog.new({ app = app, id = "below", title = "Below" })
+			local above = Dialog.new({ app = app, id = "above", title = "Above" })
+			below:open()
+			above:open()
+			expect(app.state:get("overlay.top")).to.equal("above")
+			expect(above.Instance.ZIndex > below.Instance.ZIndex).to.equal(true)
+			expect(app.input:back()).to.equal(true)
+			expect(above:get("open")).to.equal(false)
+			expect(below:get("open")).to.equal(true)
+			expect(app.state:get("overlay.top")).to.equal("below")
+		end)
+
+		it("shows the first frame of a fresh open off the screen, and then where it belongs", function()
+			local Overlay = require(script.Parent.Parent.Core.Overlay)
+			local RunService = game:GetService("RunService")
+			local dialog = Dialog.new({ app = app, title = "Fresh" })
+			dialog:open()
+			expect(dialog.frame.Position).to.equal(Overlay.offscreen)
+			if RunService:IsClient() then
+				RunService.RenderStepped:Wait()
+			end
+			RunService.Heartbeat:Wait()
+			task.wait()
+			expect(dialog.frame.Position).never.to.equal(Overlay.offscreen)
 		end)
 	end)
 end

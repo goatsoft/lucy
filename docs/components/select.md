@@ -50,6 +50,9 @@ Lucy.Stack.new({
 | `side` | string | `"bottom"` | | `bottom`, `top`, `left` or `right`: where the list opens. It flips when the other side has more room. `auto` opens below if it fits, then above, then beside |
 | `align` | string | `"start"` | | `start`, `center` or `end`: how the list lines up with the button |
 | `onValueChange` | function | | | Called with `(value, handle)` when the value changes |
+| `mount` | string | `"shown"` | | When the list and its options are built: `"shown"` the first time it opens, `"immediate"` when the select is made |
+| `keep` | boolean | `true` | | `false` takes the list away once it has closed and builds it again on the next open. With `mount = "shown"` only |
+| `onBuild` | function | | | Called with the select once its list and options exist, each time they are built, before it shows |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
 It also takes the [props every component takes](index.md#using-a-component).
@@ -90,6 +93,11 @@ Lucy.Select.new({
 
 ## How it opens
 
+The list and its options are built the first time it opens, before anything
+sees it open, so a form with many selects pays only for the buttons. The button
+shows the value from `items` without them. The first time the list shows, it
+waits one frame off the screen while its text is measured.
+
 The list opens on the app's overlay layer, above everything opened before it:
 
 - **Mouse and keyboard:** under the button (or above it when there is more room
@@ -114,6 +122,9 @@ To use your own, see [Icons Lucy draws](../guide/icons.md#icons-lucy-draws).
 | `select:open()` | Opens the list |
 | `select:close()` | Closes the list |
 | `select:toggle()` | Opens it if closed, closes it if open |
+| `select:build()` | Builds the list and its options now without opening it. Does nothing once they are built |
+| `select.items` | One `{ root, label, check }` per option, in order (`nil` until built) |
+| `select.content`, `select.list` | The list and its scroll area (`nil` until built) |
 | `select.presentation()` | `"popup"` or `"drawer"`, for this opening |
 
 When the player picks an option, it reports `select` with the value, for

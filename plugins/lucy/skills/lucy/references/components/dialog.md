@@ -31,8 +31,10 @@ quit:open()
 | `corner` | table | | | Instances or handles in the top right corner, left of the close button, such as a currency chip. See [The corner](#the-corner) |
 | `children` | table | | | Instances or handles to put in the content area |
 | `footer` | table | | | Instances or handles under the body, above the actions. They stay put while the body scrolls. When all of them are hidden (key hints on touch, say) the footer takes no room |
-| `build` | function | | | In place of `header`, `corner`, `children` and `footer`: called the first time the dialog opens, so nothing in it is made until then. See [Building on open](#building-on-open) |
-| `keep` | boolean | `true` | | With `build`. `false` removes the content once the dialog has closed and builds it again on the next open |
+| `build` | function | | | In place of `header`, `corner`, `children` and `footer`: makes the content when the dialog is built. See [Building on open](#building-on-open) |
+| `mount` | string | `"shown"` | | When the dialog is built: `"shown"` the first time it opens, `"immediate"` when it is made |
+| `keep` | boolean | `true` | | `false` takes the whole panel away once the dialog has closed and builds it again on the next open. With `mount = "shown"` only |
+| `onBuild` | function | | | Called with the dialog once its panel exists, each time it is built, before it shows: the place to style or reach into it. See [Reaching into a dialog](#reaching-into-a-dialog-onbuild) |
 | `footerPlacement` | string | `"above"` | | `"above"` the actions, or `"beside"`: on their left in one row, such as a "Don't show this again" checkbox next to the main button. On a screen too narrow for both, the actions wrap under it |
 | `dismissible` | boolean | `true` | | Whether B, Backspace, the overlay and the close button can close it |
 | `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it (off by default when `modal` is `false`) |
@@ -104,9 +106,16 @@ An action closes the dialog after its `onClick` runs, unless `onClick` returns
 
 ## Building on open
 
-A dialog made with `children` and the other slots holds content you have
-already made, open or not. For a big dialog, give one `build` function in place
-of the slots and its content is made the first time it opens:
+A dialog is built the first time it opens. Until then only the dialog itself
+exists: its id, `ui.<id>.open`, its methods and one empty frame in the modal
+layer. The panel, its title, close button, body, slots and actions, and what
+goes in them, are made on the first open, before anything treats the dialog as
+open: it is placed, takes focus and calls `onOpenChange` after. A game with a
+dozen dialogs pays for none of them until a player opens one.
+
+Content you made yourself and gave as `header`, `children` and the other slots
+waits until then. To make the content on the first open too, give one `build`
+function in place of the slots:
 
 ```luau
 local songs = Lucy.Dialog.new({
@@ -122,12 +131,49 @@ local songs = Lucy.Dialog.new({
 })
 ```
 
-It works as it does for a [Sheet](sheet.md#building-on-open): `build` runs once
-with the dialog, what it returns goes into the slots in the order `header`,
-`children`, `footer`, `corner`, and nothing treats the dialog as open until the
-content is there. `keep = false` removes the content after it closes,
-`dialog:build()` builds it ahead, and `Lucy.prebuild` builds several, one each
-frame. A two line confirm needs none of this: give it `children` as before.
+- `build` is called with the dialog each time it is built. What it returns goes
+  into the slots in the order `header`, `children`, `footer`, `corner`, so
+  something made once (tabs: the bar in the header, the panels in the body) is
+  placed in both. `build` together with a slot is an error. If `build` throws,
+  the dialog closes again and the error is reported.
+- Once built, the dialog is kept: opening again is instant and finds it as the
+  player left it. `keep = false` takes the whole panel away after it has closed
+  (after its backdrop has faded) and builds it again next time. Use it for a dialog players see
+  once or seldom, and keep what must last in [app state](../guide/app-state.md).
+- `mount = "immediate"` builds it when it is made, for code that must reach
+  its parts at once.
+- `dialog:build()` builds it ahead without opening, and
+  `Lucy.prebuild({ inventory, settings })` builds several, one each frame, so
+  the panels players open first are ready by the time they do.
+- The first time it shows, it waits one frame off the screen while its text is
+  measured, then appears where it belongs. Focus and `onOpenChange` do
+  not wait.
+
+### Reaching into a dialog: `onBuild`
+
+The fields that point into the panel (`frame`, `content`, `body`,
+`headerSlot`, `footerSlot`, `cornerSlot`, `actionsRow`, `actions`,
+`closeButton`, `titleLabel`, `shadow`, `plate`) are `nil` until it is built,
+and so are the components inside it. Style them or reach into them in
+`onBuild`, which is called with the dialog once they exist, each time it is
+built, before it shows:
+
+```luau
+Lucy.Dialog.new({
+    id = "shop",
+    title = "Shop",
+    build = buildShop,
+    onBuild = function(dialog)
+        Lucy.hydrate(dialog.content)({ Tags = { "my-shop-panel" } })
+    end,
+})
+```
+
+Code elsewhere that reaches into a dialog that has never opened calls
+`dialog:build()` first.
+
+A two line confirm needs no `build`: give it `children` as before. It is still
+built on its first open.
 
 ## Alert dialogs
 

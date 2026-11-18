@@ -74,7 +74,6 @@
 	Menu.pick and Menu.itemBounds are the geometry it uses.
 ]]
 
-local RunService = game:GetService("RunService")
 local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
 
@@ -115,8 +114,6 @@ Menu.fanGap = 10
 Menu.fanCurveGap = 34
 -- How far the stick must be pushed before it points at an item.
 Menu.deadzone = 0.5
--- Where a ring or fan waits for the frame its new labels are measured in (built on open)
-Menu.offscreen = UDim2.fromOffset(-100000, -100000)
 
 local ACTIVATED = Element.on("Activated")
 
@@ -646,631 +643,612 @@ local spec: Component.Spec = {
 		-- Where each round button sits around the centre; set when it is placed.
 		local points = Reactive.ref(Menu.ring(count, 80) :: { Vector2 })
 
-		-- The list.
-		local rows = {}
-		local makeRow: (index: number, item: Entry) -> ()
-		local makeSlice: (index: number, item: Entry) -> ()
-		local listFrame = Element.new("Frame", {
-			Name = "Items",
+		local overlayRef: Reactive.Ref<Overlay.Overlay?> = Reactive.ref(nil :: Overlay.Overlay?)
+		-- What the overlay, focus and "open" follow: true once it is open and its presence is built
+		-- (and a write to it writes `open`). Set below, before anything is built
+		local shown: Reactive.Ref<boolean> = open
+		h.presentation = function(): string?
+			local overlay = overlayRef()
+			return if overlay then overlay.presentation() else nil
+		end
+		-- The root's one instance: where the menu sits in its parent (its overlay floats in the portal)
+		local root = Element.new("Frame", {
+			Name = "Menu",
 			BackgroundTransparency = 1,
-			Size = UDim2.fromScale(1, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
-			Component.list({ Padding = UDim.new(0, 2) }) :: any,
-		})
-		-- When any item has an icon, every label starts after the icon's column.
-		local hasIcon = false
-		for _, item in entries do
-			if item.icon then
-				hasIcon = true
+			Size = UDim2.fromOffset(0, 0),
+			Visible = h:ref("visible"),
+		}) :: Frame
+
+		-- The presence (ADR 0050): the overlay, the list or ring and every row and button, built on
+		-- the first open (or when made, mount = "immediate"), in its own scope (Core/Deferred)
+		local function presence()
+			-- The list.
+			local rows = {}
+			local makeRow: (index: number, item: Entry) -> ()
+			local makeSlice: (index: number, item: Entry) -> ()
+			local listFrame = Element.new("Frame", {
+				Name = "Items",
+				BackgroundTransparency = 1,
+				Size = UDim2.fromScale(1, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				Component.list({ Padding = UDim.new(0, 2) }) :: any,
+			})
+			-- When any item has an icon, every label starts after the icon's column.
+			local hasIcon = false
+			for _, item in entries do
+				if item.icon then
+					hasIcon = true
+				end
 			end
-		end
-		local function indent(): number
-			return if not hasIcon then 0 elseif large() then 28 else 24
-		end
-		local function makeRows()
-			for index, item in entries do
-				makeRow(index, item)
+			local function indent(): number
+				return if not hasIcon then 0 elseif large() then 28 else 24
 			end
-		end
-		function makeRow(index: number, item: Entry)
-			local function off(): boolean
-				return offOf(item)
+			local function makeRows()
+				for index, item in entries do
+					makeRow(index, item)
+				end
 			end
-			local function usable(): boolean
-				return isList() and not offOf(item)
-			end
-			local hintRoom = if item.hint then 56 else 0
-			local row = Element.new("TextButton", {
-				Name = `Item{index}`,
-				LayoutOrder = index,
-				Text = "",
-				AutoButtonColor = false,
-				Size = function(): UDim2
-					return UDim2.new(1, 0, 0, height())
-				end,
-				Visible = isList,
-				Interactable = usable,
-				Selectable = usable,
-				Tags = { "ui-menu-item" :: any, ["ui-disabled"] = off, ["ui-menu-lg"] = large },
-				[ACTIVATED] = function()
-					h:select(item.value)
-				end,
-				Element.new("TextLabel", {
-					Name = "Label",
-					Position = function(): UDim2
-						return UDim2.fromOffset(indent(), 0)
-					end,
+			function makeRow(index: number, item: Entry)
+				local function off(): boolean
+					return offOf(item)
+				end
+				local function usable(): boolean
+					return isList() and not offOf(item)
+				end
+				local hintRoom = if item.hint then 56 else 0
+				local row = Element.new("TextButton", {
+					Name = `Item{index}`,
+					LayoutOrder = index,
+					Text = "",
+					AutoButtonColor = false,
 					Size = function(): UDim2
-						return UDim2.new(1, -(indent() + hintRoom), 1, 0)
+						return UDim2.new(1, 0, 0, height())
 					end,
-					TextXAlignment = Enum.TextXAlignment.Left,
-					TextTruncate = Enum.TextTruncate.AtEnd,
+					Visible = isList,
+					Interactable = usable,
+					Selectable = usable,
+					Tags = { "ui-menu-item" :: any, ["ui-disabled"] = off, ["ui-menu-lg"] = large },
+					[ACTIVATED] = function()
+						h:select(item.value)
+					end,
+					Element.new("TextLabel", {
+						Name = "Label",
+						Position = function(): UDim2
+							return UDim2.fromOffset(indent(), 0)
+						end,
+						Size = function(): UDim2
+							return UDim2.new(1, -(indent() + hintRoom), 1, 0)
+						end,
+						TextXAlignment = Enum.TextXAlignment.Left,
+						TextTruncate = Enum.TextTruncate.AtEnd,
+						Text = function(): string
+							return textOf(item)
+						end,
+						Tags = { "ui-menu-item-label" :: any, ["ui-disabled"] = off },
+					}),
+				})
+				if item.icon then
+					local icon = Icon.new({
+						app = app,
+						icon = item.icon,
+						size = function(): string
+							return if large() then "md" else "sm"
+						end,
+						name = "Icon",
+					})
+					icon.Instance.AnchorPoint = Vector2.new(0, 0.5)
+					icon.Instance.Position = UDim2.fromScale(0, 0.5)
+					icon.Instance.Parent = row
+				end
+				if item.hint then
+					local kbd = Kbd.new({ app = app, action = item.hint, variant = "mono" })
+					kbd.Instance.AnchorPoint = Vector2.new(1, 0.5)
+					kbd.Instance.Position = UDim2.fromScale(1, 0.5)
+					kbd.Instance.Parent = row
+				end
+				row.Parent = listFrame
+				rows[index] = row
+			end
+
+			-- The list is at least as wide as its widest row needs (label, icon column, key, padding),
+			-- so a label never ends in an ellipsis however large the game styles its type. Measured
+			-- with the label's styled font and size, again whenever its style changes.
+			local fitWidth = Reactive.ref(0)
+			local measuring = false
+			local function measureRows()
+				if measuring then
+					return
+				end
+				measuring = true
+				task.defer(function()
+					measuring = false
+					-- Destroyed, or its rows taken away (keep = false), before this ran
+					if h.destroyed or #rows == 0 then
+						return
+					end
+					local widest = 0
+					for index, row in rows do
+						local label = row:FindFirstChild("Label") :: TextLabel?
+						if label and label.Text ~= "" then
+							local ok, bounds = pcall(function(): Vector2
+								local params = Instance.new("GetTextBoundsParams")
+								params.Text = label.Text
+								params.Font = (label :: any):GetStyled("FontFace")
+								params.Size = (label :: any):GetStyled("TextSize")
+								params.Width = math.huge
+								return TextService:GetTextBoundsAsync(params)
+							end)
+							if ok then
+								local hintRoom = if entries[index].hint then 56 else 0
+								widest = math.max(widest, bounds.X + indent() + hintRoom)
+							end
+						end
+					end
+					-- The row's padding (Space2 each side) and a little air, so rounding never truncates
+					local pad = Component.space(app, "Space2", 8).Offset
+					fitWidth(math.ceil(widest + pad * 2 + 8))
+				end)
+			end
+			local function watchRows()
+				for _, row in rows do
+					local label = row:FindFirstChild("Label")
+					if label then
+						pcall(function()
+							(label :: any).StyledPropertiesChanged:Connect(measureRows)
+						end)
+					end
+				end
+				measureRows()
+			end
+
+			-- A fan's label that changes size while it is open (a label that follows the game) places
+			-- it again, at most once a frame. Its first show is measured by the overlay (ADR 0050, 6).
+			local replacing = false
+			local function replace()
+				if replacing or variant() ~= "arc" then
+					return
+				end
+				replacing = true
+				task.defer(function()
+					replacing = false
+					-- A deferred task: nothing tracks this read
+					local overlay = overlayRef()
+					if overlay and not h.destroyed then
+						overlay.place()
+					end
+				end)
+			end
+			local function isDrawer(): boolean
+				local overlay = overlayRef()
+				return overlay ~= nil and overlay.presentation() == "drawer"
+			end
+			local padSmall = Component.space(app, "Space1", 4).Offset
+			local padLarge = Component.space(app, "Space4", 16).Offset
+			local list = ScrollArea.new({
+				app = app,
+				name = "List",
+				scrollbar = "auto",
+				visible = isList,
+				maxHeight = function(): number
+					local overlay = overlayRef()
+					if not overlay then
+						return math.huge
+					end
+					local pad = if isDrawer() then padLarge else padSmall
+					return math.max(0, overlay.maxHeight() - pad * 2 - overlay.safeBottom())
+				end,
+				children = { listFrame },
+			})
+
+			-- The ring or arc. A fan's buttons tilt along its curve, with their labels beside them
+			-- (left or right); a ring's labels sit below. Set when it is placed.
+			local tilts = Reactive.ref({} :: { number })
+			-- Where the arrows go from each fan button (empty for a ring: the engine and the stick)
+			local links = Reactive.ref({} :: { FanLink })
+			local labelSide = Reactive.ref("below")
+			local fanSize = Reactive.ref(Vector2.zero)
+			local slices = {}
+			local captions = {}
+			local ringFrame = Element.new("Frame", {
+				Name = "Ring",
+				BackgroundTransparency = 1,
+				Visible = isRing,
+				Size = function(): UDim2
+					if not isRing() then
+						return UDim2.fromOffset(0, 0)
+					elseif variant() == "arc" then
+						local size = fanSize()
+						return UDim2.fromOffset(math.ceil(size.X), math.ceil(size.Y))
+					end
+					local side = math.ceil(extent() * 2)
+					return UDim2.fromOffset(side, side)
+				end,
+			})
+			local function makeSlices()
+				for index, item in entries do
+					makeSlice(index, item)
+				end
+			end
+			function makeSlice(index: number, item: Entry)
+				local function off(): boolean
+					return offOf(item)
+				end
+				local function usable(): boolean
+					return isRing() and not offOf(item)
+				end
+				local slice = Element.new("TextButton", {
+					Name = `Slice{index}`,
+					Text = "",
+					AutoButtonColor = false,
+					AnchorPoint = Vector2.new(0.5, 0.5),
+					Size = function(): UDim2
+						local side = sliceSize()
+						return UDim2.fromOffset(side, side)
+					end,
+					Position = function(): UDim2
+						local at = points()[index] or Vector2.zero
+						return UDim2.new(0.5, math.floor(at.X + 0.5), 0.5, math.floor(at.Y + 0.5))
+					end,
+					Rotation = function(): number
+						return if variant() == "arc" then tilts()[index] or 0 else 0
+					end,
+					Visible = isRing,
+					-- A fan walks in item order, also across its curves (Menu.fanLinks)
+					NextSelectionUp = function(): GuiObject?
+						local link = links()[index]
+						return link and slices[link.up]
+					end,
+					NextSelectionDown = function(): GuiObject?
+						local link = links()[index]
+						return link and slices[link.down]
+					end,
+					NextSelectionLeft = function(): GuiObject?
+						local link = links()[index]
+						return link and slices[link.left]
+					end,
+					NextSelectionRight = function(): GuiObject?
+						local link = links()[index]
+						return link and slices[link.right]
+					end,
+					Interactable = usable,
+					Selectable = usable,
+					-- Its focus ring goes round the whole item, button and label (the ItemRing below)
+					Tags = {
+						"ui-menu-slice" :: any,
+						"ui-ring-host",
+						["ui-disabled"] = off,
+						["ui-menu-lg"] = large,
+						["ui-menu-squircle"] = function(): boolean
+							return shape() == "squircle"
+						end,
+						["ui-menu-square"] = function(): boolean
+							return shape() == "square"
+						end,
+					},
+					[ACTIVATED] = function()
+						h:select(item.value)
+					end,
+				})
+				local function beside(): boolean
+					return labelSide() ~= "below"
+				end
+				captions[index] = Element.new("TextLabel", {
+					Name = "Caption",
+					AnchorPoint = function(): Vector2
+						local side = labelSide()
+						return if side == "left"
+							then Vector2.new(1, 0.5)
+							elseif side == "right" then Vector2.new(0, 0.5)
+							else Vector2.new(0.5, 0)
+					end,
+					Position = function(): UDim2
+						local side = labelSide()
+						return if side == "left"
+							then UDim2.new(0, -Menu.captionGap, 0.5, 0)
+							elseif side == "right" then UDim2.new(1, Menu.captionGap, 0.5, 0)
+							else UDim2.new(0.5, 0, 1, Menu.captionDrop)
+					end,
+					-- A pill beside its button is as tall as its text (and padding), so a game's
+					-- theme can give it any text size
+					Size = function(): UDim2
+						return UDim2.fromOffset(0, if beside() then 0 elseif large() then 24 else 20)
+					end,
+					AutomaticSize = function(): Enum.AutomaticSize
+						return if beside() then Enum.AutomaticSize.XY else Enum.AutomaticSize.X
+					end,
 					Text = function(): string
 						return textOf(item)
 					end,
-					Tags = { "ui-menu-item-label" :: any, ["ui-disabled"] = off },
-				}),
-			})
-			if item.icon then
-				local icon = Icon.new({
-					app = app,
-					icon = item.icon,
-					size = function(): string
-						return if large() then "md" else "sm"
-					end,
-					name = "Icon",
-				})
-				icon.Instance.AnchorPoint = Vector2.new(0, 0.5)
-				icon.Instance.Position = UDim2.fromScale(0, 0.5)
-				icon.Instance.Parent = row
-			end
-			if item.hint then
-				local kbd = Kbd.new({ app = app, action = item.hint, variant = "mono" })
-				kbd.Instance.AnchorPoint = Vector2.new(1, 0.5)
-				kbd.Instance.Position = UDim2.fromScale(1, 0.5)
-				kbd.Instance.Parent = row
-			end
-			row.Parent = listFrame
-			rows[index] = row
-		end
-
-		-- The list is at least as wide as its widest row needs (label, icon column, key, padding),
-		-- so a label never ends in an ellipsis however large the game styles its type. Measured
-		-- with the label's styled font and size, again whenever its style changes.
-		local fitWidth = Reactive.ref(0)
-		local measuring = false
-		local function measureRows()
-			if measuring then
-				return
-			end
-			measuring = true
-			task.defer(function()
-				measuring = false
-				-- Destroyed, or its rows taken away (keep = false), before this ran
-				if h.destroyed or #rows == 0 then
-					return
-				end
-				local widest = 0
-				for index, row in rows do
-					local label = row:FindFirstChild("Label") :: TextLabel?
-					if label and label.Text ~= "" then
-						local ok, bounds = pcall(function(): Vector2
-							local params = Instance.new("GetTextBoundsParams")
-							params.Text = label.Text
-							params.Font = (label :: any):GetStyled("FontFace")
-							params.Size = (label :: any):GetStyled("TextSize")
-							params.Width = math.huge
-							return TextService:GetTextBoundsAsync(params)
-						end)
-						if ok then
-							local hintRoom = if entries[index].hint then 56 else 0
-							widest = math.max(widest, bounds.X + indent() + hintRoom)
-						end
-					end
-				end
-				-- The row's padding (Space2 each side) and a little air, so rounding never truncates
-				local pad = Component.space(app, "Space2", 8).Offset
-				fitWidth(math.ceil(widest + pad * 2 + 8))
-			end)
-		end
-		local function watchRows()
-			for _, row in rows do
-				local label = row:FindFirstChild("Label")
-				if label then
-					pcall(function()
-						(label :: any).StyledPropertiesChanged:Connect(measureRows)
-					end)
-				end
-			end
-			measureRows()
-		end
-
-		local overlayRef: Reactive.Ref<Overlay.Overlay?> = Reactive.ref(nil :: Overlay.Overlay?)
-		-- A fan built as it opens has its labels measured a frame later: once they are, it is
-		-- placed again (rows built on open only: a menu built long before it opens has its labels
-		-- measured by then, and is placed as ever). At most once a frame.
-		-- With rows built on open, the first time a ring or fan shows after they are built it is
-		-- placed off the screen until a frame has laid out and measured its labels, then placed
-		-- for them: no frame shows it placed for labels not measured yet (ADR 0049, Risk). Its
-		-- focus and "open" do not wait. A list is placed as ever.
-		local measured = true
-		local function measuredNow()
-			if measured or h.destroyed then
-				return
-			end
-			measured = true
-			local overlay = overlayRef()
-			if overlay then
-				overlay.place()
-			end
-		end
-		local function settle()
-			-- After a frame has been drawn (its layout measured the labels): Heartbeat alone can come
-			-- before the next frame is drawn. A server draws nothing, so it waits a Heartbeat.
-			if RunService:IsClient() then
-				RunService.RenderStepped:Once(function()
-					RunService.Heartbeat:Once(measuredNow)
-				end)
-			else
-				RunService.Heartbeat:Once(measuredNow)
-			end
-		end
-		local replacing = false
-		local function replace()
-			if replacing or p._menuMount == "immediate" or variant() ~= "arc" then
-				return
-			end
-			replacing = true
-			task.defer(function()
-				replacing = false
-				-- A deferred task: nothing tracks this read
-				local overlay = overlayRef()
-				if overlay and not h.destroyed then
-					overlay.place()
-				end
-			end)
-		end
-		local function isDrawer(): boolean
-			local overlay = overlayRef()
-			return overlay ~= nil and overlay.presentation() == "drawer"
-		end
-		local padSmall = Component.space(app, "Space1", 4).Offset
-		local padLarge = Component.space(app, "Space4", 16).Offset
-		local list = ScrollArea.new({
-			app = app,
-			name = "List",
-			scrollbar = "auto",
-			visible = isList,
-			maxHeight = function(): number
-				local overlay = overlayRef()
-				if not overlay then
-					return math.huge
-				end
-				local pad = if isDrawer() then padLarge else padSmall
-				return math.max(0, overlay.maxHeight() - pad * 2 - overlay.safeBottom())
-			end,
-			children = { listFrame },
-		})
-
-		-- The ring or arc. A fan's buttons tilt along its curve, with their labels beside them
-		-- (left or right); a ring's labels sit below. Set when it is placed.
-		local tilts = Reactive.ref({} :: { number })
-		-- Where the arrows go from each fan button (empty for a ring: the engine and the stick)
-		local links = Reactive.ref({} :: { FanLink })
-		local labelSide = Reactive.ref("below")
-		local fanSize = Reactive.ref(Vector2.zero)
-		local slices = {}
-		local captions = {}
-		local ringFrame = Element.new("Frame", {
-			Name = "Ring",
-			BackgroundTransparency = 1,
-			Visible = isRing,
-			Size = function(): UDim2
-				if not isRing() then
-					return UDim2.fromOffset(0, 0)
-				elseif variant() == "arc" then
-					local size = fanSize()
-					return UDim2.fromOffset(math.ceil(size.X), math.ceil(size.Y))
-				end
-				local side = math.ceil(extent() * 2)
-				return UDim2.fromOffset(side, side)
-			end,
-		})
-		local function makeSlices()
-			for index, item in entries do
-				makeSlice(index, item)
-			end
-		end
-		function makeSlice(index: number, item: Entry)
-			local function off(): boolean
-				return offOf(item)
-			end
-			local function usable(): boolean
-				return isRing() and not offOf(item)
-			end
-			local slice = Element.new("TextButton", {
-				Name = `Slice{index}`,
-				Text = "",
-				AutoButtonColor = false,
-				AnchorPoint = Vector2.new(0.5, 0.5),
-				Size = function(): UDim2
-					local side = sliceSize()
-					return UDim2.fromOffset(side, side)
-				end,
-				Position = function(): UDim2
-					local at = points()[index] or Vector2.zero
-					return UDim2.new(0.5, math.floor(at.X + 0.5), 0.5, math.floor(at.Y + 0.5))
-				end,
-				Rotation = function(): number
-					return if variant() == "arc" then tilts()[index] or 0 else 0
-				end,
-				Visible = isRing,
-				-- A fan walks in item order, also across its curves (Menu.fanLinks)
-				NextSelectionUp = function(): GuiObject?
-					local link = links()[index]
-					return link and slices[link.up]
-				end,
-				NextSelectionDown = function(): GuiObject?
-					local link = links()[index]
-					return link and slices[link.down]
-				end,
-				NextSelectionLeft = function(): GuiObject?
-					local link = links()[index]
-					return link and slices[link.left]
-				end,
-				NextSelectionRight = function(): GuiObject?
-					local link = links()[index]
-					return link and slices[link.right]
-				end,
-				Interactable = usable,
-				Selectable = usable,
-				-- Its focus ring goes round the whole item, button and label (the ItemRing below)
-				Tags = {
-					"ui-menu-slice" :: any,
-					"ui-ring-host",
-					["ui-disabled"] = off,
-					["ui-menu-lg"] = large,
-					["ui-menu-squircle"] = function(): boolean
-						return shape() == "squircle"
-					end,
-					["ui-menu-square"] = function(): boolean
-						return shape() == "square"
-					end,
-				},
-				[ACTIVATED] = function()
-					h:select(item.value)
-				end,
-			})
-			local function beside(): boolean
-				return labelSide() ~= "below"
-			end
-			captions[index] = Element.new("TextLabel", {
-				Name = "Caption",
-				AnchorPoint = function(): Vector2
-					local side = labelSide()
-					return if side == "left"
-						then Vector2.new(1, 0.5)
-						elseif side == "right" then Vector2.new(0, 0.5)
-						else Vector2.new(0.5, 0)
-				end,
-				Position = function(): UDim2
-					local side = labelSide()
-					return if side == "left"
-						then UDim2.new(0, -Menu.captionGap, 0.5, 0)
-						elseif side == "right" then UDim2.new(1, Menu.captionGap, 0.5, 0)
-						else UDim2.new(0.5, 0, 1, Menu.captionDrop)
-				end,
-				-- A pill beside its button is as tall as its text (and padding), so a game's
-				-- theme can give it any text size
-				Size = function(): UDim2
-					return UDim2.fromOffset(0, if beside() then 0 elseif large() then 24 else 20)
-				end,
-				AutomaticSize = function(): Enum.AutomaticSize
-					return if beside() then Enum.AutomaticSize.XY else Enum.AutomaticSize.X
-				end,
-				Text = function(): string
-					return textOf(item)
-				end,
-				Tags = { "ui-menu-caption" :: any, ["ui-disabled"] = off, ["ui-menu-caption-pill"] = beside },
-				Parent = slice,
-			})
-
-			-- The item's focus ring (Component.partRing), round the button and its label. The label's
-			-- size is measured in the button's own units: a UIScale above scales AbsoluteSize, not offsets.
-			local caption = captions[index]
-			local captionSize = Reactive.ref(Vector2.zero)
-			local function measure()
-				local scale = slice.AbsoluteSize.X / sliceSize()
-				captionSize(if scale > 0 then caption.AbsoluteSize / scale else caption.AbsoluteSize)
-			end
-			caption:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-				measure()
-				replace()
-			end)
-			measure()
-			local function itemBounds(): (Vector2, Vector2)
-				return Menu.itemBounds(labelSide(), sliceSize(), captionSize(), Menu.itemRingPad)
-			end
-			Element.hydrate(Component.partRing(app), {
-				Name = "ItemRing",
-				AnchorPoint = Vector2.zero,
-				Position = function(): UDim2
-					local at = itemBounds()
-					return UDim2.fromOffset(math.floor(at.X), math.floor(at.Y))
-				end,
-				Size = function(): UDim2
-					local _, size = itemBounds()
-					return UDim2.fromOffset(math.ceil(size.X), math.ceil(size.Y))
-				end,
-				Tags = {
-					"ui-menu-item-ring" :: any,
-					["ui-menu-lg"] = large,
-					["ui-menu-squircle"] = function(): boolean
-						return shape() == "squircle"
-					end,
-					["ui-menu-square"] = function(): boolean
-						return shape() == "square"
-					end,
-				},
-				Parent = slice,
-			})
-			-- The whole item takes a press, as its focus ring shows it: the button, its label and the
-			-- gap between them. Clear, never selected itself (the button is what focus lands on).
-			Element.new("TextButton", {
-				Name = "Hit",
-				Text = "",
-				AutoButtonColor = false,
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				Selectable = false,
-				Interactable = usable,
-				ZIndex = 3,
-				Position = function(): UDim2
-					local at = itemBounds()
-					return UDim2.fromOffset(math.floor(at.X), math.floor(at.Y))
-				end,
-				Size = function(): UDim2
-					local _, size = itemBounds()
-					return UDim2.fromOffset(math.ceil(size.X), math.ceil(size.Y))
-				end,
-				[ACTIVATED] = function()
-					h:select(item.value)
-				end,
-				Parent = slice,
-			})
-			if item.icon then
-				local icon = Icon.new({
-					app = app,
-					icon = item.icon,
-					size = function(): number
-						return if large() then 32 else 24
-					end,
-					name = "Icon",
-				})
-				icon.Instance.AnchorPoint = Vector2.new(0.5, 0.5)
-				icon.Instance.Position = UDim2.fromScale(0.5, 0.5)
-				icon.Instance.Parent = slice
-			else
-				Element.new("TextLabel", {
-					Name = "Mark",
-					Size = UDim2.fromScale(1, 1),
-					Text = function(): string
-						return initials(textOf(item))
-					end,
-					Tags = { "ui-menu-slice-mark" :: any },
+					Tags = {
+						"ui-menu-caption" :: any,
+						["ui-disabled"] = off,
+						["ui-menu-caption-pill"] = beside,
+					},
 					Parent = slice,
 				})
+
+				-- The item's focus ring (Component.partRing), round the button and its label. The label's
+				-- size is measured in the button's own units: a UIScale above scales AbsoluteSize, not offsets.
+				local caption = captions[index]
+				local captionSize = Reactive.ref(Vector2.zero)
+				local function measure()
+					local scale = slice.AbsoluteSize.X / sliceSize()
+					captionSize(if scale > 0 then caption.AbsoluteSize / scale else caption.AbsoluteSize)
+				end
+				caption:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+					measure()
+					replace()
+				end)
+				measure()
+				local function itemBounds(): (Vector2, Vector2)
+					return Menu.itemBounds(labelSide(), sliceSize(), captionSize(), Menu.itemRingPad)
+				end
+				Element.hydrate(Component.partRing(app), {
+					Name = "ItemRing",
+					AnchorPoint = Vector2.zero,
+					Position = function(): UDim2
+						local at = itemBounds()
+						return UDim2.fromOffset(math.floor(at.X), math.floor(at.Y))
+					end,
+					Size = function(): UDim2
+						local _, size = itemBounds()
+						return UDim2.fromOffset(math.ceil(size.X), math.ceil(size.Y))
+					end,
+					Tags = {
+						"ui-menu-item-ring" :: any,
+						["ui-menu-lg"] = large,
+						["ui-menu-squircle"] = function(): boolean
+							return shape() == "squircle"
+						end,
+						["ui-menu-square"] = function(): boolean
+							return shape() == "square"
+						end,
+					},
+					Parent = slice,
+				})
+				-- The whole item takes a press, as its focus ring shows it: the button, its label and the
+				-- gap between them. Clear, never selected itself (the button is what focus lands on).
+				Element.new("TextButton", {
+					Name = "Hit",
+					Text = "",
+					AutoButtonColor = false,
+					BackgroundTransparency = 1,
+					BorderSizePixel = 0,
+					Selectable = false,
+					Interactable = usable,
+					ZIndex = 3,
+					Position = function(): UDim2
+						local at = itemBounds()
+						return UDim2.fromOffset(math.floor(at.X), math.floor(at.Y))
+					end,
+					Size = function(): UDim2
+						local _, size = itemBounds()
+						return UDim2.fromOffset(math.ceil(size.X), math.ceil(size.Y))
+					end,
+					[ACTIVATED] = function()
+						h:select(item.value)
+					end,
+					Parent = slice,
+				})
+				if item.icon then
+					local icon = Icon.new({
+						app = app,
+						icon = item.icon,
+						size = function(): number
+							return if large() then 32 else 24
+						end,
+						name = "Icon",
+					})
+					icon.Instance.AnchorPoint = Vector2.new(0.5, 0.5)
+					icon.Instance.Position = UDim2.fromScale(0.5, 0.5)
+					icon.Instance.Parent = slice
+				else
+					Element.new("TextLabel", {
+						Name = "Mark",
+						Size = UDim2.fromScale(1, 1),
+						Text = function(): string
+							return initials(textOf(item))
+						end,
+						Tags = { "ui-menu-slice-mark" :: any },
+						Parent = slice,
+					})
+				end
+				slice.Parent = ringFrame
+				slices[index] = slice
 			end
-			slice.Parent = ringFrame
-			slices[index] = slice
-		end
 
-		local content = Element.new("Frame", {
-			Name = "Content",
-			Size = UDim2.fromOffset(0, 0),
-			AutomaticSize = Enum.AutomaticSize.XY,
-			-- A list takes every press on it; a ring or a fan only on its buttons and labels, so a
-			-- press in a gap (or on the anchor under it) reaches the scrim and closes it
-			Active = isList,
-			Tags = {
-				"ui-menu-content" :: any,
-				["ui-menu-ring"] = isRing,
-				["ui-menu-drawer"] = function(): boolean
-					return isList() and isDrawer()
-				end,
-			},
-			Element.new("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder }),
-			list.Instance,
-			ringFrame,
-		}) :: Frame
-		h.content = content
+			local content = Element.new("Frame", {
+				Name = "Content",
+				Size = UDim2.fromOffset(0, 0),
+				AutomaticSize = Enum.AutomaticSize.XY,
+				-- A list takes every press on it; a ring or a fan only on its buttons and labels, so a
+				-- press in a gap (or on the anchor under it) reaches the scrim and closes it
+				Active = isList,
+				Tags = {
+					"ui-menu-content" :: any,
+					["ui-menu-ring"] = isRing,
+					["ui-menu-drawer"] = function(): boolean
+						return isList() and isDrawer()
+					end,
+				},
+				Element.new("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder }),
+				list.Instance,
+				ringFrame,
+			}) :: Frame
+			h.content = content
 
-		-- The rows and buttons (Core/Deferred): built now with mount = "immediate", otherwise the
-		-- first time the menu opens, and with keep = false taken away once it has left the screen
-		local function make()
+			-- The rows and buttons
 			makeRows()
 			makeSlices()
 			h.items, h.slices = rows, slices
 			watchRows()
-		end
-		-- What the overlay, focus and "open" follow: `open` itself, or with rows built on open
-		-- `shown`, true once it is open and its rows exist (and a write to it writes `open`)
-		local shown: Reactive.Ref<boolean> = open
-		if p._menuMount == "immediate" then
-			make()
-		else
-			local part = Deferred.new(h, {
-				slots = { listFrame, ringFrame },
-				keep = p._menuKeep,
-				build = function()
-					make()
-					measured = false
-					if p.onBuild then
-						p.onBuild(h)
+
+			local overlay = Overlay.use(app, {
+				open = shown,
+				content = content,
+				-- Built as it opens: its first show waits off the screen for its labels (ADR 0050, 6)
+				measureFirst = true,
+				returnFocus = p.returnFocus,
+				presentation = function(): string
+					return if isList() then "auto" else "popup"
+				end,
+				prefer = "popup",
+				anchor = p.anchor,
+				side = p.side or "auto",
+				align = p.align,
+				width = function(): number
+					return math.max(p.width or 220, fitWidth())
+				end,
+				name = "Menu",
+				-- A ring or a fan is buttons with gaps between them: a press in a gap (or on the anchor
+				-- under it) is outside it and closes it, as a list's outside presses do
+				solid = isList,
+				tags = { "ui-menu-overlay" },
+				id = h.id,
+				place = function(_presentation: string, input: Overlay.PlaceInput): Overlay.Placement?
+					if isList() then
+						return nil
 					end
+					local view = input.view
+					local anchor = input.anchor
+					local center = if anchor then anchor.position + anchor.size / 2 else view / 2
+					local r = radius()
+					if variant() == "radial" then
+						points(Menu.ring(count, r))
+						tilts({})
+						links({})
+						labelSide("below")
+						center = if anchor
+							then Menu.around(center, anchor.size, extent(), view, Overlay.margin)
+							else Menu.fit(center, extent(), view, Overlay.margin)
+					else
+						-- Up from an anchor in the lower half, down from one in the upper half; labels
+						-- on the side toward the middle, the curve bending away from them.
+						local up = if center.Y > view.Y / 2 then -1 else 1
+						local labelsLeft = if p.toward == "left"
+							then true
+							elseif p.toward == "right" then false
+							else center.X >= view.X / 2
+						local size = sliceSize()
+						local start = (if anchor then anchor.size.Y / 2 else 0) + 12 + size / 2
+						local step = size + Menu.fanGap
+						-- Labels measured in the menu's own units: a UIScale above scales AbsoluteSize
+						local shown = if slices[1] then slices[1].AbsoluteSize.X / size else 0
+						-- Too many for the screen's height: the fan wraps into curves side by side, the
+						-- next one past the labels of the last (its own labels, not the whole menu's)
+						local room = if up < 0
+							then center.Y - Overlay.margin
+							else view.Y - Overlay.margin - center.Y
+						local rows = Menu.fanRows(count, room, start, step, size)
+						local curveRoom: { number } = {}
+						for index, item in entries do
+							local curve = (index - 1) // math.max(1, rows) + 1
+							local measured = captions[index].AbsoluteSize.X / (if shown > 0 then shown else 1)
+							curveRoom[curve] =
+								math.max(curveRoom[curve] or 0, measured, #textOf(item) * 8 + 24)
+						end
+						local steps: { number } = {}
+						for curve, width in curveRoom do
+							curveRoom[curve] = width + 10
+							steps[curve] = size + curveRoom[curve] + Menu.fanCurveGap
+						end
+						-- The outer labels: the last curve's
+						local labelRoom = curveRoom[#curveRoom] or 10
+						local fan, tilt =
+							Menu.fan(count, start, step, r, up, if labelsLeft then 1 else -1, rows, steps)
+						points(fan)
+						tilts(tilt)
+						local usable = {}
+						for index, item in entries do
+							usable[index] = not offOf(item)
+						end
+						links(Menu.fanLinks(count, rows, up, not labelsLeft, usable))
+						labelSide(if labelsLeft then "left" else "right")
+						local pad = {
+							left = size / 2 + (if labelsLeft then labelRoom else 0),
+							right = size / 2 + (if labelsLeft then 0 else labelRoom),
+							top = size / 2,
+							bottom = size / 2,
+						}
+						center += Menu.nudge(center, fan, pad, view, Overlay.margin)
+						-- The frame around the centre covers every button and label.
+						local reach = Vector2.zero
+						for _, point in fan do
+							reach = reach:Max(Vector2.new(math.abs(point.X), math.abs(point.Y)))
+						end
+						fanSize(Vector2.new(reach.X + size / 2 + labelRoom, reach.Y + size / 2) * 2)
+					end
+					return {
+						anchorPoint = Vector2.new(0.5, 0.5),
+						position = UDim2.fromOffset(math.floor(center.X + 0.5), math.floor(center.Y + 0.5)),
+						maxHeight = view.Y,
+					}
 				end,
-				removed = function()
-					table.clear(rows)
-					table.clear(slices)
-					table.clear(captions)
-					h.items, h.slices = nil, nil
+				defaultFocus = function()
+					local set = if isList() then rows else slices
+					for index, item in entries do
+						if not offOf(item) then
+							return set[index]
+						end
+					end
+					return nil
 				end,
 			})
-			h._part = part
-			shown = part:follow(open, {
-				visible = function(): boolean
-					local overlay = overlayRef()
-					return overlay ~= nil and overlay.visible()
-				end,
-			})
+			overlayRef(overlay)
+			Component.claimSelection(app, overlay.root)
+
+			-- The stick points at a round button while a ring is open (a fan is a stack: up and down
+			-- walk it).
+			Composables.useWhile(function(): boolean
+				return shown() == true and variant() == "radial"
+			end, function()
+				return UserInputService.InputChanged:Connect(function(input: InputObject)
+					if input.KeyCode ~= Enum.KeyCode.Thumbstick1 then
+						return
+					end
+					local index =
+						Menu.pick(Vector2.new(input.Position.X, -input.Position.Y), Menu.angles(points()))
+					if index and not offOf(entries[index]) and app.input then
+						app.input:focus(slices[index])
+					end
+				end)
+			end)
 		end
 
-		local overlay = Overlay.use(app, {
-			open = shown,
-			content = content,
-			returnFocus = p.returnFocus,
-			presentation = function(): string
-				return if isList() then "auto" else "popup"
-			end,
-			prefer = "popup",
-			anchor = p.anchor,
-			side = p.side or "auto",
-			align = p.align,
-			width = function(): number
-				return math.max(p.width or 220, fitWidth())
-			end,
-			name = "Menu",
-			-- A ring or a fan is buttons with gaps between them: a press in a gap (or on the anchor
-			-- under it) is outside it and closes it, as a list's outside presses do
-			solid = isList,
-			tags = { "ui-menu-overlay" },
-			id = h.id,
-			place = function(_presentation: string, input: Overlay.PlaceInput): Overlay.Placement?
-				if isList() then
-					return nil
+		local part = Deferred.new(h, {
+			slots = { root },
+			keep = p._menuKeep,
+			build = function()
+				presence()
+				if p.onBuild then
+					p.onBuild(h)
 				end
-				local view = input.view
-				local anchor = input.anchor
-				local center = if anchor then anchor.position + anchor.size / 2 else view / 2
-				local r = radius()
-				if variant() == "radial" then
-					points(Menu.ring(count, r))
-					tilts({})
-					links({})
-					labelSide("below")
-					center = if anchor
-						then Menu.around(center, anchor.size, extent(), view, Overlay.margin)
-						else Menu.fit(center, extent(), view, Overlay.margin)
-				else
-					-- Up from an anchor in the lower half, down from one in the upper half; labels
-					-- on the side toward the middle, the curve bending away from them.
-					local up = if center.Y > view.Y / 2 then -1 else 1
-					local labelsLeft = if p.toward == "left"
-						then true
-						elseif p.toward == "right" then false
-						else center.X >= view.X / 2
-					local size = sliceSize()
-					local start = (if anchor then anchor.size.Y / 2 else 0) + 12 + size / 2
-					local step = size + Menu.fanGap
-					-- Labels measured in the menu's own units: a UIScale above scales AbsoluteSize
-					local shown = if slices[1] then slices[1].AbsoluteSize.X / size else 0
-					-- Too many for the screen's height: the fan wraps into curves side by side, the
-					-- next one past the labels of the last (its own labels, not the whole menu's)
-					local room = if up < 0
-						then center.Y - Overlay.margin
-						else view.Y - Overlay.margin - center.Y
-					local rows = Menu.fanRows(count, room, start, step, size)
-					local curveRoom: { number } = {}
-					for index, item in entries do
-						local curve = (index - 1) // math.max(1, rows) + 1
-						local measured = captions[index].AbsoluteSize.X / (if shown > 0 then shown else 1)
-						curveRoom[curve] = math.max(curveRoom[curve] or 0, measured, #textOf(item) * 8 + 24)
-					end
-					local steps: { number } = {}
-					for curve, width in curveRoom do
-						curveRoom[curve] = width + 10
-						steps[curve] = size + curveRoom[curve] + Menu.fanCurveGap
-					end
-					-- The outer labels: the last curve's
-					local labelRoom = curveRoom[#curveRoom] or 10
-					local fan, tilt =
-						Menu.fan(count, start, step, r, up, if labelsLeft then 1 else -1, rows, steps)
-					points(fan)
-					tilts(tilt)
-					local usable = {}
-					for index, item in entries do
-						usable[index] = not offOf(item)
-					end
-					links(Menu.fanLinks(count, rows, up, not labelsLeft, usable))
-					labelSide(if labelsLeft then "left" else "right")
-					local pad = {
-						left = size / 2 + (if labelsLeft then labelRoom else 0),
-						right = size / 2 + (if labelsLeft then 0 else labelRoom),
-						top = size / 2,
-						bottom = size / 2,
-					}
-					center += Menu.nudge(center, fan, pad, view, Overlay.margin)
-					-- The frame around the centre covers every button and label.
-					local reach = Vector2.zero
-					for _, point in fan do
-						reach = reach:Max(Vector2.new(math.abs(point.X), math.abs(point.Y)))
-					end
-					fanSize(Vector2.new(reach.X + size / 2 + labelRoom, reach.Y + size / 2) * 2)
-				end
-				return {
-					anchorPoint = Vector2.new(0.5, 0.5),
-					position = if measured
-						then UDim2.fromOffset(math.floor(center.X + 0.5), math.floor(center.Y + 0.5))
-						else Menu.offscreen,
-					maxHeight = view.Y,
-				}
 			end,
-			defaultFocus = function()
-				local set = if isList() then rows else slices
-				for index, item in entries do
-					if not offOf(item) then
-						return set[index]
-					end
+			-- keep = false: the overlay floats in the portal, so it goes by hand; the rest with the scope
+			removed = function()
+				local overlay = Reactive.peek(overlayRef) :: any
+				overlayRef(nil)
+				if overlay then
+					overlay.root:Destroy()
 				end
-				return nil
+				h.items, h.slices, h.content = nil, nil, nil
 			end,
 		})
-		overlayRef(overlay)
-		h.presentation = overlay.presentation
-		Component.claimSelection(app, overlay.root)
-
-		-- The stick points at a round button while a ring is open (a fan is a stack: up and down
-		-- walk it).
-		Composables.useWhile(function(): boolean
-			return shown() == true and variant() == "radial"
-		end, function()
-			return UserInputService.InputChanged:Connect(function(input: InputObject)
-				if input.KeyCode ~= Enum.KeyCode.Thumbstick1 then
-					return
-				end
-				local index =
-					Menu.pick(Vector2.new(input.Position.X, -input.Position.Y), Menu.angles(points()))
-				if index and not offOf(entries[index]) and app.input then
-					app.input:focus(slices[index])
-				end
-			end)
-		end)
+		h._part = part
+		shown = part:follow(open, {
+			visible = function(): boolean
+				local overlay = overlayRef()
+				return overlay ~= nil and overlay.visible()
+			end,
+		})
 
 		Reactive.watch(shown, function(isOpen, previous)
-			if isOpen and not measured then
-				settle()
-			end
 			if previous ~= nil and (isOpen == true) ~= (previous == true) then
 				h:emit(if isOpen then "open" else "close")
 			end
 		end, { immediate = true })
 
-		return Element.new("Frame", {
-			Name = "Menu",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromOffset(0, 0),
-			Visible = h:ref("visible"),
-		})
+		return root
 	end,
 }
 
@@ -1321,13 +1299,13 @@ function Menu.new(props: { [string]: any }?)
 			h._part:build()
 		end
 	end
+	-- The handle is finished: the presence is built now with mount = "immediate", or if it starts
+	-- open
 	local part = handle._part
-	if part then
-		-- The handle is finished, so a menu that starts open is built now
-		part:start(handle:ref("open"))
-	elseif given.onBuild and handle.scope then
-		handle.scope:run(given.onBuild, handle)
+	if given._menuMount == "immediate" then
+		part:build()
 	end
+	part:start(handle:ref("open"))
 	return handle
 end
 

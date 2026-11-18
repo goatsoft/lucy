@@ -4,6 +4,7 @@ return function()
 	local Reactive = require(script.Parent.Parent.Core.Reactive)
 	local Element = require(script.Parent.Parent.Core.Element)
 	local Harness = require(script.Parent.Parent.Testing.Harness)
+	local Overlay = require(script.Parent.Parent.Core.Overlay)
 
 	local function near(a: Vector2, b: Vector2): boolean
 		return (a - b).Magnitude < 0.5
@@ -486,6 +487,9 @@ return function()
 		describe("building its rows (mount)", function()
 			-- The rows and round buttons the menu holds now
 			local function made(menu: any): number
+				if not menu.content then
+					return 0
+				end
 				local count = 0
 				for _, d in menu.content:GetDescendants() do
 					if d:HasTag("ui-menu-item") or d:HasTag("ui-menu-slice") then
@@ -497,6 +501,15 @@ return function()
 
 			it("builds its rows and buttons the first time it opens, and keeps them", function()
 				local menu = make({ id = "lazy" })
+				-- Nothing of it floats yet: no overlay in the portal (ADR 0050)
+				expect(menu.content).to.equal(nil)
+				local floating = 0
+				for _, child in app:portal("modal"):GetChildren() do
+					if child:IsA("GuiObject") then
+						floating += 1
+					end
+				end
+				expect(floating).to.equal(0)
 				expect(menu.items).to.equal(nil)
 				expect(menu.slices).to.equal(nil)
 				expect(made(menu)).to.equal(0)
@@ -627,7 +640,7 @@ return function()
 					task.wait()
 				end
 				local function onScreen(menu: any): boolean
-					return menu.content.Position.X.Offset > Menu.offscreen.X.Offset / 2
+					return menu.content.Position ~= Overlay.offscreen
 				end
 				local menu = make({ variant = "arc" })
 				menu:open()
@@ -647,9 +660,11 @@ return function()
 				nextFrame()
 				expect(onScreen(ahead)).to.equal(true)
 
-				-- Built with the menu: on screen at once, as ever
+				-- Built with the menu: measured on its first show the same way (ADR 0050, 6)
 				local now = make({ variant = "arc", mount = "immediate" })
 				now:open()
+				expect(onScreen(now)).to.equal(false)
+				nextFrame()
 				expect(onScreen(now)).to.equal(true)
 			end)
 

@@ -32,8 +32,13 @@
 			maxWidth = nil,           -- pixels, instead of size
 			maxHeight = nil,          -- pixels (a number, ref or getter); the body scrolls past it
 			onOpenChange = function(open, dialog) end,
+			build = function(dialog) return { header, children, footer, corner } end, -- in place of
+			                          -- the slots: the content, made when the dialog is built
+			mount = "shown",          -- shown: built on its first open | immediate: when made
+			keep = true,              -- false: the whole panel is removed once it has closed
+			onBuild = function(dialog) end, -- once its panel exists, each time it is built
 		})
-		dialog:open()  dialog:close()  dialog:toggle()
+		dialog:open()  dialog:close()  dialog:toggle()  dialog:build()
 		app.state:set("ui.quit.open", true)   -- same thing, from anywhere
 
 		Dialog.alert({ title, description, confirmText, cancelText, destructive, onConfirm, onCancel })
@@ -58,6 +63,12 @@
 	The panel sits in a frame (dialog.frame, Core/PanelFrame): with the PanelShadow token set, a
 	shadow offset behind it (dialog.shadow, ui-dialog-shadow); with the title on the edge, a plate
 	(dialog.plate, ui-dialog-plate) whose label is dialog.titleLabel. dialog.content is the panel.
+
+	A dialog is a root and a presence (ADR 0050, Radix's Root and Presence): Dialog.new makes the
+	handle, its state and one empty frame in the modal portal (dialog.Instance); the overlay, the
+	panel and everything in it are built on the first open or when made (mount), before anything
+	sees it open, and the first show waits a frame off the screen while its text is measured.
+	Every field that points into the panel is nil until then; onBuild(dialog) runs once they exist.
 
 	State keys: open, title, description.
 ]]
@@ -169,6 +180,11 @@ function Dialog.new(props: { [string]: any }?)
 	local actionHandles = {}
 	-- One build function in place of the slots: the content is made on the first open
 	local building = Deferred.building(p, "Dialog")
+	-- When the presence is built (ADR 0050): on the first open, or when it is made; kept or not
+	local mount, keep = Deferred.mode(p, "Dialog")
+	if p.onBuild ~= nil and type(p.onBuild) ~= "function" then
+		error(`[Lucy] Dialog: onBuild is a function, not "{tostring(p.onBuild)}"`, 2)
+	end
 	local sizeName = p.size or "md"
 	local width = p.maxWidth or Dialog.sizes[sizeName]
 	if width == nil then
@@ -183,306 +199,341 @@ function Dialog.new(props: { [string]: any }?)
 		rules = Dialog.rules,
 		render = function(h)
 			local open = h:ref("open")
-			local content = Component.create("Frame", {
-				Name = "Content",
-				AutomaticSize = Enum.AutomaticSize.Y,
-				Active = true,
-				Tags = { "ui-dialog-content" },
-			})
-			-- The frame the overlay places: the panel, its shadow and an edge title's plate
-			local parts = PanelFrame.new(h.app, content, {
-				kind = "dialog",
-				title = h:ref("title"),
-				placement = p.titlePlacement,
-			})
-			local frame = parts.frame
-			Element.hydrate(frame, {
-				Size = UDim2.new(1, -32, 0, 0),
-				AutomaticSize = Enum.AutomaticSize.Y,
-			})
-			Element.new("UISizeConstraint", {
-				MaxSize = function(): Vector2
-					return Vector2.new(width + parts.offset(), math.huge)
-				end,
-			}).Parent =
-				frame
-			-- Padding and layout live on an inner frame, so the close button can sit in
-			-- the content's own corner.
-			local short = Composables.useResponsive(h.app, { short = true, default = false })
-			local inner = Element.new("Frame", {
-				Name = "Inner",
-				Size = UDim2.fromScale(1, 0),
-				AutomaticSize = Enum.AutomaticSize.Y,
-				Tags = { "ui-dialog-inner" :: any, ["ui-dialog-short"] = short },
-			}) :: Frame
-			inner.Parent = content
-			local gap = Component.space(h.app, "Space4", 16)
-			Component.list({ Padding = gap, Parent = inner })
-
-			-- Measured, so the body knows how much height is left for it.
-			local headerSize = Reactive.ref(Vector2.zero)
-			local footerSize = Reactive.ref(Vector2.zero)
-			-- Set once the footer is made; bodyCap reads it
-			local footerShown: () -> boolean = function()
-				return false
-			end
-			local header = Element.new("Frame", {
-				Name = "Header",
-				BackgroundTransparency = 1,
-				Size = UDim2.fromScale(1, 0),
-				AutomaticSize = Enum.AutomaticSize.Y,
-				LayoutOrder = 1,
-				[OUT_SIZE] = headerSize :: any,
-			})
-			header.Parent = inner
-			Component.list({ Padding = gap, Parent = header })
-			-- The title over its description (beside it on a short screen: Components/Heading)
-			-- (with the title on the edge, the description alone)
-			local titleRef = h:ref("title")
-			local text, titleLabel, descriptionLabel, headingShown = Heading.new(h.app, {
-				title = function(): string
-					return if parts.edge then "" else titleRef()
-				end,
-				description = h:ref("description"),
-				titleTag = "ui-dialog-title",
-				descriptionTag = "ui-dialog-description",
-			})
-			-- The close button (and the corner slot beside it) in the top right corner, the same place
-			-- on every dialog: the top row stops short of it
-			local corner = PanelCorner.new(h.app, content, {
-				close = showClose,
-				onClose = function()
-					h:close()
-				end,
-				children = p.corner,
-				clear = parts.clear,
-			})
-			h.cornerSlot = corner.slot
-			if corner.closeButton then
-				h.closeButton = corner.closeButton
-				h.maid:give(corner.closeButton)
-			end
-			Element.hydrate(text, {
-				Size = function(): UDim2
-					return UDim2.new(1, -corner.room(), 0, 0)
-				end,
-			})
-			text.LayoutOrder = 1
-			text.Parent = header
-			h.titleLabel = parts.titleLabel or titleLabel
-			h.descriptionLabel = descriptionLabel
-			-- The header slot: filters, tabs or anything else that stays put over the body.
-			-- Shown while anything in it is, so a slot whose children all hide takes no gap.
-			local headerSlot = Component.box({
-				Name = "HeaderSlot",
-				LayoutOrder = 2,
-				Parent = header,
-			})
-			Component.list({ Padding = gap, Parent = headerSlot })
-			-- With the heading's row gone (title on the edge, no description) the slot is the top row
-			Element.new("UIPadding", {
-				PaddingRight = function(): UDim
-					return UDim.new(0, if headingShown() then 0 else corner.room())
-				end,
-			}).Parent =
-				headerSlot
-			if p.header then
-				Component.adopt(headerSlot, p.header)
-			end
-			Element.hydrate(headerSlot, { Visible = Composables.useHasVisibleChild(headerSlot) })
-
-			-- The body scrolls in what is left of the overlay's height (and maxHeight)
-			-- after the padding, header, footer and gaps.
 			local overlayRef: Reactive.Ref<Overlay.Overlay?> = Reactive.ref(nil :: Overlay.Overlay?)
-			-- The inner padding, as the rules above set it
-			local function pad(): number
-				return if short()
-					then Component.space(h.app, "Space4", 16).Offset
-					else Component.space(h.app, "Space6", 24).Offset
+			-- What the overlay, focus and the owner follow: true once it is open and its presence is
+			-- built (and a write to it writes `open`). Set below, before anything is built
+			local shown: Reactive.Ref<boolean> = open
+			-- The body's room, from the presence while it is built
+			local capRef: Reactive.Ref<(() -> number)?> = Reactive.ref(nil :: (() -> number)?)
+			h.bodyRoom = function(): number
+				local cap = capRef()
+				return if cap then cap() else math.huge
 			end
-			local function bodyCap(): number
-				local overlay = overlayRef()
-				if not overlay then
-					return math.huge
-				end
-				local cap = overlay.maxHeight()
-				if p.maxHeight ~= nil then
-					cap = math.min(cap, Reactive.toValue(p.maxHeight))
-				end
-				local scale = Scroll.scaleOf(content)
-				if scale <= 0 then
-					scale = 1
-				end
-				local used = pad() * 2
-					+ headerSize().Y / scale
-					+ gap.Offset
-					+ parts.rise()
-					+ parts.offset()
-					+ parts.clear()
-				if footerShown() then
-					used += footerSize().Y / scale + gap.Offset
-				end
-				return math.max(0, math.floor(cap - used))
-			end
-			-- With build: whether the body shows follows what build returned
-			local bodyShown = Reactive.ref(false)
-			local scroll = ScrollArea.new({
-				app = h.app,
-				name = "Body",
-				layoutOrder = 2,
-				maxHeight = bodyCap,
-				visible = if building then bodyShown else p.children ~= nil,
-				children = p.children,
-			})
-			scroll.Instance.Parent = inner
-			local body = scroll.content
-			Component.list({ Padding = gap, Parent = body })
-			h.scroll = scroll
-			h.bodyRoom = bodyCap
 
-			local footer = Element.new("Frame", {
-				Name = "Footer",
+			-- The root's one instance (ADR 0050): the host the presence is built in, in the portal
+			local host = Element.new("Frame", {
+				Name = "Dialog",
 				BackgroundTransparency = 1,
-				Size = UDim2.fromScale(1, 0),
-				AutomaticSize = Enum.AutomaticSize.Y,
-				LayoutOrder = 3,
-				[OUT_SIZE] = footerSize :: any,
-			})
-			footer.Parent = inner
-			local beside = p.footerPlacement == "beside"
-			if beside then
-				-- The slot on the left, the actions on the right; under them when the row is too narrow
-				Component.list({
-					Padding = gap,
-					FillDirection = Enum.FillDirection.Horizontal,
-					HorizontalFlex = Enum.UIFlexAlignment.SpaceBetween,
-					VerticalAlignment = Enum.VerticalAlignment.Center,
-					Wraps = true,
+				Size = UDim2.fromScale(1, 1),
+				Visible = function(): boolean
+					local overlay = overlayRef()
+					return overlay ~= nil and overlay.visible()
+				end,
+			}) :: Frame
+
+			-- The presence: the overlay, the panel and everything in it, built on the first open
+			-- (or when made, mount = "immediate"), in its own scope (Core/Deferred)
+			local function presence()
+				local content = Component.create("Frame", {
+					Name = "Content",
+					AutomaticSize = Enum.AutomaticSize.Y,
+					Active = true,
+					Tags = { "ui-dialog-content" },
+				})
+				-- The frame the overlay places: the panel, its shadow and an edge title's plate
+				local parts = PanelFrame.new(h.app, content, {
+					kind = "dialog",
+					title = h:ref("title"),
+					placement = p.titlePlacement,
+				})
+				local frame = parts.frame
+				Element.hydrate(frame, {
+					Size = UDim2.new(1, -32, 0, 0),
+					AutomaticSize = Enum.AutomaticSize.Y,
+				})
+				Element.new("UISizeConstraint", {
+					MaxSize = function(): Vector2
+						return Vector2.new(width + parts.offset(), math.huge)
+					end,
+				}).Parent =
+					frame
+				-- Padding and layout live on an inner frame, so the close button can sit in
+				-- the content's own corner.
+				local short = Composables.useResponsive(h.app, { short = true, default = false })
+				local inner = Element.new("Frame", {
+					Name = "Inner",
+					Size = UDim2.fromScale(1, 0),
+					AutomaticSize = Enum.AutomaticSize.Y,
+					Tags = { "ui-dialog-inner" :: any, ["ui-dialog-short"] = short },
+				}) :: Frame
+				inner.Parent = content
+				local gap = Component.space(h.app, "Space4", 16)
+				Component.list({ Padding = gap, Parent = inner })
+
+				-- Measured, so the body knows how much height is left for it.
+				local headerSize = Reactive.ref(Vector2.zero)
+				local footerSize = Reactive.ref(Vector2.zero)
+				-- Set once the footer is made; bodyCap reads it
+				local footerShown: () -> boolean = function()
+					return false
+				end
+				local header = Element.new("Frame", {
+					Name = "Header",
+					BackgroundTransparency = 1,
+					Size = UDim2.fromScale(1, 0),
+					AutomaticSize = Enum.AutomaticSize.Y,
+					LayoutOrder = 1,
+					[OUT_SIZE] = headerSize :: any,
+				})
+				header.Parent = inner
+				Component.list({ Padding = gap, Parent = header })
+				-- The title over its description (beside it on a short screen: Components/Heading)
+				-- (with the title on the edge, the description alone)
+				local titleRef = h:ref("title")
+				local text, titleLabel, descriptionLabel, headingShown = Heading.new(h.app, {
+					title = function(): string
+						return if parts.edge then "" else titleRef()
+					end,
+					description = h:ref("description"),
+					titleTag = "ui-dialog-title",
+					descriptionTag = "ui-dialog-description",
+				})
+				-- The close button (and the corner slot beside it) in the top right corner, the same place
+				-- on every dialog: the top row stops short of it
+				local corner = PanelCorner.new(h.app, content, {
+					close = showClose,
+					onClose = function()
+						h:close()
+					end,
+					children = p.corner,
+					clear = parts.clear,
+				})
+				h.cornerSlot = corner.slot
+				if corner.closeButton then
+					h.closeButton = corner.closeButton
+				end
+				Element.hydrate(text, {
+					Size = function(): UDim2
+						return UDim2.new(1, -corner.room(), 0, 0)
+					end,
+				})
+				text.LayoutOrder = 1
+				text.Parent = header
+				h.titleLabel = parts.titleLabel or titleLabel
+				h.descriptionLabel = descriptionLabel
+				-- The header slot: filters, tabs or anything else that stays put over the body.
+				-- Shown while anything in it is, so a slot whose children all hide takes no gap.
+				local headerSlot = Component.box({
+					Name = "HeaderSlot",
+					LayoutOrder = 2,
+					Parent = header,
+				})
+				Component.list({ Padding = gap, Parent = headerSlot })
+				-- With the heading's row gone (title on the edge, no description) the slot is the top row
+				Element.new("UIPadding", {
+					PaddingRight = function(): UDim
+						return UDim.new(0, if headingShown() then 0 else corner.room())
+					end,
+				}).Parent =
+					headerSlot
+				if p.header then
+					Component.adopt(headerSlot, p.header)
+				end
+				Element.hydrate(headerSlot, { Visible = Composables.useHasVisibleChild(headerSlot) })
+
+				-- The body scrolls in what is left of the overlay's height (and maxHeight)
+				-- after the padding, header, footer and gaps.
+				-- The inner padding, as the rules above set it
+				local function pad(): number
+					return if short()
+						then Component.space(h.app, "Space4", 16).Offset
+						else Component.space(h.app, "Space6", 24).Offset
+				end
+				local function bodyCap(): number
+					local overlay = overlayRef()
+					if not overlay then
+						return math.huge
+					end
+					local cap = overlay.maxHeight()
+					if p.maxHeight ~= nil then
+						cap = math.min(cap, Reactive.toValue(p.maxHeight))
+					end
+					local scale = Scroll.scaleOf(content)
+					if scale <= 0 then
+						scale = 1
+					end
+					local used = pad() * 2
+						+ headerSize().Y / scale
+						+ gap.Offset
+						+ parts.rise()
+						+ parts.offset()
+						+ parts.clear()
+					if footerShown() then
+						used += footerSize().Y / scale + gap.Offset
+					end
+					return math.max(0, math.floor(cap - used))
+				end
+				-- With build: whether the body shows follows what build returned
+				local bodyShown = Reactive.ref(false)
+				local scroll = ScrollArea.new({
+					app = h.app,
+					name = "Body",
+					layoutOrder = 2,
+					maxHeight = bodyCap,
+					visible = if building then bodyShown else p.children ~= nil,
+					children = p.children,
+				})
+				scroll.Instance.Parent = inner
+				local body = scroll.content
+				Component.list({ Padding = gap, Parent = body })
+				h.scroll = scroll
+				capRef(bodyCap)
+
+				local footer = Element.new("Frame", {
+					Name = "Footer",
+					BackgroundTransparency = 1,
+					Size = UDim2.fromScale(1, 0),
+					AutomaticSize = Enum.AutomaticSize.Y,
+					LayoutOrder = 3,
+					[OUT_SIZE] = footerSize :: any,
+				})
+				footer.Parent = inner
+				local beside = p.footerPlacement == "beside"
+				if beside then
+					-- The slot on the left, the actions on the right; under them when the row is too narrow
+					Component.list({
+						Padding = gap,
+						FillDirection = Enum.FillDirection.Horizontal,
+						HorizontalFlex = Enum.UIFlexAlignment.SpaceBetween,
+						VerticalAlignment = Enum.VerticalAlignment.Center,
+						Wraps = true,
+						Parent = footer,
+					})
+				else
+					Component.list({ Padding = gap, Parent = footer })
+				end
+				-- The footer slot stays put under the body, over the actions. Shown while
+				-- anything in it is (key hints hidden on touch leave no gap).
+				local footerSlot = Component.box({
+					Name = "FooterSlot",
+					LayoutOrder = 1,
+					Size = if beside then UDim2.new() else nil,
+					AutomaticSize = if beside then Enum.AutomaticSize.XY else nil,
 					Parent = footer,
 				})
-			else
-				Component.list({ Padding = gap, Parent = footer })
-			end
-			-- The footer slot stays put under the body, over the actions. Shown while
-			-- anything in it is (key hints hidden on touch leave no gap).
-			local footerSlot = Component.box({
-				Name = "FooterSlot",
-				LayoutOrder = 1,
-				Size = if beside then UDim2.new() else nil,
-				AutomaticSize = if beside then Enum.AutomaticSize.XY else nil,
-				Parent = footer,
-			})
-			Component.list({ Padding = gap, Parent = footerSlot })
-			if p.footer then
-				Component.adopt(footerSlot, p.footer)
-			end
-			local slotHasVisible = Composables.useHasVisibleChild(footerSlot)
-			Element.hydrate(footerSlot, { Visible = slotHasVisible })
-			local actionsRow = Component.box({
-				Name = "Actions",
-				LayoutOrder = 2,
-				Size = if beside then UDim2.new() else nil,
-				AutomaticSize = if beside then Enum.AutomaticSize.XY else nil,
-				Parent = footer,
-			})
-			Component.list({
-				FillDirection = Enum.FillDirection.Horizontal,
-				HorizontalAlignment = Enum.HorizontalAlignment.Right,
-				Padding = Component.space(h.app, "Space2", 8),
-				Parent = actionsRow,
-			})
-			for index, action in p.actions or {} do
-				local actionHandle = Button.new({
-					app = h.app,
-					id = action.id,
-					text = action.text,
-					icon = action.icon,
-					children = action.children,
-					size = action.size,
-					variant = action.variant or (if index == #p.actions then "default" else "outline"),
-					disabled = action.disabled,
-					layoutOrder = index,
-					onClick = function()
-						local keepOpen = action.onClick and action.onClick(h) == false
-						if not keepOpen and action.close ~= false then
-							h:close()
+				Component.list({ Padding = gap, Parent = footerSlot })
+				if p.footer then
+					Component.adopt(footerSlot, p.footer)
+				end
+				local slotHasVisible = Composables.useHasVisibleChild(footerSlot)
+				Element.hydrate(footerSlot, { Visible = slotHasVisible })
+				local actionsRow = Component.box({
+					Name = "Actions",
+					LayoutOrder = 2,
+					Size = if beside then UDim2.new() else nil,
+					AutomaticSize = if beside then Enum.AutomaticSize.XY else nil,
+					Parent = footer,
+				})
+				Component.list({
+					FillDirection = Enum.FillDirection.Horizontal,
+					HorizontalAlignment = Enum.HorizontalAlignment.Right,
+					Padding = Component.space(h.app, "Space2", 8),
+					Parent = actionsRow,
+				})
+				for index, action in p.actions or {} do
+					local actionHandle = Button.new({
+						app = h.app,
+						id = action.id,
+						text = action.text,
+						icon = action.icon,
+						children = action.children,
+						size = action.size,
+						variant = action.variant or (if index == #p.actions then "default" else "outline"),
+						disabled = action.disabled,
+						layoutOrder = index,
+						onClick = function()
+							local keepOpen = action.onClick and action.onClick(h) == false
+							if not keepOpen and action.close ~= false then
+								h:close()
+							end
+						end,
+					})
+					actionHandle.Instance.Parent = actionsRow
+					table.insert(actionHandles, actionHandle)
+				end
+				actionsRow.Visible = #actionHandles > 0
+				local hasActions = #actionHandles > 0
+				footerShown = function(): boolean
+					return hasActions or slotHasVisible()
+				end
+				Element.hydrate(footer, { Visible = footerShown })
+
+				-- With build: what it makes, in the slots in order (0049, 2)
+				if building then
+					local made = Deferred.placeBuild(h, p, "Dialog", {
+						header = headerSlot,
+						children = body,
+						footer = footerSlot,
+						corner = corner.slot,
+					})
+					bodyShown(made.children ~= nil)
+				end
+
+				-- Stacking, back, focus and the dimmed backdrop (owned, so destroy pops them).
+				local overlay = Overlay.use(h.app, {
+					open = shown,
+					content = frame,
+					returnFocus = p.returnFocus,
+					presentation = "center",
+					modal = modal,
+					-- A non modal dialog takes focus only when told what to focus
+					focus = p.defaultFocus ~= nil,
+					scrim = if p.scrim == false then false else nil,
+					dismissible = dismissible,
+					onBack = p._onBack,
+					closeOnOutside = closeOnOverlay,
+					host = host,
+					measureFirst = true,
+					id = h.id,
+					name = "Dialog",
+					tags = { "ui-dialog" },
+					defaultFocus = function()
+						local chosen = p.defaultFocus
+						if type(chosen) == "function" then
+							chosen = chosen(h)
 						end
+						if chosen ~= nil then
+							return chosen
+						end
+						local last = actionHandles[#actionHandles]
+						return if last then last.Instance else (h.closeButton and h.closeButton.Instance)
 					end,
 				})
-				actionHandle.Instance.Parent = actionsRow
-				table.insert(actionHandles, actionHandle)
-				h.maid:give(actionHandle)
-			end
-			actionsRow.Visible = #actionHandles > 0
-			local hasActions = #actionHandles > 0
-			footerShown = function(): boolean
-				return hasActions or slotHasVisible()
-			end
-			Element.hydrate(footer, { Visible = footerShown })
-
-			-- What the overlay, focus and the owner follow: `open` itself, or with build `shown`,
-			-- which is true only once the dialog is open and its content is built (and writes `open`)
-			local shown: Reactive.Ref<boolean> = open
-			if building then
-				local part = Deferred.slots(h, p, "Dialog", {
-					header = headerSlot,
-					children = body,
-					footer = footerSlot,
-					corner = corner.slot,
-				}, {
-					placed = function(made)
-						bodyShown(made.children ~= nil)
-					end,
-					removed = function()
-						bodyShown(false)
-						scroll.frame.CanvasPosition = Vector2.zero
-					end,
-				})
-				h._part = part
-				shown = part:follow(open, {
-					visible = function(): boolean
-						local overlay = overlayRef()
-						return overlay ~= nil and overlay.visible()
-					end,
-				})
+				overlayRef(overlay)
+				h.overlay, h.content, h.body, h.footer, h.actions =
+					overlay.scrim, content, body, footer, actionHandles
+				h.frame, h.shadow, h.plate = frame, parts.shadow, parts.plate
+				h.headerSlot, h.footerSlot, h.actionsRow = headerSlot, footerSlot, actionsRow
+				Component.claimSelection(h.app, overlay.root)
 			end
 
-			-- Stacking, back, focus and the dimmed backdrop (owned, so destroy pops them).
-			local overlay = Overlay.use(h.app, {
-				open = shown,
-				content = frame,
-				returnFocus = p.returnFocus,
-				presentation = "center",
-				modal = modal,
-				-- A non modal dialog takes focus only when told what to focus
-				focus = p.defaultFocus ~= nil,
-				scrim = if p.scrim == false then false else nil,
-				dismissible = dismissible,
-				onBack = p._onBack,
-				closeOnOutside = closeOnOverlay,
-				parent = false,
-				id = h.id,
-				name = "Dialog",
-				tags = { "ui-dialog" },
-				defaultFocus = function()
-					local chosen = p.defaultFocus
-					if type(chosen) == "function" then
-						chosen = chosen(h)
+			local part = Deferred.new(h, {
+				slots = { host },
+				keep = keep,
+				build = function()
+					presence()
+					if p.onBuild then
+						p.onBuild(h)
 					end
-					if chosen ~= nil then
-						return chosen
-					end
-					local last = actionHandles[#actionHandles]
-					return if last then last.Instance else (h.closeButton and h.closeButton.Instance)
+				end,
+				-- keep = false: everything the presence pointed at is gone
+				removed = function()
+					overlayRef(nil)
+					capRef(nil)
+					table.clear(actionHandles)
+					h.overlay, h.content, h.body, h.footer, h.actions = nil, nil, nil, nil, nil
+					h.frame, h.shadow, h.plate = nil, nil, nil
+					h.headerSlot, h.footerSlot, h.actionsRow, h.cornerSlot = nil, nil, nil, nil
+					h.closeButton, h.titleLabel, h.descriptionLabel, h.scroll = nil, nil, nil, nil
 				end,
 			})
-			local root = overlay.root
-			overlayRef(overlay)
-			h.overlay, h.content, h.body, h.footer, h.actions =
-				overlay.scrim, content, body, footer, actionHandles
-			h.frame, h.shadow, h.plate = frame, parts.shadow, parts.plate
-			h.headerSlot, h.footerSlot, h.actionsRow = headerSlot, footerSlot, actionsRow
-			Component.claimSelection(h.app, root)
+			h._part = part
+			shown = part:follow(open, {
+				visible = function(): boolean
+					local overlay = overlayRef()
+					return overlay ~= nil and overlay.visible()
+				end,
+			})
 
 			-- Side effects of opening: the owner hears (once the content is there, with build).
 			Reactive.watch(shown, function(isOpen, previous)
@@ -496,7 +547,7 @@ function Dialog.new(props: { [string]: any }?)
 					end
 				end
 			end, { immediate = true })
-			return root
+			return host
 		end,
 	})
 
@@ -513,12 +564,14 @@ function Dialog.new(props: { [string]: any }?)
 	if not (p.Parent or p.parent) then
 		handle.Instance.Parent = handle.app:portal("modal")
 	end
-	-- With build: the handle is finished, so a dialog that starts open is built now
+	-- The handle is finished: the presence is built now with mount = "immediate", or if it starts
+	-- open
+	handle.build = build
 	local part = handle._part
-	if part then
-		handle.build = build
-		part:start(handle:ref("open"))
+	if mount == "immediate" then
+		part:build()
 	end
+	part:start(handle:ref("open"))
 	return handle
 end
 

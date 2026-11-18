@@ -656,6 +656,54 @@ return function()
 			scope:stop()
 		end)
 
+		-- A frame drawn, the Heartbeat after it and what that defers
+		local function nextFrame()
+			local RunService = game:GetService("RunService")
+			if RunService:IsClient() then
+				RunService.RenderStepped:Wait()
+			end
+			RunService.Heartbeat:Wait()
+			task.wait()
+		end
+
+		it("with measureFirst, waits off the screen on its first open until a frame measured it", function()
+			Harness.mount(app)
+			local overlay, open, scope = make({ presentation = "center", measureFirst = true })
+			open(true)
+			expect(overlay.content.Position).to.equal(Overlay.offscreen)
+			nextFrame()
+			expect(overlay.content.Position).never.to.equal(Overlay.offscreen)
+			-- Measured once: the next open is placed at once
+			open(false)
+			open(true)
+			expect(overlay.content.Position).never.to.equal(Overlay.offscreen)
+			scope:stop()
+
+			-- Without it, placed at once
+			local plain, openPlain, plainScope = make({ presentation = "center" })
+			openPlain(true)
+			expect(plain.content.Position).never.to.equal(Overlay.offscreen)
+			plainScope:stop()
+		end)
+
+		it("sits in its host, and the host stacks where the overlay does", function()
+			local host = Instance.new("Frame")
+			host.Parent = app:portal("modal")
+			local other, openOther, otherScope = make({})
+			local hosted, openHosted, hostedScope = make({ host = host })
+			expect(hosted.root.Parent).to.equal(host)
+			openOther(true)
+			openHosted(true)
+			-- Opened last: on top of the other, by the host's own place among the portal's children
+			expect(host.ZIndex > other.root.ZIndex).to.equal(true)
+			openHosted(false)
+			openOther(false)
+			openOther(true)
+			expect(other.root.ZIndex > host.ZIndex).to.equal(true)
+			otherScope:stop()
+			hostedScope:stop()
+		end)
+
 		it("places it again when its width changes while open, and lets its owner place it again", function()
 			local gui = Harness.mount(app)
 			local trigger = Instance.new("TextButton")

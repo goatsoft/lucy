@@ -46,8 +46,10 @@ settings:open()
 | `corner` | table | | | Instances or handles in the top right corner, left of the close button, such as a currency chip. See [The corner](#the-corner) |
 | `children` | table | | | Instances or handles to put in the scrolling body |
 | `footer` | table | | | Instances or handles under the body, above the actions. They stay put while the body scrolls |
-| `build` | function | | | In place of `header`, `corner`, `children` and `footer`: called the first time the sheet opens, so nothing in it is made until then. See [Building on open](#building-on-open) |
-| `keep` | boolean | `true` | | With `build`. `false` removes the content once the sheet has closed and builds it again on the next open |
+| `build` | function | | | In place of `header`, `corner`, `children` and `footer`: makes the content when the sheet is built. See [Building on open](#building-on-open) |
+| `mount` | string | `"shown"` | | When the sheet is built: `"shown"` the first time it opens, `"immediate"` when it is made |
+| `keep` | boolean | `true` | | `false` takes the whole panel away once the sheet has closed and builds it again on the next open. With `mount = "shown"` only |
+| `onBuild` | function | | | Called with the sheet once its panel exists, each time it is built, before it shows: the place to style or reach into it. See [Reaching into a sheet](#reaching-into-a-sheet-onbuild) |
 | `side` | string | `"right"` | | `left` or `right`: the edge the panel comes from |
 | `width` | number | `360` | | The panel's width in pixels, at most 90% of the screen |
 | `presentation` | string | `"auto"` | | `auto`, `panel` or `drawer` |
@@ -104,12 +106,16 @@ whatever had it before.
 
 ## Building on open
 
-A sheet made with `header`, `children` and the other slots holds content you
-have already made, so all of it exists from the moment the sheet does, open or
-not. A game with a dozen sheets pays for every one of them while it starts.
+A sheet is built the first time it opens. Until then only the sheet itself
+exists: its id, `ui.<id>.open`, its methods and one empty frame in the modal
+layer. The panel, its title, close button, body, slots and actions, and what
+goes in them, are made on the first open, before anything treats the sheet as
+open: it is placed, takes focus and calls `onOpenChange` after. A game with a
+dozen sheets pays for none of them until a player opens one.
 
-Give one `build` function in place of the slots and the content is made the
-first time the sheet opens:
+Content you made yourself and gave as `header`, `children` and the other slots
+waits until then. To make the content on the first open too, give one `build`
+function in place of the slots:
 
 ```luau
 local inventory = Lucy.Sheet.new({
@@ -127,28 +133,50 @@ local inventory = Lucy.Sheet.new({
 })
 ```
 
-- `build` is called once, with the sheet. What it returns goes into the slots
-  in the order `header`, `children`, `footer`, `corner`, so something made once
-  (tabs: the bar in the header, the panels in the body) is placed in both.
-- The title, the close button and the `actions` are made with the sheet, as
-  always.
-- Nothing treats the sheet as open until its content is there: it is placed,
-  takes focus and calls `onOpenChange` after `build` has run.
-- Once built, the content is kept: opening again is instant and finds the sheet
-  as the player left it. `keep = false` removes it after the sheet has closed
-  (after a drawer has slid away) and builds it again next time. Use it for a big
-  sheet players seldom open, and keep what must last in
-  [app state](../guide/app-state.md).
-- `sheet:build()` builds the content ahead without opening, and
+- `build` is called with the sheet each time it is built. What it returns goes
+  into the slots in the order `header`, `children`, `footer`, `corner`, so
+  something made once (tabs: the bar in the header, the panels in the body) is
+  placed in both. `build` together with a slot is an error. If `build` throws,
+  the sheet closes again and the error is reported.
+- Once built, the sheet is kept: opening again is instant and finds it as the
+  player left it. `keep = false` takes the whole panel away after it has closed
+  (after a drawer has slid away) and builds it again next time. Use it for a sheet players see
+  once or seldom, and keep what must last in [app state](../guide/app-state.md).
+- `mount = "immediate"` builds it when it is made, for code that must reach
+  its parts at once.
+- `sheet:build()` builds it ahead without opening, and
   `Lucy.prebuild({ inventory, settings })` builds several, one each frame, so
-  the sheets players open first are ready by the time they do.
-- Until it is built, the components inside do not exist: code that reaches into
-  a sheet that has never opened calls `sheet:build()` first.
-- `build` together with a slot is an error. If `build` throws, the sheet closes
-  again and the error is reported.
+  the panels players open first are ready by the time they do.
+- The first time it shows, it waits one frame off the screen while its text is
+  measured, then appears where it belongs (a drawer slides in from its
+  measured height). Focus and `onOpenChange` do
+  not wait.
 
-A module that makes its sheet with `build` costs almost nothing to require, so
-its hotkeys and state can be set up when the game starts.
+### Reaching into a sheet: `onBuild`
+
+The fields that point into the panel (`frame`, `content`, `body`,
+`headerSlot`, `footerSlot`, `cornerSlot`, `actionsRow`, `actions`,
+`closeButton`, `titleLabel`, `shadow`, `plate`) are `nil` until it is built,
+and so are the components inside it. Style them or reach into them in
+`onBuild`, which is called with the sheet once they exist, each time it is
+built, before it shows:
+
+```luau
+Lucy.Sheet.new({
+    id = "shop",
+    title = "Shop",
+    build = buildShop,
+    onBuild = function(sheet)
+        Lucy.hydrate(sheet.content)({ Tags = { "my-shop-panel" } })
+    end,
+})
+```
+
+Code elsewhere that reaches into a sheet that has never opened calls
+`sheet:build()` first.
+
+A module that makes its sheet this way costs almost nothing to require, so its
+hotkeys and state can be set up when the game starts.
 
 ## Examples
 
