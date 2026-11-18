@@ -23,6 +23,10 @@
 
 		Lucy.hydrate(existingGui.Title) { Text = title }   -- bring Studio-built UI to life
 
+	[Lucy.color] = "hype" (a name, a ref or getter of one) makes the instance a coloured container
+	(Core/Color), stopped with its bindings; it is applied after Tags, so the instance's own tags
+	take the colour. Called, Lucy.color(container, name) is the same thing by hand.
+
 	Lifetime: an element created inside an owner (a component's render, an effect, a
 	show branch, an each item, an effectScope) shares that owner's scope: its
 	bindings are the owner's, and when the owner stops, the bindings stop first and
@@ -33,6 +37,7 @@
 	only unbound, and always get their own scope.
 ]]
 
+local Color = require(script.Parent.Color)
 local Reactive = require(script.Parent.Reactive)
 
 local Element = {}
@@ -98,6 +103,14 @@ end
 
 -- [Lucy.instance] = someRef or function(instance) end
 Element.instance = key("instance")
+
+-- [Lucy.color] = "hype", a ref or a getter: a coloured container (Core/Color). Callable too:
+-- Lucy.color(container, name) returns stop()
+Element.color = table.freeze(setmetatable({ [KEY] = "color" }, {
+	__call = function(_, container: Instance, name: any): () -> ()
+		return Color.scope(container, name)
+	end,
+})) :: any
 
 local function describe(instance: Instance, property: string): string
 	return `{instance.ClassName}.{property}`
@@ -400,9 +413,10 @@ local function bindChild(instance: Instance, child: any, position: number, owned
 end
 
 -- Reads the props: static values are set now, getters are gathered (see defer).
--- Returns the Parent prop, which is bound last.
-local function readProps(instance: Instance, props: { [any]: any }): any
+-- Returns the Parent prop, which is bound last, and the colour, bound after every tag.
+local function readProps(instance: Instance, props: { [any]: any }): (any, any)
 	local parent = nil
+	local colour = nil
 	for k, value in props do
 		if type(k) == "string" then
 			if k == "Parent" then
@@ -422,16 +436,18 @@ local function readProps(instance: Instance, props: { [any]: any }): any
 			else
 				assign(instance, k, value)
 			end
+		elseif k == Element.color then
+			colour = value
 		elseif type(k) == "table" and k[KEY] then
 			bindSpecial(instance, k, value)
 		end
 	end
-	return parent
+	return parent, colour
 end
 
 local function bind(instance: Instance, props: { [any]: any }, owned: boolean)
 	local from = pendingTop
-	local ok: boolean, parent: any = pcall(readProps, instance, props)
+	local ok: boolean, parent: any, colour: any = pcall(readProps, instance, props)
 	if not ok then
 		-- Pop what was gathered before the error, then report it as before.
 		for i = from + 1, pendingTop do
@@ -443,6 +459,10 @@ local function bind(instance: Instance, props: { [any]: any }, owned: boolean)
 		error(parent, 0)
 	end
 	bindPending(instance, from)
+	-- After the tags (static and bound), so the instance's own take the colour
+	if colour ~= nil then
+		Color.scope(instance, colour)
+	end
 
 	local position = 0
 	local children = props.Children

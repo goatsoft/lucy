@@ -120,7 +120,7 @@ local Lucy = {
 	tween = Animate.tween,
 
 	-- Named colours on part of the UI (Core/Color, ADR 0052)
-	color = require(Core.Color).scope,
+	color = Element.color,
 	Color = require(Core.Color),
 
 	-- Images (Core/Preload): fetch pictures before they are shown

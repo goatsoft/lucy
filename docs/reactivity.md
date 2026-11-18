@@ -194,6 +194,7 @@ Lucy.new "TextButton" {
 | `[Lucy.model "Text"] = ref` | binds both ways |
 | `[Lucy.out "AbsoluteSize"] = ref` | the ref follows the property |
 | `[Lucy.instance] = ref` | the instance, for later |
+| `[Lucy.color] = "hype"` | a coloured container: a colour's name, a ref or a getter (theming, Named colours) |
 | array items | children: instances, component handles, arrays, `show` and `each` |
 | `Children = { Name = child }` | named children |
 | `Parent = gui` | set last |

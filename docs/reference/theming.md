@@ -260,6 +260,10 @@ To colour part of the UI, give a component `color`, or colour any container:
 ```luau
 Lucy.Sheet.new({ title = "THE LAB", color = "premium", children = { ... } })
 Lucy.color(card, "hype") -- a name, a ref or getter of one, or nil; returns stop()
+
+-- or as a prop, stopped with the element's bindings
+Lucy.new("TextLabel", { Tags = { "shop-price" }, [Lucy.color] = tone })
+Lucy.hydrate(card)({ [Lucy.color] = "hype" })
 ```
 
 Lucy's components inside take the colour wherever they would use Primary: filled
