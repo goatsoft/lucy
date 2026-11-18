@@ -470,6 +470,32 @@ function Deferred.prebuild(handles: { any }): { done: () -> boolean, progress: (
 	}
 end
 
+-- Overlays waiting to be built ahead (warm, and the ahead of one opening): one queue for all of
+-- them, one a frame, from the frame after they are asked for. So the frame a menu opens in pays
+-- for the menu alone, and two overlays warmed apart never build in the same frame.
+local warmQueue: { any } = {}
+local warming = false
+local function queueWarm(handle: any)
+	table.insert(warmQueue, handle)
+	if warming then
+		return
+	end
+	warming = true
+	task.spawn(function()
+		while #warmQueue > 0 do
+			RunService.Heartbeat:Wait()
+			local queued = table.remove(warmQueue, 1)
+			if not queued.destroyed and type(queued.build) == "function" then
+				local ok, err = pcall(queued.build, queued)
+				if not ok then
+					Deferred.report(err)
+				end
+			end
+		end
+		warming = false
+	end)
+end
+
 -- A list of handles or instances from one, a list of them, or a function returning either
 local function listOf(value: any): { any }
 	if type(value) == "function" then
@@ -492,9 +518,10 @@ end
 		                                                       -- it warms
 		ahead = { overlays } or function() return ... end    -- warmed when this one opens
 
-	handle:warm() warms its pictures and builds it ahead (one overlay a frame, as Lucy.prebuild),
-	without opening it. On open its pictures go to the front of the queue. Call once the handle is
-	finished; it lives in the handle's scope.
+	handle:warm() warms its pictures and builds it ahead, without opening it. Every overlay warmed
+	this way, by warm(), a trigger or an ahead, waits in one queue and is built one a frame from the
+	next frame on: the frame an overlay opens in builds that overlay only. On open its pictures go
+	to the front of the queue. Call once the handle is finished; it lives in the handle's scope.
 ]]
 function Deferred.anticipate(handle: any, props: { [string]: any }, what: string)
 	local preloadOf = props.preload
@@ -517,7 +544,7 @@ function Deferred.anticipate(handle: any, props: { [string]: any }, what: string
 		end
 		if not built then
 			built = true
-			Deferred.prebuild({ h })
+			queueWarm(h)
 		end
 	end
 	local scope = handle.scope

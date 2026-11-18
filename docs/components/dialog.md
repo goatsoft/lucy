@@ -203,8 +203,10 @@ shop:warm()                    -- or by hand: pictures warmed, panel built, stil
 ```
 
 `warm()` loads the pictures (once each, through the [shared
-queue](image.md#preloading)) and builds the panel ahead, one panel a frame as
-[`Lucy.prebuild`](#building-on-open) does. It never opens it. Warmed pictures
+queue](image.md#preloading)) and builds the panel ahead. Every overlay warmed
+this way (by `warm()`, a `trigger` or an `ahead`) waits in one queue and is
+built one a frame, from the frame after: the frame a menu opens in builds the
+menu alone, and its `ahead` follow a frame each. It never opens it. Warmed pictures
 are not [pinned](image.md#pinned-pictures): Roblox may drop them again later,
 so warm close to when they are needed. On touch, where nothing hovers, `ahead`
 and `warm()` do the job. Sheets, menus and selects take the same props and have

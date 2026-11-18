@@ -62,7 +62,9 @@ behind are not held. A list short enough to fit in that window is warmed whole, 
 
 **Overlays.** A Dialog, Sheet, Menu or Select takes `preload`: a list of pictures, or a function
 returning one, called when it is needed. `overlay:warm()` warms them and builds the presence ahead
-(0050), one overlay a frame as `Lucy.prebuild` does. Lucy calls `warm()`:
+(0050). Every overlay warmed, by any of the ways below, waits in one queue and is built one a
+frame from the frame after it was asked for, so the frame an overlay opens in builds that overlay
+only. Lucy calls `warm()`:
 
 - when anything in its `trigger` (a button, its handle, or a list of them: what opens it) is
   hovered, focused or selected on a gamepad: the half second before a press;
@@ -106,6 +108,10 @@ Lucy d7e6163, Dance Lab c7ced4c, Studio Play, desktop, 2026-11-18:
   (nothing warmed ahead). The intro Club Pass drew its showcase cards on its first frame.
 - **Anticipation:** focusing MENU built the club menu (141 instances); opening it built the dance
   menu (503) and the inventory (271), both still closed, and warmed the store pictures.
+- **One a frame (later):** each `warm()` first started a build of its own at once, so a menu
+  opening built its `ahead` in its own frame: MENU pressed without a hover took 74 ms in Studio,
+  the fan, the dance menu and the inventory (16 to 1,032 instances) in one frame. The shared queue
+  builds them a frame each, after the menu's frame.
 - **Memory:** about 214 MB of textures in the club in Studio. No figure was taken before the
   change, and Studio's are not a phone's: to be measured on a device.
 - **Not anticipated:** a hotkey (B for The Lab, I, N) has nothing to hover. Those panels build on

@@ -969,6 +969,60 @@ return function()
 			expect(inner:get("open")).to.equal(false)
 		end)
 
+		-- The frame each dialog's build ran in, counted from 1 by a frame counter (which way the
+		-- counter and the queue resume within a frame does not matter: only that the frames differ)
+		local function frameOfBuild(dialogs: { any }): ({ number }, () -> ())
+			local frame = 1
+			local at = {}
+			local counter = game:GetService("RunService").Heartbeat:Connect(function()
+				frame += 1
+			end)
+			for i, dialog in dialogs do
+				local build = dialog.build
+				dialog.build = function(...)
+					if at[i] == nil then
+						at[i] = frame
+					end
+					return build(...)
+				end
+			end
+			return at, function()
+				counter:Disconnect()
+			end
+		end
+
+		it("builds the overlays in ahead one a frame, none in the frame it opens in", function()
+			local first = Dialog.new({ app = app, title = "Dances" })
+			local second = Dialog.new({ app = app, title = "Inventory" })
+			local outer = Dialog.new({ app = app, title = "Menu", ahead = { first, second } })
+			local at, stop = frameOfBuild({ first, second })
+			outer:open()
+			expect(outer.content).to.be.ok()
+			expect(first.content == nil and second.content == nil).to.equal(true)
+			expect(Harness.waitFor(function()
+				return first.content ~= nil and second.content ~= nil
+			end)).to.equal(true)
+			stop()
+			expect(at[1] ~= at[2]).to.equal(true)
+			expect(first:get("open") or second:get("open")).to.equal(false)
+		end)
+
+		it("shares one queue between overlays warmed apart, one a frame", function()
+			local a = Dialog.new({ app = app, title = "A" })
+			local b = Dialog.new({ app = app, title = "B" })
+			local c = Dialog.new({ app = app, title = "C" })
+			local at, stop = frameOfBuild({ a, b, c })
+			a:warm()
+			b:warm()
+			c:warm()
+			expect(a.content == nil and b.content == nil and c.content == nil).to.equal(true)
+			expect(Harness.waitFor(function()
+				return a.content ~= nil and b.content ~= nil and c.content ~= nil
+			end)).to.equal(true)
+			stop()
+			expect(at[1] ~= at[2] and at[2] ~= at[3] and at[1] ~= at[3]).to.equal(true)
+		end)
+
 		it("puts its pictures first in the queue when it opens", function()
 			Preload.batchSize = 1
 			-- A frame a batch, as a real fetch takes: the queue is still busy when the dialog opens
