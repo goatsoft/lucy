@@ -163,7 +163,16 @@ Menu sizes itself from its measured rows (`fitWidth`, `GetTextBoundsAsync` in a
 `AbsoluteSize`. Deferred rows are not measured when it opens, so `Overlay.use`
 runs `place()` again when `options.width` (a getter) changes while open. The
 deferred measuring checks the menu still exists and is built before reading a
-label.
+label. A fan's labels are measured a frame after they are built as well, so on
+the deferred path each label's size change places the fan again
+(`overlay.place()`, at most once a frame); a menu built with `mount = "immediate"`
+is placed as before.
+
+A game styles a menu's rows (Dance Lab tags every row, button, label and
+caption with its tone) in `onBuild = function(menu)`, called once `menu.items`
+and `menu.slices` exist, each time they are built, before the menu shows. With
+`mount = "immediate"` it runs when the menu is made (JB, 2026-11-18, over item
+`tags` and over keeping Dance Lab's menus immediate).
 
 ### 8. Building ahead: `handle:build()` and `Lucy.prebuild`
 

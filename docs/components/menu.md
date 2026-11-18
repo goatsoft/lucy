@@ -60,6 +60,9 @@ end)
 | `shape` | string or responsive | `"round"` | | Ring and fan buttons: `round`, `squircle` or `square`, see [Button shapes](#button-shapes) |
 | `size` | string or responsive | `"md"` | | `md` or `lg`, like a [Button](button.md)'s: `lg` rows are as tall as a large button with larger text, and `lg` ring and fan buttons are bigger, with larger icons and labels |
 | `onSelect` | function | | | Called with `(value, handle)` when the player picks an action |
+| `mount` | string | `"shown"` | | When its rows and buttons are built: `"shown"` the first time it opens, `"immediate"` when it is made ([Building its rows](#building-its-rows)) |
+| `keep` | boolean | `true` | | `false` takes its rows away once it has closed and builds them again the next time it opens. With `mount = "shown"` only |
+| `onBuild` | function | | | Called with the handle once its rows and buttons exist, each time they are built, before it shows: the place to style them |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
 It also takes the [props every component takes](index.md#using-a-component).
@@ -201,6 +204,41 @@ Lucy.Menu.new({
 })
 ```
 
+## Building its rows
+
+A menu builds its rows and buttons the first time it opens, so a game with
+menus on its HUD pays for them only when a player opens one. They are built
+before anything hears that it opened: focus lands on the first action, it is
+placed round its rows, and `open` is reported once they are there. Once built
+they are kept, so opening it again is instant.
+
+To style the rows (tags for the game's own look), do it in `onBuild`, which is
+called with the menu once `menu.items` and `menu.slices` exist:
+
+```luau
+Lucy.Menu.new({
+    items = actions,
+    variant = "arc",
+    anchor = clubButton,
+    onBuild = function(menu)
+        for _, slice in menu.slices do
+            Lucy.hydrate(slice)({ Tags = { "my-menu-button" } })
+        end
+    end,
+})
+```
+
+- `keep = false` takes the rows away once it has closed and builds them again
+  the next time it opens. Use it for a big menu the player seldom opens.
+- `mount = "immediate"` builds them when the menu is made, for code that must
+  reach them before it opens.
+- `menu:build()` builds them ahead of time without opening it, so the first
+  open is instant (`Lucy.prebuild({ menu, ... })` does it for
+  several, one a frame, see [Building on open](sheet.md#building-on-open)).
+
+Until they are built, `menu.items` and `menu.slices` are `nil`: code that
+reaches into them before the first open calls `menu:build()` first.
+
 ## Where it opens
 
 A list opens beside its anchor on the side you ask for, and moves to the other
@@ -240,6 +278,9 @@ When it closes, the anchor is selected again on a controller.
 | `menu:close()` | Closes it |
 | `menu:toggle()` | Opens it if closed, closes it if open |
 | `menu:select(value)` | Picks `value` as if the player had, and closes it |
+| `menu:build()` | Builds its rows and buttons now without opening it. Does nothing once they are built |
+| `menu.items` | Its list rows, one per item in order (`nil` until built) |
+| `menu.slices` | Its ring and fan buttons, one per item in order (`nil` until built) |
 | `menu.variant()` | The variant in use: `list`, `radial` or `arc` |
 | `menu.shape()` | The button shape in use: `round`, `squircle` or `square` |
 | `menu.size()` | The size in use: `md` or `lg` |

@@ -21,10 +21,16 @@
 			toward = "auto",           -- arc: auto (the screen's middle) | left | right: its labels' side
 			shape = "round",           -- radial and arc buttons: round | squircle | square
 			size = "md",               -- md | lg, like a Button's: lg rows and ring buttons are bigger
+			mount = "shown",           -- shown: rows and buttons are built the first time it opens |
+			                           -- immediate: built with the menu
+			keep = true,               -- false: taken away once it has closed, built again next open
+			onBuild = function(menu) end, -- once its rows exist (each time they are built), before
+			                           -- it shows: the place to style them (menu.items, menu.slices)
 			onSelect = function(value, menu) end,
 		})
 		clubButton.Activated:Connect(function() menu:toggle() end)
 		menu:open()  menu:close()  menu:toggle()  menu:select("dj")
+		menu:build()               -- builds the rows now, without opening (Lucy.prebuild)
 
 	An item is { value, label?, icon?, hint?, disabled? }. icon is any name Icon
 	draws (a lucy: icon or one of the game's own sheets). hint names an action
@@ -55,10 +61,15 @@
 	stays inside, back and a press outside close it, and focus returns to the
 	anchor. Picking an item calls onSelect, emits "select" and closes it.
 
+	Its rows and round buttons are built the first time it opens (ADR 0049), before
+	anything hears it open, so focus, placing and "open" find them. Code that reads
+	them before that calls menu:build() first, or styles them in onBuild.
+
 	State keys: open, visible.
 	Events: "open", "close" and "select" with the value, for Lucy.useUiSound.
 	menu.items holds one list row per item, menu.slices one round button per
-	item, in order; menu.variant(), menu.shape() and menu.size() are the ones in use.
+	item, in order (nil until built); menu.variant(), menu.shape() and menu.size()
+	are the ones in use.
 	Menu.ring, Menu.fan, Menu.fanRows, Menu.fanLinks, Menu.toward, Menu.fit, Menu.around, Menu.nudge, Menu.angles,
 	Menu.pick and Menu.itemBounds are the geometry it uses.
 ]]
@@ -68,6 +79,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local Component = require(script.Parent.Parent.Core.Component)
 local Composables = require(script.Parent.Parent.Composables)
+local Deferred = require(script.Parent.Parent.Core.Deferred)
 local Element = require(script.Parent.Parent.Core.Element)
 local Icon = require(script.Parent.Icon)
 local Kbd = require(script.Parent.Kbd)
@@ -633,6 +645,8 @@ local spec: Component.Spec = {
 
 		-- The list.
 		local rows = {}
+		local makeRow: (index: number, item: Entry) -> ()
+		local makeSlice: (index: number, item: Entry) -> ()
 		local listFrame = Element.new("Frame", {
 			Name = "Items",
 			BackgroundTransparency = 1,
@@ -650,7 +664,12 @@ local spec: Component.Spec = {
 		local function indent(): number
 			return if not hasIcon then 0 elseif large() then 28 else 24
 		end
-		for index, item in entries do
+		local function makeRows()
+			for index, item in entries do
+				makeRow(index, item)
+			end
+		end
+		function makeRow(index: number, item: Entry)
 			local function off(): boolean
 				return offOf(item)
 			end
@@ -711,7 +730,6 @@ local spec: Component.Spec = {
 			row.Parent = listFrame
 			rows[index] = row
 		end
-		h.items = rows
 
 		-- The list is at least as wide as its widest row needs (label, icon column, key, padding),
 		-- so a label never ends in an ellipsis however large the game styles its type. Measured
@@ -725,6 +743,10 @@ local spec: Component.Spec = {
 			measuring = true
 			task.defer(function()
 				measuring = false
+				-- Destroyed, or its rows taken away (keep = false), before this ran
+				if h.destroyed or #rows == 0 then
+					return
+				end
 				local widest = 0
 				for index, row in rows do
 					local label = row:FindFirstChild("Label") :: TextLabel?
@@ -748,17 +770,37 @@ local spec: Component.Spec = {
 				fitWidth(math.ceil(widest + pad * 2 + 8))
 			end)
 		end
-		for _, row in rows do
-			local label = row:FindFirstChild("Label")
-			if label then
-				pcall(function()
-					(label :: any).StyledPropertiesChanged:Connect(measureRows)
-				end)
+		local function watchRows()
+			for _, row in rows do
+				local label = row:FindFirstChild("Label")
+				if label then
+					pcall(function()
+						(label :: any).StyledPropertiesChanged:Connect(measureRows)
+					end)
+				end
 			end
+			measureRows()
 		end
-		measureRows()
 
 		local overlayRef: Reactive.Ref<Overlay.Overlay?> = Reactive.ref(nil :: Overlay.Overlay?)
+		-- A fan built as it opens has its labels measured a frame later: once they are, it is
+		-- placed again (rows built on open only: a menu built long before it opens has its labels
+		-- measured by then, and is placed as ever). At most once a frame.
+		local replacing = false
+		local function replace()
+			if replacing or p._menuMount == "immediate" or variant() ~= "arc" then
+				return
+			end
+			replacing = true
+			task.defer(function()
+				replacing = false
+				-- A deferred task: nothing tracks this read
+				local overlay = overlayRef()
+				if overlay and not h.destroyed then
+					overlay.place()
+				end
+			end)
+		end
 		local function isDrawer(): boolean
 			local overlay = overlayRef()
 			return overlay ~= nil and overlay.presentation() == "drawer"
@@ -805,7 +847,12 @@ local spec: Component.Spec = {
 				return UDim2.fromOffset(side, side)
 			end,
 		})
-		for index, item in entries do
+		local function makeSlices()
+			for index, item in entries do
+				makeSlice(index, item)
+			end
+		end
+		function makeSlice(index: number, item: Entry)
 			local function off(): boolean
 				return offOf(item)
 			end
@@ -907,7 +954,10 @@ local spec: Component.Spec = {
 				local scale = slice.AbsoluteSize.X / sliceSize()
 				captionSize(if scale > 0 then caption.AbsoluteSize / scale else caption.AbsoluteSize)
 			end
-			caption:GetPropertyChangedSignal("AbsoluteSize"):Connect(measure)
+			caption:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+				measure()
+				replace()
+			end)
 			measure()
 			local function itemBounds(): (Vector2, Vector2)
 				return Menu.itemBounds(labelSide(), sliceSize(), captionSize(), Menu.itemRingPad)
@@ -985,7 +1035,6 @@ local spec: Component.Spec = {
 			slice.Parent = ringFrame
 			slices[index] = slice
 		end
-		h.slices = slices
 
 		local content = Element.new("Frame", {
 			Name = "Content",
@@ -1007,8 +1056,47 @@ local spec: Component.Spec = {
 		}) :: Frame
 		h.content = content
 
+		-- The rows and buttons (Core/Deferred): built now with mount = "immediate", otherwise the
+		-- first time the menu opens, and with keep = false taken away once it has left the screen
+		local function make()
+			makeRows()
+			makeSlices()
+			h.items, h.slices = rows, slices
+			watchRows()
+		end
+		-- What the overlay, focus and "open" follow: `open` itself, or with rows built on open
+		-- `shown`, true once it is open and its rows exist (and a write to it writes `open`)
+		local shown: Reactive.Ref<boolean> = open
+		if p._menuMount == "immediate" then
+			make()
+		else
+			local part = Deferred.new(h, {
+				slots = { listFrame, ringFrame },
+				keep = p._menuKeep,
+				build = function()
+					make()
+					if p.onBuild then
+						p.onBuild(h)
+					end
+				end,
+				removed = function()
+					table.clear(rows)
+					table.clear(slices)
+					table.clear(captions)
+					h.items, h.slices = nil, nil
+				end,
+			})
+			h._part = part
+			shown = part:follow(open, {
+				visible = function(): boolean
+					local overlay = overlayRef()
+					return overlay ~= nil and overlay.visible()
+				end,
+			})
+		end
+
 		local overlay = Overlay.use(app, {
-			open = open,
+			open = shown,
 			content = content,
 			returnFocus = p.returnFocus,
 			presentation = function(): string
@@ -1122,7 +1210,7 @@ local spec: Component.Spec = {
 		-- The stick points at a round button while a ring is open (a fan is a stack: up and down
 		-- walk it).
 		Composables.useWhile(function(): boolean
-			return open() == true and variant() == "radial"
+			return shown() == true and variant() == "radial"
 		end, function()
 			return UserInputService.InputChanged:Connect(function(input: InputObject)
 				if input.KeyCode ~= Enum.KeyCode.Thumbstick1 then
@@ -1136,7 +1224,7 @@ local spec: Component.Spec = {
 			end)
 		end)
 
-		Reactive.watch(open, function(isOpen, previous)
+		Reactive.watch(shown, function(isOpen, previous)
 			if previous ~= nil and (isOpen == true) ~= (previous == true) then
 				h:emit(if isOpen then "open" else "close")
 			end
@@ -1158,6 +1246,10 @@ function Menu.new(props: { [string]: any }?)
 	check("size", Menu.sizes, given.size or "md")
 	check("toward", Menu.towards, given.toward or "auto")
 	given._menuEntries = normalize(given.items)
+	given._menuMount, given._menuKeep = Deferred.mode(given, "Menu")
+	if given.onBuild ~= nil and type(given.onBuild) ~= "function" then
+		error(`[Lucy] Menu: onBuild is a function, not "{tostring(given.onBuild)}"`, 0)
+	end
 	local handle = Component.mount(spec, given)
 	function handle.open(h)
 		h:set("open", true)
@@ -1187,6 +1279,19 @@ function Menu.new(props: { [string]: any }?)
 				return
 			end
 		end
+	end
+	-- Builds the rows and buttons now, without opening. Nothing happens once they are built.
+	function handle.build(h)
+		if not h.destroyed and h._part then
+			h._part:build()
+		end
+	end
+	local part = handle._part
+	if part then
+		-- The handle is finished, so a menu that starts open is built now
+		part:start(handle:ref("open"))
+	elseif given.onBuild and handle.scope then
+		handle.scope:run(given.onBuild, handle)
 	end
 	return handle
 end

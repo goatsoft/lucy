@@ -280,6 +280,7 @@ return function()
 					table.insert(picked, value)
 				end,
 			})
+			menu:build()
 			local slice, caption = menu.slices[1], nil
 			for _, d in slice:GetDescendants() do
 				if d:IsA("TextLabel") and d:HasTag("ui-menu-caption") then
@@ -413,11 +414,13 @@ return function()
 
 		it("shapes the round buttons, round unless told, and follows a responsive shape", function()
 			local round = make({ variant = "radial" })
+			round:build()
 			expect(round.shape()).to.equal("round")
 			expect(round.slices[1]:HasTag("ui-menu-squircle")).to.equal(false)
 			expect(round.slices[1]:HasTag("ui-menu-square")).to.equal(false)
 
 			local shaped = make({ variant = "radial", shape = { gamepad = "squircle", default = "square" } })
+			shaped:build()
 			expect(shaped.slices[1]:HasTag("ui-menu-square")).to.equal(true)
 			app.input:setMode("gamepad")
 			expect(shaped.shape()).to.equal("squircle")
@@ -427,12 +430,14 @@ return function()
 
 		it("sizes its items like a button: md unless told, lg taller rows and bigger ring buttons", function()
 			local md = make({ variant = "radial" })
+			md:build()
 			expect(md.size()).to.equal("md")
 			expect(md.slices[1].Size.X.Offset).to.equal(Menu.sliceSizes.md)
 			expect(md.items[1].Size.Y.Offset).to.equal(app.theme:resolve("ControlMd").Y.Offset)
 			expect(md.items[1]:HasTag("ui-menu-lg")).to.equal(false)
 
 			local lg = make({ variant = "radial", size = { gamepad = "lg", default = "md" } })
+			lg:build()
 			expect(lg.size()).to.equal("md")
 			app.input:setMode("gamepad")
 			expect(lg.size()).to.equal("lg")
@@ -476,6 +481,152 @@ return function()
 			expect(function()
 				make({ shape = "star" })
 			end).to.throw()
+		end)
+
+		describe("building its rows (mount)", function()
+			-- The rows and round buttons the menu holds now
+			local function made(menu: any): number
+				local count = 0
+				for _, d in menu.content:GetDescendants() do
+					if d:HasTag("ui-menu-item") or d:HasTag("ui-menu-slice") then
+						count += 1
+					end
+				end
+				return count
+			end
+
+			it("builds its rows and buttons the first time it opens, and keeps them", function()
+				local menu = make({ id = "lazy" })
+				expect(menu.items).to.equal(nil)
+				expect(menu.slices).to.equal(nil)
+				expect(made(menu)).to.equal(0)
+				menu:open()
+				expect(#menu.items).to.equal(4)
+				expect(#menu.slices).to.equal(4)
+				expect(made(menu)).to.equal(8)
+				local first = menu.items[1]
+				menu:close()
+				menu:open()
+				expect(menu.items[1]).to.equal(first)
+				expect(made(menu)).to.equal(8)
+			end)
+
+			it("has its rows before anything hears it open, and focuses the first usable one", function()
+				app.input:setMode("gamepad")
+				local seen = nil
+				local menu
+				local scope = Reactive.effectScope(true)
+				menu = scope:run(function()
+					Composables.useUiSound(app, {
+						open = function()
+							seen = if menu.slices then #menu.slices else 0
+						end,
+					})
+					return make({ variant = "radial" })
+				end)
+				menu:open()
+				expect(seen).to.equal(4)
+				expect(app.input:focused()).to.equal(menu.slices[1])
+				scope:stop()
+			end)
+
+			it("builds them all at once with mount = immediate", function()
+				local menu = make({ mount = "immediate" })
+				expect(#menu.items).to.equal(4)
+				expect(made(menu)).to.equal(8)
+			end)
+
+			it("builds them ahead with build, without opening", function()
+				local menu = make()
+				menu:build()
+				expect(#menu.slices).to.equal(4)
+				expect(menu:get("open")).to.equal(false)
+				local first = menu.slices[1]
+				menu:build()
+				expect(menu.slices[1]).to.equal(first)
+				expect(made(menu)).to.equal(8)
+			end)
+
+			it("takes them away once closed with keep = false, and builds them on the next open", function()
+				local menu = make({ keep = false })
+				menu:open()
+				local first = menu.items[1]
+				menu:close()
+				Harness.flush()
+				expect(menu.items).to.equal(nil)
+				expect(menu.slices).to.equal(nil)
+				expect(first.Parent).to.equal(nil)
+				expect(made(menu)).to.equal(0)
+				menu:open()
+				expect(#menu.items).to.equal(4)
+				expect(menu.items[1]).never.to.equal(first)
+				expect(made(menu)).to.equal(8)
+			end)
+
+			it("hands onBuild the menu once its rows exist, each time it builds them", function()
+				local counts = {}
+				local menu = make({
+					keep = false,
+					onBuild = function(m)
+						table.insert(counts, #m.items + #m.slices)
+					end,
+				})
+				expect(#counts).to.equal(0)
+				menu:open()
+				expect(counts[1]).to.equal(8)
+				menu:close()
+				Harness.flush()
+				menu:open()
+				expect(#counts).to.equal(2)
+
+				local now = {}
+				make({
+					mount = "immediate",
+					onBuild = function(m)
+						table.insert(now, #m.slices)
+					end,
+				})
+				expect(now[1]).to.equal(4)
+			end)
+
+			it("places a fan again once its labels are measured", function()
+				if not Harness.laysOutLive() then
+					return -- labels are measured: live layout only (Harness.laysOutLive)
+				end
+				local anchor = Instance.new("TextButton")
+				anchor.Size = UDim2.fromOffset(120, 40)
+				anchor.Position = UDim2.new(0.5, -60, 1, -60)
+				anchor.Parent = gui
+				local function placed(props: { [string]: any }): Vector2
+					local menu = make(props)
+					menu:open()
+					for _ = 1, 10 do
+						task.wait()
+					end
+					local size = menu.content.AbsoluteSize
+					menu:destroy()
+					return size
+				end
+				local items = {
+					{ value = "a", label = "A label long enough to measure" },
+					{ value = "b", label = "B" },
+				}
+				local built = placed({ variant = "arc", anchor = anchor, items = items, mount = "immediate" })
+				local lazy = placed({ variant = "arc", anchor = anchor, items = items })
+				expect((lazy - built).Magnitude < 1).to.equal(true)
+			end)
+
+			it("refuses keep with mount = immediate, an unknown mount and a bad onBuild", function()
+				expect(function()
+					make({ mount = "immediate", keep = false })
+				end).to.throw()
+				expect(function()
+					make({ mount = "later" })
+				end).to.throw()
+				expect(function()
+					make({ onBuild = true })
+				end).to.throw()
+			end)
 		end)
 	end)
 end
