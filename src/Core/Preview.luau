@@ -10,6 +10,7 @@
 			description = "Variants and sizes",
 			layout = "centered",           -- "centered" | "padded" | "fullscreen"
 			width = 360,                   -- centred column width in pixels
+			app = MyTheme.appOptions,      -- App options (or a function returning them): your themes, colors...
 			controls = {
 				text = "Button",                         -- string
 				disabled = false,                        -- boolean
@@ -62,6 +63,7 @@ export type Story = {
 	description: string?,
 	layout: string?,
 	width: number?,
+	app: ({ [string]: any } | () -> { [string]: any })?,
 	controls: { [string]: any }?,
 	render: ((ctx: Context) -> any)?,
 	module: ModuleScript?,
@@ -292,6 +294,49 @@ local function buildTarget(story: Story, canvas: Frame): Frame
 	return target
 end
 
+-- The App options a story may set: how the game looks. The rest are the preview's own.
+local APP_OPTIONS = {
+	theme = true,
+	density = true,
+	baseColor = true,
+	primary = true,
+	themes = true,
+	primitives = true,
+	densities = true,
+	colors = true,
+	colorRecipes = true,
+}
+
+local function appOptions(from: any, whose: string): { [string]: any }
+	local options = if type(from) == "function" then from() else from
+	if options == nil then
+		return {}
+	end
+	if type(options) ~= "table" then
+		error(`[Lucy] {whose} app options must be a table or a function returning one`, 0)
+	end
+	for key in options do
+		if not APP_OPTIONS[key] then
+			error(`[Lucy] {whose} app option "{tostring(key)}" is not one a preview takes`, 0)
+		end
+	end
+	return options
+end
+
+-- The story app's options: the mount's `app`, then the story's, then the mount's own picks.
+local function appFor(story: Story, opts: { [string]: any }): { [string]: any }
+	local merged = table.clone(appOptions(opts.app, "preview"))
+	for key, value in appOptions(story.app, `story {story.title or story.id or "?"}`) do
+		merged[key] = value
+	end
+	for _, key in { "theme", "density", "baseColor", "primary" } do
+		if opts[key] ~= nil then
+			merged[key] = opts[key]
+		end
+	end
+	return merged
+end
+
 local function inputFor(device: string?): { [string]: any }?
 	if device then
 		local caps = Preview.devices[device]
@@ -313,6 +358,8 @@ end
 		density      pin a density; otherwise it follows the device
 		device       "desktop" | "mobile" | "tablet" | "console" (real input on a client if nil)
 		baseColor, primary   as App.new
+		app          App options for every story (themes, primitives, densities, colors, colorRecipes...);
+		             a story's own `app` wins, and theme, density, baseColor and primary above win over both
 		controls     initial control values, overriding the story's defaults
 		inset        { left, top, right, bottom } pixels to keep clear (a browser's sidebar)
 		background   false to leave the canvas transparent
@@ -322,15 +369,11 @@ local function mountNow(story: Story, options: { [string]: any }?): Mounted
 	local opts: { [string]: any } = options or {}
 	local previous = Context.getCurrent()
 
-	local app = App.new({
-		theme = opts.theme,
-		density = opts.density,
-		baseColor = opts.baseColor,
-		primary = opts.primary,
-		parent = opts.parent,
-		namePrefix = opts.namePrefix or "LucyPreview_",
-		input = inputFor(opts.device),
-	})
+	local appOpts = appFor(story, opts)
+	appOpts.parent = opts.parent
+	appOpts.namePrefix = opts.namePrefix or "LucyPreview_"
+	appOpts.input = inputFor(opts.device)
+	local app = App.new(appOpts)
 	app.theme:addRules("preview", Preview.rules, { layer = "lucy" })
 
 	local gui = app:portal("preview", { displayOrder = opts.displayOrder or 5 })

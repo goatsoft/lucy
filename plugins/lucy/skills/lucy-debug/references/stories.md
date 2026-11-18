@@ -45,6 +45,7 @@ return {
 | `description` | One line shown with the controls |
 | `layout` | `"centered"` (default), `"padded"` or `"fullscreen"` (scenes) |
 | `width` | Column width for centred stories (360) |
+| `app` | Your game's look for the story's App, see [below](#your-games-look) |
 | `controls` | Values to vary, see below |
 | `render(ctx)` | Builds the UI and returns what to show |
 
@@ -52,6 +53,44 @@ return {
 `app` (the story's own App), `target` (the frame to fill) and `controls`.
 Return an instance, a component handle or a list of them; anything returned
 without a parent goes into `target`.
+
+## Your game's look
+
+Each story gets an App of its own, with Lucy's built in themes. Give it your
+game's with `app`: the same options your game's `Lucy.App.new` takes for how it
+looks (`themes`, `primitives`, `densities`, `colors`, `colorRecipes`, `theme`,
+`density`, `baseColor`, `primary`), as a table or a function that returns one,
+called on every mount.
+
+```luau
+-- Stories/GameLook.luau: one place for every story
+local GameTheme = require(path.to.GameTheme)
+
+return function()
+    return {
+        themes = GameTheme.themes(),
+        primitives = GameTheme.primitives(),
+        colors = GameTheme.colors(),
+        colorRecipes = GameTheme.COLOR_RECIPES,
+    }
+end
+```
+
+```luau
+-- EmoteShop/EmoteCard.story.luau
+return {
+    app = require(script.Parent.Parent.Stories.GameLook),
+    render = function(ctx) ... end,
+}
+```
+
+With your `colors` on the App, the `color` prop, `Lucy.color` and rules written
+in `$Color` work in a story as they do in your game
+([Named colours](../../lucy/references/reference/theming.md#named-colours)). Rules your game adds
+itself (`app.theme:addRules`) the story adds in `render`, on `ctx.app.theme`.
+
+The preview sets the rest of the App's options itself (`parent`, `namePrefix`,
+`input`), so any other key in `app` is an error.
 
 ## Controls
 
@@ -88,7 +127,9 @@ input does not work in edit mode; use Play for clicking around.
 
 `Preview.show` options: `root` (where to look for stories), `theme`,
 `density`, `device` (`desktop`, `mobile`, `tablet`, `console`), `baseColor`,
-`primary` and `controls` (initial values).
+`primary`, `app` (App options for every story; a story's own `app` wins over
+it, and `theme`, `density`, `baseColor` and `primary` win over both) and
+`controls` (initial values).
 
 ## Browse in Play
 

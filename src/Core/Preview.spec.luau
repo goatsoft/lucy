@@ -176,6 +176,73 @@ return function()
 			expect(m.app.theme:getDensity()).to.equal("tv")
 		end)
 
+		it("builds the story's app with the story's app options", function()
+			local m = mount({
+				app = { colors = { hype = "$Yellow400" }, theme = "light" },
+				render = function() end,
+			})
+			expect(m.app.theme:get()).to.equal("light")
+			expect(m.app.theme:resolve("Hype")).to.equal(m.app.theme:resolve("Yellow400"))
+			expect(m.app.theme:resolve("HypeForeground")).to.be.ok()
+		end)
+
+		it("calls a story's app function on every mount", function()
+			local calls = 0
+			local story = {
+				app = function()
+					calls += 1
+					return { colors = { hype = "$Yellow400" } }
+				end,
+				render = function() end,
+			}
+			mount(story):destroy()
+			local m = mount(story)
+			expect(calls).to.equal(2)
+			expect(m.app.theme:resolve("Hype")).to.equal(m.app.theme:resolve("Yellow400"))
+		end)
+
+		it("takes app options from the mount, under the story's and over them the mount's theme", function()
+			local m = mount({
+				app = { colors = { hype = "$Yellow400" }, theme = "light" },
+				render = function() end,
+			}, {
+				app = { colors = { hype = "$Red500", calm = "$Sky400" } },
+				theme = "dark",
+			})
+			expect(m.app.theme:get()).to.equal("dark")
+			expect(m.app.theme:resolve("Hype")).to.equal(m.app.theme:resolve("Yellow400"))
+			expect(m.app.theme:resolve("Calm")).to.equal(nil)
+		end)
+
+		it("compiles a scoped $Color rule once per named colour", function()
+			local m = mount({
+				app = { colors = { hype = "$Yellow400", calm = "$Sky400" } },
+				render = function(ctx)
+					ctx.app.theme:addRules("storyTones", {
+						{
+							selector = ".story-card",
+							scoped = true,
+							properties = { BackgroundColor3 = "$Color" },
+						},
+					})
+				end,
+			})
+			local selectors = {}
+			for _, rule in m.app.theme:rulesOf("game") do
+				selectors[rule.Selector] = true
+			end
+			expect(selectors[".story-card.ui-color-hype"]).to.equal(true)
+			expect(selectors[".story-card.ui-color-calm"]).to.equal(true)
+		end)
+
+		it("rejects app options the preview sets itself", function()
+			for _, key in { "parent", "input", "namePrefix", "setCurrent" } do
+				expect(function()
+					mount({ app = { [key] = true }, render = function() end })
+				end).to.throw()
+			end
+		end)
+
 		it("paints the canvas with the theme background unless asked not to", function()
 			local m = mount({ render = function() end }, { theme = "dark" })
 			Harness.flush()
