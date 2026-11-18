@@ -46,6 +46,9 @@ Lucy.Stack.new({
 | `mount` | string | `"shown"` | | When the list and its options are built: `"shown"` the first time it opens, `"immediate"` when the select is made |
 | `keep` | boolean | `true` | | `false` takes the list away once it has closed and builds it again on the next open. With `mount = "shown"` only |
 | `onBuild` | function | | | Called with the select once its list and options exist, each time they are built, before it shows |
+| `preload` | list or function | | | Its pictures, or a function returning them, read when needed. Warmed by `warm()`, and first in the queue when it opens. See [Warming ahead](dialog.md#warming-ahead) |
+| `trigger` | button, handle or list | | | What opens it. Hovered or focused, it warms (it does not open) |
+| `ahead` | overlays or function | | | Overlays warmed when this one opens, such as a sheet opened from inside it |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
 It also takes the [props every component takes](index.md#using-a-component).

@@ -35,6 +35,9 @@ quit:open()
 | `mount` | string | `"shown"` | | When the dialog is built: `"shown"` the first time it opens, `"immediate"` when it is made |
 | `keep` | boolean | `true` | | `false` takes the whole panel away once the dialog has closed and builds it again on the next open. With `mount = "shown"` only |
 | `onBuild` | function | | | Called with the dialog once its panel exists, each time it is built, before it shows: the place to style or reach into it. See [Reaching into a dialog](#reaching-into-a-dialog-onbuild) |
+| `preload` | list or function | | | Its pictures, or a function returning them, read when needed. Warmed by `warm()`, and first in the queue when it opens. See [Warming ahead](dialog.md#warming-ahead) |
+| `trigger` | button, handle or list | | | What opens it. Hovered or focused, it warms (it does not open) |
+| `ahead` | overlays or function | | | Overlays warmed when this one opens, such as a sheet opened from inside it |
 | `footerPlacement` | string | `"above"` | | `"above"` the actions, or `"beside"`: on their left in one row, such as a "Don't show this again" checkbox next to the main button. On a screen too narrow for both, the actions wrap under it |
 | `dismissible` | boolean | `true` | | Whether B, Backspace, the overlay and the close button can close it |
 | `closeOnOverlay` | boolean | `true` | | Whether clicking outside closes it (off by default when `modal` is `false`) |
@@ -92,6 +95,7 @@ An action closes the dialog after its `onClick` runs, unless `onClick` returns
 | `dialog:close()` | Closes it |
 | `dialog:toggle()` | Opens it if closed, closes it if open |
 | `dialog:build()` | With `build`: builds the content now, without opening. Does nothing once it is built |
+| `dialog:warm()` | Warms its pictures and builds it ahead, without opening. See [Warming ahead](dialog.md#warming-ahead) |
 | `dialog.body` | The frame that holds `children` (hidden when there are none) |
 | `dialog.scroll` | The [ScrollArea](scroll-area.md) around the body |
 | `dialog.bodyRoom()` | The height the body may take before it scrolls, in the dialog's own units. It follows the screen, the header and the footer, so a body that should fit rather than scroll (a card shrunk to the room) can read it |
@@ -174,6 +178,30 @@ Code elsewhere that reaches into a dialog that has never opened calls
 
 A two line confirm needs no `build`: give it `children` as before. It is still
 built on its first open.
+
+## Warming ahead
+
+A panel builds on its first open, and its pictures load then too. Warm it a
+moment before instead (ADR 0051):
+
+```luau
+local danceSheet = Lucy.Sheet.new({ title = "DANCE", preload = function() return danceIcons end })
+local shop = Lucy.Dialog.new({
+    title = "THE LAB",
+    preload = function() return shopPictures end,
+    trigger = shopButton,      -- hovered or focused: warmed
+    ahead = { danceSheet },    -- warmed when the shop opens
+})
+shop:warm()                    -- or by hand: pictures warmed, panel built, still closed
+```
+
+`warm()` loads the pictures (once each, through the [shared
+queue](image.md#preloading)) and builds the panel ahead, one panel a frame as
+[`Lucy.prebuild`](#building-on-open) does. It never opens it. Warmed pictures
+are not [pinned](image.md#pinned-pictures): Roblox may drop them again later,
+so warm close to when they are needed. On touch, where nothing hovers, `ahead`
+and `warm()` do the job. Sheets, menus and selects take the same props and have
+the same `warm()`.
 
 ## Alert dialogs
 

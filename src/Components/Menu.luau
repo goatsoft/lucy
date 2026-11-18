@@ -1306,6 +1306,8 @@ function Menu.new(props: { [string]: any }?)
 		part:build()
 	end
 	part:start(handle:ref("open"))
+	-- Warmed ahead: preload, trigger, ahead and warm() (ADR 0051)
+	Deferred.anticipate(handle, given, "Menu")
 	return handle
 end
 

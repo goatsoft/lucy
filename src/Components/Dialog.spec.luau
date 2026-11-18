@@ -893,6 +893,127 @@ return function()
 		)
 	end)
 
+	describe("anticipated (ADR 0051)", function()
+		local Preload = require(script.Parent.Parent.Core.Preload)
+		local real, surface
+		local asked: { any }
+		beforeEach(function()
+			real, surface = Preload.provider, Preload.surface
+			asked = {}
+			Preload.surface = function()
+				return nil
+			end
+			Preload.provider = {
+				PreloadAsync = function(_, list)
+					for _, id in list do
+						table.insert(asked, id)
+					end
+				end,
+			}
+			Preload._reset()
+		end)
+		afterEach(function()
+			Preload.provider, Preload.surface = real, surface
+			Preload._reset()
+		end)
+
+		it("warm() warms its pictures and builds it ahead, without opening", function()
+			local dialog = Dialog.new({ app = app, title = "Shop", preload = { 601, 602 } })
+			expect(dialog.content).to.equal(nil)
+			dialog:warm()
+			task.wait(0.1)
+			expect(Preload.isLoaded(601) and Preload.isLoaded(602)).to.equal(true)
+			expect(dialog.content).to.be.ok()
+			expect(dialog:get("open")).to.equal(false)
+		end)
+
+		it("reads a preload function when it is needed, not when it is made", function()
+			local reads = 0
+			local dialog = Dialog.new({
+				app = app,
+				title = "Shop",
+				preload = function()
+					reads += 1
+					return { 603 }
+				end,
+			})
+			expect(reads).to.equal(0)
+			dialog:warm()
+			task.wait(0.1)
+			expect(reads).to.equal(1)
+			expect(Preload.isLoaded(603)).to.equal(true)
+		end)
+
+		it("warms when what opens it takes focus", function()
+			local button = Instance.new("TextButton")
+			button.Parent = Harness.mount(app)
+			local dialog = Dialog.new({ app = app, title = "Shop", preload = { 604 }, trigger = button })
+			task.wait(0.1)
+			expect(Preload.isLoaded(604)).to.equal(false)
+			app.input:markFocus(button)
+			task.wait(0.1)
+			expect(Preload.isLoaded(604)).to.equal(true)
+			expect(dialog.content).to.be.ok()
+			expect(dialog:get("open")).to.equal(false)
+		end)
+
+		it("warms the overlays it names in ahead when it opens", function()
+			local inner = Dialog.new({ app = app, title = "Dance", preload = { 605 } })
+			local outer = Dialog.new({ app = app, title = "Lab", ahead = { inner } })
+			task.wait(0.1)
+			expect(Preload.isLoaded(605)).to.equal(false)
+			outer:open()
+			task.wait(0.1)
+			expect(Preload.isLoaded(605)).to.equal(true)
+			expect(inner.content).to.be.ok()
+			expect(inner:get("open")).to.equal(false)
+		end)
+
+		it("puts its pictures first in the queue when it opens", function()
+			Preload.batchSize = 1
+			-- A frame a batch, as a real fetch takes: the queue is still busy when the dialog opens
+			Preload.provider = {
+				PreloadAsync = function(_, list)
+					for _, id in list do
+						table.insert(asked, id)
+					end
+					task.wait()
+				end,
+			}
+			Preload.preload({ 1, 2, 3, 4, 5, 6 })
+			local dialog = Dialog.new({ app = app, title = "Shop", preload = { 606 } })
+			dialog:open()
+			task.wait(0.5)
+			Preload.batchSize = 8
+			expect(table.find(asked, "rbxassetid://606") < table.find(asked, "rbxassetid://6")).to.equal(true)
+		end)
+
+		it("is the same on a sheet, a menu and a select", function()
+			local Sheet = require(script.Parent.Sheet)
+			local Menu = require(script.Parent.Menu)
+			local Select = require(script.Parent.Select)
+			local gui = Harness.mount(app)
+			local sheet = Sheet.new({ app = app, title = "S", preload = { 611 } })
+			local menu = Menu.new({
+				app = app,
+				Parent = gui,
+				items = { { value = "a", label = "A" } },
+				preload = { 612 },
+			})
+			local picker = Select.new({ app = app, Parent = gui, items = { "A", "B" }, preload = { 613 } })
+			sheet:warm()
+			menu:warm()
+			picker:warm()
+			task.wait(0.2)
+			for _, id in { 611, 612, 613 } do
+				expect(Preload.isLoaded(id)).to.equal(true)
+			end
+			expect(sheet.content).to.be.ok()
+			expect(menu.content).to.be.ok()
+			expect(picker.items).to.be.ok()
+		end)
+	end)
+
 	describe("the presence (ADR 0050)", function()
 		local Devtools = require(script.Parent.Parent.Core.Devtools)
 		local Text = require(script.Parent.Text)

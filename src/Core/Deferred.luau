@@ -48,6 +48,7 @@
 local RunService = game:GetService("RunService")
 
 local Component = require(script.Parent.Component)
+local Preload = require(script.Parent.Preload)
 local Reactive = require(script.Parent.Reactive)
 local Scroll = require(script.Parent.Scroll)
 
@@ -467,6 +468,118 @@ function Deferred.prebuild(handles: { any }): { done: () -> boolean, progress: (
 			return if total == 0 then 1 else finished() / total
 		end,
 	}
+end
+
+-- A list of handles or instances from one, a list of them, or a function returning either
+local function listOf(value: any): { any }
+	if type(value) == "function" then
+		value = value()
+	end
+	if value == nil then
+		return {}
+	end
+	if typeof(value) == "Instance" or (type(value) == "table" and value.Instance ~= nil) then
+		return { value }
+	end
+	return value
+end
+
+--[[
+	Anticipation (ADR 0051), for an overlay that builds on open (Dialog, Sheet, Menu, Select):
+
+		preload = { ids } or function() return { ids } end   -- its pictures, read when needed
+		trigger = button or handle or { ... }                  -- what opens it: hovered or focused,
+		                                                       -- it warms
+		ahead = { overlays } or function() return ... end    -- warmed when this one opens
+
+	handle:warm() warms its pictures and builds it ahead (one overlay a frame, as Lucy.prebuild),
+	without opening it. On open its pictures go to the front of the queue. Call once the handle is
+	finished; it lives in the handle's scope.
+]]
+function Deferred.anticipate(handle: any, props: { [string]: any }, what: string)
+	local preloadOf = props.preload
+	if preloadOf ~= nil and type(preloadOf) ~= "function" and type(preloadOf) ~= "table" then
+		error(`[Lucy] {what}: preload is a list of pictures or a function returning one`, 3)
+	end
+	local function pictures(): { any }
+		if type(preloadOf) == "function" then
+			return preloadOf() or {}
+		end
+		return preloadOf or {}
+	end
+	local built = false
+	function handle.warm(h: any)
+		if h.destroyed then
+			return
+		end
+		if preloadOf ~= nil then
+			Preload.preload(pictures())
+		end
+		if not built then
+			built = true
+			Deferred.prebuild({ h })
+		end
+	end
+	local scope = handle.scope
+	if not scope then
+		return
+	end
+	scope:run(function()
+		-- Why a watch: opening hands work to other systems (the picture queue, other overlays'
+		-- builds), side effects with nothing declarative to bind
+		Reactive.watch(handle:ref("open"), function(isOpen: boolean)
+			if not isOpen then
+				return
+			end
+			if preloadOf ~= nil then
+				Preload.preload(pictures(), { first = true })
+			end
+			for _, other in listOf(props.ahead) do
+				if type(other) == "table" and type(other.warm) == "function" then
+					other:warm()
+				end
+			end
+		end)
+		local triggers: { Instance } = {}
+		for _, item in listOf(props.trigger) do
+			local instance = if typeof(item) == "Instance" then item else item.Instance
+			if instance then
+				table.insert(triggers, instance)
+			end
+		end
+		if #triggers == 0 then
+			return
+		end
+		local connections: { RBXScriptConnection } = {}
+		for _, instance in triggers do
+			if instance:IsA("GuiObject") then
+				table.insert(
+					connections,
+					(instance :: GuiObject).MouseEnter:Connect(function()
+						handle:warm()
+					end)
+				)
+			end
+		end
+		Reactive.onCleanup(function()
+			for _, connection in connections do
+				connection:Disconnect()
+			end
+		end)
+		-- Keyboard and gamepad focus, Lucy's own (the engine's selection included)
+		local focused = handle.app.input:focusRef()
+		Reactive.watch(focused, function(object: GuiObject?)
+			if not object then
+				return
+			end
+			for _, instance in triggers do
+				if object == instance or object:IsDescendantOf(instance) then
+					handle:warm()
+					return
+				end
+			end
+		end)
+	end)
 end
 
 -- Builds a component that is open from the start. Call it once the handle is finished.

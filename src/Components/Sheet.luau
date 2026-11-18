@@ -640,6 +640,8 @@ function Sheet.new(props: { [string]: any }?)
 		part:build()
 	end
 	part:start(handle:ref("open"))
+	-- Warmed ahead: preload, trigger, ahead and warm() (ADR 0051)
+	Deferred.anticipate(handle, p, "Sheet")
 	return handle
 end
 

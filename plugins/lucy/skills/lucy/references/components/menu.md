@@ -56,6 +56,9 @@ end)
 | `mount` | string | `"shown"` | | When its rows and buttons are built: `"shown"` the first time it opens, `"immediate"` when it is made ([Building its rows](#building-its-rows)) |
 | `keep` | boolean | `true` | | `false` takes its rows away once it has closed and builds them again the next time it opens. With `mount = "shown"` only |
 | `onBuild` | function | | | Called with the handle once its rows and buttons exist, each time they are built, before it shows: the place to style them |
+| `preload` | list or function | | | Its pictures, or a function returning them, read when needed. Warmed by `warm()`, and first in the queue when it opens. See [Warming ahead](dialog.md#warming-ahead) |
+| `trigger` | button, handle or list | | | What opens it. Hovered or focused, it warms (it does not open) |
+| `ahead` | overlays or function | | | Overlays warmed when this one opens, such as a sheet opened from inside it |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
 It also takes the [props every component takes](index.md#using-a-component).

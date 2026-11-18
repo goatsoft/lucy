@@ -50,6 +50,9 @@ settings:open()
 | `mount` | string | `"shown"` | | When the sheet is built: `"shown"` the first time it opens, `"immediate"` when it is made |
 | `keep` | boolean | `true` | | `false` takes the whole panel away once the sheet has closed and builds it again on the next open. With `mount = "shown"` only |
 | `onBuild` | function | | | Called with the sheet once its panel exists, each time it is built, before it shows: the place to style or reach into it. See [Reaching into a sheet](#reaching-into-a-sheet-onbuild) |
+| `preload` | list or function | | | Its pictures, or a function returning them, read when needed. Warmed by `warm()`, and first in the queue when it opens. See [Warming ahead](dialog.md#warming-ahead) |
+| `trigger` | button, handle or list | | | What opens it. Hovered or focused, it warms (it does not open) |
+| `ahead` | overlays or function | | | Overlays warmed when this one opens, such as a sheet opened from inside it |
 | `side` | string | `"right"` | | `left` or `right`: the edge the panel comes from |
 | `width` | number | `360` | | The panel's width in pixels, at most 90% of the screen |
 | `presentation` | string | `"auto"` | | `auto`, `panel` or `drawer` |
@@ -93,6 +96,7 @@ whatever had it before.
 | `sheet:close()` | Closes it |
 | `sheet:toggle()` | Opens it if closed, closes it if open |
 | `sheet:build()` | With `build`: builds the content now, without opening. Does nothing once it is built |
+| `sheet:warm()` | Warms its pictures and builds it ahead, without opening. See [Warming ahead](dialog.md#warming-ahead) |
 | `sheet.presentation()` | `"panel"` or `"drawer"`, for this opening |
 | `sheet.body` | The [ScrollArea](scroll-area.md) that holds `children` |
 | `sheet.bodyRoom()` | The height the body may take before it scrolls, in the sheet's own units. It follows the screen, the header and the footer |
