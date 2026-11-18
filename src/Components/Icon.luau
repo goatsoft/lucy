@@ -30,6 +30,7 @@ local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local IconSheet = require(script.Parent.Parent.Core.IconSheet)
 local Image = require(script.Parent.Image)
+local Preload = require(script.Parent.Parent.Core.Preload)
 
 local Icon = {}
 
@@ -70,6 +71,41 @@ export type Resolved = { image: string, offset: Vector2, size: Vector2, tint: bo
 -- name -> resolved entry; the newest registration of a name wins.
 local registry: { [string]: Resolved } = {}
 
+-- Sheets are pinned (ADR 0051): one picture holds every icon on it, so keeping it in use means no
+-- icon ever pops in. A registered sheet is pinned when it is registered; Lucy's own the first time
+-- one of its icons is drawn. Only where there is a screen to draw on (a client).
+Icon.pin = true
+local pinned: { [string]: any } = {}
+local function pinSheet(url: string)
+	if not Icon.pin or pinned[url] or url == "" or Preload.surface() == nil then
+		return
+	end
+	pinned[url] = Preload.preload({ url }, { pin = true })
+end
+
+-- Lets a sheet go once no registered icon uses it (Lucy's own stays: it is drawn by default)
+local function unpinUnused(url: string)
+	local job = pinned[url]
+	if not job then
+		return
+	end
+	for _, resolved in registry do
+		if resolved.image == url then
+			return
+		end
+	end
+	job.release()
+	pinned[url] = nil
+end
+
+-- Lets every sheet go (tests)
+function Icon._resetPins()
+	for _, job in pinned do
+		job.release()
+	end
+	table.clear(pinned)
+end
+
 local function resolveEntry(name: string, entry: Entry): Resolved
 	local url = Image.url(entry.image)
 	if url == "" then
@@ -103,14 +139,20 @@ function Icon.register(map: { [string]: Entry }): () -> ()
 		local resolved = resolveEntry(name, entry)
 		registry[name] = resolved
 		added[name] = resolved
+		pinSheet(resolved.image)
 	end
 	return function()
+		local sheets: { [string]: boolean } = {}
 		for name, resolved in added do
 			if registry[name] == resolved then
 				registry[name] = nil
 			end
+			sheets[resolved.image] = true
 		end
 		table.clear(added)
+		for url in sheets do
+			unpinUnused(url)
+		end
 	end
 end
 
@@ -121,8 +163,13 @@ end
 -- A registered name, an asset id or a url, as what to draw. Nil for an unknown name.
 function Icon.resolve(value: any): Resolved?
 	if type(value) == "string" then
-		local entry = registry[value] or defaults[value]
+		local entry = registry[value]
 		if entry then
+			return entry
+		end
+		entry = defaults[value]
+		if entry then
+			pinSheet(entry.image)
 			return entry
 		end
 		if string.find(value, "://", 1, true) or string.match(value, "^%d+$") then

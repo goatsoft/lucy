@@ -77,6 +77,92 @@ return function()
 		host:Destroy()
 	end)
 
+	describe("pinned (ADR 0051)", function()
+		local host: Folder
+		beforeEach(function()
+			host = Instance.new("Folder")
+			Preload.surface = function()
+				return host
+			end
+			Preload.warmTimeout = 0.05 -- nothing renders here, so the warming copies wait it out
+		end)
+		afterEach(function()
+			Preload._reset()
+			host:Destroy()
+		end)
+
+		local function kept(): { string }
+			local images = {}
+			for _, child in host:GetChildren() do
+				if child.Name == "Pinned" then
+					table.insert(images, (child :: ImageLabel).Image)
+				end
+			end
+			table.sort(images)
+			return images
+		end
+
+		it("keeps a drawn copy of each picture until the job releases it", function()
+			local job = Preload.preload({ 7, 8 }, { pin = true })
+			task.wait(0.15)
+			expect(job.done()).to.equal(true)
+			expect(table.concat(kept(), ",")).to.equal("rbxassetid://7,rbxassetid://8")
+			for _, child in host:GetChildren() do
+				expect((child :: ImageLabel).Size).to.equal(UDim2.fromOffset(2, 2))
+			end
+			expect(Preload.stats().pinned).to.equal(2)
+			job.release()
+			expect(#kept()).to.equal(0)
+			expect(Preload.stats().pinned).to.equal(0)
+			-- Still loaded: only Roblox may drop it now
+			expect(Preload.isLoaded(7)).to.equal(true)
+		end)
+
+		it("keeps a picture pinned twice until both release it", function()
+			local a = Preload.preload({ 9 }, { pin = true })
+			local b = Preload.preload({ 9 }, { pin = true })
+			task.wait(0.15)
+			expect(#kept()).to.equal(1)
+			a.release()
+			a.release() -- twice from one job counts once
+			expect(#kept()).to.equal(1)
+			b.release()
+			expect(#kept()).to.equal(0)
+		end)
+
+		it("pins a picture warmed before at once", function()
+			Preload.preload({ 10 })
+			task.wait(0.15)
+			expect(#kept()).to.equal(0)
+			Preload.preload({ 10 }, { pin = true })
+			expect(table.concat(kept(), ",")).to.equal("rbxassetid://10")
+		end)
+
+		it("counts pins with nothing to draw on (a server)", function()
+			Preload.surface = function()
+				return nil
+			end
+			local job = Preload.preload({ 11 }, { pin = true })
+			task.wait()
+			expect(Preload.stats().pinned).to.equal(1)
+			job.release()
+			expect(Preload.stats().pinned).to.equal(0)
+		end)
+
+		it("reports what is pinned, warmed and waiting", function()
+			Preload.batchSize = 1
+			Preload.preload({ 12 }, { pin = true })
+			Preload.preload({ 13, 14 })
+			local now = Preload.stats()
+			expect(now.pinned).to.equal(1)
+			expect(now.waiting >= 1).to.equal(true)
+			task.wait(0.5)
+			local later = Preload.stats()
+			expect(later.waiting).to.equal(0)
+			expect(later.warmed).to.equal(3)
+		end)
+	end)
+
 	it("works in batches", function()
 		Preload.batchSize = 2
 		local job = Preload.preload({ 1, 2, 3, 4, 5 })

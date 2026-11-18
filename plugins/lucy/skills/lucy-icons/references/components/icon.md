@@ -48,6 +48,12 @@ from any [Iconify](https://icon-sets.iconify.design) icon you name in your
 code, such as `"lucide-extended:heart-duotone"`. [Add icons](../guide/icons.md) covers both,
 with every field of the map.
 
+On a client, every sheet you register is [pinned](../../../lucy/references/components/image.md#pinned-pictures)
+when you register it, and Lucy's own sheet the first time one of its icons is
+drawn: one picture holds every icon on it, so keeping it in use means an icon
+never pops in. Unregistering lets a sheet go once no registered icon uses it.
+Set `Lucy.Icon.pin = false` before registering to turn this off.
+
 ## Props
 
 | Prop | Type | Default | State key | What it does |

@@ -76,6 +76,60 @@ return function()
 		expect(Icon.resolve("lucy:close")).to.equal(default)
 	end)
 
+	describe("pinned sheets (ADR 0051)", function()
+		local Preload = require(script.Parent.Parent.Core.Preload)
+		local host, surface, provider, warmTimeout
+		beforeEach(function()
+			host = Instance.new("Folder")
+			surface, provider, warmTimeout = Preload.surface, Preload.provider, Preload.warmTimeout
+			-- Nothing renders here: the warming copies wait this out, not the 5 s a client allows
+			Preload.warmTimeout = 0.05
+			Preload.surface = function()
+				return host
+			end
+			Preload.provider = { PreloadAsync = function() end }
+			Preload._reset()
+			Icon._resetPins()
+		end)
+		afterEach(function()
+			Icon._resetPins()
+			task.wait(0.1) -- the queue finishes before the next spec shares it
+			Preload._reset()
+			Preload.surface, Preload.provider, Preload.warmTimeout = surface, provider, warmTimeout
+			host:Destroy()
+		end)
+
+		it("pins each sheet it registers once, and lets it go when unregistered", function()
+			local remove = Icon.register({
+				["test:a"] = { image = 901, rect = { 0, 0, 64, 64 } },
+				["test:b"] = { image = 901, rect = { 64, 0, 64, 64 } },
+				["test:c"] = { image = 902 },
+			})
+			expect(Preload.isPinned(901)).to.equal(true)
+			expect(Preload.isPinned(902)).to.equal(true)
+			expect(Preload.stats().pinned).to.equal(2)
+			remove()
+			expect(Preload.isPinned(901)).to.equal(false)
+			expect(Preload.stats().pinned).to.equal(0)
+		end)
+
+		it("pins Lucy's own sheet the first time one of its icons is drawn", function()
+			local url = (Icon.resolve("lucy:close") :: any).image
+			Icon._resetPins()
+			expect(Preload.isPinned(url)).to.equal(false)
+			Icon.new({ app = app, Parent = gui, icon = "lucy:close" })
+			expect(Preload.isPinned(url)).to.equal(true)
+		end)
+
+		it("pins nothing with Icon.pin off", function()
+			Icon.pin = false
+			local remove = Icon.register({ ["test:d"] = { image = 903 } })
+			Icon.pin = true
+			expect(Preload.isPinned(903)).to.equal(false)
+			remove()
+		end)
+	end)
+
 	it("forgets names when unregistered", function()
 		local remove = Icon.register({ ["test:temp"] = { image = 5 } })
 		expect(Icon.has("test:temp")).to.equal(true)

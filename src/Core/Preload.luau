@@ -21,7 +21,12 @@
 	the batch), it showed in about 0.1 s, also after the tiny copies were gone. With no player
 	(a server, edit mode, tests) ids go to PreloadAsync as before.
 
-	Preload.isLoaded(id) says whether an image has been fetched through the queue.
+	Pinned (ADR 0051): Lucy.preload(ids, { pin = true }) keeps each drawn copy for as long as it is
+	pinned, so Roblox never counts the picture unused and unloads it; job.release() lets it go. For
+	what must always be ready (icon sheets, the first screens); the rest is warmed before it is needed.
+
+	Preload.isLoaded(id) says whether an image has been fetched through the queue, Preload.isPinned(id)
+	whether it is pinned, and Preload.stats() counts what is pinned, warmed and waiting.
 	Tests swap Preload.provider for a fake with a PreloadAsync(list, callback) method, and
 	Preload.surface for where the drawn copies go (a function returning an Instance, or nil).
 ]]
@@ -96,11 +101,15 @@ end
 export type Job = {
 	progress: () -> number,
 	done: () -> boolean,
+	-- With pin: lets the pictures go again (they stay loaded until Roblox drops them)
+	release: () -> (),
 }
 
 type Entry = { key: any, jobs: { () -> () } }
 
 local loaded: { [any]: boolean } = {}
+-- Pinned pictures: how many jobs hold each, and its kept copy once it has loaded (ADR 0051)
+local pins: { [any]: { count: number, label: ImageLabel? } } = {}
 local waiting: { [any]: Entry } = {}
 local queue: { Entry } = {}
 local running = false
@@ -122,13 +131,41 @@ local function keyOf(id: any): any
 	return nil
 end
 
+-- Whether a picture is pinned (ADR 0051): kept in use until every job pinning it releases it
+function Preload.isPinned(id: any): boolean
+	local key = keyOf(id)
+	return key ~= nil and pins[key] ~= nil
+end
+
 function Preload.isLoaded(id: any): boolean
 	local key = keyOf(id)
 	return key ~= nil and loaded[key] == true
 end
 
+-- A pinned picture's copy, drawn for as long as it is pinned so Roblox never counts it unused.
+-- Made once it has loaded (the queue's batches set the pace); only urls are drawn.
+local function keep(key: any)
+	local pin = pins[key]
+	if not pin or pin.label or not loaded[key] or type(key) ~= "string" then
+		return
+	end
+	local surface = Preload.surface()
+	if not surface then
+		return
+	end
+	local label = Instance.new("ImageLabel")
+	label.Name = "Pinned"
+	label.Size = UDim2.fromOffset(2, 2)
+	label.BackgroundTransparency = 1
+	label.ImageTransparency = 0.98
+	label.Image = key
+	label.Parent = surface
+	pin.label = label
+end
+
 local function finish(entry: Entry)
 	loaded[entry.key] = true
+	keep(entry.key)
 	waiting[entry.key] = nil
 	for _, notify in entry.jobs do
 		notify()
@@ -172,8 +209,10 @@ local function run()
 end
 
 -- Fetches `ids` through the queue; returns the job's progress and done getters.
-function Preload.preload(ids: { any }, options: { first: boolean? }?): Job
+function Preload.preload(ids: { any }, options: { first: boolean?, pin: boolean? }?): Job
 	local first = options ~= nil and options.first == true
+	local pin = options ~= nil and options.pin == true
+	local held: { any } = {}
 	local total, count = 0, Reactive.ref(0)
 	local function notify()
 		count(count() + 1)
@@ -187,6 +226,13 @@ function Preload.preload(ids: { any }, options: { first: boolean? }?): Job
 		end
 		seen[key] = true
 		total += 1
+		if pin then
+			local entry = pins[key] or { count = 0 }
+			entry.count += 1
+			pins[key] = entry
+			table.insert(held, key)
+			keep(key)
+		end
 		if loaded[key] then
 			count(count() + 1)
 		elseif waiting[key] then
@@ -224,11 +270,47 @@ function Preload.preload(ids: { any }, options: { first: boolean? }?): Job
 		done = function(): boolean
 			return count() >= total
 		end,
+		release = function()
+			for _, key in held do
+				local entry = pins[key]
+				if entry then
+					entry.count -= 1
+					if entry.count <= 0 then
+						if entry.label then
+							entry.label:Destroy()
+						end
+						pins[key] = nil
+					end
+				end
+			end
+			table.clear(held)
+		end,
 	}
+end
+
+-- How many pictures are pinned, have been warmed (loaded through the queue) and are waiting
+function Preload.stats(): { pinned: number, warmed: number, waiting: number }
+	local pinned, warmed, waitingCount = 0, 0, 0
+	for _ in pins do
+		pinned += 1
+	end
+	for _ in loaded do
+		warmed += 1
+	end
+	for _ in waiting do
+		waitingCount += 1
+	end
+	return { pinned = pinned, warmed = warmed, waiting = waitingCount }
 end
 
 -- Forgets every image (tests)
 function Preload._reset()
+	for _, entry in pins do
+		if entry.label then
+			entry.label:Destroy()
+		end
+	end
+	table.clear(pins)
 	table.clear(loaded)
 	table.clear(waiting)
 	table.clear(queue)

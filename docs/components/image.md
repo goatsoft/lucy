@@ -96,6 +96,28 @@ Ids are asset ids, urls or instances. `Lucy.Preload.isLoaded(id)` says whether
 a picture has been fetched. A virtual [Grid](grid.md#long-lists) takes a
 `preload` function and fetches every item's pictures for you.
 
+### Pinned pictures
+
+Roblox can unload a picture again once nothing on the screen uses it, so a
+picture preloaded at the start may be gone by the time its panel opens. Pin what
+must always be ready, once, at launch: what the first screens show and what
+every player opens.
+
+```luau
+local hud = Lucy.preload(hudPictures, { pin = true })
+hud.release()   -- later, if it is no longer needed: Roblox may unload it again
+```
+
+A pinned picture keeps its tiny copy drawn for as long as it is pinned. A
+picture pinned by two calls stays until both release it. Pin with care: each
+pinned picture stays in memory for as long as the game runs, so pin what is
+always needed and preload the rest just before it is.
+[Icon sheets](icon.md#registering-icons) are pinned for you.
+
+`Lucy.Preload.isPinned(id)` says whether a picture is pinned, and
+`Lucy.Preload.stats()` counts what is `pinned`, `warmed` (fetched through the
+queue) and `waiting`.
+
 ## Examples
 
 A track cover that fills its card, cut to fit:
