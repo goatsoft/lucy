@@ -175,6 +175,29 @@ or work differently.
 5. Measure and record here: instances in the modal portal at club start and on the title screen,
    live components, Lua heap, before and after.
 
+### Measured in Dance Lab
+
+On Lucy ac990fc, Studio Play, desktop:
+
+| | Before (0049) | After (0050) |
+|---|---|---|
+| Modal portal at club start | 718 instances | 16 |
+| Modal portal on the title screen | 718 | 16 |
+| One unopened Dialog / Sheet | 46 / 48 instances, about 2 ms to make | a root and one host frame |
+| Lucy components live at club start | | 169 |
+| PlayerGui at club start | | 1,709 instances |
+
+The Lua heap was not measured on both sides, so no figure is given for it. The portal grows as
+panels are opened and kept (`keep` defaults to true): 2,589 instances after all 14 checked panels
+had been opened once.
+
+The frame-by-frame probe (14 panels, frames 10 and 60, styled properties and focus) matched the
+0049 baseline in every panel once the song picker's equal-priority style tie was settled in Dance
+Lab (its rule raised to priority 41). The DJ booth differs only by its live vote count. The radial
+menus matched exactly in one run and in the next were shifted 16 px as a whole, nothing inside them
+changed, with no menu code changed between the runs. Pictures in a panel now load
+when it first opens, so they can appear a moment after the panel.
+
 ## Consequences
 
 - A game that makes its panels when its modules load pays for the root and one host frame each,
