@@ -1,6 +1,6 @@
 # 0049: Mount on open
 
-- Status: accepted
+- Status: accepted, amended by 0050 (sections 1, 2 and 7)
 - Date: 2026-11-18
 
 ## Context
