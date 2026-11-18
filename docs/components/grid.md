@@ -159,9 +159,13 @@ UIGridLayout: it places its cells itself. With no Scroll Area (or other
 ScrollingFrame) around it, it builds every cell.
 
 Pictures in cells that are not built yet have not loaded either. Give the grid
-a `preload` function that returns an item's pictures, and it fetches them all in
-the background as the list arrives ([Lucy.preload](image.md#preloading)), so a
-cell shows its picture the moment it is built:
+a `preload` function that returns an item's pictures, and it warms them ahead of
+the player ([Lucy.preload](image.md#preloading)), so a cell shows its picture
+the moment it is built. It warms what is in view, then `Lucy.Grid.preloadAhead`
+screens (2) the way the player last scrolled and `Lucy.Grid.preloadBehind` (1)
+the other way, nearest first, and again as the view moves. A list that keeps
+growing only ever loads what the player is about to see. With no scroll area
+around it, the grid warms every item.
 
 ```luau
 Lucy.Grid.new({

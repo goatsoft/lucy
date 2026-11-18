@@ -40,9 +40,10 @@
 	so a new list moves the cells it keeps rather than rebuilding them. Without a
 	ScrollingFrame around it every cell is built. children is not used.
 	handle.cellFor(key) is a cell's frame, if built; handle.cellCount() is how
-	many are built. With preload, every item's pictures are fetched in the
-	background as the list arrives (Lucy.preload), so scrolling shows them
-	at once. There is no UIGridLayout (handle.layout is nil).
+	many are built. With preload, the pictures of the items in view and
+	Grid.preloadAhead screens ahead (the way the player last scrolled) and
+	Grid.preloadBehind behind are warmed, nearest first (Lucy.preload, ADR 0051),
+	so scrolling shows them at once. There is no UIGridLayout (handle.layout is nil).
 
 	State keys: visible.
 ]]
@@ -67,6 +68,10 @@ local ALIGN = {
 Grid.defaultCellSize = UDim2.fromOffset(100, 100)
 -- Rows built beyond each edge of the view, in virtual mode.
 Grid.overscan = 2
+-- With preload: the screens of items warmed ahead of the view, the way the player last scrolled,
+-- and behind it (ADR 0051)
+Grid.preloadAhead = 2
+Grid.preloadBehind = 1
 
 -- How many columns of at least `min` fit in `width` with `gap` between them.
 function Grid.fit(width: number, min: number, gap: number): number
@@ -214,19 +219,6 @@ function Grid._virtual(h: any, g: { [string]: any }): Frame
 		end
 		return index
 	end
-	-- Every item's pictures, fetched in the background as the list arrives
-	local preloadOf = p.preload
-	if type(preloadOf) == "function" then
-		Reactive.watchEffect(function()
-			local ids = {}
-			for _, entry in items() do
-				for _, id in preloadOf(entry) or {} do
-					table.insert(ids, id)
-				end
-			end
-			Reactive.untrack(Preload.preload, ids)
-		end)
-	end
 	local indexById = Reactive.computed(function(): { [any]: number }
 		local out = {}
 		for index, entry in items() do
@@ -267,6 +259,94 @@ function Grid._virtual(h: any, g: { [string]: any }): Frame
 		end
 		return out
 	end)
+
+	-- Pictures warmed ahead (ADR 0051): what is in view, then Grid.preloadAhead screens the way the
+	-- player last scrolled and Grid.preloadBehind the other way, nearest first. Only when the rows in
+	-- that window change; with no scroll area around it the whole list is in view.
+	local preloadOf = p.preload
+	if type(preloadOf) == "function" then
+		local lastTop, downward = 0, true
+		local pending: { any }? = nil
+		local window = Reactive.computed(function(): string
+			local count = #items()
+			local height = viewHeight()
+			if height >= math.huge or count == 0 then
+				return `all {count}`
+			end
+			local n, step = g.count(), cellHeight() + g.gap()
+			local top = viewTop() - pad
+			if top ~= lastTop then
+				downward = top > lastTop
+				lastTop = top
+			end
+			local rowsTotal = math.ceil(count / n)
+			local first = math.max(0, math.floor(top / step))
+			local last = math.min(rowsTotal - 1, math.ceil((top + height) / step) - 1)
+			local screen = math.ceil(height / step)
+			local ahead, behind = Grid.preloadAhead * screen, Grid.preloadBehind * screen
+			return `{first} {last} {if downward then ahead else behind} {if downward then behind else ahead} {n} {rowsTotal}`
+		end)
+		Reactive.watchEffect(function()
+			local key = window()
+			local list = Reactive.untrack(items)
+			local ids = {}
+			local function addRow(row: number, n: number)
+				for index = row * n + 1, math.min(#list, (row + 1) * n) do
+					for _, id in preloadOf(list[index]) or {} do
+						table.insert(ids, id)
+					end
+				end
+			end
+			if string.sub(key, 1, 3) == "all" then
+				addRow(0, #list)
+			else
+				local first, last, down, up, n, rowsTotal =
+					string.match(key, "^(%d+) (%-?%d+) (%d+) (%d+) (%d+) (%d+)$")
+				local a, b, d, u, cols, total =
+					tonumber(first) :: number,
+					tonumber(last) :: number,
+					tonumber(down) :: number,
+					tonumber(up) :: number,
+					tonumber(n) :: number,
+					tonumber(rowsTotal) :: number
+				for row = a, b do
+					addRow(row, cols)
+				end
+				-- Ahead (the way it moves) before behind, each nearest first
+				local function below()
+					for row = b + 1, math.min(total - 1, b + d) do
+						addRow(row, cols)
+					end
+				end
+				local function above()
+					for row = a - 1, math.max(0, a - u), -1 do
+						addRow(row, cols)
+					end
+				end
+				if downward then
+					below()
+					above()
+				else
+					above()
+					below()
+				end
+			end
+			-- Handed over on the next step: a grid made before it is placed in its scroll area does not
+			-- know its view yet, and a burst of scrolling asks once. To the front of the queue: the old
+			-- window's leftovers wait behind it.
+			local waiting = pending ~= nil
+			pending = ids
+			if not waiting then
+				task.defer(function()
+					local list = pending
+					pending = nil
+					if list and not h.destroyed then
+						Preload.preload(list, { first = true })
+					end
+				end)
+			end
+		end)
+	end
 
 	local cells: { [any]: Frame } = {}
 	local root = Element.new("Frame", {

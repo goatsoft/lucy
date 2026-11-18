@@ -232,36 +232,97 @@ return function()
 			expect(near(kept.AbsolutePosition.Y, grid.Instance.AbsolutePosition.Y)).to.equal(true)
 		end)
 
-		it("preloads every item's pictures, not only the cells it builds", function()
+		describe("preload window (ADR 0051)", function()
 			local Preload = require(script.Parent.Parent.Core.Preload)
-			local real, surface = Preload.provider, Preload.surface
-			local asked: { any } = {}
-			-- Fetched, not drawn: a client in Play would draw the fake ids and wait for them
-			Preload.surface = function()
-				return nil
+			local real, surface
+			local asked: { any }
+			beforeEach(function()
+				real, surface = Preload.provider, Preload.surface
+				asked = {}
+				-- Fetched, not drawn: a client in Play would draw the fake ids and wait for them
+				Preload.surface = function()
+					return nil
+				end
+				Preload.provider = {
+					PreloadAsync = function(_, list)
+						for _, id in list do
+							table.insert(asked, id)
+						end
+					end,
+				}
+				Preload._reset()
+			end)
+			afterEach(function()
+				Preload.provider, Preload.surface = real, surface
+				Preload._reset()
+			end)
+
+			local function pictures(n: number): { number }
+				return { 5000 + n }
 			end
-			Preload.provider = {
-				PreloadAsync = function(_, list)
-					for _, id in list do
-						table.insert(asked, id)
-					end
-				end,
-			}
-			Preload._reset()
-			local grid = make({
-				items = numbers(400),
-				columns = 4,
-				cellHeight = 50,
-				preload = function(n: number)
-					return { 5000 + n }
-				end,
-			})
-			task.wait(0.1)
-			expect(grid.cellCount() < 400).to.equal(true)
-			expect(#asked).to.equal(400)
-			expect(Preload.isLoaded(5400)).to.equal(true)
-			Preload.provider, Preload.surface = real, surface
-			Preload._reset()
+			-- One column of 50 high rows in a 300 high view: 6 rows a screen
+			local function column(count: number): (any, ScrollingFrame)
+				return make({
+					items = numbers(count),
+					columns = 1,
+					cellHeight = 50,
+					gap = 0,
+					preload = pictures,
+				})
+			end
+			local function warmed(n: number): boolean
+				return Preload.isLoaded(5000 + n)
+			end
+
+			it("warms what is in view and two screens ahead, not the whole list", function()
+				column(1000)
+				task.wait(0.1)
+				-- In view: 1 to 6; two screens ahead: 7 to 18
+				expect(warmed(1)).to.equal(true)
+				expect(warmed(18)).to.equal(true)
+				expect(warmed(25)).to.equal(false)
+				expect(warmed(1000)).to.equal(false)
+				expect(#asked < 40).to.equal(true)
+				-- Nearest first
+				expect(asked[1]).to.equal("rbxassetid://5001")
+			end)
+
+			it("looks ahead the way the player scrolls, and a screen behind", function()
+				local _, scroller = column(1000)
+				local scale = Scroll.scaleOf(scroller)
+				-- Down to row 201: in view 201 to 206, ahead 207 to 218, behind 195 to 200
+				scroller.CanvasPosition = Vector2.new(0, 200 * 50 * scale)
+				task.wait(0.2)
+				expect(warmed(201)).to.equal(true)
+				expect(warmed(218)).to.equal(true)
+				expect(warmed(195)).to.equal(true)
+				expect(warmed(230)).to.equal(false)
+				expect(warmed(185)).to.equal(false)
+				-- Up to row 151: ahead is up now, 139 to 150, and behind is down, 157 to 162
+				scroller.CanvasPosition = Vector2.new(0, 150 * 50 * scale)
+				task.wait(0.2)
+				expect(warmed(139)).to.equal(true)
+				expect(warmed(162)).to.equal(true)
+				expect(warmed(130)).to.equal(false)
+			end)
+
+			it("warms a list with no scroll area around it whole", function()
+				local grid = Grid.new({
+					app = app,
+					Parent = gui,
+					virtual = true,
+					columns = 4,
+					cellHeight = 50,
+					items = numbers(30),
+					item = function()
+						return Instance.new("Frame")
+					end,
+					preload = pictures,
+				})
+				task.wait(0.1)
+				expect(grid.cellCount()).to.equal(30)
+				expect(#asked).to.equal(30)
+			end)
 		end)
 
 		it("fits columns to minCellWidth", function()
