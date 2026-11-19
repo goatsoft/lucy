@@ -105,6 +105,26 @@ end)
 `flush` returns `true` when nothing is left. `queue:pending()` counts the writes
 still waiting.
 
+## Waiting for one key
+
+Some answers must wait until the save is in the store, such as a purchase's
+receipt: telling Roblox it was granted before the profile is written can lose the
+item if the server stops. `handle:await(key, timeout)` yields until every write
+made to that key so far has landed:
+
+```luau
+profiles:set(`u{player.UserId}`, profile)
+if not profiles:await(`u{player.UserId}`, 10) then
+    return Enum.ProductPurchaseDecision.NotProcessedYet -- Roblox asks again
+end
+return Enum.ProductPurchaseDecision.PurchaseGranted
+```
+
+It returns `false` when the latest write gave up after its retries, or when
+`timeout` runs out (no timeout: it waits for one or the other). Offline, or for a
+key with nothing written, it returns `true` at once. Writes made while it waits
+are not waited for.
+
 ## Studio
 
 In Studio every store gets a name of its own: `queue:store("Profiles")` is

@@ -15,6 +15,8 @@
 		profiles:remove("u123")
 		local saved = profiles:get("u123")      -- yields: a pending write, else the cache, else
 		                                        -- the store ({ fresh = true } skips the cache)
+		profiles:await("u123", 10)              -- yields until every write to the key so far has
+		                                        -- landed (true), or one gave up or time ran out
 		hype:set("u123", 4200)
 		local top = hype:top(10)                -- { { key, value } }, highest first; cached for
 		                                        -- ttl, pending writes merged in
@@ -96,6 +98,7 @@ type Write = {
 	fns: { (any) -> any }?,
 	tries: number,
 	notBefore: number,
+	version: number?,
 }
 
 type Cached = { value: any, at: number }
@@ -115,6 +118,10 @@ type Handle = {
 	memory: { [string]: any },
 	pages: { [string]: Page },
 	written: { [string]: Cached },
+	-- await: each change to a key counts up; what landed and what gave up, by that count
+	versions: { [string]: number },
+	landed: { [string]: number },
+	gaveUp: { [string]: number },
 }
 
 local Handle = {}
@@ -218,6 +225,9 @@ local function makeHandle(queue: any, name: string, scope: string?, ordered: boo
 		memory = {},
 		pages = {},
 		written = {},
+		versions = {},
+		landed = {},
+		gaveUp = {},
 	}, Handle)
 	table.insert(queue.handles, handle)
 	return handle
@@ -317,6 +327,13 @@ local function remember(handle: any, key: string, value: any)
 	end
 end
 
+-- The key's next change count (await waits for it to land)
+local function bump(handle: any, key: string): number
+	local version = (handle.versions[key] or 0) + 1
+	handle.versions[key] = version
+	return version
+end
+
 local function queueWrite(handle: any, key: string, write: Write)
 	if handle.queue.offline or not handle.store then
 		-- Offline: what would be written is what there is
@@ -336,6 +353,7 @@ local function queueWrite(handle: any, key: string, write: Write)
 		end
 		return
 	end
+	write.version = bump(handle, key)
 	handle.writes[key] = write
 end
 
@@ -351,6 +369,7 @@ function Handle.update(self: any, key: string, fn: (any) -> any)
 	if pending and pending.kind == "set" then
 		-- On a pending set: the new value is known, no read needed
 		pending.value = fn(pending.value)
+		pending.version = bump(self, key)
 		if self.ordered then
 			self.written[key] = { value = pending.value, at = self.queue.clock() }
 		end
@@ -358,6 +377,7 @@ function Handle.update(self: any, key: string, fn: (any) -> any)
 	end
 	if pending and pending.kind == "update" and pending.fns then
 		table.insert(pending.fns, fn)
+		pending.version = bump(self, key)
 		return
 	end
 	queueWrite(self, key, { kind = "update", fns = { fn }, tries = 0, notBefore = 0 })
@@ -407,6 +427,7 @@ function Handle._send(self: any, now: number)
 			local at = queue.clock()
 			if ok then
 				self.lastWrite[key] = at
+				self.landed[key] = math.max(self.landed[key] or 0, write.version or 0)
 				if write.kind == "remove" then
 					self.cache[key] = nil
 					self.memory[key] = nil
@@ -419,6 +440,7 @@ function Handle._send(self: any, now: number)
 				return -- a newer write to the key is waiting; it replaces this one
 			end
 			if write.tries >= queue.retries then
+				self.gaveUp[key] = math.max(self.gaveUp[key] or 0, write.version or 0)
 				queue.warn(`[Lucy] DataQueue: gave up writing "{key}" to "{self.name}": {result}`)
 				if queue.onError then
 					queue.onError({ store = self.name, key = key, error = result })
@@ -429,6 +451,30 @@ function Handle._send(self: any, now: number)
 			self.writes[key] = write
 		end)
 	end
+end
+
+-- Waits (yields) until every write made to `key` so far has landed in the store: true. False
+-- when the latest of them gave up, or after `timeout` seconds (none: until one or the other).
+-- Offline there is nothing to wait for: true. For what must not be answered before it is saved
+-- (a purchase's receipt).
+function Handle.await(self: any, key: string, timeout: number?): boolean
+	local queue = self.queue
+	if queue.offline or not self.store then
+		return true
+	end
+	local target = self.versions[key] or 0
+	local start = queue.clock()
+	while (self.landed[key] or 0) < target do
+		if (self.gaveUp[key] or 0) >= target and not self.writes[key] and not self.inFlight[key] then
+			return false
+		end
+		if queue.destroyed or (timeout and queue.clock() - start >= timeout) then
+			return false
+		end
+		queue.wait(0.1)
+		queue:step()
+	end
+	return true
 end
 
 -- The value at `key` (yields). options.fresh skips the cache.
