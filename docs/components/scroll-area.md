@@ -126,6 +126,13 @@ When the area holds nothing to select, such as a long block of rules text, and
 the content does not fit, the area itself can be selected instead, so the
 player can still scroll it with a gamepad.
 
+The right stick scrolls around whatever has focus: up and down the nearest area
+that scrolls that way, left and right the nearest that scrolls sideways (a row
+of tabs or cards inside a page). While focus is in something it can scroll, the
+stick does not turn the camera. Focus that scrolls out of view moves to the
+nearest control that still shows, so the D-pad carries on from what the player
+sees.
+
 ## Examples
 
 A dialog body that grows with its text and scrolls past 320 pixels:

@@ -12,6 +12,14 @@
 		                                -- calls back once, the first time object shows and is
 		                                -- near what the ScrollingFrame around it shows; returns
 		                                -- a function that stops it looking
+		Scroll.along(object, axis)      -- the nearest ScrollingFrame above object that scrolls
+		                                -- along "X" or "Y" (its canvas is bigger than it there)
+		Scroll.stickStep(tilt, view, dt) -- pure: how far one axis of the right stick scrolls
+		Scroll.byStick(object, stick, dt)
+		                                -- scrolls round object with the right stick: up and down
+		                                -- the nearest scroller that scrolls that way, left and
+		                                -- right the nearest that scrolls sideways; returns the
+		                                -- scrollers it moved
 
 	The engine scrolls to the gamepad selection by itself, but focus moved by Lucy
 	(Tab, arrow keys) does not, so InputManager.markFocus calls reveal while the
@@ -105,6 +113,73 @@ function Scroll.reveal(object: GuiObject, margin: number?, only: ScrollingFrame?
 		end
 		node = node.Parent
 	end
+end
+
+-- The right stick (InputManager): nothing under the deadzone, then up to stickSpeed views a
+-- second at full tilt, gently at first (squared) so a small tilt reads a line at a time.
+Scroll.stickDeadzone = 0.2
+Scroll.stickSpeed = 1.6
+
+function Scroll.along(object: Instance, axis: string): ScrollingFrame?
+	local node: Instance? = object.Parent
+	while node do
+		if node:IsA("ScrollingFrame") and node.ScrollingEnabled then
+			local frame = node :: ScrollingFrame
+			local direction = frame.ScrollingDirection
+			local allowed = direction == Enum.ScrollingDirection.XY
+				or (axis == "X" and direction == Enum.ScrollingDirection.X)
+				or (axis == "Y" and direction == Enum.ScrollingDirection.Y)
+			-- against the frame's whole size: the other way's scroll bar narrows the window, which
+			-- is not more to see
+			local room = if axis == "X"
+				then frame.AbsoluteCanvasSize.X - frame.AbsoluteSize.X
+				else frame.AbsoluteCanvasSize.Y - frame.AbsoluteSize.Y
+			if allowed and room > 1 then
+				return frame
+			end
+		end
+		node = node.Parent
+	end
+	return nil
+end
+
+function Scroll.stickStep(tilt: number, view: number, dt: number): number
+	local amount = math.abs(tilt)
+	if amount < Scroll.stickDeadzone then
+		return 0
+	end
+	local t = math.min(1, (amount - Scroll.stickDeadzone) / (1 - Scroll.stickDeadzone))
+	return math.sign(tilt) * t * t * Scroll.stickSpeed * view * dt
+end
+
+function Scroll.byStick(object: GuiObject, stick: Vector2, dt: number): { ScrollingFrame }
+	local moved: { ScrollingFrame } = {}
+	for _, axis in { "X", "Y" } do
+		local frame = Scroll.along(object, axis)
+		if not frame then
+			continue
+		end
+		local canvas = frame.CanvasPosition
+		local window = frame.AbsoluteWindowSize
+		local extent = frame.AbsoluteCanvasSize
+		local position = canvas
+		if axis == "X" then
+			-- right goes on along the row
+			local x = canvas.X + Scroll.stickStep(stick.X, window.X, dt)
+			position = Vector2.new(math.clamp(x, 0, math.max(0, extent.X - window.X)), canvas.Y)
+		else
+			-- the stick's Y is up: up goes back towards the top
+			local y = canvas.Y - Scroll.stickStep(stick.Y, window.Y, dt)
+			position = Vector2.new(canvas.X, math.clamp(y, 0, math.max(0, extent.Y - window.Y)))
+		end
+		if position ~= canvas then
+			frame.CanvasPosition = position
+			if not table.find(moved, frame) then
+				table.insert(moved, frame)
+			end
+		end
+	end
+	return moved
 end
 
 -- How many views beyond each edge of what a scroll area shows count as near (whenNear).

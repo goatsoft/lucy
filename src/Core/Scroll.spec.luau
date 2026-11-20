@@ -330,4 +330,88 @@ return function()
 			expect(frame.CanvasPosition.Y).to.equal(0)
 		end)
 	end)
+
+	describe("right stick", function()
+		local app, cleanup, gui
+		beforeEach(function()
+			app, cleanup = Harness.app()
+			gui = Harness.mount(app)
+		end)
+		afterEach(function()
+			cleanup()
+		end)
+
+		-- A page scrolling down, with a row in it scrolling sideways, and a button in each
+		local function build()
+			local page = Instance.new("ScrollingFrame")
+			page.Size = UDim2.fromOffset(300, 100)
+			page.CanvasSize = UDim2.fromOffset(0, 1000)
+			page.Parent = gui
+			local row = Instance.new("ScrollingFrame")
+			row.Size = UDim2.fromOffset(200, 60)
+			row.CanvasSize = UDim2.fromOffset(1000, 0)
+			row.ScrollingDirection = Enum.ScrollingDirection.X
+			row.Parent = page
+			local inRow = Instance.new("TextButton")
+			inRow.Size = UDim2.fromOffset(50, 40)
+			inRow.Parent = row
+			local onPage = Instance.new("TextButton")
+			onPage.Size = UDim2.fromOffset(50, 20)
+			onPage.Position = UDim2.fromOffset(0, 70)
+			onPage.Parent = page
+			Harness.flush()
+			return page, row, inRow, onPage
+		end
+
+		it("does nothing in the deadzone, then speeds up with the tilt", function()
+			expect(Scroll.stickStep(0.1, 100, 1)).to.equal(0)
+			local half = Scroll.stickStep(0.6, 100, 1)
+			local full = Scroll.stickStep(1, 100, 1)
+			expect(half > 0 and half < full / 2).to.equal(true)
+			expect(full).to.equal(Scroll.stickSpeed * 100)
+			expect(Scroll.stickStep(-1, 100, 1)).to.equal(-full)
+		end)
+
+		it("finds the scroller for each way, past one that does not scroll that way", function()
+			local page, row, inRow, onPage = build()
+			expect(Scroll.along(inRow, "X")).to.equal(row)
+			expect(Scroll.along(inRow, "Y")).to.equal(page)
+			expect(Scroll.along(onPage, "Y")).to.equal(page)
+			expect(Scroll.along(onPage, "X")).to.equal(nil)
+		end)
+
+		it("scrolls down the page for down, and along the row for right", function()
+			local page, row, inRow = build()
+			Scroll.byStick(inRow, Vector2.new(0, -1), 0.1)
+			expect(page.CanvasPosition.Y > 0).to.equal(true)
+			expect(row.CanvasPosition.X).to.equal(0)
+			Scroll.byStick(inRow, Vector2.new(1, 0), 0.1)
+			expect(row.CanvasPosition.X > 0).to.equal(true)
+		end)
+
+		it("stops at the ends", function()
+			local page, _, _, onPage = build()
+			Scroll.byStick(onPage, Vector2.new(0, 1), 1)
+			expect(page.CanvasPosition.Y).to.equal(0)
+			for _ = 1, 20 do
+				Scroll.byStick(onPage, Vector2.new(0, -1), 1)
+			end
+			expect(page.CanvasPosition.Y).to.equal(page.AbsoluteCanvasSize.Y - page.AbsoluteWindowSize.Y)
+		end)
+
+		it("moves focus scrolled out of view to what shows", function()
+			local page, _, inRow = build()
+			local further = Instance.new("TextButton")
+			further.Size = UDim2.fromOffset(50, 20)
+			further.Position = UDim2.fromOffset(0, 400)
+			further.Parent = page
+			Harness.flush()
+			app.input:setMode("gamepad")
+			app.input:markFocus(inRow)
+			page.CanvasPosition = Vector2.new(0, 370)
+			Harness.flush()
+			app.input:_keepInView(page)
+			expect(app.input:focused()).to.equal(further)
+		end)
+	end)
 end

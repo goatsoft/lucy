@@ -48,6 +48,13 @@
 		returnFocus = false leaves nothing selected (a HUD whose buttons must not
 		keep the gamepad's left stick).
 
+	Right stick:
+		With a gamepad, the right stick scrolls round the focus: up and down the nearest
+		ScrollingFrame above it that scrolls that way, left and right the nearest that scrolls
+		sideways (Scroll.byStick). While focus sits in something it can scroll, the stick is
+		sunk, so the camera behind stays put. Focus scrolled out of view goes to the control
+		nearest it that shows, so the D-pad carries on from what the player sees.
+
 	Shoulder buttons:
 		LB / RB call app.input:shoulder(-1 / 1): the nearest component around the
 		focus with a shoulder method handles them (Tabs switch tab).
@@ -73,6 +80,7 @@
 		it back, so restoreFocus() runs when it closes.
 ]]
 
+local ContextActionService = game:GetService("ContextActionService")
 local GuiService = game:GetService("GuiService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -114,6 +122,8 @@ export type InputManager = typeof(setmetatable(
 		_nudged: any,
 		_held: { key: Enum.KeyCode, token: {} }?,
 		_stick: Vector2,
+		_rightStick: Vector2,
+		_stickSunk: boolean,
 		_backKeys: { Enum.KeyCode },
 		_lastFocused: GuiObject?,
 		_returning: boolean,
@@ -169,6 +179,8 @@ local function stickDirection(position: Vector3, current: Vector2): Vector2
 	end
 	return Vector2.new(0, -math.sign(y))
 end
+
+local STICK_SINK = "LucyScrollStick"
 
 -- Shorter side below this (in Roblox screen points) is a phone.
 InputManager.mobileMaxShortSide = 600
@@ -251,6 +263,8 @@ function InputManager.new(app: any, options: { [string]: any }?): InputManager
 		_nudged = false,
 		_held = nil :: { key: Enum.KeyCode, token: {} }?,
 		_stick = Vector2.zero,
+		_rightStick = Vector2.zero,
+		_stickSunk = false,
 		_backKeys = (opts.backKeys or InputManager.backKeys) :: { Enum.KeyCode },
 		_lastFocused = nil :: GuiObject?,
 		_returning = false,
@@ -960,7 +974,20 @@ function InputManager._watch(self: InputManager)
 		end
 	end))
 
+	maid:give(RunService.RenderStepped:Connect(function(dt)
+		self:_stickScroll(dt)
+	end))
+	maid:give(function()
+		if self._stickSunk then
+			self._stickSunk = false
+			ContextActionService:UnbindAction(STICK_SINK)
+		end
+	end)
+
 	maid:give(UserInputService.InputEnded:Connect(function(input)
+		if input.KeyCode == Enum.KeyCode.Thumbstick2 then
+			self._rightStick = Vector2.zero
+		end
 		local held = self._held
 		if held and input.KeyCode == held.key then
 			self:_letGo()
@@ -968,6 +995,10 @@ function InputManager._watch(self: InputManager)
 	end))
 
 	maid:give(UserInputService.InputChanged:Connect(function(input)
+		if input.KeyCode == Enum.KeyCode.Thumbstick2 then
+			self._rightStick = Vector2.new(input.Position.X, input.Position.Y)
+			return
+		end
 		if input.KeyCode ~= Enum.KeyCode.Thumbstick1 then
 			return
 		end
@@ -989,6 +1020,69 @@ function InputManager._watch(self: InputManager)
 			self:_hold(Enum.KeyCode.Thumbstick1, direction)
 		end
 	end))
+end
+
+-- The right stick, each frame: sinks it while focus is in something it can scroll, scrolls that,
+-- and moves focus scrolled out of view to the control nearest it that shows
+function InputManager._stickScroll(self: InputManager, dt: number)
+	local focused = self._focused
+	local live = focused ~= nil and self._mode == "gamepad" and focused:IsDescendantOf(game)
+	local scrollable = live
+		and focused ~= nil
+		and (Scroll.along(focused, "Y") ~= nil or Scroll.along(focused, "X") ~= nil)
+	if scrollable ~= self._stickSunk then
+		self._stickSunk = scrollable
+		if scrollable then
+			ContextActionService:BindActionAtPriority(STICK_SINK, function()
+				return Enum.ContextActionResult.Sink
+			end, false, Enum.ContextActionPriority.High.Value + 1000, Enum.KeyCode.Thumbstick2)
+		else
+			ContextActionService:UnbindAction(STICK_SINK)
+		end
+	end
+	if not scrollable or focused == nil or self._rightStick.Magnitude < Scroll.stickDeadzone then
+		return
+	end
+	for _, frame in Scroll.byStick(focused, self._rightStick, dt) do
+		self:_keepInView(frame)
+	end
+end
+
+-- Focus that `frame` scrolled out of view goes to the control in it nearest where it was that
+-- shows whole (with reveal's margin, so focusing it does not scroll back)
+function InputManager._keepInView(self: InputManager, frame: ScrollingFrame)
+	local focused = self._focused
+	if not focused or not focused:IsDescendantOf(frame) then
+		return
+	end
+	-- the margin only along the ways it scrolls: a list's controls sit flush with its sides
+	local margin = Vector2.new(
+		if frame.AbsoluteCanvasSize.X > frame.AbsoluteSize.X then 8 else 0,
+		if frame.AbsoluteCanvasSize.Y > frame.AbsoluteSize.Y then 8 else 0
+	)
+	local low = frame.AbsolutePosition + margin
+	local high = frame.AbsolutePosition + frame.AbsoluteWindowSize - margin
+	local function shows(object: GuiObject): boolean
+		local a, b = object.AbsolutePosition, object.AbsolutePosition + object.AbsoluteSize
+		return a.X >= low.X - 0.5 and a.Y >= low.Y - 0.5 and b.X <= high.X + 0.5 and b.Y <= high.Y + 0.5
+	end
+	if shows(focused) then
+		return
+	end
+	local centre = focused.AbsolutePosition + focused.AbsoluteSize / 2
+	local best: GuiObject? = nil
+	local bestDistance = math.huge
+	for _, object in self:selectables(frame) do
+		if shows(object) then
+			local distance = (object.AbsolutePosition + object.AbsoluteSize / 2 - centre).Magnitude
+			if distance < bestDistance then
+				best, bestDistance = object, distance
+			end
+		end
+	end
+	if best then
+		self:focus(best)
+	end
 end
 
 --[[
