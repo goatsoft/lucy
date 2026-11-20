@@ -191,6 +191,26 @@ return function()
 			expect(calls).to.equal(0)
 		end)
 
+		it("looks again as the scroll area scrolls, a little at a time", function()
+			if not Harness.laysOutLive() then
+				return
+			end
+			-- as gamepad focus scrolls a list: small steps, a frame apart. The engine updates what is
+			-- past the visible part lazily, so the object's own place may not say it moved
+			local frame, item = build(500)
+			local calls = 0
+			Scroll.whenNear(item, function()
+				calls += 1
+			end)
+			for y = 0, 320, 20 do
+				frame.CanvasPosition = Vector2.new(0, y)
+				task.wait()
+			end
+			expect(Harness.waitFor(function()
+				return calls == 1
+			end)).to.equal(true)
+		end)
+
 		it("calls back for what shows with no scroll area around it", function()
 			if not Harness.laysOutLive() then
 				return

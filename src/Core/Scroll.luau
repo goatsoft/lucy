@@ -152,8 +152,8 @@ end
 
 	`object` needs a size of its own: something with no size is taken as not laid out yet. It
 	looks when made and then on the engine's signals: the object moved, changed size, was shown
-	or was put somewhere, what hid it showed, or the scroll area changed size. For content built
-	as the player scrolls to it (Core/Deferred's "intersect", Lucy.useIntersect).
+	or was put somewhere, what hid it showed, or the scroll area scrolled or changed size. For
+	content built as the player scrolls to it (Core/Deferred's "intersect", Lucy.useIntersect).
 ]]
 function Scroll.whenNear(object: GuiObject, callback: () -> (), overscan: number?): () -> ()
 	local reach = overscan or Scroll.overscan
@@ -196,6 +196,10 @@ function Scroll.whenNear(object: GuiObject, callback: () -> (), overscan: number
 		local scroller = object:FindFirstAncestorWhichIsA("ScrollingFrame")
 		if scroller and not followed[scroller] then
 			followed[scroller] = scroller:GetPropertyChangedSignal("AbsoluteWindowSize"):Connect(look)
+			-- and on every scroll: the engine moves what is past the visible part lazily, so an
+			-- object just beyond it often hears nothing of a scroll (its AbsolutePosition does not
+			-- change), and a list scrolled by gamepad focus stopped where nothing new was built
+			table.insert(connections, scroller:GetPropertyChangedSignal("CanvasPosition"):Connect(look))
 		end
 		return isNear(object, scroller, reach)
 	end
