@@ -39,6 +39,14 @@ return function()
 			expect(Scroll.offsetFor(0, 200, 700, 740, 8, 1000)).to.equal(548)
 		end)
 
+		it("goes to the end for the last item when it only just overflows, not back to the start", function()
+			-- a row of tabs 3 px wider than its room: the start and the end are both near, and the
+			-- last tab (under the end's fade) needs the end
+			expect(Scroll.offsetFor(0, 638, 516, 642, 8, 641)).to.equal(3)
+			-- and the first tab, from the end, still goes back to the start
+			expect(Scroll.offsetFor(3, 638, 0, 253, 8, 641)).to.equal(0)
+		end)
+
 		it("stays put when the item is in view, however near an end", function()
 			expect(Scroll.offsetFor(30, 200, 100, 140, 8, 1000)).to.equal(30)
 			expect(Scroll.offsetFor(790, 200, 900, 940, 8, 1000)).to.equal(790)

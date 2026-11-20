@@ -59,11 +59,14 @@ function Scroll.offsetFor(
 	if extent ~= nil and target ~= position then
 		local near = view * Scroll.snap
 		local last = math.max(0, extent - view)
-		if target < near then
-			target = 0
-		elseif last - target < near and top >= last then
-			-- only while the span's top still shows from the end (a span taller than the view)
+		-- only while the span's top still shows from the end (a span taller than the view)
+		local toEnd = last - target < near and top >= last
+		-- Going forward, the end first: in a list that only just overflows both ends are near, and
+		-- the start would leave the span it scrolled for under the end's fade
+		if toEnd and (target > position or target >= near) then
 			target = last
+		elseif target < near then
+			target = 0
 		end
 	end
 	return target
