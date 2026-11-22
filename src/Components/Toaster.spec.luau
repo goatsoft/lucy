@@ -53,6 +53,30 @@ return function()
 			cleanup()
 		end)
 
+		it("keeps the toaster when the effect that showed the first toast runs again", function()
+			local Reactive = require(script.Parent.Parent.Core.Reactive)
+			local phase = Reactive.ref("countdown")
+			local scope = Reactive.effectScope(true)
+			local shown = false
+			scope:run(function()
+				Reactive.watchEffect(function()
+					phase() -- re-runs on every phase, as a game's watcher does
+					if not shown then
+						shown = true
+						app.toast("Balloons in 10")
+					end
+				end)
+			end)
+			local portal = app:portal("toast")
+			local toaster = portal:FindFirstChild("Toaster", true)
+			expect(toaster).to.be.ok()
+			phase("on")
+			expect(toaster.Parent).to.be.ok()
+			expect(portal:FindFirstChild("Toaster", true)).to.equal(toaster)
+			scope:stop()
+			expect(toaster.Parent).to.be.ok()
+		end)
+
 		it("mounts again in the toast portal when the one it was in is taken away", function()
 			app.toast("Doors open")
 			local first = app:portal("toast")

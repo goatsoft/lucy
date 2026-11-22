@@ -275,14 +275,24 @@ function Toaster.install(app)
 			mounted:destroy()
 		end
 		if mounted == nil or mounted.destroyed then
-			mounted = Toaster.new({
-				app = app,
-				id = "toaster",
-				position = app.config.toastPosition,
-				width = app.config.toastWidth,
-				Parent = portal,
-			})
-			app.maid:give(mounted)
+			-- Built in a scope of its own: the first toast is often sent from inside an effect,
+			-- and a component built there belongs to it, so the toaster went the next time that
+			-- effect ran again and toasts stopped showing. It lives as long as the app
+			local scope = Reactive.effectScope(true)
+			mounted = scope:run(function()
+				return Toaster.new({
+					app = app,
+					id = "toaster",
+					position = app.config.toastPosition,
+					width = app.config.toastWidth,
+					Parent = portal,
+				})
+			end)
+			local maid: any = app.maid
+			maid:give(mounted)
+			maid:give(function()
+				scope:stop()
+			end)
 		end
 	end
 
