@@ -33,6 +33,8 @@ Lucy.Stack.new({
 | `align` | string | `"left"` | yes | `left`, `center` or `right` |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 | `autoWidth` | boolean or responsive | `false` | | Sizes to the text instead of filling the width, and stops wrapping |
+| `wrap` | boolean, responsive or getter | | | `false` keeps the text on one line, `true` wraps it. Left out, text that fills the width wraps and text sized to its words (`autoWidth`, `reserve`) does not |
+| `fit` | `true` or number | | | Keeps the text on one line, sized to its words, and scales it down when it is wider than its parent has room for, never under 0.6 of its size. A number sets that floor instead (`fit = 0.5`) |
 | `reserve` | string or getter | | | Holds the width of the widest text of this shape, so a timer or count never moves what is around it: `"0:00"` holds the widest time with any digits. Measured in the text's own font and size. Align it to say which side the number keeps to. Give a getter for a line whose words change too (return the line itself): it holds the widest for those words and only moves when the words do |
 | `richText` | boolean | `false` | | Turns on Roblox rich text tags such as `<b>` |
 | `reveal` | number or `true` | | | Types the text out, this many characters a second (`true`: 40), and again from the start whenever the text changes |
@@ -81,10 +83,27 @@ Text that fits itself, for use in a row:
 Lucy.Text.new({ text = "Level 12", variant = "small", autoWidth = true, Parent = row })
 ```
 
-Rich text:
+A word or a stat that must stay on one line in a narrow card. With `fit` it shrinks to the
+card's width instead of breaking over two lines or running out of the card, and keeps its own
+size whenever there is room. It measures against its parent, so put it straight in the card or
+row whose width it should keep to:
 
 <!-- preview -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-text-4-light.webp" alt="Text example" loading="lazy"><img class="example-dark" src="/images/examples/components-text-4-dark.webp" alt="Text example" loading="lazy"></figure>
+
+```luau
+local card = Lucy.new "Frame" {
+    Size = UDim2.fromOffset(110, 60),
+    BackgroundTransparency = 1,
+    Parent = parent,
+}
+Lucy.Text.new({ text = "OVERDRIVE", variant = "h2", fit = true, Parent = card })
+```
+
+Rich text:
+
+<!-- preview -->
+<figure class="example-preview"><img class="example-light" src="/images/examples/components-text-5-light.webp" alt="Text example" loading="lazy"><img class="example-dark" src="/images/examples/components-text-5-dark.webp" alt="Text example" loading="lazy"></figure>
 
 ```luau
 Lucy.Text.new({ text = "Press <b>E</b> to dance", richText = true, Parent = prompt })

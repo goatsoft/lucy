@@ -46,6 +46,59 @@ return function()
 		expect(text.Instance.AutomaticSize).to.equal(Enum.AutomaticSize.XY)
 	end)
 
+	describe("wrap", function()
+		it("keeps a full width line on one line with wrap = false", function()
+			local text = Text.new({ app = app, Parent = gui, text = "Hello", wrap = false })
+			expect(text.Instance.Size).to.equal(UDim2.fromScale(1, 0))
+			expect(text.Instance.TextWrapped).to.equal(false)
+		end)
+
+		it("follows a reactive wrap", function()
+			local Reactive = require(script.Parent.Parent.Core.Reactive)
+			local on = Reactive.ref(true)
+			local text = Text.new({ app = app, Parent = gui, text = "Hello", wrap = on })
+			expect(text.Instance.TextWrapped).to.equal(true)
+			on(false)
+			expect(text.Instance.TextWrapped).to.equal(false)
+		end)
+	end)
+
+	describe("fit", function()
+		it("sizes to its text on one line and scales down to the width it has", function()
+			local room = Instance.new("Frame")
+			room.Size = UDim2.fromOffset(120, 100)
+			room.Parent = gui
+			local text = Text.new({
+				app = app,
+				Parent = room,
+				text = "ACCURACY 90% \u{00B7} MAX COMBO x35",
+				variant = "h4",
+				fit = 0.2,
+			})
+			expect(text.Instance.AutomaticSize).to.equal(Enum.AutomaticSize.XY)
+			expect(text.Instance.TextWrapped).to.equal(false)
+			local scale = text.Instance:FindFirstChild("LucyFit") :: UIScale
+			expect(scale).to.be.ok()
+			if not Harness.laysOutLive() then
+				return -- the scale follows live layout only (Harness.laysOutLive)
+			end
+			local waited = 0
+			while scale.Scale >= 1 and waited < 1 do
+				waited += task.wait()
+			end
+			expect(scale.Scale < 1).to.equal(true)
+			expect(text.Instance.AbsoluteSize.X <= room.AbsoluteSize.X + 1).to.equal(true)
+		end)
+
+		it("leaves text that fits at its own size", function()
+			local text = Text.new({ app = app, Parent = gui, text = "Hi", fit = true })
+			local scale = text.Instance:FindFirstChild("LucyFit") :: UIScale
+			task.wait()
+			task.wait()
+			expect(scale.Scale).to.equal(1)
+		end)
+	end)
+
 	it("applies alignment and variant from state", function()
 		local text = Text.new({ app = app, id = "title", Parent = gui, variant = "h1", align = "center" })
 		expect(text.Instance.TextXAlignment).to.equal(Enum.TextXAlignment.Center)

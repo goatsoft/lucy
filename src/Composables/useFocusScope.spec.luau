@@ -1,0 +1,32 @@
+return function()
+	local Composables = require(script.Parent)
+	local Reactive = require(script.Parent.Parent.Core.Reactive)
+	local Harness = require(script.Parent.Parent.Testing.Harness)
+
+	local app, cleanup
+	beforeEach(function()
+		app, cleanup = Harness.app()
+	end)
+	afterEach(function()
+		cleanup()
+	end)
+
+	describe("useFocusScope", function()
+		it("pushes a focus scope only while active", function()
+			local scope = Reactive.effectScope(true)
+			local open = Reactive.ref(true)
+			local root = Instance.new("Frame")
+			local before = #app.input._scopes
+			scope:run(function()
+				Composables.useFocusScope(app, open, { root = root })
+			end)
+			expect(#app.input._scopes).to.equal(before + 1)
+			open(false)
+			expect(#app.input._scopes).to.equal(before)
+			open(true)
+			scope:stop()
+			expect(#app.input._scopes).to.equal(before)
+			root:Destroy()
+		end)
+	end)
+end

@@ -8,6 +8,13 @@
 	align:   left | center | right
 	autoWidth = true sizes to the text instead of filling the parent's width (a responsive
 	value too: { short = true, default = false }).
+	wrap = false keeps the text on one line where it would wrap; wrap = true wraps it. Left out,
+	text that fills the width wraps and text sized to its words (autoWidth, reserve) does not.
+	A responsive value or a getter too.
+	fit = true keeps the text on one line, sized to its words, and scales it down when that is
+	wider than its parent has room for (Lucy.useFit), never under 0.6 of its size; give a number
+	for another floor (fit = 0.5). For a word or a stat that must not break over two lines in a
+	narrow card: "OVERDRIVE", "MAX COMBO x35".
 	reserve = "0:00" holds the width of the widest text of that shape (each digit tried as every
 	digit), in the label's styled font and size, so a timer or count never moves what is around
 	it as it changes. Align it (right, say) to say which side the number keeps to. A getter works
@@ -118,6 +125,12 @@ local spec: Component.Spec = {
 		check(h:get("variant")) -- an unknown variant fails the mount
 		local variant, align = h:ref("variant"), h:ref("align")
 		local autoWidth = Composables.useResponsive(h.app, p.autoWidth)
+		local fitting = p.fit ~= nil and p.fit ~= false
+		local wrap = if p.wrap ~= nil then Composables.useResponsive(h.app, p.wrap) else nil
+		-- Sized to its words rather than filling the width
+		local function hugs(): boolean
+			return fitting or autoWidth() == true or p.reserve ~= nil
+		end
 		local rate = if p.reveal == true
 			then Text.REVEAL_RATE
 			elseif type(p.reveal) == "number" then p.reveal
@@ -166,16 +179,21 @@ local spec: Component.Spec = {
 				if reserved() > 0 then
 					return UDim2.fromOffset(reserved(), 0)
 				end
-				return if autoWidth() or p.reserve then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0)
+				return if hugs() then UDim2.fromOffset(0, 0) else UDim2.fromScale(1, 0)
 			end,
 			AutomaticSize = function(): Enum.AutomaticSize
 				if reserved() > 0 then
 					return Enum.AutomaticSize.Y
 				end
-				return if autoWidth() or p.reserve then Enum.AutomaticSize.XY else Enum.AutomaticSize.Y
+				return if hugs() then Enum.AutomaticSize.XY else Enum.AutomaticSize.Y
 			end,
 			TextWrapped = function(): boolean
-				return not (autoWidth() or p.reserve)
+				if fitting then
+					return false
+				elseif wrap then
+					return wrap() == true
+				end
+				return not hugs()
 			end,
 			RichText = p.richText == true,
 			Text = display,
@@ -193,6 +211,13 @@ local spec: Component.Spec = {
 				end,
 			},
 		}) :: TextLabel
+		if fitting then
+			Element.new("UIScale", {
+				Name = "LucyFit",
+				Scale = Composables.useFit(label, { min = if type(p.fit) == "number" then p.fit else nil }),
+				Parent = label,
+			})
+		end
 		if type(p.reserve) == "string" or type(p.reserve) == "function" then
 			local reserve: any = p.reserve
 			local function sample(): string

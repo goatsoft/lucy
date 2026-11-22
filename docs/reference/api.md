@@ -34,7 +34,7 @@ check a name exists before you use it, and find the page that explains it.
 ## Composables
 
 `Lucy.useDensity`, `useMetric`, `useResponsive`, `useBackHandler`,
-`useFocusScope`, `useFocusZone`, `useHoldArrows`, `useSize`, `useHasVisibleChild`, `useUiSound`, `useTable`, `useSort`, `useWhile`, `useCountdown`,
+`useFocusScope`, `useFocusZone`, `useHoldArrows`, `useSize`, `useFit`, `useHasVisibleChild`, `useUiSound`, `useTable`, `useSort`, `useWhile`, `useCountdown`,
 `useDrag`, `useReveal`, `useCount`, `useRequest` and `useIntersect`. See
 the [composables reference](composables/index.md).
 

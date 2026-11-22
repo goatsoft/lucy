@@ -11,6 +11,8 @@
 			padding = "Space4",       -- optional, same forms as gap
 			wrap = false,
 			size = UDim2,             -- optional; defaults to filling width (column) or hugging (row)
+			fit = true,               -- optional: scales the stack down to fit its parent's width
+			                          -- (Lucy.useFit), never under 0.6; a number for another floor
 			children = { ... },       -- instances, handles or functions
 			mount = "immediate",      -- immediate | intersect: a child given as a function is built
 			                          -- the first time it is scrolled near (see below)
@@ -173,6 +175,15 @@ local spec: Component.Spec = {
 			h.layout,
 			paddingChild,
 		})
+		-- fit: a row of words or stats too wide for a narrow card shrinks to fit it (a stack that
+		-- fills its parent's width never needs to)
+		if p.fit ~= nil and p.fit ~= false then
+			Element.new("UIScale", {
+				Name = "LucyFit",
+				Scale = Composables.useFit(frame, { min = if type(p.fit) == "number" then p.fit else nil }),
+				Parent = frame,
+			})
+		end
 		if Deferred.mode(p, "Stack", MOUNTS, "immediate") == "intersect" then
 			local estimate: number = if type(p.estimate) == "number" then p.estimate else Stack.estimate
 			local across = horizontal()

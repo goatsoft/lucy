@@ -103,6 +103,7 @@ local Lucy = {
 	useHoldArrows = Composables.useHoldArrows,
 	useSize = Composables.useSize,
 	useHasVisibleChild = Composables.useHasVisibleChild,
+	useFit = Composables.useFit,
 	useResponsive = Composables.useResponsive,
 	useUiSound = Composables.useUiSound,
 	useTable = Composables.useTable,

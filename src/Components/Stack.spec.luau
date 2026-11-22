@@ -48,6 +48,30 @@ return function()
 		expect(stack.layout.HorizontalAlignment).to.equal(Enum.HorizontalAlignment.Right)
 	end)
 
+	it("scales a row down to the width it has with fit", function()
+		local room = Instance.new("Frame")
+		room.Size = UDim2.fromOffset(100, 100)
+		room.Parent = gui
+		local children = {}
+		for i = 1, 3 do
+			local f = Instance.new("Frame")
+			f.Size = UDim2.fromOffset(80, 20)
+			children[i] = f
+		end
+		local stack =
+			Stack.new({ app = app, Parent = room, direction = "horizontal", fit = 0.1, children = children })
+		local scale = stack.Instance:FindFirstChild("LucyFit") :: UIScale
+		expect(scale).to.be.ok()
+		if not Harness.laysOutLive() then
+			return -- the scale follows live layout only (Harness.laysOutLive)
+		end
+		local waited = 0
+		while math.abs(scale.Scale - 100 / 240) > 0.01 and waited < 1 do
+			waited += task.wait()
+		end
+		expect(scale.Scale).to.be.near(100 / 240, 0.01)
+	end)
+
 	it("adds padding when asked", function()
 		local stack = Stack.new({ app = app, Parent = gui, padding = 12 })
 		expect(stack.Instance:FindFirstChildOfClass("UIPadding").PaddingTop).to.equal(UDim.new(0, 12))

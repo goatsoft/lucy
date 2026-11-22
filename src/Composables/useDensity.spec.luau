@@ -1,0 +1,33 @@
+return function()
+	local Composables = require(script.Parent)
+	local Reactive = require(script.Parent.Parent.Core.Reactive)
+	local Harness = require(script.Parent.Parent.Testing.Harness)
+
+	local app, cleanup
+	beforeEach(function()
+		app, cleanup = Harness.app()
+	end)
+	afterEach(function()
+		cleanup()
+	end)
+
+	describe("useDensity / useMetric", function()
+		it("follow the theme's density, one shared ref per app", function()
+			local scope = Reactive.effectScope(true)
+			local density, height
+			scope:run(function()
+				density = Composables.useDensity(app)
+				height = Composables.useMetric(app, "ControlMd")
+			end)
+			expect(density()).to.equal(app.theme:getDensity())
+			local before = height()
+			app.theme:setDensity("touch")
+			expect(density()).to.equal("touch")
+			expect(height() > before).to.equal(true)
+			scope:run(function()
+				expect(Composables.useDensity(app)).to.equal(density)
+			end)
+			scope:stop()
+		end)
+	end)
+end

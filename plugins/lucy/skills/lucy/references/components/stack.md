@@ -27,6 +27,7 @@ Lucy.Stack.new({
 | `align` | string | `"start"` | | Across the stack: `start`, `center`, `end`, `stretch` (each child fills the stack's width in a column, its height in a row) or `baseline` (a row's texts on one baseline, see below) |
 | `justify` | string | `"start"` | | Along the stack: `start`, `center`, `end` or `between` |
 | `wrap` | boolean | `false` | | Moves children to a new line when they do not fit |
+| `fit` | `true` or number | | | Scales the stack down when it is wider than its parent has room for, never under 0.6 of its size; a number sets that floor instead. For a row of words or stats in a narrow card ([A row that fits](#a-row-that-fits)) |
 | `size` | UDim2 | see below | | The stack's size |
 | `automaticSize` | AutomaticSize | see below | | Overrides how it grows to fit its children |
 | `children` | table | | | Instances, handles or functions to put in it |
@@ -100,6 +101,30 @@ Lucy.Stack.new({
     gap = "Space3",
     children = { preview, buyButton },
     Parent = column,
+})
+```
+
+## A row that fits
+
+A row of stats sized to its words can be wider than the card it sits in when the numbers are
+long. With `fit` the whole row scales down to the card's width, so it never runs out of the card,
+and it keeps its own size whenever there is room:
+
+```luau
+local card = Lucy.new "Frame" {
+    Size = UDim2.fromOffset(260, 60),
+    BackgroundTransparency = 1,
+    Parent = parent,
+}
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space3",
+    fit = true,
+    children = {
+        Lucy.Text.new({ text = "ACCURACY 98%", variant = "h4", autoWidth = true }),
+        Lucy.Text.new({ text = "MAX COMBO x124", variant = "h4", autoWidth = true }),
+    },
+    Parent = card,
 })
 ```
 

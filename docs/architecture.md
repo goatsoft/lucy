@@ -230,7 +230,7 @@ game decides what to switch off while one is. See
 src/
   init.luau            package entry (Wally)
   Core/                framework; always installed
-  Composables/         Lucy.use*: behaviour shared between components
+  Composables/         Lucy.use*: one file per composable + its spec; init.luau is the index
   Components/          one file per component + its spec
   Testing/Harness.luau shared test helpers
 tests/Runner.luau      runs every spec, returns a summary

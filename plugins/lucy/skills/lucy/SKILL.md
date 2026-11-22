@@ -237,6 +237,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [useCountdown](references/reference/composables/use-countdown.md): Synchronised countdown of whole seconds remaining until a timestamp.
 - [useDensity](references/reference/composables/use-density.md): Returns a getter for the current device density profile.
 - [useDrag](references/reference/composables/use-drag.md): Follows a mouse or touch drag starting from a GUI element.
+- [useFit](references/reference/composables/use-fit.md): Scales something down to the width its parent has, for words and rows that must not run out of a card.
 - [useFocusScope](references/reference/composables/use-focus-scope.md): Traps keyboard and gamepad focus inside a container while active.
 - [useFocusZone](references/reference/composables/use-focus-zone.md): A group of HUD controls nothing selects until the player steps in with a key; B steps out.
 - [useHasVisibleChild](references/reference/composables/use-has-visible-child.md): Follows whether any child of a frame has Visible on, so a slot whose contents all hide can drop out of its layout.
