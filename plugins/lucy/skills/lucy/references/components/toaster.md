@@ -36,6 +36,7 @@ or gamepad focus.
 | `duration` | number | `4` | Seconds before it closes. `math.huge` keeps it until dismissed |
 | `action` | table | | A button: `{ label = "Join", onClick = join }` |
 | `id` | string | made up for you | Pass the id of a toast that is showing to update it in place |
+| `holder` | string | `"default"` | Which [holder](#holders) it shows in |
 | `channel` | string | `"default"` | What kind of message it is, for quiet mode |
 | `quiet` | string | `"hold"` | While its channel is quiet: `hold` shows it when quiet ends, `drop` throws it away, `show` shows it anyway |
 | `content` | function | | Your own UI in place of the title and description: called once with a getter for the toast (it follows updates by id), returns an Instance or a handle |
@@ -90,7 +91,7 @@ Change these before the first toast shows:
 |---|---|---|
 | `Lucy.Toaster.defaults.duration` | `4` | Seconds a toast stays when no `duration` is given |
 | `Lucy.Toaster.defaults.visibleToasts` | `3` | How many show at once; the newest win |
-| `Lucy.Toaster.defaults.width` | `356` | Width in pixels, never wider than the screen; `App.new({ toastWidth = 480 })` sets it for one app |
+| `Lucy.Toaster.defaults.width` | `356` | Width in pixels, never wider than the screen; `App.new({ toastWidth = 480 })` sets it for the default holder, a holder's `width` for another ([Holders](#holders)) |
 
 A kind colours the whole toast with the theme's `Success`, `Destructive`,
 `Warning` or `Info` colour, and its text and close icon with the matching
@@ -140,6 +141,48 @@ nearest the edge. At the top, toasts sit just off the top of the screen where
 Roblox's top bar is free (the top centre, mostly), and drop below the bar only
 where they would reach Roblox's own buttons. On touch devices they sit
 centred, at the top or the bottom.
+
+## Holders
+
+A holder is a place toasts show: a position, a width and how many show at once.
+The app makes its holders when it starts and keeps them for as long as it runs,
+so a toast shows the same wherever it is sent from, a button's click or the
+middle of an effect. There is always a `default` holder, set by `toastPosition`
+and `toastWidth`. Add as many more as your screens need, and send each toast to
+the one it belongs in:
+
+```luau
+app.toast.holder("events", { position = "top-center", width = 420 })
+
+app.toast("Doors open at eight", { holder = "events", duration = math.huge })
+app.toast.success("Outfit saved") -- the default holder
+```
+
+Declare them when you make the app instead, if you know them up front:
+
+```luau
+local app = Lucy.App.new({
+    toastPosition = "bottom-right",
+    toasters = {
+        events = { position = "top-center", width = 480 },
+        notices = { position = "bottom-left", visibleToasts = 2 },
+    },
+})
+```
+
+| Holder option | Default | What it does |
+|---|---|---|
+| `position` | `"bottom-right"` | Where its toasts sit, as for the default holder (see [Position](#position)) |
+| `width` | `356` | How wide its toasts are on a desktop |
+| `visibleToasts` | `3` | How many of its toasts show at once; the newest win |
+
+`app.toast.holder` again for the same id changes it. `app.toast.holders()`
+lists them. A toast sent to a holder that was never declared is an error, so a
+misspelt id shows at once. `app.toast.removeHolder(id)` takes one down and drops
+its toasts, for a screen that goes away for good; the default holder always
+stays. The default holder's state is at `ui.toaster`, another's at
+`ui.toaster-<id>`, so `app.state:set("ui.toaster-events.position", "top-left")`
+moves one.
 
 ## Examples
 

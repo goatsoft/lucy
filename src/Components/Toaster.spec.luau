@@ -53,6 +53,69 @@ return function()
 			cleanup()
 		end)
 
+		describe("holders", function()
+			local function holderFrame(name: string): Instance?
+				return app:portal("toast"):FindFirstChild(name)
+			end
+
+			it("builds the default holder with the app, before any toast", function()
+				expect(holderFrame("Toaster")).to.be.ok()
+				expect(app.toast.holders()).to.be.ok()
+				expect(table.find(app.toast.holders(), "default")).to.be.ok()
+			end)
+
+			it("puts a toast in the holder it names, and only there", function()
+				app.toast.holder("events", { position = "top-center" })
+				app.toast("Balloons in 10", { id = "balloons", holder = "events" })
+				app.toast("Saved", { id = "saved" })
+				local events = holderFrame("Toaster_events") :: Instance
+				local default = holderFrame("Toaster") :: Instance
+				expect(events).to.be.ok()
+				expect(events:FindFirstChild("balloons-frame", true)).to.be.ok()
+				expect(events:FindFirstChild("saved-frame", true)).to.equal(nil)
+				expect(default:FindFirstChild("saved-frame", true)).to.be.ok()
+				expect(default:FindFirstChild("balloons-frame", true)).to.equal(nil)
+				expect(app:handle("toaster-events"):get("position")).to.equal("top-center")
+			end)
+
+			it("takes holders from App.new", function()
+				local other, done = Harness.app({
+					theme = "light",
+					namePrefix = "ToastHolders_",
+					toasters = { events = { position = "top-left", width = 300 } },
+				})
+				expect(other:portal("toast"):FindFirstChild("Toaster_events")).to.be.ok()
+				expect(other:handle("toaster-events"):get("position")).to.equal("top-left")
+				done()
+			end)
+
+			it("refuses a holder that was never declared", function()
+				expect(function()
+					app.toast("Lost", { holder = "nowhere" })
+				end).to.throw()
+			end)
+
+			it("changes a holder when it is declared again", function()
+				app.toast.holder("events", { position = "top-center" })
+				app.toast.holder("events", { position = "bottom-left" })
+				expect(app:handle("toaster-events"):get("position")).to.equal("bottom-left")
+				expect(#app:portal("toast"):GetChildren()).to.be.ok()
+			end)
+
+			it("removes a holder and its toasts only when asked", function()
+				app.toast.holder("events", { position = "top-center" })
+				app.toast("Balloons", { id = "balloons", holder = "events", duration = math.huge })
+				app.toast("Saved", { id = "saved", duration = math.huge })
+				app.toast.removeHolder("events")
+				expect(holderFrame("Toaster_events")).to.equal(nil)
+				expect(#app.toast.list()).to.equal(1)
+				expect(app.toast.list()[1].id).to.equal("saved")
+				expect(function()
+					app.toast.removeHolder("default")
+				end).to.throw()
+			end)
+		end)
+
 		it("keeps the toaster when the effect that showed the first toast runs again", function()
 			local Reactive = require(script.Parent.Parent.Core.Reactive)
 			local phase = Reactive.ref("countdown")
@@ -227,8 +290,13 @@ return function()
 			local media = row(won).Media
 			expect(media.LayoutOrder < row(won).Body.LayoutOrder).to.equal(true)
 			local icon = media:FindFirstChildWhichIsA("ImageLabel")
-			local colour = Harness.styled(icon, "ImageColor3")
-			expect(Harness.colorEq(colour, app.theme:resolve("SuccessForeground"))).to.equal(true)
+			-- The engine styles a new instance a frame or more later, more under a full suite
+			expect(Harness.waitFor(function()
+				return Harness.colorEq(
+					Harness.styled(icon, "ImageColor3"),
+					app.theme:resolve("SuccessForeground")
+				)
+			end)).to.equal(true)
 		end)
 
 		it("is installed on every app", function()

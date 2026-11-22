@@ -35,6 +35,7 @@ Every option is optional.
 | `backKeys` | `{ ButtonB, Backspace }` | The keys that go back. See [Back keys](../architecture.md#back-keys) |
 | `toastPosition` | `"bottom-right"` | Where toasts show. See [Toaster](../components/toaster.md) |
 | `toastWidth` | `356` | How wide toasts are on a desktop, in pixels |
+| `toasters` | | More places toasts show, by id: `{ events = { position = "top-center" } }`. See [Holders](../components/toaster.md#holders) |
 | `parent` | the player's PlayerGui | Where the App's ScreenGuis go |
 | `namePrefix` | `"Lucy_"` | Starts the name of every ScreenGui and folder the App makes. A second App needs its own |
 | `setCurrent` | `true` | Makes this the App components use, and the one `Lucy.App.current()` returns |

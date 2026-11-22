@@ -14,7 +14,20 @@
 		app.toast.dismiss(id)                    -- or app.toast.dismiss() for all
 
 	options: description, kind, media, duration (seconds, math.huge = until dismissed),
-	action { label, onClick }, id, channel, quiet, content, bare, dismissOnTap, swipe.
+	action { label, onClick }, id, holder, channel, quiet, content, bare, dismissOnTap, swipe.
+
+	Holders (ADR 0055): the app owns where toasts show. It builds them when it is made and keeps
+	them as long as it lives, so a toast shows wherever it is sent from. There is always a
+	`default` holder (toastPosition, toastWidth); declare more and send toasts to them by id:
+
+		Lucy.App.new({ toasters = { events = { position = "top-center", width = 480 } } })
+		app.toast.holder("notices", { position = "bottom-right", visibleToasts = 2 })
+		app.toast("Bonus XP", { holder = "events" })     -- "default" when left out
+		app.toast.holders()                               -- { "default", "events", "notices" }
+		app.toast.removeHolder("notices")                 -- takes it down, and its toasts
+
+	A holder's options: position, width, visibleToasts. Declaring one again changes it. A toast
+	for a holder that was never declared is an error.
 
 	media is a slot (as Item's): an Icon, an image, a handle, an instance, a builder or a list,
 	before the title and description. An Icon in it takes the toast's text colour.
@@ -53,8 +66,9 @@
 	Lucy.Gradient; a kind without one keeps its flat fill.
 	How wide: App.new({ toastWidth = 480 }), 356 by default; on a screen narrower than that they
 	fill its width.
-	Where: App.new({ toastPosition = "top-center" }), or later
-	app.state:set("ui.toaster.position", ...): top-left, top-center, top-right,
+	Where: App.new({ toastPosition = "top-center" }) for the default holder (another holder's
+	position is its own), or later app.state:set("ui.toaster.position", ...) (another holder:
+	ui.toaster-<id>.position): top-left, top-center, top-right,
 	bottom-left, bottom-center or bottom-right (the default). On touch devices
 	toasts sit centred at the top or bottom. The newest is nearest the edge.
 	Toasts are announced to gamepad/keyboard users but never steal focus.
@@ -261,46 +275,89 @@ end
 
 function Toaster.install(app)
 	local counter = 0
-	local mounted: Component.Handle? = nil
 
 	local function clock(): number
 		return if app.clock then app.clock() else os.clock()
 	end
 
-	local function ensureMounted()
-		-- A toaster whose portal was taken out of the screen (not destroyed) is in a gui nobody
-		-- sees: the app makes a new portal then, and the toaster goes in it again
-		local portal = app:portal("toast")
-		if mounted ~= nil and not mounted.destroyed and not mounted.Instance:IsDescendantOf(portal) then
-			mounted:destroy()
+	-- The holders, by id: their options, and the toaster each one is (ADR 0055). Built when the app
+	-- is made, each in a scope of its own, so nothing that sends a toast owns one
+	type Holder = { options: { [string]: any }, handle: any?, scope: any? }
+	local holders: { [string]: Holder } = {}
+	local order: { string } = {}
+
+	local function takeDown(holder: Holder)
+		if holder.handle and not holder.handle.destroyed then
+			holder.handle:destroy()
 		end
-		if mounted == nil or mounted.destroyed then
-			-- Built in a scope of its own: the first toast is often sent from inside an effect,
-			-- and a component built there belongs to it, so the toaster went the next time that
-			-- effect ran again and toasts stopped showing. It lives as long as the app
-			local scope = Reactive.effectScope(true)
-			mounted = scope:run(function()
-				return Toaster.new({
-					app = app,
-					id = "toaster",
-					position = app.config.toastPosition,
-					width = app.config.toastWidth,
-					Parent = portal,
-				})
-			end)
-			local maid: any = app.maid
-			maid:give(mounted)
-			maid:give(function()
-				scope:stop()
-			end)
+		if holder.scope then
+			holder.scope:stop()
 		end
+		holder.handle, holder.scope = nil, nil
 	end
+
+	-- Builds a holder's toaster in the live toast portal, or again when it is not there (destroyed,
+	-- or its portal taken off the screen)
+	local function build(id: string)
+		local holder = holders[id]
+		local portal = app:portal("toast")
+		local handle = holder.handle
+		if handle and not handle.destroyed and handle.Instance:IsDescendantOf(portal) then
+			return
+		end
+		takeDown(holder)
+		local options = holder.options
+		local scope = Reactive.effectScope(true)
+		holder.scope = scope
+		holder.handle = scope:run(function()
+			return Toaster.new({
+				app = app,
+				id = if id == "default" then "toaster" else "toaster-" .. id,
+				holder = id,
+				position = options.position,
+				width = options.width,
+				visibleToasts = options.visibleToasts,
+				Parent = portal,
+			})
+		end)
+	end
+
+	local function declare(id: any, options: { [string]: any }?)
+		if type(id) ~= "string" or id == "" then
+			error("[Lucy] a toast holder needs an id", 3)
+		end
+		local opts: { [string]: any } = table.clone(options or {})
+		if opts.position ~= nil then
+			checkPosition(opts.position)
+		end
+		local holder = holders[id]
+		if holder then
+			takeDown(holder)
+			holder.options = opts
+		else
+			holder = { options = opts }
+			holders[id] = holder
+			table.insert(order, id)
+		end
+		build(id)
+	end
+
+	local maid: any = app.maid
+	maid:give(function()
+		for _, holder in holders do
+			takeDown(holder)
+		end
+		table.clear(holders)
+		table.clear(order)
+	end)
 
 	-- Toasts held while their channel is quiet, oldest first.
 	local held: Reactive.Ref<{ any }> = Reactive.ref({})
 
 	local function publish(toast: { [string]: any })
-		ensureMounted()
+		if holders[toast.holder] then
+			build(toast.holder)
+		end
 		toast.createdAt = clock()
 		app.state:update("toasts", function(list)
 			return Toaster.add(list or {}, toast)
@@ -346,6 +403,13 @@ function Toaster.install(app)
 		if not table.find(Toaster.quietRules, rule) then
 			error(`[Lucy] unknown toast quiet rule "{rule}" (expected hold, drop, show)`, 3)
 		end
+		local holder = opts.holder or "default"
+		if holders[holder] == nil then
+			error(
+				`[Lucy] no toast holder "{holder}": declare it with app.toast.holder or App.new's toasters`,
+				3
+			)
+		end
 		local id = opts.id
 		if id == nil then
 			counter += 1
@@ -359,6 +423,7 @@ function Toaster.install(app)
 			media = opts.media,
 			duration = opts.duration or Toaster.defaults.duration,
 			action = opts.action,
+			holder = holder,
 			channel = opts.channel or "default",
 			content = opts.content,
 			bare = opts.bare == true and opts.content ~= nil,
@@ -415,8 +480,62 @@ function Toaster.install(app)
 		end)
 	end
 
+	-- Declares a holder, or changes one (ADR 0055)
+	function api.holder(id: string, options: { [string]: any }?)
+		declare(id, options)
+	end
+	-- The holders' ids, in the order they were declared
+	function api.holders(): { string }
+		return table.clone(order)
+	end
+	-- Takes a holder down and drops its toasts. The default holder stays
+	function api.removeHolder(id: string)
+		if id == "default" then
+			error("[Lucy] the default toast holder cannot be removed", 2)
+		end
+		local holder = holders[id]
+		if not holder then
+			return
+		end
+		takeDown(holder)
+		holders[id] = nil
+		table.remove(order, table.find(order, id) :: number)
+		local function others(list: { any }): { any }
+			local out = {}
+			for _, toast in list do
+				if toast.holder ~= id then
+					table.insert(out, toast)
+				end
+			end
+			return if #out == #list then list else out
+		end
+		held(others(Reactive.untrack(function()
+			return held()
+		end)))
+		app.state:update("toasts", function(list)
+			return others(list or {})
+		end)
+	end
+
 	app.toast = api
 	app.state:set("toasts", app.state:get("toasts") or {})
+	-- The default holder, then the app's own, built now (ADR 0055)
+	local config: { [string]: any } = app.config or {}
+	local toasters: { [string]: any } = config.toasters or {}
+	local default: { [string]: any } = table.clone(toasters.default or {})
+	default.position = default.position or config.toastPosition
+	default.width = default.width or config.toastWidth
+	declare("default", default)
+	local extra = {}
+	for id in toasters do
+		if id ~= "default" then
+			table.insert(extra, id)
+		end
+	end
+	table.sort(extra)
+	for _, id in extra do
+		declare(id, toasters[id])
+	end
 	return api
 end
 
@@ -759,13 +878,27 @@ function Toaster.new(props: { [string]: any }?)
 		kind = "toaster",
 		props = p,
 		defaults = { visible = true, position = "bottom-right" },
+		-- props.holder: whose toasts it draws (ADR 0055), "default" when left out
 		rules = Toaster.rules,
 		render = function(h)
 			local app = h.app
 			h.entries = {}
+			-- Only this holder's toasts (ADR 0055); a toaster made by hand with no holder is the
+			-- default's
+			local mine = p.holder or "default"
 			local list = app.state:ref("toasts")
+			local own = Reactive.computed(function(): { any }
+				local all = list() or EMPTY
+				local out = {}
+				for _, toast in all do
+					if (toast.holder or "default") == mine then
+						table.insert(out, toast)
+					end
+				end
+				return if #out == #all then all elseif #out == 0 then EMPTY else out
+			end)
 			local function toasts(): { any }
-				return list() or EMPTY
+				return own()
 			end
 
 			-- Side effect: tick the clock only while something can expire.
@@ -846,7 +979,7 @@ function Toaster.new(props: { [string]: any }?)
 				Padding = Component.space(app, "Space2", 8),
 			})
 			local container = Element.new("Frame", {
-				Name = "Toaster",
+				Name = if mine == "default" then "Toaster" else "Toaster_" .. mine,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				AnchorPoint = anchor,
