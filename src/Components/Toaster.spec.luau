@@ -53,6 +53,19 @@ return function()
 			cleanup()
 		end)
 
+		it("mounts again in the toast portal when the one it was in is taken away", function()
+			app.toast("Doors open")
+			local first = app:portal("toast")
+			expect(first:FindFirstChild("Toaster", true)).to.be.ok()
+			-- Taken out of the screen without being destroyed: the app makes a new portal
+			first.Parent = nil
+			app.toast("Show at eight")
+			local portal = app:portal("toast")
+			expect(portal).never.to.equal(first)
+			expect(portal:FindFirstChild("Toaster", true)).to.be.ok()
+			expect(#app.toast.list()).to.equal(2)
+		end)
+
 		it("follows a reactive visible", function()
 			local Reactive = require(script.Parent.Parent.Core.Reactive)
 			local inMenu = Reactive.ref(false)

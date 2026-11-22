@@ -268,13 +268,19 @@ function Toaster.install(app)
 	end
 
 	local function ensureMounted()
+		-- A toaster whose portal was taken out of the screen (not destroyed) is in a gui nobody
+		-- sees: the app makes a new portal then, and the toaster goes in it again
+		local portal = app:portal("toast")
+		if mounted ~= nil and not mounted.destroyed and not mounted.Instance:IsDescendantOf(portal) then
+			mounted:destroy()
+		end
 		if mounted == nil or mounted.destroyed then
 			mounted = Toaster.new({
 				app = app,
 				id = "toaster",
 				position = app.config.toastPosition,
 				width = app.config.toastWidth,
-				Parent = app:portal("toast"),
+				Parent = portal,
 			})
 			app.maid:give(mounted)
 		end
