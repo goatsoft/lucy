@@ -7,7 +7,7 @@ order: 0
 
 # Components
 
-47 components, grouped by what they do.
+Every component, grouped by what it does.
 
 ## Actions and choices
 

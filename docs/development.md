@@ -294,7 +294,7 @@ Changes come in as pull requests to `main`:
 1. Fork the repository and make a branch.
 2. Work as above: a spec that fails first, then the code, then the static checks.
    CI runs the same checks on every pull request.
-3. If you change lucy-icons, add a changeset with `pnpm changeset`.
+3. If you change lucy-icons or lucy-mcp, add a changeset with `pnpm changeset`.
 4. Open the pull request saying what changed and why.
 
 The maintainer reviews every pull request. It merges once it is approved and CI
@@ -305,7 +305,44 @@ passes.
 Only the maintainer releases. Merging a pull request never publishes anything,
 and contributors never publish to Wally or npm.
 
-- **Lucy** goes to Wally when the maintainer bumps `version` in `wally.toml`,
-  notes the changes and publishes.
-- **lucy-icons** goes to npm through changesets: merged changesets open a
-  "Version Packages" pull request, and the maintainer merging it publishes.
+### Lucy, on Wally
+
+The Luau package is `goatsoft/lucy`. Its version is `version` in `wally.toml`,
+and `CHANGELOG.md` at the top of the repo says what each version changed.
+
+1. Bump `version` in `wally.toml`. Update the version in the README's install
+   line and in `plugins/lucy/.claude-plugin/plugin.json` to match.
+2. Add the version to `CHANGELOG.md`: what is new, what was fixed, and what a
+   game has to change (anything breaking goes first).
+3. Run every check on that commit: the [static checks](#static-checks), the
+   whole test suite in Studio with 0 failed (CI cannot run it), the em-dash
+   check and `pnpm site:build`.
+4. Check what will ship: `wally package --list` shows only `src/` (no specs, no
+   `src/Testing`), `wally.toml`, `default.project.json`, `README.md` and
+   `LICENSE`.
+5. Commit (`chore(release): 0.1.0`), push, and wait for Release and Pages to go
+   green: `gh run list --limit 3`.
+6. Tag it and push the tag: `git tag v0.1.0 && git push origin v0.1.0`.
+7. Publish: `wally login` (once per machine, with a GitHub account in the
+   goatsoft organisation), then `wally publish`. A version can never be
+   published twice or taken back, so this comes last.
+8. Check it: the version shows on
+   [wally.run](https://wally.run/package/goatsoft/lucy). In an empty folder,
+   a `wally.toml` with `Lucy = "goatsoft/lucy@0.1.0"` installs with
+   `wally install`, and the README's usage example runs in Studio.
+9. Make the GitHub Release from the tag with that version's `CHANGELOG.md`
+   entry: `gh release create v0.1.0 --title "Lucy 0.1.0" --notes-file <notes>`.
+
+Before 1.0, a minor version (0.2.0) may break things and a patch (0.1.1) never
+does. Games pin `goatsoft/lucy@0.1.0`, which takes patches only.
+
+### lucy-icons and lucy-mcp, on npm
+
+Both go to npm through changesets. Describe the change with `pnpm changeset`;
+merged changesets open a "Version Packages" pull request, and the maintainer
+merging it publishes, tags the version and makes its GitHub Release. Publishing
+uses npm trusted publishing from the Release workflow, so there is no token.
+
+A new package needs setting up once on npmjs.com before its first release: a
+trusted publisher naming this repository, the `release.yml` workflow and the
+`npm` environment.

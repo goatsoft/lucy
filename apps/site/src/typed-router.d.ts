@@ -661,6 +661,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/composables/use-fit': RouteRecordInfo<
+      '/docs/reference/composables/use-fit',
+      '/docs/reference/composables/use-fit',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/composables/use-focus-scope': RouteRecordInfo<
       '/docs/reference/composables/use-focus-scope',
       '/docs/reference/composables/use-focus-scope',
@@ -1536,6 +1543,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/composables/use-drag.md': {
       routes:
         | '/docs/reference/composables/use-drag'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-fit.md': {
+      routes:
+        | '/docs/reference/composables/use-fit'
       views:
         | never
       pathParamNames:

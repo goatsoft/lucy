@@ -1,7 +1,7 @@
 <!-- Made by scripts/skills.ts from docs/components/index.md. Edit the doc, not this file. -->
 # Components
 
-47 components, grouped by what they do.
+Every component, grouped by what it does.
 
 ## Actions and choices
 
