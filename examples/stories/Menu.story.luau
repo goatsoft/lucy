@@ -28,7 +28,7 @@ return {
 				end,
 			},
 			{ value = "dj", label = "DJ request" },
-			{ value = "lab", label = "The Lab" },
+			{ value = "shop", label = "Emote Shop" },
 			{ value = "dances", label = "Dances" },
 			{ value = "items", label = "Items", disabled = ctx.controls.inShow },
 			{ value = "exit", label = "Exit", icon = "lucy:close" },

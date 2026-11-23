@@ -3,7 +3,7 @@ return {
 	description = "A line that scrolls when it does not fit; the column is narrow on purpose.",
 	width = 260,
 	controls = {
-		text = "Future Bounce VIP (Extended Club Mix) by DJ GOD",
+		text = "Neon Nights (Extended Club Mix) by DJ Lucy",
 		variant = { "large", "h3", "p", "muted" },
 		visible = true,
 	},
