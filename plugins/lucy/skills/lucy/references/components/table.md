@@ -36,6 +36,7 @@ Lucy.Table.new({
 | `highlight` | function | | | Return `true` for rows to pick out, such as the player's own |
 | `striped` | boolean | `false` | | Shades every other row |
 | `onRowClick` | function | | | Called with `(row, index)`. Rows become buttons the player can select |
+| `headerCell` | function | | | Draws a header cell in place of its text: called with `(column, align)`, returns a component, an Instance or text. [DataGrid](data-grid.md) draws its sort buttons this way |
 | `empty` | string | | | Shown when there are no rows |
 | `maxHeight` | number | | | The body scrolls past this many pixels |
 | `virtual` | boolean | `false` | | Builds only the rows near the view, see [Long lists](#long-lists) |

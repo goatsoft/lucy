@@ -29,7 +29,7 @@ Every option is optional.
 
 | Option | Default | What it does |
 |---|---|---|
-| `theme`, `baseColor`, `primary`, `themes`, `primitives`, `densities`, `density`, `styleParent` | | How the UI looks; see [Theming](theming.md#app-options) |
+| `theme`, `baseColor`, `primary`, `themes`, `colors`, `colorRecipes`, `primitives`, `densities`, `density`, `styleParent` | | How the UI looks; see [Theming](theming.md#app-options) |
 | `state` | `{}` | Your starting data in the [store](store.md) |
 | `adaptive` | on | `false` turns scaling off; a table such as `{ max = 1.5 }` changes its numbers. See [Scaling](../architecture.md#scaling) |
 | `backKeys` | `{ ButtonB, Backspace }` | The keys that go back. See [Back keys](../architecture.md#back-keys) |
