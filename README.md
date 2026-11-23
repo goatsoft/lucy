@@ -23,20 +23,17 @@
   <a href="https://wally.run/package/goatsoft/lucy"><img src="https://img.shields.io/badge/wally-goatsoft%2Flucy-c050ea" alt="Wally"></a>
   <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-5bd0f8" alt="MIT Licence"></a>
 </p>
-
 ## Overview
 
-One source of truth for your UI and app state. Lucy tracks changes and updates
-the UI for you. Themed components that work with mouse, keyboard, gamepad and
-touch.
+Lucy keeps your game's UI state in one place and keeps the screen in step with
+it. When a value changes, only the properties that read it are set again.
+Nothing is rebuilt.
 
-The components (buttons, dialogs, toasts, inputs, switches, panels and more)
-come with light and dark themes and work on desktop, console, tablet and phone.
-Their looks are Universal Styling rules, so hovering and switching themes run
-no Luau.
+Its components work with mouse, keyboard, gamepad and touch, on phone, tablet,
+desktop and console, in light and dark themes. Their looks are Universal
+Styling rules, so hovering and switching themes run no Luau.
 
-When a value changes, only the properties that read it are set again. Nothing is
-rebuilt and nothing is diffed, so long lists and busy HUDs stay cheap.
+See every component on the [components page](https://lucy.goatsoft.io/docs/components/).
 
 ## Installation
 
@@ -47,10 +44,13 @@ rebuilt and nothing is diffed, so long lists and busy HUDs stay cheap.
 Lucy = "goatsoft/lucy@0.1.0"
 ```
 
+Run `wally install`. The examples below expect Lucy at
+`ReplicatedStorage.Packages.Lucy`.
+
 ### Copy the source
 
-If you would rather own and edit the components, copy them into your project
-with [Lune](https://lune-org.github.io/docs) and a checkout of Lucy:
+To own and edit the components, copy them into your game with
+[Lune](https://lune-org.github.io/docs) and a copy of this repo:
 
 ```sh
 git clone https://github.com/goatsoft/lucy ~/Projects/Lucy
@@ -58,22 +58,27 @@ cd your-game
 lune run ~/Projects/Lucy/scripts/add -- button dialog --from ~/Projects/Lucy --out src/shared/Lucy
 ```
 
-The core comes along, and so do dependencies (Dialog brings Button). Files you
-have changed are kept unless you pass `--overwrite`. Use `--list` to see every
-component and `--all` to copy them all.
+The core and anything a component needs come along (Dialog brings Button).
+`--all` copies every component.
+
+### Coding agents
+
+Lucy has skills for Claude Code, Codex and Antigravity, so an agent builds your
+UI with Lucy's components. `@goatsoft/lucy-mcp` lets an agent see and press
+your UI in Studio. See [Use Lucy with agents](https://lucy.goatsoft.io/docs/guide/agents/).
 
 ## Usage
 
-Create one App on the client, then build scenes from components. This one is a
-settings menu: a volume slider the game reads, and a theme picker that switches
-the whole UI.
+Make one App on the client, then build scenes from components. This settings
+menu has a volume slider the game reads and a theme picker that switches the
+whole UI:
 
 ```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
 local Lucy = require(ReplicatedStorage.Packages.Lucy)
 
--- One app per player. Its state holds your game's data, and the theme.
+-- One app per player. Its state holds your game's data and the theme.
 local app = Lucy.App.new({
     theme = "dark",
     state = { settings = { volume = 50 } },
@@ -90,13 +95,13 @@ app.scenes:register("Settings", {
                     title = "Settings",
                     maxWidth = 400,
                     children = {
-                        -- Each control is bound to a value in state, both ways.
+                        -- Each control reads and writes a value in state.
                         Lucy.Text.new({ text = "Volume", variant = "label" }),
                         Lucy.Slider.new({ value = app.state:ref("settings.volume"), showValue = true }),
                         Lucy.Text.new({ text = "Theme", variant = "label" }),
                         Lucy.Select.new({
                             items = { { value = "dark", label = "Dark" }, { value = "light", label = "Light" } },
-                            value = app.state:ref("theme"), -- pick Light and the whole UI switches
+                            value = app.state:ref("theme"),
                         }),
                     },
                 }),
@@ -108,91 +113,44 @@ app.scenes:register("Settings", {
 
 app.scenes:goTo("Settings")
 
--- The game reads the same state. No glue code in between.
+-- The game reads the same state.
 app.state:subscribe("settings.volume", function(volume)
     SoundService.Music.Volume = volume / 100
 end)
 ```
 
-Any property of any instance can follow a value. Here a button shows the coins
-and slides on a spring:
+Every component keeps its state in the app, so game code can change any of it:
 
 ```lua
-local coins = app.state:ref("coins")
-local open = Lucy.ref(false)
-local x = Lucy.spring(function() return if open() then 0 else -320 end)
-
-Lucy.new "TextButton" {
-    Text = function() return `Coins: {coins()}` end,
-    Position = function() return UDim2.fromOffset(x(), 16) end,
-    [Lucy.on "Activated"] = function() open(not open()) end,
-    Parent = gui,
-}
-```
-
-Every component keeps its state in the app's store, so game code can change any
-of it by id:
-
-```lua
-app.state:set("ui.quit.open", true)         -- open the quit dialog
-app.state:set("theme", "light")             -- switch theme
-app.state:set("scenes.current", "Game")     -- change screen
-
+app.state:set("theme", "light")          -- switch theme
+app.state:set("scenes.current", "Game")  -- change screen
 app.toast.success("Round won", { description = "+$250" })
 ```
 
-## Features
-
-- Accordion, Alert, Arrow, Attribution, Avatar, Badge, Button, Checkbox,
-  Collapsible, DataGrid, Dialog, Effect, Gradient, Grid, Icon, Icon Stack,
-  Image, Inline Confirm, Input, Item, Kbd, Leaderboard, Marquee, Menu, Number Field,
-  Panel, Pressable, Progress, Radio Group, Scroll Area, Select, Separator,
-  Sheet, Skeleton, Slider, Slot, SortButton, Spinner, Stack, Switch, Table,
-  Tabs, Text, Toaster, Toggle, Toggle Group, Tour and Waveform.
-- Light and dark themes for each base colour, with an optional primary colour,
-  switchable while the game runs.
-- Controls that grow for touch and console, and layout props that change with
-  the device.
-- A themed focus ring in place of the Roblox selection ring, shown only while
-  navigating with keys or a gamepad.
-- Scenes on separate layers, so menus and modals never take input from the
-  screen below.
-- Refs, computed values, springs and tweens that bind to any property.
-- Named hotkeys for keyboard and gamepad, switched off together while a menu is
-  open, and a way to stop the character moving under a dialog.
-- Any Iconify icon by name, packed into a few uploaded images by the
-  lucy-icons build.
-- UI in the world: SurfaceGuis on parts and BillboardGuis over heads that
-  follow the theme and take clicks.
-- Guided tours with spotlight cutouts and arrows for first time players.
-- Server state sync, DataQueue request pacing, synced Boards and requests from
-  players checked on the server.
-- `Lucy.hydrate` to add behaviour to UI built in Studio.
-- Stories that preview any component or scene in Studio without pressing Play.
-- Devtools and the Lucy MCP server that look at and drive a running UI in
-  Studio, by hand or with a coding agent.
-- Skills for Claude Code, Codex and Antigravity, so coding agents build with
-  Lucy's components and rules.
-- Strict types and no runtime dependencies.
+The [getting started guide](https://lucy.goatsoft.io/docs/) goes on from here:
+[scenes](https://lucy.goatsoft.io/docs/guide/scenes/),
+[app state](https://lucy.goatsoft.io/docs/guide/app-state/),
+[themes](https://lucy.goatsoft.io/docs/guide/themes/),
+[hotkeys](https://lucy.goatsoft.io/docs/guide/actions/) and the
+[API](https://lucy.goatsoft.io/docs/reference/api/).
 
 ## Architecture
 
 ```
-App                one per client
-├─ AppState        every piece of UI state, in one tree of tables
-├─ Theme           Universal Styling sheets and the rules for every component
-├─ InputManager    input mode, device, focus and the back button
-├─ SceneManager    one ScreenGui per scene, on layers
-└─ toast           the toast API
+App            one per player, on the client
+├─ state       all UI state in one tree of tables
+├─ theme       Universal Styling rules for every component
+├─ input       input mode, device, focus and the back button
+├─ actions     named hotkeys for keyboard and gamepad
+├─ scenes      one ScreenGui per screen, on layers
+└─ toast       toast messages
 ```
 
-Components keep their state in AppState at `ui.<id>`. Each one builds its
-instances once and binds their properties to that state, so a write to one key
-updates only the properties that read it. Code sets behaviour and layout; looks
-come from style rules matched by tags.
-
-The [architecture guide](https://lucy.goatsoft.io/docs/architecture/) covers
-the rest.
+A component keeps its state in the app at `ui.<id>`. It builds its instances
+once and ties each property to the values it reads, so a change sets only those
+properties. Code sets behaviour and layout; looks come from style rules matched
+by tags. The [architecture guide](https://lucy.goatsoft.io/docs/architecture/)
+has the rest.
 
 ## Licence
 
