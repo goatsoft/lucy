@@ -5,6 +5,7 @@ import { routes } from 'vue-router/auto-routes'
 import App from './App.vue'
 import { createHead } from './head'
 import { docs } from './lib/docs'
+import { withSlash } from './lib/slash'
 import '@fontsource-variable/fredoka'
 import '@fontsource-variable/nunito'
 import './main.css'
@@ -13,8 +14,12 @@ import './main.css'
 export function createSite(path: string) {
   // The dev server serves index.html as is, with no prerendered HTML to hydrate, so it mounts fresh.
   const app = import.meta.env.DEV && !import.meta.env.SSR ? createApp(App) : createSSRApp(App)
+  const history = import.meta.env.SSR ? createMemoryHistory() : createWebHistory()
+  // Every link the router draws (the site's own and the docs sidebar) ends in a slash, like the pages' addresses.
+  const createHref = history.createHref
+  history.createHref = (location) => createHref(withSlash(location))
   const router = createRouter({
-    history: import.meta.env.SSR ? createMemoryHistory() : createWebHistory(),
+    history,
     routes,
     scrollBehavior: (to, _from, saved) => {
       const still = !import.meta.env.SSR && matchMedia('(prefers-reduced-motion: reduce)').matches

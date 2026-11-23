@@ -13,6 +13,7 @@ import type { Plugin } from 'vite'
 import { defineConfig, searchForWorkspaceRoot } from 'vite'
 import { VueRouterAutoImports } from 'vue-router/unplugin'
 import VueRouter from 'vue-router/vite'
+import { withSlash } from './src/lib/slash.ts'
 
 const here = fileURLToPath(new URL('.', import.meta.url))
 const root = searchForWorkspaceRoot(here)
@@ -82,7 +83,11 @@ export default defineConfig({
     }),
     ...gruff({
       root,
-      route,
+      // Links between docs pages end in a slash, like the pages' addresses (the sidebar's come from the router).
+      route: (file) => {
+        const path = route(file)
+        return path && withSlash(path)
+      },
       pages: () => pages(),
       repoUrl: `${REPO}/blob/main/`,
       // Docs pages get the docs layout; snippets in src/content render bare, for the landing page.

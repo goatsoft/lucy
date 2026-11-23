@@ -43,4 +43,5 @@ const files = await prerender({
 // Every page, for search engines (robots.txt points here).
 const urls = routes.map((path) => `  <url><loc>${SITE.url}${path === '/' ? '/' : `${path}/`}</loc></url>`)
 writeFileSync(join(here, 'dist/sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`)
-console.log(`Prerendered ${files.length} pages and the sitemap.`)
+writeFileSync(join(here, 'dist/robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${SITE.url}/sitemap.xml\n`)
+console.log(`Prerendered ${files.length} pages, the sitemap and robots.txt.`)
