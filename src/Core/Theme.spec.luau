@@ -181,8 +181,12 @@ return function()
 			button.Parent = gui
 			gui.Parent = Harness.guiParent()
 			Harness.flush()
-			expect(Harness.styled(frame, "BorderSizePixel")).to.equal(0)
-			expect(Harness.styled(button, "AutoButtonColor")).to.equal(false)
+			expect(Harness.waitFor(function()
+				return Harness.styled(frame, "BorderSizePixel") == 0
+			end, 2)).to.equal(true)
+			expect(Harness.waitFor(function()
+				return Harness.styled(button, "AutoButtonColor") == false
+			end, 2)).to.equal(true)
 			gui:Destroy()
 		end)
 	end)
@@ -302,6 +306,13 @@ return function()
 	local function colourOf(frame: Frame): Color3
 		return Harness.styled(frame, "BackgroundColor3")
 	end
+	-- Whether the frame comes to show the colour. Styles land a few frames after the probe is
+	-- made, and more when Studio is busy or its window is in the background, so wait for them.
+	local function shows(frame: Frame, colour: Color3): boolean
+		return Harness.waitFor(function()
+			return Harness.colorEq(colourOf(frame), colour)
+		end, 2)
+	end
 
 	-- What Lucy's layers rest on and Roblox does not document (ADR 0052): a change here fails the
 	-- suite instead of a game's look
@@ -338,7 +349,7 @@ return function()
 			derive(high, low)
 			rule(high, ".probe-layer", BLUE, 0)
 			local frame, done = probe(high, "probe-layer")
-			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			expect(shows(frame, BLUE)).to.equal(true)
 			done()
 		end)
 
@@ -347,7 +358,7 @@ return function()
 			rule(s, "Frame.probe-tie", RED, 0)
 			rule(s, ".probe-tie", BLUE, 0)
 			local frame, done = probe(s, "probe-tie")
-			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			expect(shows(frame, BLUE)).to.equal(true)
 			done()
 		end)
 
@@ -358,7 +369,7 @@ return function()
 			derive(top, middle)
 			rule(top, ".probe-token", "$ProbeColour")
 			local frame, done = probe(top, "probe-token")
-			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			expect(shows(frame, BLUE)).to.equal(true)
 			done()
 		end)
 	end)
@@ -411,7 +422,7 @@ return function()
 				{ selector = ".probe-order", priority = 0, properties = { BackgroundColor3 = BLUE } },
 			})
 			local frame, done = probe(theme.design, "probe-order")
-			expect(Harness.colorEq(colourOf(frame), RED)).to.equal(true)
+			expect(shows(frame, RED)).to.equal(true)
 			-- At one Priority, the rule added later wins
 			theme:addRules("probe-high-later", {
 				{ selector = ".probe-order", priority = 100, properties = { BackgroundColor3 = BLUE } },
@@ -445,7 +456,7 @@ return function()
 				{ selector = ".probe-game", priority = 0, properties = { BackgroundColor3 = BLUE } },
 			})
 			local frame, done = probe(theme.design, "probe-game")
-			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			expect(shows(frame, BLUE)).to.equal(true)
 			done()
 		end)
 
@@ -459,7 +470,7 @@ return function()
 			}, { layer = "live" })
 			expect(theme.folder.Design:FindFirstChildOfClass("StyleRule")).to.be.ok()
 			local frame, done = probe(theme.design, "probe-live")
-			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			expect(shows(frame, BLUE)).to.equal(true)
 			theme:removeRules("live-probe")
 			expect(Harness.waitFor(function()
 				return Harness.colorEq(colourOf(frame), RED)
@@ -473,7 +484,7 @@ return function()
 				{ selector = ".probe-game-token", properties = { BackgroundColor3 = "$Primary" } },
 			})
 			local frame, done = probe(theme.design, "probe-game-token")
-			expect(Harness.colorEq(colourOf(frame), hex("ff0000"))).to.equal(true)
+			expect(shows(frame, hex("ff0000"))).to.equal(true)
 			theme:set("dark")
 			expect(Harness.waitFor(function()
 				return Harness.colorEq(colourOf(frame), hex("0000ff"))
@@ -491,7 +502,7 @@ return function()
 			})
 			expect(theme:rulesOf("fixed")[1]).to.be.ok()
 			local frame, done = probe(theme.design, "probe-fixed")
-			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			expect(shows(frame, BLUE)).to.equal(true)
 			done()
 		end)
 
@@ -550,7 +561,7 @@ return function()
 			end
 			expect(inLucy).to.equal(2)
 			local frame, done = probe(theme.design, "probe-declared")
-			expect(Harness.colorEq(colourOf(frame), BLUE)).to.equal(true)
+			expect(shows(frame, BLUE)).to.equal(true)
 			done()
 		end)
 
