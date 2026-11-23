@@ -1,3 +1,7 @@
+-- The icons the docs use (examples/DocIcons, made by lucy-icons), registered for this
+-- preview. A game registers the map its own icon build writes.
+local DocIcons = require(script.Parent.Parent.DocIcons)
+
 return {
 	group = "Components",
 	description = "Small status labels.",
@@ -9,6 +13,7 @@ return {
 	},
 	render = function(ctx)
 		local Lucy = ctx.Lucy
+		Lucy.Icon.register(DocIcons)
 		return {
 			Lucy.Badge.new({
 				text = ctx.controls.text,

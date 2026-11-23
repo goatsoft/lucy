@@ -1,3 +1,7 @@
+-- The icons the docs use (examples/DocIcons, made by lucy-icons), registered for this
+-- preview. A game registers the map its own icon build writes.
+local DocIcons = require(script.Parent.Parent.DocIcons)
+
 return {
 	group = "Components",
 	description = "Genre chips (pick several), items with a slot (VIP shows while `vip` is on) and a 1 to 5 vote (pick one).",
@@ -10,6 +14,7 @@ return {
 	},
 	render = function(ctx)
 		local Lucy = ctx.Lucy
+		Lucy.Icon.register(DocIcons)
 		local c = ctx.controls
 		local genres = Lucy.ref({ "House" })
 		local vote = Lucy.ref(false)

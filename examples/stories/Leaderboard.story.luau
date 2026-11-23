@@ -1,3 +1,7 @@
+-- The icons the docs use (examples/DocIcons, made by lucy-icons), registered for this
+-- preview. A game registers the map its own icon build writes.
+local DocIcons = require(script.Parent.Parent.DocIcons)
+
 return {
 	group = "Components",
 	description = "Club Lucy's hype board: 1st up top, 2nd and 3rd under it, the rest by name, and you pinned at the bottom.",
@@ -11,6 +15,7 @@ return {
 	},
 	render = function(ctx)
 		local Lucy = ctx.Lucy
+		Lucy.Icon.register(DocIcons)
 		local c = ctx.controls
 		local crew = {
 			{ name = "Nova", hype = 9840 },
