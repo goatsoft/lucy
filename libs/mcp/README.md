@@ -1,5 +1,7 @@
 # lucy-mcp
 
+[![npm](https://img.shields.io/npm/v/@goatsoft/lucy-mcp)](https://www.npmjs.com/package/@goatsoft/lucy-mcp)
+
 An MCP server for coding agents building Roblox UI with
 [Lucy](https://lucy.goatsoft.io). It looks at and drives a running Lucy UI in
 Roblox Studio, the way a player would, so an agent can check its own work:
@@ -26,18 +28,29 @@ server**). It runs Lucy's [Devtools](https://lucy.goatsoft.io/docs/reference/dev
 there with `execute_luau`. The game's UI is reachable while it runs in Play;
 in edit mode, a story shown with `preview` is.
 
-## Running it from a Lucy checkout
+## Setting it up
 
-Until it is on npm, point the agent's MCP config at the source (Node 24 runs
-it directly). For Claude Code, in the game's `.mcp.json`:
+You need Node 24 or newer, Roblox Studio, and a game that uses Lucy. Add the
+server to your agent's MCP config. For Claude Code, that is `.mcp.json` in the
+game's folder:
 
 ```json
 {
   "mcpServers": {
-    "lucy": { "command": "node", "args": ["/path/to/lucy/libs/mcp/src/cli.ts"] }
+    "lucy": { "command": "npx", "args": ["-y", "@goatsoft/lucy-mcp"] }
   }
 }
 ```
+
+Other agents take the same command (`npx -y @goatsoft/lucy-mcp`) wherever they
+list MCP servers. The server talks over stdio and needs no API key.
+
+Then ask the agent to check its work: "open the shop and show me a picture",
+"move focus through the settings with a gamepad", "what is in app state under
+`settings`?".
+
+To run it from a checkout of Lucy instead, use
+`"command": "node", "args": ["/path/to/lucy/libs/mcp/src/cli.ts"]`.
 
 Set `LUCY_STUDIO_MCP` to Studio's MCP binary if it is not where Studio installs
 it (`/Applications/RobloxStudio.app/Contents/MacOS/StudioMCP` on macOS; on
@@ -52,3 +65,9 @@ pnpm mcp:typecheck
 
 `src/studio.ts` is the only file that knows Studio's tool names and answers.
 `src/luau.ts` writes the Luau each call runs.
+
+## Licence
+
+[MIT](https://github.com/goatsoft/lucy/blob/main/LICENSE). More in
+[Work with coding agents](https://lucy.goatsoft.io/docs/guide/agents) in Lucy's
+docs.

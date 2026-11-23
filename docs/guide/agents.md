@@ -83,19 +83,19 @@ being told to read anything.
 
 ## Inspect and drive UI with lucy-mcp
 
-The repo includes an MCP server at `libs/mcp` (`@goatsoft/lucy-mcp`) so an
+Lucy has an MCP server, `@goatsoft/lucy-mcp` on npm, so an
 agent can inspect a running Lucy app in Studio, read `app.state`, click
 buttons, move gamepad focus, open stories in edit mode and take screenshots.
 It uses Studio's own MCP server, so keep **Enable Studio as MCP server** on in
 Studio's **Manage MCP Servers** panel.
 
-Requires Node 24 or newer. Point your agent's MCP config (for example `.mcp.json`
-in your game's folder) at `libs/mcp/src/cli.ts`:
+Requires Node 24 or newer. Add it to your agent's MCP config (for example
+`.mcp.json` in your game's folder):
 
 ```json
 {
   "mcpServers": {
-    "lucy": { "command": "node", "args": ["/path/to/lucy/libs/mcp/src/cli.ts"] }
+    "lucy": { "command": "npx", "args": ["-y", "@goatsoft/lucy-mcp"] }
   }
 }
 ```
