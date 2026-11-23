@@ -343,6 +343,17 @@ merged changesets open a "Version Packages" pull request, and the maintainer
 merging it publishes, tags the version and makes its GitHub Release. Publishing
 uses npm trusted publishing from the Release workflow, so there is no token.
 
-A new package needs setting up once on npmjs.com before its first release: a
-trusted publisher naming this repository, the `release.yml` workflow and the
-`npm` environment.
+npm only takes a trusted publisher for a package that already exists, so a new
+package goes up by hand once before its first release:
+
+1. Publish an empty placeholder from a folder outside the repo, with only a
+   `package.json` holding the package's name, version `0.0.0` and the licence:
+   `npm login`, then `npm publish --access public`.
+2. On npmjs.com, in the package's settings under Trusted publishing, add a
+   GitHub Actions publisher: organisation `goatsoft`, repository `lucy`,
+   workflow `release.yml`, environment `npm`.
+3. Merge the "Version Packages" pull request as usual. If its Release run
+   already failed with `ENEEDAUTH`, re-run the failed job:
+   `gh run rerun <run id> --failed`.
+4. Mark the placeholder as old:
+   `npm deprecate <name>@0.0.0 "Placeholder, use 0.1.0 or later"`.

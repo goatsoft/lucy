@@ -11,6 +11,7 @@ realm = "shared"
 # wally.toml, README.md and LICENSE. Add new top-level folders and files here.
 exclude = [
 	"**/*.spec.luau",
+	"**/.DS_Store",
 	"src/Testing",
 	"apps",
 	"assets",
