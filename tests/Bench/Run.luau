@@ -1,4 +1,5 @@
 --!strict
+--!nolint DeprecatedApi
 --[[
 	Runs every benchmark suite and returns the results plus a markdown table.
 	In the Lucy dev place (edit mode, or the Studio MCP):
@@ -17,6 +18,15 @@ local Bench = require(script.Parent.Bench)
 local Suites = require(script.Parent.Suites)
 
 export type Result = Bench.Row
+
+-- The Studio the numbers came from, for docs/benchmarks.md. Roblox marks version()
+-- deprecated but names nothing to use instead: RunService:GetRobloxVersion() is
+-- for Roblox's own scripts only. It still works; nil if it is ever taken away.
+local function studioVersion(): string?
+	-- selene: allow(undefined_variable)
+	local ok, value = pcall(version)
+	return if ok then value else nil
+end
 
 export type Report = {
 	results: { Result },
@@ -88,8 +98,7 @@ function Run.run(options: { [string]: any }?): Report
 		markdown = markdown,
 		environment = {
 			date = os.date("!%Y-%m-%d"),
-			-- selene: allow(undefined_variable)
-			studio = version(),
+			studio = studioVersion(),
 			iterations = iterations,
 			warmup = warmup,
 			scale = scale,
