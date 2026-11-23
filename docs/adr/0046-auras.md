@@ -8,8 +8,8 @@
 Games dress characters in effects: a glow that grows with a player's rank, wings
 bought for half an hour, a golden shimmer while a legendary dance plays, sparks
 round whoever is on a streak. Dance Lab needs all four (rank auras, the dealers'
-raven and bat wings, the Headliner gold, its streak aura) and Turf Heist will
-want its own. Each is a little 3D picture worn on a character or set at a
+raven and bat wings, the Headliner gold, its streak aura) and other games
+will want their own. Each is a little 3D picture worn on a character or set at a
 point, and each needs the same plumbing:
 
 - mounting on a character (attachments, welds, a rig for moving parts) and

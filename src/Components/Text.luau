@@ -2,7 +2,7 @@
 --[[
 	Text: headings, body copy and labels.
 
-		Text.new({ text = "Turf Heist", variant = "h1", align = "center" })
+		Text.new({ text = "Club Lucy", variant = "h1", align = "center" })
 
 	variant: h1 | h2 | h3 | h4 | p | lead | large | small | muted | label
 	align:   left | center | right

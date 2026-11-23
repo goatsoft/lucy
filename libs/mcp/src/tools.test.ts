@@ -74,8 +74,8 @@ test('with several open, a tool needs `studio`, by id or by part of its name', a
   await call(studio, 'tree', { studio: 'dance lab' })
   await call(studio, 'tree', { studio: 'b' })
   assert.deepEqual(calls.map((c) => c.id), ['a', 'b'])
-  const unknown = await call(studio, 'tree', { studio: 'Bagman' })
-  assert.match(text(unknown), /No open Studio matches "Bagman"/)
+  const unknown = await call(studio, 'tree', { studio: 'Nowhere' })
+  assert.match(text(unknown), /No open Studio matches "Nowhere"/)
 })
 
 test('no Studio open: the tool says how to get one', async () => {

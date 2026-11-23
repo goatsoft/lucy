@@ -11,7 +11,7 @@ return {
 			AutomaticSize = Enum.AutomaticSize.Y,
 			BackgroundTransparency = 1,
 			Lucy.show(ctx.controls.loaded, function()
-				return Lucy.Panel.new({ title = "JB", description = "Online, in Turf Heist" })
+				return Lucy.Panel.new({ title = "JB", description = "Online, in Club Lucy" })
 			end, function()
 				return Lucy.Stack.new({
 					direction = "horizontal",

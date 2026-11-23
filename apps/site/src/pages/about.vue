@@ -146,26 +146,18 @@ const pillars = [
         <p class="mt-4 max-w-2xl text-sm leading-7 text-pretty text-muted-foreground">
           Lucy is tested on real production screens, not toy demos. <strong class="font-semibold text-foreground">Dance Lab</strong> runs its entire UI on Lucy: live HUDs, shops, audio settings, pause menus, leaderboards, and guided tours.
         </p>
-        <div class="mt-6 grid gap-4 sm:grid-cols-2">
-          <div class="rounded-xl border border-border bg-background/80 p-5 backdrop-blur-md">
-            <h3 class="font-display text-base font-semibold text-foreground">
-              Turf Heist
-            </h3>
-            <p class="mt-1.5 text-sm leading-6 text-muted-foreground">
-              Our earlier Roblox action game that showed us what menus, HUD layouts, and controller support needed.
-            </p>
-          </div>
+        <div class="mt-6 grid gap-4">
           <div class="rounded-xl border border-border bg-background/80 p-5 backdrop-blur-md">
             <div class="flex items-center justify-between gap-2">
               <h3 class="font-display text-base font-semibold text-foreground">
                 Dance Lab
               </h3>
               <span class="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 font-mono text-[11px] text-primary">
-                Case study soon
+                In development
               </span>
             </div>
             <p class="mt-1.5 text-sm leading-6 text-muted-foreground">
-              In development with its entire client UI powered by Lucy. A full case study will be published when the game launches.
+              A dance battle rhythm game for phone, desktop and console, with its entire client UI built on Lucy. The full case study comes with the launch.
             </p>
           </div>
         </div>

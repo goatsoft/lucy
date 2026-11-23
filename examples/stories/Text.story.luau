@@ -3,7 +3,7 @@ return {
 	description = "The type scale; the first line follows the controls.",
 	width = 480,
 	controls = {
-		text = "Turf Heist",
+		text = "Club Lucy",
 		variant = { "h1", "h2", "h3", "h4", "p", "lead", "large", "small", "muted", "label" },
 		align = { "center", "left", "right" },
 	},
