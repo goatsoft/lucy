@@ -45,7 +45,7 @@ pays for the rules of its own priority, so start-up stays quick with thousands o
 |---|---|---|
 | `theme` | `"dark"` | The theme to start in |
 | `baseColor` | `"zinc"` | Base colour for the built in light and dark themes |
-| `primary` | the base colour | Palette hue that tints `Primary` and `Ring` (with none, `Ring` is blue) |
+| `primary` | `"violet"` | Palette hue that tints `Primary` and `Ring`. `"none"` gives a black and white look: `Primary` in the base colour, `Ring` in blue |
 | `themes` | built from `baseColor` and `primary` | Your own set of themes, replacing the built in ones |
 | `colors` | none | [Named colours](#named-colours): `{ hype = "$Yellow400" }` |
 | `colorRecipes` | none | Your own shades of every named colour, by name |
@@ -70,7 +70,7 @@ Base colours: `zinc`, `slate`, `gray`, `neutral`, `stone`, `mauve`, `olive`,
 
 Every theme has these. The light and dark columns show the built in themes for a
 base colour `c` and primary hue `p` (`c-950` is the base colour's 950 shade).
-Without a `primary`, the `p` values fall back to the base colour shades shown.
+With `primary = "none"`, the `p` values fall back to the base colour shades shown.
 
 | Token | Colours | Light | Dark |
 |---|---|---|---|
@@ -152,7 +152,10 @@ fit; see [Accessibility](accessibility.md#text-size).
 
 | Member | What it is |
 |---|---|
-| `themesFor(base, { primary })` | the built in `{ light, dark }` themes for a base colour and primary hue |
+| `themesFor(base, { primary })` | the built in `{ light, dark }` themes for a base colour and primary hue; with no `primary` here, the black and white look |
+| `themes` | the themes an App gets when it picks no colours: `themesFor("zinc", { primary = "violet" })` |
+| `defaultPrimary` | `"violet"`, the primary an App uses when it names none |
+| `spectrum` | the colours of Lucy the mascot, `{ magenta, orchid, sky }`, ready to pass as [named colours](#named-colours): `colors = Lucy.Tokens.spectrum` |
 | `oklch(L, C, H)` | a colour from OKLCH lightness (0 to 1), chroma and hue (degrees) |
 | `over(fg, bg, alpha)` | `fg` at `alpha` over `bg`, as a theme value; worked out per theme |
 | `mix(a, b, t)` | an even mix of two tokens in Oklab; `t` 0 gives `a`, 1 gives `b` |

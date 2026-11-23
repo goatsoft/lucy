@@ -30,6 +30,7 @@ exclude = [
 	"pnpm-lock.yaml",
 	"registry.json",
 	"AGENTS.md",
+	"CHANGELOG.md",
 	"rokit.toml",
 	"selene.toml",
 	"stylua.toml",

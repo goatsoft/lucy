@@ -13,7 +13,9 @@ instance. This guide goes from picking colours to a theme of your own. The
 
 ## Pick your colours
 
-Give the App a base colour and, if you like, a primary colour:
+With no colours picked, an App wears Lucy's own: zinc greys with violet buttons,
+the same as this website. Give the App a base colour, a primary colour or both
+to make it yours:
 
 ```luau
 local app = Lucy.App.new({
@@ -29,7 +31,8 @@ local app = Lucy.App.new({
 - `primary` tints buttons, switches, sliders, selections and the focus ring.
   Any palette hue: `red`, `orange`, `amber`, `yellow`, `lime`, `green`,
   `emerald`, `teal`, `cyan`, `sky`, `blue`, `indigo`, `violet`, `purple`,
-  `fuchsia`, `pink` or `rose`. Leave it out for a black and white look.
+  `fuchsia`, `pink` or `rose`. Left out, it is `violet`. Use `"none"` for a
+  black and white look.
 - `theme` is the one to start in: `"dark"` (the default) or `"light"`.
 
 You get a light and a dark theme built from these two colours.

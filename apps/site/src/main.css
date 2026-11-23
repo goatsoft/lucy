@@ -5,9 +5,9 @@
 @custom-variant dark (&:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *));
 
 /*
-  Lucy tokens: zinc and violet like Lucy's default theme in Roblox
-  (src/Core/Tokens.luau), with the spectrum taken from the mascot herself
-  (magenta, orchid, sky; see assets/brand/build.py).
+  Lucy tokens: zinc and violet, the same as Lucy's default theme in Roblox
+  (Tokens.themes in src/Core/Tokens.luau), with the spectrum taken from the
+  mascot herself (magenta, orchid, sky; Tokens.spectrum, assets/brand/build.py).
 */
 :root {
   color-scheme: dark;

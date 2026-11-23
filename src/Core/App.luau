@@ -20,7 +20,7 @@
 	config:
 		theme         initial theme name ("dark")
 		baseColor     base colour for the default themes ("zinc", "slate", ...)
-		primary       palette hue to tint Primary ("blue", "rose", ...)
+		primary       palette hue to tint Primary ("blue", "rose", ...; "violet" when left out, "none" for black and white)
 		primitives    token overrides (see Core/Tokens)
 		themes        theme overrides (replaces baseColor/primary)
 		densities     density overrides
@@ -145,7 +145,9 @@ function App.new(config: { [string]: any }?): App
 	self.theme = Theme.new({
 		name = self.namePrefix .. "Styles",
 		primitives = options.primitives,
-		themes = options.themes or Tokens.themesFor(options.baseColor, { primary = options.primary }),
+		themes = options.themes or Tokens.themesFor(options.baseColor, {
+			primary = if options.primary == "none" then nil else options.primary or Tokens.defaultPrimary,
+		}),
 		-- Named colours and a game's own shades of them (ADR 0052)
 		colors = options.colors,
 		colorRecipes = options.colorRecipes,

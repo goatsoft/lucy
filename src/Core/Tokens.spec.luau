@@ -33,6 +33,16 @@ return function()
 	end)
 
 	describe("themes", function()
+		it("makes the default themes zinc with Lucy's violet, and names her spectrum", function()
+			expect(Tokens.defaultPrimary).to.equal("violet")
+			expect(Tokens.themes.dark.Primary).to.equal("$Violet500")
+			expect(Tokens.themes.light.Primary).to.equal("$Violet600")
+			expect(Tokens.themes.dark.Background).to.equal("$Zinc950")
+			for _, name in { "magenta", "orchid", "sky" } do
+				expect(typeof(Tokens.spectrum[name])).to.equal("Color3")
+			end
+		end)
+
 		it("gives every theme of every base the same keys", function()
 			local reference = keys(Tokens.themes.light)
 			for _, base in Tokens.bases do

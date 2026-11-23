@@ -25,7 +25,8 @@
 
 	Tokens.themesFor(base, options) builds light and dark themes for a base colour: base = "zinc" | "slate" | "gray" | "neutral" |
 	"stone" | "mauve" | "olive" | "mist" | "taupe"; options.primary = any palette
-	hue ("blue", "rose", ...) to tint the primary colour.
+	hue ("blue", "rose", ...) to tint the primary colour. Tokens.themes, the default, is zinc
+	with Tokens.defaultPrimary (violet); Tokens.spectrum holds the mascot's colours.
 
 	A Color3 has no alpha, so translucent values are pre-composited with
 	Tokens.over, which blends in sRGB exactly as a browser does. See ADR 0010.
@@ -324,7 +325,20 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 	return { light = light, dark = dark }
 end
 
-Tokens.themes = Tokens.themesFor("zinc")
+-- Lucy's own look, the one a game gets when it picks no colours: zinc greys and violet, as on
+-- the website. An App uses defaultPrimary whenever a game names no primary ("none" for black
+-- and white).
+Tokens.defaultPrimary = "violet"
+Tokens.themes = Tokens.themesFor("zinc", { primary = Tokens.defaultPrimary })
+
+-- The colours of Lucy the mascot, to add as named colours when a game wants them:
+--   Lucy.App.new({ colors = Tokens.spectrum })
+-- They are not on by default: every named colour gets its own copy of each coloured rule.
+Tokens.spectrum = {
+	magenta = Color3.fromRGB(240, 62, 222),
+	orchid = Color3.fromRGB(192, 80, 234),
+	sky = Color3.fromRGB(91, 208, 248),
+}
 Tokens.defaultTheme = "dark"
 
 local function isAlias(value: any): boolean
