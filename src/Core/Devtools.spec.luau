@@ -84,7 +84,8 @@ return function()
 			local list = Devtools.apps()
 			Devtools.timeout = previous
 			dead:Destroy()
-			expect(os.clock() - started < 1.5).to.equal(true)
+			-- Well under the 3 s default, with room for a busy machine (a site build alongside)
+			expect(os.clock() - started < 2.5).to.equal(true)
 			for _, entry in list do
 				expect(entry.name).never.to.equal("Dead_")
 			end

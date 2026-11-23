@@ -308,10 +308,11 @@ return function()
 	end
 	-- Whether the frame comes to show the colour. Styles land a few frames after the probe is
 	-- made, and more when Studio is busy or its window is in the background, so wait for them.
+	-- A pass returns as soon as the colour shows; the long limit only matters on a slow run.
 	local function shows(frame: Frame, colour: Color3): boolean
 		return Harness.waitFor(function()
 			return Harness.colorEq(colourOf(frame), colour)
-		end, 2)
+		end, 5)
 	end
 
 	-- What Lucy's layers rest on and Roblox does not document (ADR 0052): a change here fails the
