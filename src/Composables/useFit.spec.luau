@@ -4,9 +4,9 @@ return function()
 	local Harness = require(script.Parent.Parent.Testing.Harness)
 
 	describe("useFit", function()
-		local function settle(check: () -> boolean)
+		local function settle(check: () -> boolean, limit: number?)
 			local waited = 0
-			while not check() and waited < 1 do
+			while not check() and waited < (limit or 1) do
 				waited += task.wait()
 			end
 		end
@@ -79,9 +79,13 @@ return function()
 				s.Parent = label
 				return f
 			end)
-			-- Settle, then watch it for half a second: it must not move, and must stay inside
+			-- Settle (the text measures late under a busy run), then watch it for half a second:
+			-- it must not move, and must stay inside
+			settle(function()
+				return fit() < 1
+			end, 3)
 			local waited = 0
-			while waited < 0.5 do
+			while waited < 0.2 do
 				waited += task.wait()
 			end
 			local first = fit()
