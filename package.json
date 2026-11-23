@@ -15,6 +15,7 @@
     "icons:test": "pnpm --filter @goatsoft/lucy-icons test",
     "mcp:typecheck": "pnpm --filter @goatsoft/lucy-mcp typecheck",
     "mcp:test": "pnpm --filter @goatsoft/lucy-mcp test",
+    "types": "sh scripts/types.sh",
     "skills": "node scripts/skills.ts",
     "skills:check": "node scripts/skills.ts --check",
     "changeset": "changeset",

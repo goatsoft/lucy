@@ -18,7 +18,7 @@ for TestEZ (into `DevPackages/`, gitignored).
 | lune | `scripts/add.luau` CLI, `scripts/gen-palette.luau` |
 | selene / stylua | lint and format |
 | run-in-roblox | headless test runs in CI |
-| luau-lsp | type checking (editor or `luau-lsp analyze`) |
+| luau-lsp | type checking (editor or `sh scripts/types.sh`) |
 
 ## Daily loop
 
@@ -134,9 +134,7 @@ Gotchas:
 ## Static checks
 
 ```
-rojo sourcemap test.project.json -o sourcemap.json
-luau-lsp analyze --sourcemap=sourcemap.json --definitions=@roblox=globalTypes.d.luau \
-  --definitions=@testez=testez.d.luau src tests
+sh scripts/types.sh
 selene src tests examples
 stylua --check src tests scripts examples
 lune run scripts/add -- --check

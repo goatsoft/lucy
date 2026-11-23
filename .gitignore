@@ -11,6 +11,9 @@ wally.lock
 *.rbxmx
 sourcemap.json
 
+# luau-lsp's Roblox types, fetched by scripts/types.sh
+.luau-lsp/
+
 # Editors and OS
 .vscode/*.log
 .DS_Store
