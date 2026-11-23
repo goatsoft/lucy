@@ -391,6 +391,28 @@ return function()
 			expect(handle.destroyed).to.equal(true)
 		end)
 
+		it("lets what render made clean up before its state goes, when its owning scope stops", function()
+			-- A list's items stop in a cleanup render registered: they must not see the state removed
+			local seen = "not run"
+			local scope = Reactive.effectScope()
+			scope:run(function()
+				return Component.mount({
+					kind = "listed",
+					props = { app = app, id = "listed" },
+					defaults = { size = "md" },
+					render = function()
+						Reactive.onCleanup(function()
+							seen = tostring(app.state:get("ui.listed.size"))
+						end)
+						return Element.new("Frame", {})
+					end,
+				})
+			end)
+			scope:stop()
+			expect(seen).to.equal("md")
+			expect(app.state:get("ui.listed")).to.equal(nil)
+		end)
+
 		it("aliases a writable ref: every write to the key is a write to the ref, at once", function()
 			local on = Reactive.ref("a")
 			local handle = mountThing({ app = app, id = "alias", text = on })

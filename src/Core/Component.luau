@@ -362,9 +362,12 @@ function Handle.destroy(self: Handle)
 	self.destroyed = true
 	-- A newer component may have mounted with this id (a list rebuilt with the same ids makes the
 	-- new items before it drops the old): then ui.<id> is its state now, and stays
-	local owner = self.app:handle(self.id) == self
+	self._ownsState = self.app:handle(self.id) == self
 	self.app:unregisterHandle(self)
 	local scope = self.scope
+	-- Its scope already stopping (the scope above it stopped): what render made is still being
+	-- taken down, and may read the state, so the scope's last cleanup removes it (see mount)
+	local stopping = scope ~= nil and not scope.active
 	if scope then
 		scope:stop() -- first: render's bindings and watchers end before anything else
 	end
@@ -374,7 +377,15 @@ function Handle.destroy(self: Handle)
 	if instance and not Element.going(instance) then
 		instance:Destroy()
 	end
-	if owner and not self.props.persist then
+	if not stopping then
+		self:_dropState()
+	end
+end
+
+-- Removes ui.<id>, once, after destroy, unless a newer component owns it or `persist` keeps it.
+function Handle._dropState(self: Handle)
+	if self._ownsState and not self.props.persist then
+		self._ownsState = false
 		self.app.state:remove(self.path)
 	end
 end
@@ -552,6 +563,13 @@ function Component.mount(spec: Spec, props: Props?): Handle
 	-- (bindings, computeds, watchers, composables) is the component's.
 	local scope = Reactive.effectScope()
 	handle.scope = scope
+	-- Before render, so it runs last: a scope runs its cleanups newest first, and what render
+	-- registered (a list's items, its frame, a watcher's cleanup) must stop while the state is
+	-- still there. Only then does the state go.
+	scope:onCleanup(function()
+		handle:destroy()
+		handle:_dropState()
+	end)
 	local okRender, rendered = pcall(scope.run, scope, spec.render, handle)
 	if not okRender then
 		scope:stop()
@@ -579,9 +597,6 @@ function Component.mount(spec: Spec, props: Props?): Handle
 	end
 	Component.claimSelection(app, root)
 	app:registerHandle(handle)
-	scope:onCleanup(function()
-		handle:destroy()
-	end)
 	-- Destroyed from above (its panel, its gui, the app): the component goes too, so its watchers
 	-- and frame steps do not run on for ever against a dead frame
 	handle.maid:give(root.Destroying:Connect(function()
