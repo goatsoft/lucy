@@ -23,17 +23,22 @@
   <a href="https://wally.run/package/goatsoft/lucy"><img src="https://img.shields.io/badge/wally-goatsoft%2Flucy-c050ea" alt="Wally"></a>
   <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-5bd0f8" alt="MIT Licence"></a>
 </p>
+
 ## Overview
 
-Lucy keeps your game's UI state in one place and keeps the screen in step with
-it. When a value changes, only the properties that read it are set again.
-Nothing is rebuilt.
+Lucy is a UI and app framework for Roblox. It gives you themed components and a
+single place to keep your UI state.
 
-Its components work with mouse, keyboard, gamepad and touch, on phone, tablet,
-desktop and console, in light and dark themes. Their looks are Universal
-Styling rules, so hovering and switching themes run no Luau.
+Build UI screens from components and connect them to the app state. When a value
+changes, Lucy updates only the properties that use it. Nothing is rebuilt, so
+your app stays fast.
 
-See every component on the [components page](https://lucy.goatsoft.io/docs/components/).
+Menus and HUDs work with mouse, keyboard, gamepad and touch, on phone, desktop
+and console, without handling each device yourself. Light and dark themes come
+with it, and because the styling is Roblox's Universal Styling, hover effects
+and theme switches run no Luau.
+
+[Browse the components](https://lucy.goatsoft.io/docs/components/).
 
 ## Installation
 
