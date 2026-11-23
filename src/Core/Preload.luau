@@ -123,6 +123,9 @@ end
 local waiting: { [any]: Entry } = {}
 local queue: { Entry } = {}
 local running = false
+-- Bumped by _reset: a batch still in flight from before ends quietly and leaves the fresh
+-- queue to a loop of its own
+local generation = 0
 
 -- The key an id is known by: a url for asset ids, the instance itself otherwise
 local function keyOf(id: any): any
@@ -187,8 +190,9 @@ local function run()
 		return
 	end
 	running = true
+	local mine = generation
 	task.spawn(function()
-		while #queue > 0 do
+		while #queue > 0 and generation == mine do
 			local batch: { Entry } = {}
 			local list: { any } = {}
 			local urls: { string } = {}
@@ -210,11 +214,16 @@ local function run()
 			if surface and #urls > 0 then
 				pcall(draw, urls, surface)
 			end
+			if generation ~= mine then
+				return
+			end
 			for _, entry in batch do
 				finish(entry)
 			end
 		end
-		running = false
+		if generation == mine then
+			running = false
+		end
 	end)
 end
 
@@ -315,8 +324,10 @@ function Preload.stats(): { pinned: number, warmed: number, waiting: number }
 	return { pinned = pinned, warmed = warmed, waiting = waitingCount }
 end
 
--- Forgets every image (tests)
+-- Forgets every image, and any batch still being fetched (tests)
 function Preload._reset()
+	generation += 1
+	running = false
 	for _, entry in pins do
 		if entry.label then
 			entry.label:Destroy()

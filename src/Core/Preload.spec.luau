@@ -211,6 +211,23 @@ return function()
 		expect(slow.done()).to.equal(true)
 	end)
 
+	it("starts afresh after a reset, whatever an earlier batch is still doing", function()
+		gate = Instance.new("BindableEvent")
+		Preload.preload({ 1 })
+		task.wait()
+		-- 1 is still being fetched when the queue is reset
+		local stuck = gate :: BindableEvent
+		gate = nil
+		Preload._reset()
+		local job = Preload.preload({ 5 })
+		expect(job.done()).to.equal(true)
+		-- The old batch ending later leaves the fresh queue alone
+		stuck:Fire()
+		task.wait()
+		expect(Preload.isLoaded(1)).to.equal(false)
+		expect(Preload.isLoaded(5)).to.equal(true)
+	end)
+
 	it("shows progress part way", function()
 		Preload.batchSize = 1
 		gate = Instance.new("BindableEvent")
