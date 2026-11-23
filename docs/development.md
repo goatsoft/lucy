@@ -33,7 +33,12 @@ for TestEZ (into `DevPackages/`, gitignored).
    require(game.ReplicatedStorage.LucyTests.Runner).run()
    require(game.ReplicatedStorage.LucyTests.Runner).run({ pattern = "Button" })
    ```
-   `run` returns `{ passed, failed, skipped, errors, ok }`.
+   `run` returns `{ passed, failed, skipped, errors, ok }`. Each run tests fresh
+   copies of `Lucy`, `LucyTests` and `LucyExamples`, because Studio keeps the first
+   loaded copy of a module: without them an edit-mode run after a Rojo sync would
+   test the old code. `{ fresh = false }` runs the originals. The Runner itself is
+   still the first loaded copy, so after changing `tests/Runner.luau` restart Play
+   or Studio.
 4. Look at a component without pressing Play:
    ```luau
    require(game.ReplicatedStorage.Lucy).Preview.show("Button", { root = game.ReplicatedStorage.LucyExamples })
