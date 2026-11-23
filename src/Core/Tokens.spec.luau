@@ -33,11 +33,12 @@ return function()
 	end)
 
 	describe("themes", function()
-		it("makes the default themes zinc with Lucy's violet, and names her spectrum", function()
+		it("makes the default themes mauve with Lucy's violet, and names her spectrum", function()
 			expect(Tokens.defaultPrimary).to.equal("violet")
 			expect(Tokens.themes.dark.Primary).to.equal("$Violet500")
 			expect(Tokens.themes.light.Primary).to.equal("$Violet600")
-			expect(Tokens.themes.dark.Background).to.equal("$Zinc950")
+			expect(Tokens.defaultBase).to.equal("mauve")
+			expect(Tokens.themes.dark.Background).to.equal("$Mauve950")
 			for _, name in { "magenta", "orchid", "sky" } do
 				expect(typeof(Tokens.spectrum[name])).to.equal("Color3")
 			end
@@ -208,7 +209,7 @@ return function()
 
 	describe("derived tokens", function()
 		it("composites over like CSS alpha (dark border is white at 10%)", function()
-			local resolved = Tokens.resolveTheme(Tokens.themes.dark, Tokens.primitives)
+			local resolved = Tokens.resolveTheme(Tokens.themesFor("zinc").dark, Tokens.primitives)
 			expect(resolved.Border:ToHex()).to.equal("222224")
 		end)
 

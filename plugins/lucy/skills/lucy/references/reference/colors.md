@@ -18,7 +18,7 @@ rule or a theme wants a colour.
 ## Base colours
 
 The greys a theme is built on: `baseColor` picks one for the built in light
-and dark themes (`zinc` by default). All but `neutral` have a faint tint: `slate`
+and dark themes (`mauve` by default). All but `neutral` have a faint tint: `slate`
 and `gray` lean blue (slate the more), `zinc` a touch violet, `mist` teal,
 `mauve` purple, `olive` green, and `stone` and `taupe` warm. `neutral` is the
 only true grey.

@@ -19,7 +19,7 @@
 
 	config:
 		theme         initial theme name ("dark")
-		baseColor     base colour for the default themes ("zinc", "slate", ...)
+		baseColor     base colour for the default themes ("mauve" when left out; "zinc", "slate", ...)
 		primary       palette hue to tint Primary ("blue", "rose", ...; "violet" when left out, "none" for black and white)
 		primitives    token overrides (see Core/Tokens)
 		themes        theme overrides (replaces baseColor/primary)

@@ -5,19 +5,19 @@
 @custom-variant dark (&:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *));
 
 /*
-  Lucy tokens: zinc and violet, the same as Lucy's default theme in Roblox
+  Lucy tokens: mauve and violet, the same as Lucy's default theme in Roblox
   (Tokens.themes in src/Core/Tokens.luau), with the spectrum taken from the
   mascot herself (magenta, orchid, sky; Tokens.spectrum, assets/brand/build.py).
 */
 :root {
   color-scheme: dark;
-  --background: oklch(0.141 0.005 285.823);
-  --surface: oklch(0.21 0.006 285.885);
+  --background: oklch(0.145 0.008 326);
+  --surface: oklch(0.212 0.019 322.1);
   --foreground: oklch(0.985 0 0);
-  --muted-foreground: oklch(0.705 0.015 286.067);
+  --muted-foreground: oklch(0.711 0.019 323);
   --border: oklch(1 0 0 / 0.1);
   --input: oklch(1 0 0 / 0.15);
-  --accent: oklch(0.274 0.006 286.033);
+  --accent: oklch(0.263 0.024 320.1);
   --primary: oklch(0.606 0.25 292.717);
   --primary-foreground: oklch(0.985 0 0);
   --spectrum-1: oklch(0.683 0.265 332.6);
@@ -30,12 +30,12 @@
 :root[data-theme="light"] {
   color-scheme: light;
   --background: oklch(1 0 0);
-  --surface: oklch(0.967 0.001 286.375);
-  --foreground: oklch(0.141 0.005 285.823);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --accent: oklch(0.967 0.001 286.375);
+  --surface: oklch(0.96 0.003 325.6);
+  --foreground: oklch(0.145 0.008 326);
+  --muted-foreground: oklch(0.542 0.034 322.5);
+  --border: oklch(0.922 0.005 325.6);
+  --input: oklch(0.922 0.005 325.6);
+  --accent: oklch(0.96 0.003 325.6);
   --primary: oklch(0.541 0.281 293.009);
   --primary-foreground: oklch(0.985 0 0);
   --spectrum-1: oklch(0.56 0.25 332.6);
@@ -167,7 +167,7 @@
   .prose .callout-danger .callout-title { @apply text-rose-300; }
   .prose .callout-note .callout-title { @apply text-spectrum-2; }
   .prose details > summary { @apply cursor-pointer font-medium text-foreground; }
-  .prose .code-block { @apply relative my-6 overflow-hidden rounded-xl border border-border bg-[oklch(0.12_0.005_286)]; }
+  .prose .code-block { @apply relative my-6 overflow-hidden rounded-xl border border-border bg-[oklch(0.12_0.008_326)]; }
   .prose .code-title { @apply border-b border-border px-4 py-2 font-mono text-xs text-muted-foreground; }
   .prose .code-block pre { @apply overflow-x-auto p-4 font-mono text-[13px] leading-6; }
   .prose h1 .heading-anchor { @apply hidden; }

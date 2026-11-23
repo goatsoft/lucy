@@ -76,7 +76,7 @@ return function()
 	it("starts in Lucy's own violet when a game picks no colours", function()
 		local app, done = Harness.app({ theme = "dark" })
 		expect(app.theme:resolve("Primary")).to.equal(app.theme:resolve("Violet500"))
-		expect(app.theme:resolve("Background")).to.equal(app.theme:resolve("Zinc950"))
+		expect(app.theme:resolve("Background")).to.equal(app.theme:resolve("Mauve950"))
 		done()
 	end)
 
@@ -89,7 +89,7 @@ return function()
 
 	it('gives a black and white look with primary = "none"', function()
 		local app, done = Harness.app({ primary = "none", theme = "dark" })
-		expect(app.theme:resolve("Primary")).to.equal(app.theme:resolve("Zinc200"))
+		expect(app.theme:resolve("Primary")).to.equal(app.theme:resolve("Mauve200"))
 		done()
 	end)
 

@@ -44,7 +44,7 @@ pays for the rules of its own priority, so start-up stays quick with thousands o
 | Option | Default | What it does |
 |---|---|---|
 | `theme` | `"dark"` | The theme to start in |
-| `baseColor` | `"zinc"` | Base colour for the built in light and dark themes |
+| `baseColor` | `"mauve"` | Base colour for the built in light and dark themes |
 | `primary` | `"violet"` | Palette hue that tints `Primary` and `Ring`. `"none"` gives a black and white look: `Primary` in the base colour, `Ring` in blue |
 | `themes` | built from `baseColor` and `primary` | Your own set of themes, replacing the built in ones |
 | `colors` | none | [Named colours](#named-colours): `{ hype = "$Yellow400" }` |
@@ -153,7 +153,7 @@ fit; see [Accessibility](accessibility.md#text-size).
 | Member | What it is |
 |---|---|
 | `themesFor(base, { primary })` | the built in `{ light, dark }` themes for a base colour and primary hue; with no `primary` here, the black and white look |
-| `themes` | the themes an App gets when it picks no colours: `themesFor("zinc", { primary = "violet" })` |
+| `themes` | the themes an App gets when it picks no colours: `themesFor("mauve", { primary = "violet" })` |
 | `defaultPrimary` | `"violet"`, the primary an App uses when it names none |
 | `spectrum` | the colours of Lucy the mascot, `{ magenta, orchid, sky }`, ready to pass as [named colours](#named-colours): `colors = Lucy.Tokens.spectrum` |
 | `oklch(L, C, H)` | a colour from OKLCH lightness (0 to 1), chroma and hue (degrees) |

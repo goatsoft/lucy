@@ -8,7 +8,7 @@ instance. This guide goes from picking colours to a theme of your own. The
 
 ## Pick your colours
 
-With no colours picked, an App wears Lucy's own: zinc greys with violet buttons,
+With no colours picked, an App wears Lucy's own: mauve greys with violet buttons,
 the same as this website. Give the App a base colour, a primary colour or both
 to make it yours:
 
@@ -21,7 +21,7 @@ local app = Lucy.App.new({
 ```
 
 - `baseColor` sets the greys: backgrounds, cards, borders and muted text. One of
-  `zinc` (the default), `slate`, `gray`, `neutral`, `stone`, `mauve`, `olive`,
+  `mauve` (the default), `zinc`, `slate`, `gray`, `neutral`, `stone`, `olive`,
   `mist` or `taupe`.
 - `primary` tints buttons, switches, sliders, selections and the focus ring.
   Any palette hue: `red`, `orange`, `amber`, `yellow`, `lime`, `green`,

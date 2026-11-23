@@ -25,7 +25,7 @@
 
 	Tokens.themesFor(base, options) builds light and dark themes for a base colour: base = "zinc" | "slate" | "gray" | "neutral" |
 	"stone" | "mauve" | "olive" | "mist" | "taupe"; options.primary = any palette
-	hue ("blue", "rose", ...) to tint the primary colour. Tokens.themes, the default, is zinc
+	hue ("blue", "rose", ...) to tint the primary colour. Tokens.themes, the default, is mauve
 	with Tokens.defaultPrimary (violet); Tokens.spectrum holds the mascot's colours.
 
 	A Color3 has no alpha, so translucent values are pre-composited with
@@ -178,6 +178,8 @@ Tokens.densities = {
 }
 Tokens.defaultDensity = "default"
 
+-- The base colour when a game names none
+Tokens.defaultBase = "mauve"
 Tokens.bases = { "zinc", "slate", "gray", "neutral", "stone", "mauve", "olive", "mist", "taupe" }
 
 --[[
@@ -186,7 +188,7 @@ Tokens.bases = { "zinc", "slate", "gray", "neutral", "stone", "mauve", "olive", 
 	Primary, blue for Ring, so focus never shows in the base grey).
 ]]
 function Tokens.themesFor(base: string?, options: { primary: string? }?)
-	local b = base or "zinc"
+	local b = base or Tokens.defaultBase
 	if Palette[b] == nil then
 		error(`[Lucy] unknown base colour "{b}"`, 2)
 	end
@@ -325,11 +327,11 @@ function Tokens.themesFor(base: string?, options: { primary: string? }?)
 	return { light = light, dark = dark }
 end
 
--- Lucy's own look, the one a game gets when it picks no colours: zinc greys and violet, as on
+-- Lucy's own look, the one a game gets when it picks no colours: mauve greys and violet, as on
 -- the website. An App uses defaultPrimary whenever a game names no primary ("none" for black
 -- and white).
 Tokens.defaultPrimary = "violet"
-Tokens.themes = Tokens.themesFor("zinc", { primary = Tokens.defaultPrimary })
+Tokens.themes = Tokens.themesFor(Tokens.defaultBase, { primary = Tokens.defaultPrimary })
 
 -- The colours of Lucy the mascot, to add as named colours when a game wants them:
 --   Lucy.App.new({ colors = Tokens.spectrum })
