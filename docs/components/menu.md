@@ -21,9 +21,9 @@ Lucy.Menu.new({
     open = true,
     anchor = button,
     items = {
-        { value = "join", label = "Join show", icon = "lucy:plus" },
-        { value = "dj", label = "DJ request" },
-        { value = "lab", label = "The Lab" },
+        { value = "join", label = "Join the set", icon = "lucy:plus" },
+        { value = "request", label = "Request a track" },
+        { value = "shop", label = "Emote Shop" },
         { value = "dances", label = "Dances" },
         { value = "exit", label = "Exit", icon = "lucy:close" },
     },
@@ -115,9 +115,9 @@ Lucy.Menu.new({
     open = true,
     variant = "radial",
     items = {
-        { value = "join", label = "Join show", icon = "lucy:plus" },
-        { value = "dj", label = "DJ request" },
-        { value = "lab", label = "The Lab" },
+        { value = "join", label = "Join the set", icon = "lucy:plus" },
+        { value = "request", label = "Request a track" },
+        { value = "shop", label = "Emote Shop" },
         { value = "dances", label = "Dances" },
         { value = "items", label = "Items" },
         { value = "exit", label = "Exit", icon = "lucy:close" },
@@ -161,9 +161,9 @@ Lucy.Menu.new({
     variant = "radial",
     shape = "squircle",
     items = {
-        { value = "join", label = "Join show", icon = "lucy:plus" },
-        { value = "dj", label = "DJ request" },
-        { value = "lab", label = "The Lab" },
+        { value = "join", label = "Join the set", icon = "lucy:plus" },
+        { value = "request", label = "Request a track" },
+        { value = "shop", label = "Emote Shop" },
         { value = "dances", label = "Dances" },
         { value = "exit", label = "Exit", icon = "lucy:close" },
     },
@@ -176,14 +176,14 @@ Lucy.Menu.new({
 An item's `label`, `icon` and `disabled` can be a ref or a getter. The item
 follows it, so a menu made once keeps up with the game, with no need to make
 it again.
-Here JOIN SHOW turns into LEAVE SHOW once the player is in, and PRACTICE
+Here JOIN THE SET turns into LEAVE THE SET once the player is in, and PRACTICE
 fades out until they leave:
 
 <!-- preview solo -->
 <figure class="example-preview"><img class="example-light" src="/images/examples/components-menu-4-light.webp" alt="Menu example" loading="lazy"><img class="example-dark" src="/images/examples/components-menu-4-dark.webp" alt="Menu example" loading="lazy"></figure>
 
 ```luau
-local inShow = Lucy.ref(true)
+local inSet = Lucy.ref(true)
 
 Lucy.Menu.new({
     open = true,
@@ -191,16 +191,16 @@ Lucy.Menu.new({
     shape = "squircle",
     items = {
         {
-            value = "show",
+            value = "set",
             label = function()
-                return if inShow() then "Leave show" else "Join show"
+                return if inSet() then "Leave the set" else "Join the set"
             end,
             icon = function()
-                return if inShow() then "lucy:minus" else "lucy:plus"
+                return if inSet() then "lucy:minus" else "lucy:plus"
             end,
         },
-        { value = "practice", label = "Practice", disabled = inShow },
-        { value = "dj", label = "DJ request" },
+        { value = "practice", label = "Practice", disabled = inSet },
+        { value = "request", label = "Request a track" },
         { value = "exit", label = "Exit", icon = "lucy:close" },
     },
     Parent = parent,
@@ -270,7 +270,7 @@ holds keyboard and gamepad focus while open:
   fan covers it.
 - **Keyboard and D-pad:** move between actions and press Enter or A.
 - **Stick:** on a ring or fan, point the left stick at a button to select it.
-- **Back:** B, Backspace or Escape closes it without picking anything.
+- **Back:** B or Backspace closes it without picking anything.
 
 On a ring or fan, the focus ring goes round the whole action, its button and
 its label, following the button's shape: a pill round a round button, a rounded

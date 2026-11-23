@@ -189,7 +189,7 @@ built on its first open.
 ## Warming ahead
 
 A panel builds on its first open, and its pictures load then too. Warm it a
-moment before instead (ADR 0051):
+moment before instead:
 
 ```luau
 local danceSheet = Lucy.Sheet.new({ title = "DANCE", preload = function() return danceIcons end })
@@ -293,7 +293,7 @@ A dialog's panel sits in a frame that can add two things, both off until asked:
 
 ```luau
 local pass = Lucy.Dialog.new({
-    title = "Club Pass",
+    title = "Season pass",
     description = "Season one ends in 89 days.",
     titlePlacement = "edge",
     actions = { { text = "Close" } },

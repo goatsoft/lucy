@@ -75,7 +75,7 @@ A slower ticker that waits longer at each end:
 
 ```luau
 Lucy.Marquee.new({
-    text = "Sign up at The Lab to dance in the next round",
+    text = "Sign up at the Booth to dance in the next round",
     variant = "muted",
     speed = 25,
     pause = 3,
@@ -90,7 +90,7 @@ Lucy.Panel.new({
     size = UDim2.fromOffset(300, 0),
     children = {
         Lucy.Marquee.new({
-            text = "Sign ups are open at The Lab · DJ GOD is on the decks · Next round in 2 minutes",
+            text = "Sign ups are open at the Booth · DJ Lucy is on the decks · Next round in 2 minutes",
             variant = "large",
             loop = true,
             speed = 90,

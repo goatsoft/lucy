@@ -76,6 +76,7 @@ the [composables reference](composables/index.md).
 |---|---|---|
 | `Lucy.Tokens` | The design tokens and the theme builders (`themesFor`, `onColor`) | [Theming](theming.md#lucytokens) |
 | `Lucy.Palette` | Every palette colour as OKLCH values | [Theming](theming.md#lucytokens) |
+| `Lucy.color`, `Lucy.Color` | `Lucy.color(container, name)` gives part of the UI one of your named colours. `Lucy.Color` is the module behind it: `Lucy.Color.scope` is the same function, and `Lucy.Color.attribute` (`"LucyColor"`) is the attribute a coloured container carries | [Named colours](theming.md#named-colours) |
 | `Lucy.Oklab` | Colour maths: convert, mix, and check contrast | [Theming](theming.md#lucytokens) |
 | `Lucy.Preferences` | The player's accessibility settings: reduced motion, text size, background transparency | [Accessibility](accessibility.md#lucypreferences) |
 

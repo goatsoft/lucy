@@ -6,7 +6,7 @@ order: 5
 
 # Make your UI accessible
 
-Lucy's components are readable and reachable out of the box. This guide covers
+Lucy's components are readable and reachable as they come. This guide covers
 the parts that depend on your own UI: the colours you pick, where focus starts,
 and how you size and animate things. What Lucy does by itself is in
 [Accessibility](../reference/accessibility.md).

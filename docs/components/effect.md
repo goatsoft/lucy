@@ -36,7 +36,7 @@ The picture fills a square as big as the smaller side of its box, centred in
 it. It plays its opening each time it is shown, and `effect:play()` plays it
 again. Some types keep moving after the opening (rays turn). Nothing runs while
 the effect is hidden, and it stops when destroyed. When the player asks for
-reduced motion, the picture is simply there, still.
+reduced motion, the picture is there, still.
 
 ## Props
 
@@ -142,7 +142,7 @@ local box = Lucy.new("Frame", {
     BackgroundTransparency = 1,
     Parent = parent,
 })
-local plus = Lucy.Button.new({ text = "Unlock VIP+", size = "lg", Parent = box })
+local plus = Lucy.Button.new({ text = "Unlock VIP", size = "lg", Parent = box })
 plus.Instance.Size = UDim2.fromScale(1, 1)
 Lucy.Effect.new({ type = "shine", variant = "warning", radius = 8, Parent = plus.Instance })
 ```

@@ -23,7 +23,7 @@ Folder <namePrefix>Styles (ReplicatedStorage)
 └─ Lucy_0, Game_40...     a layer's rules of one priority, one sheet each
 ```
 
-The rule sheets are layers (ADR 0052): each derives the one
+The rule sheets are layers: each derives the one
 below, and a sheet's own rules beat every rule below it, whatever their priority. So your rules
 beat Lucy's looks without a priority above Lucy's, Lucy's few fixed rules (marked `fixed = true`)
 beat yours, and a live rule beats all. Lucy's own rules are all
@@ -303,14 +303,14 @@ A scoped rule with no `$Color` holds in any colour, so it is compiled once, on
 ```
 
 Roblox's tokens cannot be scoped below a ScreenGui, which is why a colour is a tag
-on the elements and its rules are compiled per colour (ADR 0052).
+on the elements and its rules are compiled per colour.
 
 ### Colours that colour only some things
 
 Each colour gets its own copy of every rule written in `$Color`, Lucy's and
 yours. A game with many colours has many copies, and every copy is a rule the
 engine checks new elements against: Dance Lab's 38 colours made 3,572 of its
-4,904 rules, and a panel's first open paid for them (ADR 0053). Most colours are
+4,904 rules, and a panel's first open paid for them. Most colours are
 only ever put on a few kinds of thing, so say which:
 
 ```luau

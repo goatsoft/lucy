@@ -21,7 +21,7 @@
   <a href="https://github.com/goatsoft/lucy/actions/workflows/ci.yml"><img src="https://github.com/goatsoft/lucy/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://lucy.goatsoft.io"><img src="https://img.shields.io/badge/docs-lucy.goatsoft.io-8757e2" alt="Docs"></a>
   <a href="https://wally.run/package/goatsoft/lucy"><img src="https://img.shields.io/badge/wally-goatsoft%2Flucy-c050ea" alt="Wally"></a>
-  <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-5bd0f8" alt="MIT License"></a>
+  <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-5bd0f8" alt="MIT Licence"></a>
 </p>
 
 ## Overview
@@ -144,8 +144,8 @@ app.toast.success("Round won", { description = "+$250" })
 ## Features
 
 - Accordion, Alert, Arrow, Attribution, Avatar, Badge, Button, Checkbox,
-  Collapsible, DataGrid, Dialog, Effect, Gradient, Grid, Icon, Image,
-  Inline Confirm, Input, Item, Kbd, Leaderboard, Marquee, Menu, Number Field,
+  Collapsible, DataGrid, Dialog, Effect, Gradient, Grid, Icon, Icon Stack,
+  Image, Inline Confirm, Input, Item, Kbd, Leaderboard, Marquee, Menu, Number Field,
   Panel, Pressable, Progress, Radio Group, Scroll Area, Select, Separator,
   Sheet, Skeleton, Slider, Slot, SortButton, Spinner, Stack, Switch, Table,
   Tabs, Text, Toaster, Toggle, Toggle Group, Tour and Waveform.
@@ -213,5 +213,5 @@ The games and UI you build with Lucy are yours.
     </picture>
   </a>
   <br>
-  Made by <a href="https://goatsoft.io">GOATsoft</a> · <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE">MIT License</a> · <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE-ART.md">Artwork licence</a>
+  Made by <a href="https://goatsoft.io">GOATsoft</a> · <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE">MIT Licence</a> · <a href="https://github.com/goatsoft/lucy/blob/main/LICENSE-ART.md">Artwork licence</a>
 </p>
