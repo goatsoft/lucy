@@ -5,9 +5,11 @@ const { y } = useWindowScroll()
 const scrolled = computed(() => y.value > 24)
 const open = ref(false)
 const links = [
+  { label: 'Home', to: '/' },
   { label: 'About', to: '/about' },
   { label: 'Features', to: '/#features' },
   { label: 'Components', to: '/docs/components/' },
+  { label: 'Case studies', to: '/case-studies/dance-lab' },
   { label: 'Docs', to: '/docs/' },
 ]
 </script>

@@ -281,13 +281,20 @@ const install = 'Lucy = "goatsoft/lucy@0.1.0"'
           Managing Roblox UI across scattered LocalScripts gets messy fast, and rebuilding UI trees on every update hurts frame rate.
           Lucy puts one App in charge of your screens, input, and state. Instances are created once, only changed properties update, and Roblox StyleSheets handle styling.
         </p>
-        <div class="mt-8 flex justify-center">
+        <div class="mt-8 flex flex-wrap justify-center gap-3">
           <Button
             variant="glass"
             :as="RouterLink"
             to="/docs/architecture"
           >
             Architecture guide <ILcChevronRight />
+          </Button>
+          <Button
+            variant="glass"
+            :as="RouterLink"
+            to="/case-studies/dance-lab"
+          >
+            See it in Dance Lab <ILcChevronRight />
           </Button>
         </div>
       </div>

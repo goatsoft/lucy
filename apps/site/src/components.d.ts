@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Button: typeof import('./components/ui/Button.vue')['default']
+    CaseFigure: typeof import('./components/CaseFigure.vue')['default']
     ColorPalette: typeof import('./components/ColorPalette.vue')['default']
     GoatsoftLogo: typeof import('./components/GoatsoftLogo.vue')['default']
     ILcArrowUpRight: typeof import('~icons/lucide/arrow-up-right')['default']
@@ -22,12 +23,14 @@ declare module 'vue' {
     ILxEyeFilled: typeof import('~icons/lucide-extended/eye-filled')['default']
     ILxFileCodeFilled: typeof import('~icons/lucide-extended/file-code-filled')['default']
     ILxHouseDuotone: typeof import('~icons/lucide-extended/house-duotone')['default']
+    ILxHouseFilled: typeof import('~icons/lucide-extended/house-filled')['default']
     ILxMonitorDuotone: typeof import('~icons/lucide-extended/monitor-duotone')['default']
     ILxMoonDuotone: typeof import('~icons/lucide-extended/moon-duotone')['default']
     ILxSunDuotone: typeof import('~icons/lucide-extended/sun-duotone')['default']
     ISiGithub: typeof import('~icons/simple-icons/github')['default']
     LicenceDialog: typeof import('./components/LicenceDialog.vue')['default']
     Mark: typeof import('./components/Mark.vue')['default']
+    PhoneFrame: typeof import('./components/PhoneFrame.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SiteFooter: typeof import('./components/SiteFooter.vue')['default']

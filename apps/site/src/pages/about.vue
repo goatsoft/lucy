@@ -157,7 +157,13 @@ const pillars = [
               </span>
             </div>
             <p class="mt-1.5 text-sm leading-6 text-muted-foreground">
-              A dance battle rhythm game for phone, desktop and console, with its entire client UI built on Lucy. The full case study comes with the launch.
+              A dance battle rhythm game for phone, desktop and console, with its entire client UI built on Lucy.<br>
+              <RouterLink
+                to="/case-studies/dance-lab"
+                class="font-medium text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary"
+              >
+                Read the case study
+              </RouterLink>
             </p>
           </div>
         </div>
