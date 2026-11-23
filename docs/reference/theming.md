@@ -124,7 +124,8 @@ The same in every theme.
 | `FontSans`, `FontSansMedium`, `FontSansSemibold`, `FontSansBold` | Nunito, for text |
 | `FontDisplay` | Fredoka, for headings |
 | `StrokeThin`, `StrokeThick` | 1 and 2 px |
-| `FocusRing` | 3 px |
+| `FocusRing` | 3 px: the focus ring's sharp edge |
+| `FocusFeather`, `FocusHalo` | 6 and 10 px: the focus ring's softer feather and fainter halo, reaching in from its edge |
 | `PanelShadow` | 0: a [Dialog](../components/dialog.md#the-frame) or [Sheet](../components/sheet.md)'s shadow, in px right and down (0 draws none) |
 | `PanelPlateOverlap` | 14: how far a title on the edge comes down over its panel, in px (the panel's content starts that much lower, so it clears the title) |
 | `PanelTitleEdge` | 0: where dialog and sheet titles go when a panel does not say (1 puts every one on a plate on the top edge) |

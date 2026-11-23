@@ -60,13 +60,9 @@ Slider.valueHeight = 20 -- room for the value under a vertical slider
 Slider.fastAfter = 12
 Slider.fastParts = 25
 
+-- The focus ring goes round the thumb (the halo), not the whole row: the row is a ring host
+-- (ui-ring-host), so it gets no ring of its own
 local rules: { Component.Rule } = {
-	-- The focus ring goes round the thumb (the halo), not the whole row.
-	{
-		selector = ".ui-slider.ui-focus-visible::UIStroke",
-		priority = 101,
-		properties = { Transparency = 1 },
-	},
 	{
 		selector = ".ui-slider-track",
 		priority = 0,
@@ -442,6 +438,7 @@ local spec: Component.Spec = {
 			SelectionBehaviorDown = alongY,
 			Tags = {
 				"ui-slider" :: any,
+				"ui-ring-host",
 				-- Orientation and size in one binding: they rarely change.
 				function()
 					local o, s = orientation(), size()

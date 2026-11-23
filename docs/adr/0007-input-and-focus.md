@@ -23,7 +23,8 @@ Focus is Lucy's:
   a `$Ring` outline at `$FocusRing`, so UI the game built without Lucy (outside the
   style sheet) shows the same ring when selected.
 - The focused object gets the `ui-focus-visible` tag only while navigating with
-  keyboard or gamepad, and a base rule draws a themed UIStroke ring (`$Ring`).
+  keyboard or gamepad, and a base rule draws a themed UIStroke ring (`$Ring`). (0056: the
+  ring is now strokes of its own inside the focused element.)
   Text inputs show the ring whenever focused, like shadcn.
 - Base rules zero `BorderSizePixel` on every Gui class and turn off
   `AutoButtonColor` inside linked guis.

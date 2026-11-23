@@ -141,27 +141,33 @@ table.insert(Theme.baseRules, {
 	priority = RESET,
 	properties = { ScrollBarImageColor3 = "$MutedForeground", ScrollBarThickness = 6 },
 })
--- Our focus ring, shown for keyboard and gamepad navigation (see InputManager).
-table.insert(Theme.baseRules, {
-	selector = ".ui-focus-visible::UIStroke",
-	priority = FOCUS,
-	properties = {
-		Color = "$Ring",
-		Thickness = "$FocusRing",
-		Transparency = 0,
-		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-		-- Inside the edge, so a ring never spills past its element or gets clipped.
-		BorderStrokePosition = Enum.BorderStrokePosition.Inner,
-	},
-})
+-- Our focus ring, shown for keyboard and gamepad navigation: strokes of its own that InputManager
+-- puts inside what has focus, so an outline a game gives the element never covers it. Sharp at
+-- the edge, then a softer feather and a faint halo further in, so it reads as a glow and not as
+-- one more border. All inside the edge, so a ring never spills past its element or gets clipped.
+-- A game recolours it with one rule on `.its-tag > .ui-focus-ring-part`.
+for _, part in
+	{
+		{ ".ui-focus-ring", "$FocusRing", 0 },
+		{ ".ui-focus-feather", "$FocusFeather", 0.6 },
+		{ ".ui-focus-halo", "$FocusHalo", 0.85 },
+	} :: { { any } }
+do
+	table.insert(Theme.baseRules, {
+		selector = part[1],
+		priority = FOCUS,
+		properties = {
+			Color = "$Ring",
+			Thickness = part[2],
+			Transparency = part[3],
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			BorderStrokePosition = Enum.BorderStrokePosition.Inner,
+		},
+	})
+end
 
--- Rows that ring one part instead (Component.partRing): the row's own ring is
--- hidden and the part's ring shows.
-table.insert(Theme.baseRules, {
-	selector = ".ui-ring-host.ui-focus-visible::UIStroke",
-	priority = FOCUS + 1,
-	properties = { Transparency = 1 },
-})
+-- Rows that ring one part instead (Component.partRing, tagged ui-ring-host): the row gets no ring
+-- of its own (InputManager) and the part's ring shows.
 table.insert(Theme.baseRules, {
 	selector = ".ui-part-ring-corner",
 	priority = 0,

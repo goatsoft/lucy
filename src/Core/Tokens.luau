@@ -128,6 +128,9 @@ local function buildPrimitives()
 		StrokeThin = 1,
 		StrokeThick = 2,
 		FocusRing = 3, -- focus ring stroke in px
+		-- The focus ring's soft feather and fainter halo, inward from its edge, in px
+		FocusFeather = 6,
+		FocusHalo = 10,
 
 		-- Dialog and Sheet's frame (Core/PanelFrame): the shadow's offset right and down in px (0:
 		-- none), how far an edge title's plate comes down over the panel, and whether titles go on

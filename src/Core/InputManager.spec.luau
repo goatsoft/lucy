@@ -152,6 +152,123 @@ return function()
 			expect(button:HasTag("ui-focus-visible")).to.equal(false)
 		end)
 
+		-- The ring is strokes of Lucy's own inside what has focus, so a game's outline on a card (a
+		-- rule on its ::UIStroke, in the game's layer) can never hide it
+		describe("the ring's strokes", function()
+			local Component = require(script.Parent.Component)
+			-- The ring's strokes showing in `object` (they wait for their style before they show)
+			local function ringOf(object: Instance): { UIStroke }
+				Harness.flush()
+				local out = {}
+				for _, child in object:GetChildren() do
+					if child:IsA("UIStroke") and child:HasTag("ui-focus-ring-part") and child.Enabled then
+						table.insert(out, child)
+					end
+				end
+				return out
+			end
+			local function lucyButton(gui: Instance): TextButton
+				local button = Instance.new("TextButton")
+				button.Size = UDim2.fromOffset(120, 40)
+				button.Parent = gui
+				Component.claimSelection(app, button)
+				return button
+			end
+
+			it("puts a sharp ring and its soft feather in what has focus while navigating", function()
+				local gui = Harness.mount(app)
+				local button = lucyButton(gui)
+				app.input:setMode("mouse")
+				app.input:markFocus(button)
+				expect(#ringOf(button)).to.equal(0)
+				app.input:setMode("gamepad")
+				local tags = {}
+				for _, stroke in ringOf(button) do
+					for _, tag in { "ui-focus-ring", "ui-focus-feather", "ui-focus-halo" } do
+						if stroke:HasTag(tag) then
+							tags[tag] = true
+						end
+					end
+				end
+				expect(#ringOf(button)).to.equal(3)
+				expect(tags["ui-focus-ring"]).to.equal(true)
+				expect(tags["ui-focus-feather"]).to.equal(true)
+				expect(tags["ui-focus-halo"]).to.equal(true)
+			end)
+
+			it("moves with the focus and goes with the mouse", function()
+				local gui = Harness.mount(app)
+				local first = lucyButton(gui)
+				local second = lucyButton(gui)
+				app.input:setMode("keyboard")
+				app.input:markFocus(first)
+				app.input:markFocus(second)
+				expect(#ringOf(first)).to.equal(0)
+				expect(#ringOf(second)).to.equal(3)
+				app.input:setMode("mouse")
+				expect(#ringOf(second)).to.equal(0)
+				app.input:setMode("gamepad")
+				expect(#ringOf(second)).to.equal(3)
+				app.input:markFocus(nil)
+				expect(#ringOf(second)).to.equal(0)
+			end)
+
+			it("shows over a game's outline on what has focus, inside its edge", function()
+				app.theme:addRules("probe-card-outline", {
+					{
+						selector = ".probe-outlined::UIStroke",
+						priority = 1000,
+						properties = { Color = Color3.new(1, 1, 0), Thickness = 2 },
+					},
+				})
+				local gui = Harness.mount(app)
+				local card = lucyButton(gui)
+				card:AddTag("probe-outlined")
+				app.input:setMode("gamepad")
+				app.input:markFocus(card)
+				local ring: UIStroke? = nil
+				for _, stroke in ringOf(card) do
+					if stroke:HasTag("ui-focus-ring") then
+						ring = stroke
+					end
+				end
+				assert(ring, "no ring")
+				expect(Harness.colorEq(Harness.styled(ring, "Color"), app.theme:resolve("Ring"))).to.equal(
+					true
+				)
+				expect(Harness.styled(ring, "Transparency")).to.equal(0)
+				expect(Harness.styled(ring, "BorderStrokePosition")).to.equal(Enum.BorderStrokePosition.Inner)
+				-- Drawn over the card's own outline
+				expect(ring.ZIndex > 1).to.equal(true)
+			end)
+
+			it("draws none on a row that rings one part, or on UI Lucy did not build", function()
+				local gui = Harness.mount(app)
+				local row = lucyButton(gui)
+				row:AddTag("ui-ring-host")
+				local foreign = Instance.new("TextButton")
+				foreign.Parent = gui
+				app.input:setMode("gamepad")
+				app.input:markFocus(row)
+				expect(row:HasTag("ui-focus-visible")).to.equal(true)
+				expect(#ringOf(row)).to.equal(0)
+				app.input:markFocus(foreign)
+				expect(#ringOf(foreign)).to.equal(0)
+			end)
+
+			it("comes back on the next focus after what had it is destroyed", function()
+				local gui = Harness.mount(app)
+				local first = lucyButton(gui)
+				local second = lucyButton(gui)
+				app.input:setMode("gamepad")
+				app.input:markFocus(first)
+				expect(#ringOf(first)).to.equal(3)
+				first:Destroy()
+				app.input:markFocus(second)
+				expect(#ringOf(second)).to.equal(3)
+			end)
+		end)
+
 		it("tells bindings what has focus, through focusRef", function()
 			local Reactive = require(script.Parent.Reactive)
 			local gui = Harness.mount(app)

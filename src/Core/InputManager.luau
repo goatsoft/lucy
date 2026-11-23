@@ -14,9 +14,17 @@
 	Focus:
 		Roblox draws a white selection image around the selected GuiObject. App
 		replaces it with a blank one everywhere and this manager tags the selected
-		object "ui-focus-visible" (a themed UIStroke ring) only while the player is
-		navigating with keyboard or gamepad, like CSS :focus-visible. It also
-		scrolls any ScrollingFrame above it to show it (Core/Scroll).
+		object "ui-focus-visible" only while the player is navigating with keyboard
+		or gamepad, like CSS :focus-visible. It also scrolls any ScrollingFrame above
+		it to show it (Core/Scroll).
+
+		The ring itself is three UIStrokes of the manager's own put inside what has
+		focus (ui-focus-ring, ui-focus-feather, ui-focus-halo, all ui-focus-ring-part):
+		sharp at the edge and fading inward, drawn over the element's own outline. A
+		game's rule on the element's ::UIStroke (a coloured card's outline) never
+		reaches them, so the ring always shows. Their looks are style rules
+		(Core/Theme). None go on a row that rings one part (ui-ring-host) or on UI
+		Lucy did not build (it has app.selectionRing).
 
 	Following focus:
 		app.input:focusRef() is a getter bindings can read: what has focus now (an
@@ -130,6 +138,9 @@ export type InputManager = typeof(setmetatable(
 		_focusLive: boolean,
 		_holding: boolean,
 		_focusRef: Reactive.Ref<GuiObject?>,
+		_ring: { UIStroke }?,
+		_ringOn: boolean,
+		_ringStyled: boolean,
 	},
 	InputManager
 ))
@@ -271,6 +282,9 @@ function InputManager.new(app: any, options: { [string]: any }?): InputManager
 		_focusLive = false,
 		_holding = false,
 		_focusRef = Reactive.ref(nil :: GuiObject?),
+		_ring = nil :: { UIStroke }?,
+		_ringOn = false,
+		_ringStyled = false,
 	}, InputManager)
 	self:_publish()
 
@@ -366,11 +380,115 @@ local function isShown(object: GuiObject): boolean
 	return true
 end
 
+-- The ring's strokes, sharp at the edge first, then softer further in; drawn over the element's
+-- own outline (ZIndex RING_Z down)
+local RING_PARTS = { "ui-focus-ring", "ui-focus-feather", "ui-focus-halo" }
+local RING_Z = 10
+-- How many frames a new ring waits for its style before it shows anyway
+local RING_STYLE_FRAMES = 30
+
+--[[
+	The ring's strokes, made once and moved to whatever has focus. A new stroke takes a few frames
+	to get its style, and shows as a thin black line until then; a stroke moved from one element
+	to another keeps its style. So the strokes start off (Enabled is not styled, so code owns it)
+	and turn on once styled, and are only made again when what held them was destroyed.
+]]
+function InputManager._ringStrokes(self: InputManager): { UIStroke }
+	local ring = self._ring
+	if ring then
+		local alive = true
+		for _, stroke in ring do
+			if stroke.Parent == nil then
+				alive = false
+			end
+		end
+		if alive then
+			return ring
+		end
+		for _, stroke in ring do
+			stroke:Destroy()
+		end
+	end
+	local made = {}
+	for index, tag in RING_PARTS do
+		local stroke = Instance.new("UIStroke")
+		stroke.Name = "LucyFocusRing"
+		stroke.Enabled = false
+		stroke.ZIndex = RING_Z - index + 1
+		stroke:AddTag("ui-focus-ring-part")
+		stroke:AddTag(tag)
+		table.insert(made, stroke)
+	end
+	self._ring = made
+	self._ringStyled = false
+	return made
+end
+
+-- Whether the ring's style has reached its strokes: the sharp ring is past a default stroke's 1 px,
+-- or the halo is see through
+local function styled(ring: { UIStroke }): boolean
+	local thickness = ring[1]:GetStyled("Thickness")
+	local clear = ring[#ring]:GetStyled("Transparency")
+	return (type(thickness) == "number" and thickness ~= 1) or (type(clear) == "number" and clear > 0)
+end
+
+function InputManager._showRing(self: InputManager, ring: { UIStroke })
+	if self._ringStyled then
+		for _, stroke in ring do
+			stroke.Enabled = true
+		end
+		return
+	end
+	task.spawn(function()
+		local frames = 0
+		while frames < RING_STYLE_FRAMES and self._ring == ring and not styled(ring) do
+			frames += 1
+			RunService.Heartbeat:Wait()
+		end
+		if self._ring ~= ring then
+			return
+		end
+		self._ringStyled = true
+		if self._ringOn then
+			for _, stroke in ring do
+				stroke.Enabled = true
+			end
+		end
+	end)
+end
+
+function InputManager._dropRing(self: InputManager)
+	self._ringOn = false
+	local ring = self._ring
+	if ring then
+		for _, stroke in ring do
+			stroke.Enabled = false
+		end
+	end
+end
+
+-- Puts the ring's strokes in `object`, unless it rings one part instead (ui-ring-host) or Lucy
+-- did not build it (app.selectionRing rings that)
+function InputManager._drawRing(self: InputManager, object: GuiObject)
+	local blank = self.app.selectionImage
+	if object:HasTag("ui-ring-host") or blank == nil or object.SelectionImageObject ~= blank then
+		self:_dropRing()
+		return
+	end
+	local ring = self:_ringStrokes()
+	for _, stroke in ring do
+		stroke.Parent = object
+	end
+	self._ringOn = true
+	self:_showRing(ring)
+end
+
 function InputManager._clearRing(self: InputManager)
 	local focused = self._focused
 	if focused and focused.Parent then
 		focused:RemoveTag("ui-focus-visible")
 	end
+	self:_dropRing()
 end
 
 -- Records `object` as focused and shows the ring if the player is navigating.
@@ -389,8 +507,13 @@ function InputManager.markFocus(self: InputManager, object: GuiObject?)
 	end
 	if object and self:isNavigating() then
 		object:AddTag("ui-focus-visible")
+		if object ~= previous or not self._ringOn then
+			self:_drawRing(object)
+		end
 		-- The engine scrolls to the gamepad selection, but not to focus Lucy moves.
 		Scroll.reveal(object)
+	else
+		self:_dropRing()
 	end
 	-- Tiles: a closed one takes focus that lands inside it, an open one closes when focus leaves
 	if object ~= previous then
@@ -1101,6 +1224,13 @@ function InputManager.destroy(self: InputManager)
 	self._held = nil
 	self._nudged = false
 	self:_clearRing()
+	local ring = self._ring
+	self._ring = nil
+	if ring then
+		for _, stroke in ring do
+			stroke:Destroy()
+		end
+	end
 	self.maid:clean()
 	self._scopes = {}
 	self._back = {}

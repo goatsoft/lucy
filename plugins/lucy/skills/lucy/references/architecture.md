@@ -188,9 +188,15 @@ component from the focused object up with a `press(object)` method that returns
 true takes it.
 
 Roblox's own selection image is replaced with a blank frame on Lucy's components;
-Lucy draws its own ring with the `ui-focus-visible` tag only while navigating with
-keys or a pad. Everything else in PlayerGui (a game's older ScreenGuis) gets
-`app.selectionRing` instead, the same `$Ring` outline drawn by the engine.
+Lucy tags what has focus `ui-focus-visible` only while navigating with keys or a
+pad, and puts its own ring inside it: three strokes, sharp at the edge
+(`ui-focus-ring`) and softer further in (`ui-focus-feather`, `ui-focus-halo`), all
+tagged `ui-focus-ring-part`. They are not the element's own outline, so a game that
+outlines its cards still sees the ring over them. To colour the ring differently on
+one element, add a rule on `.your-tag > .ui-focus-ring-part`. Rows that ring one
+part instead (a checkbox's box, a slider's thumb) are tagged `ui-ring-host` and get
+no ring of their own. Everything else in PlayerGui (a game's older ScreenGuis) gets
+`app.selectionRing` instead, a `$Ring` outline drawn by the engine.
 
 ### Back keys
 

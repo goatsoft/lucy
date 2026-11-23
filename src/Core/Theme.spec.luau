@@ -812,16 +812,21 @@ return function()
 		end)
 	end)
 
-	it("draws every focus ring inside its element, never past its edge", function()
+	it("draws every focus ring inside its element, never past its edge, feather and halo too", function()
 		local found = 0
+		local seen = {}
 		for _, rule in Theme.baseRules do
 			local props = rule.properties or {}
-			if props.Thickness == "$FocusRing" then
+			local thickness = props.Thickness
+			if thickness == "$FocusRing" or thickness == "$FocusFeather" or thickness == "$FocusHalo" then
 				found += 1
+				seen[thickness] = true
 				expect(props.BorderStrokePosition).to.equal(Enum.BorderStrokePosition.Inner)
 			end
 		end
-		expect(found >= 2).to.equal(true)
+		expect(found >= 4).to.equal(true)
+		expect(seen["$FocusFeather"]).to.equal(true)
+		expect(seen["$FocusHalo"]).to.equal(true)
 	end)
 
 	it("draws every border inside its element, so a scroll area never clips one", function()
