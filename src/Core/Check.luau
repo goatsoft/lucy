@@ -146,6 +146,10 @@ function Check.array(check: Check, max: number?): Check
 		local count = 0
 		for key in value do
 			count += 1
+			-- stop at once: never walk more of an oversized payload than the limit
+			if count > limit then
+				return false, `should have at most {limit} items`
+			end
 			if type(key) ~= "number" or key % 1 ~= 0 or key < 1 then
 				return false, "should be a list"
 			end
@@ -155,9 +159,6 @@ function Check.array(check: Check, max: number?): Check
 			if key > count then
 				return false, "should be a list with no holes"
 			end
-		end
-		if count > limit then
-			return false, `should have at most {limit} items`
 		end
 		for i = 1, count do
 			local ok, why = check(value[i])

@@ -42,6 +42,15 @@ return function()
 		local list = Check.array(Check.number(), 3)
 		expect((list({ 1, 2 }))).to.equal(true)
 		expect((list({ 1, 2, 3, 4 }))).to.equal(false)
+		-- an oversized list fails without its items being checked
+		local seen = 0
+		local counted = Check.array(function()
+			seen += 1
+			return true
+		end, 3)
+		local big = table.create(10000, 1)
+		expect((counted(big))).to.equal(false)
+		expect(seen).to.equal(0)
 		expect((list({ 1, "x" }))).to.equal(false)
 		expect((list({ [1] = 1, [3] = 3 }))).to.equal(false)
 		-- # can report 4 here; a hole at 2 must still fail
