@@ -209,7 +209,8 @@ end
 | `profile:save()` | Queues a save. Every held profile saves every `autosave` seconds by itself |
 | `profile:release()` | The last save, letting another server load it |
 | `profile:await(timeout?)` | Yields until every save so far has landed; `false` if time ran out or the profile was lost |
-| `profiles:receipt(profile, purchaseId, grant)` | For `ProcessReceipt`: runs `grant(data)` once per purchase, and answers `true` once that is saved |
+| `profiles:receipt(profile, purchaseId, grant)` | For `ProcessReceipt`: runs `grant(data)` once per purchase, and answers `true` once that is saved. `grant` gets a copy of the data and must not wait (yield): its changes and the purchase land together, and one that waits or errors changes nothing and answers `false`, so Roblox asks again |
+| `profiles:close(timeout?)` | Releases every held profile and waits for the saves; what runs when the server closes |
 | `Lucy.Profiles.commit({ a, b })` | Saves every profile given and waits for all of them: tell players a trade is done only when it answers `true` |
 
 A claim older than `stale` seconds (autosave times three, plus a minute) is a
