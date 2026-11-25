@@ -65,6 +65,7 @@ export type Profile = typeof(setmetatable(
 		active: boolean,
 		lost: boolean,
 		profiles: any,
+		_granting: { [string]: boolean },
 	},
 	Profile
 ))
@@ -193,6 +194,14 @@ function Profiles.load(self: any, key: string): (Profile?, string?)
 	if existing then
 		return existing
 	end
+	-- A release of this key from this server (a quick leave and rejoin) must land first, or the
+	-- claim would read the data from before it and the release would then clear the new claim
+	if not self.handle:await(key, self.tries * self.wait + 30) then
+		return nil, "in use"
+	end
+	if self.held[key] then
+		return self.held[key]
+	end
 	local record, why = self:_claim(key)
 	if not record then
 		return nil, why
@@ -214,6 +223,7 @@ function Profiles.load(self: any, key: string): (Profile?, string?)
 		active = true,
 		lost = false,
 		profiles = self,
+		_granting = {},
 	}, Profile) :: any
 	self.held[key] = profile
 	return profile
@@ -234,7 +244,12 @@ local function write(profile: Profile, release: boolean)
 		self.held[profile.key] = nil
 	end
 	self.handle:update(profile.key, function(old: any)
-		if self:_heldElsewhere(old) then
+		-- Only load takes over a profile. A save writes only while the stored claim is still this
+		-- server's: another server's claim (fresh or stale) or none at all (another server took it
+		-- over and let it go) means this copy is out of date
+		local session = if type(old) == "table" then old.session else nil
+		local ours = type(session) == "table" and session.job == self.jobId
+		if not ours then
 			-- Another server holds it now: this copy must never be written again
 			if not profile.lost then
 				profile.lost = true
@@ -275,9 +290,11 @@ function Profile.release(self: Profile)
 	write(self, true)
 end
 
--- Yields until every save so far has landed (true), or `timeout` seconds pass (false)
+-- Yields until every save so far has landed (true), or `timeout` seconds pass (false). False
+-- too when the profile is lost: what it held was not saved.
 function Profile.await(self: Profile, timeout: number?): boolean
-	return self.profiles.handle:await(self.key, timeout)
+	local landed = self.profiles.handle:await(self.key, timeout)
+	return landed and not self.lost
 end
 
 -- Grants a purchase once: grant(data) runs only if this PurchaseId has not been granted,
@@ -288,15 +305,32 @@ function Profiles.receipt(self: any, profile: Profile, purchaseId: string, grant
 	if not profile.active then
 		return false
 	end
+	-- Another call for this purchase is granting it (grant yielded): wait for it, never grant twice
+	while profile._granting[purchaseId] do
+		task.wait(0.05)
+	end
 	if not table.find(profile.receipts, purchaseId) then
-		grant(profile.data)
-		table.insert(profile.receipts, purchaseId)
-		while #profile.receipts > self.receiptLimit do
-			table.remove(profile.receipts, 1)
+		if not profile.active then
+			return false
+		end
+		profile._granting[purchaseId] = true
+		local ok, err = pcall(function()
+			grant(profile.data)
+		end)
+		if ok then
+			table.insert(profile.receipts, purchaseId)
+			while #profile.receipts > self.receiptLimit do
+				table.remove(profile.receipts, 1)
+			end
+		end
+		profile._granting[purchaseId] = nil
+		if not ok then
+			self.queue.warn(`[Lucy] Profiles: granting {purchaseId} failed: {err}`)
+			return false
 		end
 		profile:save()
 	end
-	return profile:await(15) and not profile.lost
+	return profile:await(15)
 end
 
 -- Saves every profile given and waits for all of them (after a trade: tell the players it
@@ -304,15 +338,18 @@ end
 -- the gap as short as it can be; with every profile held by this server, nobody can load
 -- either side elsewhere in the meantime.
 function Profiles.commit(profiles: { Profile }, timeout: number?): boolean
+	-- Every profile checked before any is saved, so one side of a trade is never written alone
 	for _, profile in profiles do
 		if not profile.active then
 			return false
 		end
+	end
+	for _, profile in profiles do
 		profile:save()
 	end
 	local ok = true
 	for _, profile in profiles do
-		if not profile:await(timeout or 15) or profile.lost then
+		if not profile:await(timeout or 15) then
 			ok = false
 		end
 	end

@@ -162,6 +162,77 @@ return function()
 		expect(Profiles.commit({ a, b }, 1)).to.equal(false)
 	end)
 
+	it("never writes over a profile another server took over and let go", function()
+		local service = fakeService()
+		local a = server(service, "A", { stale = 100 })
+		local b = server(service, "B", { stale = 100 })
+		local old = assert(a:load("u1"))
+		now += 101
+		local fresh = assert(b:load("u1"))
+		fresh.data.cash = 5
+		fresh:release()
+		fresh:await(1)
+		-- the record now has no claim at all: A's stale copy must still not be written
+		old.data.cash = 9999
+		old:save()
+		expect(old:await(1)).to.equal(false)
+		expect(old.lost).to.equal(true)
+		expect(service.data.Profiles.u1.data.cash).to.equal(5)
+	end)
+
+	it("waits for its own release to land before loading the key again", function()
+		local service = fakeService()
+		local profiles = server(service, "A")
+		local first = assert(profiles:load("u1"))
+		first.data.cash = 7
+		first:release()
+		local again = assert(profiles:load("u1"))
+		expect(again).never.to.equal(first)
+		expect(again.data.cash).to.equal(7)
+		-- the release did not clear the new claim
+		expect(service.data.Profiles.u1.session.job).to.equal("A")
+		again.data.cash = 8
+		again:save()
+		expect(again:await(1)).to.equal(true)
+		expect(service.data.Profiles.u1.data.cash).to.equal(8)
+	end)
+
+	it("grants a purchase once even when grant yields and the receipt comes twice", function()
+		local profiles = server(fakeService(), "A")
+		local profile = assert(profiles:load("u1"))
+		local grants = 0
+		local function grant(data)
+			grants += 1
+			task.wait()
+			data.cash += 1
+		end
+		local answers = {}
+		task.spawn(function()
+			table.insert(answers, profiles:receipt(profile, "purchase-2", grant))
+		end)
+		table.insert(answers, profiles:receipt(profile, "purchase-2", grant))
+		while #answers < 2 do
+			task.wait()
+		end
+		expect(grants).to.equal(1)
+		expect(profile.data.cash).to.equal(1)
+		expect(answers[1] and answers[2]).to.equal(true)
+	end)
+
+	it("saves nothing for a trade when any side cannot be saved", function()
+		local service = fakeService()
+		local profiles = server(service, "A")
+		local a = assert(profiles:load("u1"))
+		local b = assert(profiles:load("u2"))
+		b:release()
+		b:await(1)
+		a.data.cash = 500
+		expect(Profiles.commit({ a, b }, 1)).to.equal(false)
+		profiles.queue:flush(1)
+		-- the claim from load, but not the trade's cash
+		expect(service.data.Profiles.u1.data).to.equal(nil)
+	end)
+
 	it("gives the same profile to a second load on the same server", function()
 		local profiles = server(fakeService(), "A")
 		local first = profiles:load("u1")
