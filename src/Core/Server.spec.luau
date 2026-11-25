@@ -213,4 +213,133 @@ return function()
 		expect(ok).to.equal(false)
 		expect(called).to.equal(false)
 	end)
+
+	describe("checks and rates", function()
+		local Check = require(script.Parent.Check)
+		local now, rejected, checked
+		beforeEach(function()
+			now = 0
+			rejected = {}
+			checked = Server.new({
+				transport = fakeTransport(),
+				players = false,
+				autoFlush = false,
+				clock = function()
+					return now
+				end,
+				onReject = function(_, name, why)
+					table.insert(rejected, { name, why })
+				end,
+			})
+		end)
+		afterEach(function()
+			checked:destroy()
+		end)
+
+		it("runs the handler only when every argument passes its check", function()
+			local a = player(1)
+			checked:_join(a)
+			local calls = 0
+			checked:handle("buy", function()
+				calls += 1
+			end, { check = { Check.string({ max = 8 }), Check.number({ min = 1, max = 5 }) } })
+			expect((checked:_request(a, "buy", "glock", 2))).to.equal(true)
+			expect((checked:_request(a, "buy", "glock", 0 / 0))).to.equal(false)
+			expect((checked:_request(a, "buy", { "glock" }, 2))).to.equal(false)
+			expect((checked:_request(a, "buy", "glock", 2, "extra"))).to.equal(false)
+			expect(calls).to.equal(1)
+			task.wait()
+			expect(#rejected).to.equal(3)
+		end)
+
+		it("limits how often one player may ask, refilling over time", function()
+			local a, b = player(1), player(2)
+			checked:_join(a)
+			checked:_join(b)
+			checked:handle("fire", function() end, { check = {}, rate = { perSecond = 2, burst = 2 } })
+			expect((checked:_request(a, "fire"))).to.equal(true)
+			expect((checked:_request(a, "fire"))).to.equal(true)
+			expect((checked:_request(a, "fire"))).to.equal(false)
+			expect((checked:_request(b, "fire"))).to.equal(true) -- another player's bucket
+			now += 0.5
+			expect((checked:_request(a, "fire"))).to.equal(true)
+		end)
+
+		it("keeps the reason a handler failed on the server", function()
+			local a = player(1)
+			checked:_join(a)
+			checked:handle("boom", function()
+				error("secret path in ServerScriptService")
+			end)
+			local ok, message = checked:_request(a, "boom")
+			expect(ok).to.equal(false)
+			expect((string.find(message, "secret", 1, true))).to.equal(nil)
+		end)
+
+		it("refuses an unchecked handler on a strict server", function()
+			local strict =
+				Server.new({ transport = fakeTransport(), players = false, autoFlush = false, strict = true })
+			expect(function()
+				strict:handle("vote", function() end)
+			end).to.throw()
+			strict:handle("vote", function() end, { check = {} })
+			strict:destroy()
+		end)
+
+		it("takes a request only on its own channel", function()
+			local a = player(1)
+			checked:_join(a)
+			checked:handle("aim", function() end, { check = { Check.vector() }, unreliable = true })
+			checked:handle("vote", function() end, { check = {} })
+			expect((checked:_requestStream(a, "aim", Vector3.zero))).to.equal(true)
+			expect((checked:_request(a, "aim", Vector3.zero))).to.equal(false)
+			expect((checked:_requestStream(a, "vote"))).to.equal(false)
+		end)
+	end)
+
+	it("streams to one ready player or to every ready player", function()
+		local streamed = {}
+		local t = fakeTransport()
+		function t.stream(who: any, name: string, ...)
+			table.insert(streamed, { who or "all", name, ... })
+		end
+		local s = Server.new({ transport = t, players = false, autoFlush = false })
+		local a, b = player(1), player(2)
+		s:_join(a)
+		s:_join(b)
+		s:_ready(a)
+		s:stream(b, "hit") -- not ready: dropped
+		s:stream(a, "hit", 3)
+		s:stream(nil, "shot")
+		expect(#streamed).to.equal(2)
+		expect(streamed[1][1]).to.equal(a)
+		expect(streamed[1][3]).to.equal(3)
+		expect(streamed[2][1]).to.equal("all")
+		s:destroy()
+	end)
+
+	it("compares shared state once for every player, and still catches up a late one", function()
+		local a, b, c = player(1), player(2), player(3)
+		for _, p in { a, b } do
+			server:_join(p)
+			server:_ready(p)
+		end
+		server.state:set("shared.round", 1)
+		server:flush()
+		-- one list of ops, sent to both
+		local last = transport.sent[a][#transport.sent[a]]
+		expect(last.shared[1][1]).to.equal("round")
+		expect(mirror(transport, b).shared.round).to.equal(1)
+
+		server:_join(c)
+		server:_ready(c)
+		server.state:set("shared.round", 2)
+		server.state:set("shared.phase", "Live")
+		server:flush()
+		for _, p in { a, b, c } do
+			local seen = mirror(transport, p).shared
+			expect(seen.round).to.equal(2)
+			expect(seen.phase).to.equal("Live")
+		end
+	end)
 end

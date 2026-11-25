@@ -8,6 +8,8 @@
 		app.state:ref("server.me.coins")     -- what it keeps for this player
 		app.server:send("vote", "House")     -- a request; nothing comes back
 		local ok = app.server:call("buy", "moonwalk") -- waits for the handler's answer
+		app.server:stream("aim", hit)          -- unreliable: may be dropped, the next replaces it
+		app.server:onStream("shot", function(from, to) end) -- server:stream(...) from the server
 
 	The link finds the server's remotes ("<namePrefix>Server" in ReplicatedStorage)
 	without holding up App.new, tells the server it is ready, and writes everything the
@@ -17,7 +19,8 @@
 	options (App.new's `server`): true, or
 		namePrefix  the server's namePrefix ("Lucy_")
 		parent      where to look for the remotes folder (ReplicatedStorage)
-		transport   { send(kind, ...), call(name, ...) } instead of remotes (specs)
+		transport   { send(kind, ...), call(name, ...), stream(name, ...)? } instead of
+		            remotes (specs); the link's _stream(name, ...) is what arrives
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -28,6 +31,7 @@ ServerLink.__index = ServerLink
 type Transport = {
 	send: (kind: string, ...any) -> (),
 	call: (name: string, ...any) -> (boolean, any),
+	stream: ((name: string, ...any) -> ())?,
 }
 
 export type ServerLink = typeof(setmetatable(
@@ -35,6 +39,7 @@ export type ServerLink = typeof(setmetatable(
 		app: any,
 		_transport: Transport?,
 		_queue: { { n: number, [number]: any } },
+		_listeners: { [string]: { (...any) -> () } },
 		_connections: { RBXScriptConnection },
 		destroyed: boolean?,
 	},
@@ -49,6 +54,7 @@ function ServerLink.new(app: any, options: any): ServerLink
 	local self: ServerLink = setmetatable({} :: any, ServerLink)
 	self.app = app
 	self._queue = {}
+	self._listeners = {}
 	self._connections = {}
 
 	if opts.transport then
@@ -60,8 +66,17 @@ function ServerLink.new(app: any, options: any): ServerLink
 			local folder = parent:WaitForChild(name)
 			local sync = folder:WaitForChild("Sync") :: RemoteEvent
 			local call = folder:WaitForChild("Call") :: RemoteFunction
+			local stream = folder:FindFirstChild("Stream") :: UnreliableRemoteEvent?
 			if self.destroyed then
 				return
+			end
+			if stream then
+				table.insert(
+					self._connections,
+					stream.OnClientEvent:Connect(function(name, ...)
+						self:_stream(name, ...)
+					end)
+				)
 			end
 			table.insert(
 				self._connections,
@@ -76,6 +91,11 @@ function ServerLink.new(app: any, options: any): ServerLink
 				call = function(requestName: string, ...)
 					return call:InvokeServer(requestName, ...)
 				end,
+				stream = if stream
+					then function(requestName: string, ...)
+						stream:FireServer(requestName, ...)
+					end
+					else nil,
 			})
 		end)
 	end
@@ -114,6 +134,48 @@ function ServerLink.call(self: ServerLink, name: string, ...): any
 		error(`[Lucy] server request "{name}" failed: {result}`, 2)
 	end
 	return result
+end
+
+-- Sends a request on the unreliable channel (a handler with unreliable = true). It may be
+-- dropped, and is dropped while the link is still connecting: send what the next one replaces.
+function ServerLink.stream(self: ServerLink, name: string, ...)
+	local transport = self._transport
+	if transport and transport.stream then
+		transport.stream(name, ...)
+	end
+end
+
+-- Calls fn(...) whenever the server streams `name` (server:stream). Returns a disconnect.
+function ServerLink.onStream(self: ServerLink, name: string, fn: (...any) -> ()): () -> ()
+	local list = self._listeners[name]
+	if not list then
+		list = {}
+		self._listeners[name] = list
+	end
+	table.insert(list, fn)
+	return function()
+		local current = self._listeners[name]
+		if current then
+			local index = table.find(current, fn)
+			if index then
+				table.remove(current, index)
+			end
+		end
+	end
+end
+
+-- What arrived on the unreliable channel
+function ServerLink._stream(self: ServerLink, name: any, ...)
+	if type(name) ~= "string" then
+		return
+	end
+	local list = self._listeners[name]
+	if not list then
+		return
+	end
+	for _, fn in table.clone(list) do
+		task.spawn(fn, ...)
+	end
 end
 
 local function apply(state: any, base: string, ops: { any })
@@ -175,6 +237,7 @@ function ServerLink.destroy(self: ServerLink)
 		connection:Disconnect()
 	end
 	self._connections = {}
+	self._listeners = {}
 end
 ServerLink.Destroy = ServerLink.destroy
 
