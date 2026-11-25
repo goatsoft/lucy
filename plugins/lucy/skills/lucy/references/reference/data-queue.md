@@ -177,7 +177,11 @@ local profiles = Lucy.Profiles.new(queue, "Profiles", {
 })
 
 Players.PlayerAdded:Connect(function(player)
-    local profile, why = profiles:load(`u{player.UserId}`)
+    local profile, why = profiles:load(`u{player.UserId}`) -- yields
+    if profile and not player.Parent then
+        profile:release() -- they left while it loaded: let it go, or it stays claimed
+        return
+    end
     if not profile then
         player:Kick(if why == "in use" then "Your data is still saving. Join again in a moment." else "Could not load your data.")
         return
@@ -204,7 +208,7 @@ end
 | `profile.data` | The game's data. Change it in place |
 | `profile:save()` | Queues a save. Every held profile saves every `autosave` seconds by itself |
 | `profile:release()` | The last save, letting another server load it |
-| `profile:await(timeout?)` | Yields until every save so far has landed |
+| `profile:await(timeout?)` | Yields until every save so far has landed; `false` if time ran out or the profile was lost |
 | `profiles:receipt(profile, purchaseId, grant)` | For `ProcessReceipt`: runs `grant(data)` once per purchase, and answers `true` once that is saved |
 | `Lucy.Profiles.commit({ a, b })` | Saves every profile given and waits for all of them: tell players a trade is done only when it answers `true` |
 
