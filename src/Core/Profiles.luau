@@ -43,16 +43,22 @@
 		tries      how many times load reads a claimed profile before "in use" (6)
 		wait       seconds between those reads (2.5)
 		receipts   how many PurchaseIds a profile remembers (100)
-		jobId      this server's id (game.JobId, or "studio" in Studio)
+		jobId      this server's id (game.JobId; in Studio, where JobId is empty, "studio-" and an
+		           id made once per session, so two Studio sessions never share a claim)
 		bindToClose  false to leave BindToClose alone (specs)
 		autoRun    false: no autosave loop (specs)
 		time, sleep  wall clock seconds and a yield (specs)
 ]]
 
+local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
 local Profiles = {}
 Profiles.__index = Profiles
+
+-- This server's id: its JobId, or in Studio (no JobId) one made once for the session and shared by
+-- every Profiles in it
+local SERVER_ID = if game.JobId ~= "" then game.JobId else "studio-" .. HttpService:GenerateGUID(false)
 
 local Profile = {}
 Profile.__index = Profile
@@ -65,8 +71,6 @@ export type Profile = typeof(setmetatable(
 		active: boolean,
 		lost: boolean,
 		profiles: any,
-		_granting: { [string]: boolean },
-		_releasing: boolean,
 	},
 	Profile
 ))
@@ -85,7 +89,7 @@ end
 function Profiles.new(queue: any, name: string, options: { [string]: any }?): any
 	local opts: { [string]: any } = options or {}
 	local autosave = opts.autosave or 60
-	local jobId = opts.jobId or (if game.JobId ~= "" then game.JobId else "studio")
+	local jobId = opts.jobId or SERVER_ID
 	local self = setmetatable({
 		queue = queue,
 		handle = queue:store(name),
@@ -120,8 +124,7 @@ function Profiles.new(queue: any, name: string, options: { [string]: any }?): an
 	end
 	if opts.bindToClose ~= false then
 		game:BindToClose(function()
-			self:releaseAll()
-			queue:flush(queue.closeTimeout)
+			self:close(queue.closeTimeout)
 		end)
 	end
 	return self
@@ -195,6 +198,7 @@ end
 -- Loads and holds the profile at key (yields). (profile) or (nil, "in use" | "failed").
 -- Loading a key this server already holds answers the same profile.
 function Profiles.load(self: any, key: string): (Profile?, string?)
+	local waitFor = self.tries * self.wait + 30
 	local existing = self.held[key]
 	if existing then
 		return existing
@@ -203,7 +207,6 @@ function Profiles.load(self: any, key: string): (Profile?, string?)
 	-- claim would read the data from before it and the release would then clear the new claim.
 	-- A release whose writes all gave up (DataStores down) is written again now, not left to
 	-- block the key for good.
-	local waitFor = self.tries * self.wait + 30
 	if not self.handle:await(key, waitFor) then
 		local released = self.released[key]
 		if released and self:_gaveUp(key) then
@@ -240,8 +243,6 @@ function Profiles.load(self: any, key: string): (Profile?, string?)
 		active = true,
 		lost = false,
 		profiles = self,
-		_granting = {},
-		_releasing = false,
 	}, Profile) :: any
 	self.held[key] = profile
 	return profile
@@ -338,22 +339,7 @@ end
 -- The last save, letting the profile go so another server can load it. The profile is no
 -- longer held: drop references to it.
 function Profile.release(self: Profile)
-	if self._releasing or not self.active then
-		return
-	end
-	if next(self._granting) == nil then
-		write(self, true)
-		return
-	end
-	-- A purchase is being granted (grant yielded): its reward and PurchaseId must be in the last
-	-- save, so let go once it is done. No new receipt starts meanwhile.
-	self._releasing = true
-	task.spawn(function()
-		while next(self._granting) ~= nil do
-			task.wait(0.05)
-		end
-		write(self, true)
-	end)
+	write(self, true)
 end
 
 -- Yields until every save so far has landed (true), or `timeout` seconds pass (false). False
@@ -363,36 +349,45 @@ function Profile.await(self: Profile, timeout: number?): boolean
 	return landed and not self.lost
 end
 
--- Grants a purchase once: grant(data) runs only if this PurchaseId has not been granted,
--- then the profile is saved. True once the grant is saved (answer PurchaseGranted), false
--- if it is not saved yet (answer NotProcessedYet; Roblox asks again, and it is not granted
--- twice).
+-- Grants a purchase once: grant(data) runs only if this PurchaseId has not been granted, then the
+-- profile is saved. True once the grant is saved (answer PurchaseGranted), false if it is not
+-- saved yet (answer NotProcessedYet; Roblox asks again, and it is not granted twice).
+--
+-- grant gets a copy of the data and must not yield. Its changes and the PurchaseId go into the
+-- profile together, in one step with no yield between, so no save ever holds the reward without
+-- the receipt (or the receipt without the reward). A grant that errors or yields changes nothing
+-- and answers false. A grant may replace nested tables: keep no references into profile.data
+-- across it.
 function Profiles.receipt(self: any, profile: Profile, purchaseId: string, grant: (data: any) -> ()): boolean
-	if not profile.active or profile._releasing then
-		return false -- NotProcessedYet: Roblox asks again, wherever the player is next
-	end
-	-- Another call for this purchase is granting it (grant yielded): wait for it, never grant twice
-	while profile._granting[purchaseId] do
-		task.wait(0.05)
+	if not profile.active then
+		return false
 	end
 	if not table.find(profile.receipts, purchaseId) then
-		if not profile.active then
+		local staged = deepCopy(profile.data)
+		local thread = coroutine.create(grant)
+		local ok, err = coroutine.resume(thread, staged)
+		if coroutine.status(thread) ~= "dead" then
+			coroutine.close(thread)
+			self.queue.warn(`[Lucy] Profiles: granting {purchaseId} yielded; a grant must not wait`)
 			return false
 		end
-		profile._granting[purchaseId] = true
-		local ok, err = pcall(function()
-			grant(profile.data)
-		end)
-		if ok then
-			table.insert(profile.receipts, purchaseId)
-			while #profile.receipts > self.receiptLimit do
-				table.remove(profile.receipts, 1)
-			end
-		end
-		profile._granting[purchaseId] = nil
 		if not ok then
 			self.queue.warn(`[Lucy] Profiles: granting {purchaseId} failed: {err}`)
 			return false
+		end
+		-- The grant and its receipt, together
+		local data = profile.data
+		for key in data do
+			if staged[key] == nil then
+				data[key] = nil
+			end
+		end
+		for key, value in staged do
+			data[key] = value
+		end
+		table.insert(profile.receipts, purchaseId)
+		while #profile.receipts > self.receiptLimit do
+			table.remove(profile.receipts, 1)
 		end
 		profile:save()
 	end
@@ -434,6 +429,13 @@ function Profiles.releaseAll(self: any)
 	for _, profile: any in table.clone(self.held) do
 		profile:release()
 	end
+end
+
+-- Releases every held profile and waits at most `timeout` seconds for every write to land. True
+-- when all is saved. What BindToClose runs.
+function Profiles.close(self: any, timeout: number?): boolean
+	self:releaseAll()
+	return self.queue:flush(timeout or self.queue.closeTimeout)
 end
 
 function Profiles.destroy(self: any)

@@ -198,28 +198,6 @@ return function()
 		expect(service.data.Profiles.u1.data.cash).to.equal(8)
 	end)
 
-	it("grants a purchase once even when grant yields and the receipt comes twice", function()
-		local profiles = server(fakeService(), "A")
-		local profile = assert(profiles:load("u1"))
-		local grants = 0
-		local function grant(data)
-			grants += 1
-			task.wait()
-			data.cash += 1
-		end
-		local answers = {}
-		task.spawn(function()
-			table.insert(answers, profiles:receipt(profile, "purchase-2", grant))
-		end)
-		table.insert(answers, profiles:receipt(profile, "purchase-2", grant))
-		while #answers < 2 do
-			task.wait()
-		end
-		expect(grants).to.equal(1)
-		expect(profile.data.cash).to.equal(1)
-		expect(answers[1] and answers[2]).to.equal(true)
-	end)
-
 	it("saves nothing for a trade when any side cannot be saved", function()
 		local service = fakeService()
 		local profiles = server(service, "A")
@@ -247,29 +225,59 @@ return function()
 		expect(again.data.cash).to.equal(9)
 	end)
 
-	it("lets go only once a purchase being granted is in the last save", function()
+	it("grants nothing when grant yields or errors, so a retry grants it once", function()
 		local service = fakeService()
 		local profiles = server(service, "A")
 		local profile = assert(profiles:load("u1"))
-		local answer
-		task.spawn(function()
-			answer = profiles:receipt(profile, "purchase-3", function(data)
-				task.wait()
-				task.wait()
-				data.cash += 25
-			end)
-		end)
-		profile:release() -- the player leaves mid grant
-		expect(profiles:receipt(profile, "purchase-4", function() end)).to.equal(false)
-		while answer == nil or profile.active do -- the grant, then the release it held back
+		expect(profiles:receipt(profile, "purchase-2", function(data)
+			data.cash += 10
 			task.wait()
-		end
-		profiles.queue:flush(1)
-		expect(answer).to.equal(true)
+			data.cash += 10
+		end)).to.equal(false)
+		expect(profiles:receipt(profile, "purchase-2", function(data)
+			data.cash += 10
+			error("half way")
+		end)).to.equal(false)
+		-- neither touched the data nor recorded the purchase
+		expect(profile.data.cash).to.equal(0)
+		expect(table.find(profile.receipts, "purchase-2")).to.equal(nil)
+		-- Roblox asks again: granted once, the reward and the receipt saved together
+		expect(profiles:receipt(profile, "purchase-2", function(data)
+			data.cash += 10
+		end)).to.equal(true)
 		local record = service.data.Profiles.u1
-		expect(record.data.cash).to.equal(25)
-		expect(record.receipts[1]).to.equal("purchase-3")
-		expect(record.session).to.equal(nil)
+		expect(record.data.cash).to.equal(10)
+		expect(record.receipts[1]).to.equal("purchase-2")
+	end)
+
+	it("releases and saves every held profile on close", function()
+		local service = fakeService()
+		local profiles = server(service, "A")
+		local a = assert(profiles:load("u1"))
+		local b = assert(profiles:load("u2"))
+		a.data.cash = 1
+		b.data.cash = 2
+		expect(profiles:close(2)).to.equal(true)
+		expect(service.data.Profiles.u1.data.cash).to.equal(1)
+		expect(service.data.Profiles.u2.session).to.equal(nil)
+		expect(profiles:get("u1")).to.equal(nil)
+	end)
+
+	it("gives each Studio session its own id, shared by every Profiles in it", function()
+		local queue = DataQueue.new({
+			service = fakeService(),
+			inStudio = true,
+			autoRun = false,
+			bindToClose = false,
+			warn = function() end,
+		})
+		local one = Profiles.new(queue, "One", { autoRun = false, bindToClose = false })
+		local two = Profiles.new(queue, "Two", { autoRun = false, bindToClose = false })
+		expect(one.jobId).to.equal(two.jobId)
+		if game.JobId == "" then
+			expect(string.sub(one.jobId, 1, 7)).to.equal("studio-")
+			expect(#one.jobId > 7).to.equal(true)
+		end
 	end)
 
 	it("gives the same profile to a second load on the same server", function()
