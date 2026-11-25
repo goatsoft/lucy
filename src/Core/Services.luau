@@ -149,6 +149,8 @@ function Services.run(self: any)
 				error(`[Lucy] Services: "{id}" failed to init: {err}`, 0)
 			end
 			if coroutine.status(thread) ~= "dead" then
+				-- never let it carry on later, after start up has failed
+				coroutine.close(thread)
 				error(`[Lucy] Services: "{id}" yielded in init; wait in start instead`, 0)
 			end
 		end

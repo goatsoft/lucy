@@ -60,15 +60,21 @@ return function()
 		end).to.throw()
 
 		local yielding = quiet()
+		local resumed = false
 		yielding:add({
 			name = "Slow",
 			init = function()
 				task.wait()
+				resumed = true
 			end,
 		})
 		expect(function()
 			yielding:run()
 		end).to.throw()
+		-- the init is stopped, not left to run after start up failed
+		task.wait()
+		task.wait()
+		expect(resumed).to.equal(false)
 	end)
 
 	it("warns about a start that fails and starts the rest", function()
