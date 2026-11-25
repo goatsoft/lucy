@@ -37,6 +37,12 @@ To write your own composables, see [Share logic with composables](../../guide/co
 | [`useCount`](use-count.md) | Animates a number smoothly toward a target value |
 | [`useRequest`](use-request.md) | Calls the server, keeps the answer and requests again when inputs change |
 | [`useIntersect`](use-intersect.md) | Whether something has been scrolled near yet, for building it only then |
+| [`useDelayGroup`](use-delay-group.md) | Shares an open delay and warm skip window across tooltips |
+| [`useDismiss`](use-dismiss.md) | Closes floating content on Back or on a press outside it |
+| [`useFocus`](use-focus.md) | Tracks whether keyboard or gamepad focus is on a control or inside it |
+| [`useHover`](use-hover.md) | Tracks pointer hover over a target with open and close delays |
+| [`usePress`](use-press.md) | Tracks hold, long-press or toggle presses on a control |
+| [`useProximity`](use-proximity.md) | Tracks whether the local character is within a stud distance of a world target |
 
 ## Lifetime and ownership
 

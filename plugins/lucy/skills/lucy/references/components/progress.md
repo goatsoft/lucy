@@ -34,6 +34,11 @@ app.state:set("ui.hype.value", 75)
 | `value` | number | `0` | yes | How full the bar is. Kept between 0 and `max` |
 | `max` | number | `100` | yes | The value of a full bar |
 | `variant` | string | `"default"` | yes | The bar's colour: `default`, `success`, `warning` or `destructive` |
+| `shape` | string | `"bar"` | | `"bar"` for a horizontal bar, or `"circle"` for a ring that fills clockwise |
+| `size` | number or string | `34` | | Ring diameter in pixels (`sm` `28`, `md` `34`, `lg` `40`), with `shape = "circle"` |
+| `thickness` | number | `$StrokeThick` | | Ring stroke thickness in pixels, with `shape = "circle"` |
+| `trackVisible` | boolean or getter | `true` | | Shows or hides the ring track while keeping `children` visible |
+| `children` / `content` | any | | | Components centred inside the ring (such as a circular [Kbd](kbd.md)) |
 | `visible` | boolean | `true` | yes | Shows or hides the bar |
 | `height` | number | `8` | | The bar's height in pixels |
 | `steps` | number | none | | Makes the bar a rail of this many numbered markers. See [Stepped](#stepped) |
@@ -106,6 +111,40 @@ for _, asset in clubAssets do
     ContentProvider:PreloadAsync({ asset })
     loaded(loaded() + 1)
 end
+```
+
+## Circular
+
+With `shape = "circle"`, Progress draws a clockwise ring around any `children`
+or `content` placed in its centre, such as a circular [Kbd](kbd.md) key cap for
+a hold action or timer:
+
+```luau
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space4",
+    align = "center",
+    children = {
+        Lucy.Progress.new({
+            shape = "circle",
+            size = 36,
+            value = 65,
+            children = {
+                Lucy.Kbd.new({ keyboard = Enum.KeyCode.E, shape = "circle" }),
+            },
+        }),
+        Lucy.Progress.new({
+            shape = "circle",
+            size = 36,
+            value = 80,
+            variant = "success",
+            children = {
+                Lucy.Text.new({ text = "80%", variant = "small", autoWidth = true }),
+            },
+        }),
+    },
+    Parent = parent,
+})
 ```
 
 ## Preview

@@ -1,0 +1,65 @@
+return function()
+	local Composables = require(script.Parent)
+	local Reactive = require(script.Parent.Parent.Core.Reactive)
+	local Harness = require(script.Parent.Parent.Testing.Harness)
+
+	local app, cleanup
+	beforeEach(function()
+		app, cleanup = Harness.app()
+	end)
+	afterEach(function()
+		cleanup()
+	end)
+
+	describe("useDismiss", function()
+		it("needs an owner", function()
+			expect(function()
+				Composables.useDismiss(app, Reactive.ref(true))
+			end).to.throw()
+		end)
+
+		it("closes on back while open", function()
+			local open = Reactive.ref(true)
+			local scope = Reactive.effectScope(true)
+			scope:run(function()
+				Composables.useDismiss(app, open)
+			end)
+			expect(app.input:back()).to.equal(true)
+			expect(open()).to.equal(false)
+			expect(app.input:back()).to.equal(false)
+			scope:stop()
+		end)
+
+		it("leaves back alone with back = false", function()
+			local open = Reactive.ref(true)
+			local scope = Reactive.effectScope(true)
+			scope:run(function()
+				Composables.useDismiss(app, open, { back = false })
+			end)
+			expect(app.input:back()).to.equal(false)
+			expect(open()).to.equal(true)
+			scope:stop()
+		end)
+
+		it("closes on a press outside what it keeps, not on one inside", function()
+			local open = Reactive.ref(true)
+			local inside = Instance.new("Frame")
+			local dismiss
+			local scope = Reactive.effectScope(true)
+			scope:run(function()
+				dismiss = Composables.useDismiss(app, open, {
+					inside = { inside },
+					hits = function(object, point)
+						return object == inside and point.X < 10
+					end,
+				})
+			end)
+			dismiss.press(Vector2.new(5, 5))
+			expect(open()).to.equal(true)
+			dismiss.press(Vector2.new(50, 5))
+			expect(open()).to.equal(false)
+			scope:stop()
+			inside:Destroy()
+		end)
+	end)
+end

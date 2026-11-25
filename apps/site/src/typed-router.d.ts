@@ -283,6 +283,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/prompt': RouteRecordInfo<
+      '/docs/components/prompt',
+      '/docs/components/prompt',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/radio-group': RouteRecordInfo<
       '/docs/components/radio-group',
       '/docs/components/radio-group',
@@ -405,6 +412,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/components/toggle-group': RouteRecordInfo<
       '/docs/components/toggle-group',
       '/docs/components/toggle-group',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/tooltip': RouteRecordInfo<
+      '/docs/components/tooltip',
+      '/docs/components/tooltip',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -570,6 +584,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/recipes/proximity-interactions': RouteRecordInfo<
+      '/docs/recipes/proximity-interactions',
+      '/docs/recipes/proximity-interactions',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/recipes/save-data': RouteRecordInfo<
       '/docs/recipes/save-data',
       '/docs/recipes/save-data',
@@ -654,9 +675,23 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/composables/use-delay-group': RouteRecordInfo<
+      '/docs/reference/composables/use-delay-group',
+      '/docs/reference/composables/use-delay-group',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/composables/use-density': RouteRecordInfo<
       '/docs/reference/composables/use-density',
       '/docs/reference/composables/use-density',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-dismiss': RouteRecordInfo<
+      '/docs/reference/composables/use-dismiss',
+      '/docs/reference/composables/use-dismiss',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -671,6 +706,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/reference/composables/use-fit': RouteRecordInfo<
       '/docs/reference/composables/use-fit',
       '/docs/reference/composables/use-fit',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-focus': RouteRecordInfo<
+      '/docs/reference/composables/use-focus',
+      '/docs/reference/composables/use-focus',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -703,6 +745,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/composables/use-hover': RouteRecordInfo<
+      '/docs/reference/composables/use-hover',
+      '/docs/reference/composables/use-hover',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/composables/use-intersect': RouteRecordInfo<
       '/docs/reference/composables/use-intersect',
       '/docs/reference/composables/use-intersect',
@@ -713,6 +762,20 @@ declare module 'vue-router/auto-routes' {
     '/docs/reference/composables/use-metric': RouteRecordInfo<
       '/docs/reference/composables/use-metric',
       '/docs/reference/composables/use-metric',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-press': RouteRecordInfo<
+      '/docs/reference/composables/use-press',
+      '/docs/reference/composables/use-press',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/reference/composables/use-proximity': RouteRecordInfo<
+      '/docs/reference/composables/use-proximity',
+      '/docs/reference/composables/use-proximity',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -1123,6 +1186,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/prompt.md': {
+      routes:
+        | '/docs/components/prompt'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/radio-group.md': {
       routes:
         | '/docs/components/radio-group'
@@ -1262,6 +1333,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/toggle-group.md': {
       routes:
         | '/docs/components/toggle-group'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/tooltip.md': {
+      routes:
+        | '/docs/components/tooltip'
       views:
         | never
       pathParamNames:
@@ -1451,6 +1530,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/recipes/proximity-interactions.md': {
+      routes:
+        | '/docs/recipes/proximity-interactions'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/recipes/save-data.md': {
       routes:
         | '/docs/recipes/save-data'
@@ -1547,9 +1634,25 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/reference/composables/use-delay-group.md': {
+      routes:
+        | '/docs/reference/composables/use-delay-group'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/reference/composables/use-density.md': {
       routes:
         | '/docs/reference/composables/use-density'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-dismiss.md': {
+      routes:
+        | '/docs/reference/composables/use-dismiss'
       views:
         | never
       pathParamNames:
@@ -1566,6 +1669,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/composables/use-fit.md': {
       routes:
         | '/docs/reference/composables/use-fit'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-focus.md': {
+      routes:
+        | '/docs/reference/composables/use-focus'
       views:
         | never
       pathParamNames:
@@ -1603,6 +1714,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/reference/composables/use-hover.md': {
+      routes:
+        | '/docs/reference/composables/use-hover'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/reference/composables/use-intersect.md': {
       routes:
         | '/docs/reference/composables/use-intersect'
@@ -1614,6 +1733,22 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/composables/use-metric.md': {
       routes:
         | '/docs/reference/composables/use-metric'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-press.md': {
+      routes:
+        | '/docs/reference/composables/use-press'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/composables/use-proximity.md': {
+      routes:
+        | '/docs/reference/composables/use-proximity'
       views:
         | never
       pathParamNames:

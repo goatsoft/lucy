@@ -79,6 +79,7 @@ Kbd.names = {
 }
 
 Kbd.variants = { "color", "mono" }
+Kbd.shapes = { "default", "circle" }
 
 -- Face buttons by controller, and the colour each is printed in.
 Kbd.faces = {
@@ -97,6 +98,7 @@ Kbd.faceColours = {
 }
 
 Kbd.glyphSize = 20
+Kbd.circleSize = 24
 Kbd.scale = { default = 1, touch = 1, tv = 1.25 }
 
 Kbd.rules = {
@@ -110,6 +112,16 @@ Kbd.rules = {
 		selector = ".ui-kbd::UIPadding",
 		priority = 0,
 		properties = { PaddingLeft = "$Space1", PaddingRight = "$Space1" },
+	},
+	{
+		selector = ".ui-kbd.ui-kbd-circle::UICorner",
+		priority = 5,
+		properties = { CornerRadius = "$RadiusFull" },
+	},
+	{
+		selector = ".ui-kbd.ui-kbd-circle::UIPadding",
+		priority = 5,
+		properties = { PaddingLeft = "$Space0", PaddingRight = "$Space0" },
 	},
 	-- A controller picture brings its own shape.
 	{ selector = ".ui-kbd.ui-kbd-glyph", priority = 10, properties = { BackgroundTransparency = 1 } },
@@ -214,13 +226,29 @@ local function checkVariant(variant: string)
 	end
 end
 
+local function checkShape(shape: string)
+	if not table.find(Kbd.shapes, shape) then
+		error(`[Lucy] unknown Kbd shape "{shape}" (expected default or circle)`, 0)
+	end
+end
+
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "kbd",
-	defaults = { keyboard = "", gamepad = "", touch = "", action = "", variant = "color", visible = true },
+	defaults = {
+		keyboard = "",
+		gamepad = "",
+		touch = "",
+		action = "",
+		variant = "color",
+		shape = "default",
+		visible = true,
+	},
 	rules = Kbd.rules,
 	render = function(h)
+		local p: Component.Props = h.props
 		checkVariant(h:get("variant"))
+		checkShape(h:get("shape"))
 		local rawKeyboard, rawGamepad, touch, visible =
 			h:ref("keyboard"), h:ref("gamepad"), h:ref("touch"), h:ref("visible")
 		local action = h:ref("action")
@@ -237,6 +265,7 @@ local spec: Component.Spec = {
 		end
 		local keyboard, gamepad = fromAction(rawKeyboard), fromAction(rawGamepad)
 		local variant = h:ref("variant")
+		local shape = h:ref("shape")
 		local inputMode = h.app.state:ref("input.mode")
 		local hasKeyboard = h.app.state:ref("input.keyboard")
 		-- No keyboard keys on a device with no keyboard, even after a key press (Studio's device
@@ -250,6 +279,21 @@ local spec: Component.Spec = {
 			return m
 		end
 		local density = Composables.useDensity(h.app)
+
+		local function isCircle(): boolean
+			local s = shape()
+			checkShape(s)
+			return s == "circle"
+		end
+
+		local function baseCircleSize(): number
+			local raw = if type(p.size) == "function" then p.size() else p.size
+			return if type(raw) == "number" then raw else Kbd.circleSize
+		end
+
+		local function circlePx(): number
+			return math.round(baseCircleSize() * (Kbd.scale[density()] or 1))
+		end
 
 		-- The key for the current input, and its picture when it has one.
 		local function key(): any
@@ -267,11 +311,19 @@ local spec: Component.Spec = {
 		local function hasImage(): boolean
 			return image() ~= ""
 		end
+		local function scaleLong(): boolean
+			return isCircle() and #Kbd.label(key()) > 2
+		end
 
 		local text = Element.new("TextLabel", {
 			Name = "Key",
-			Size = UDim2.fromOffset(0, 0),
-			AutomaticSize = Enum.AutomaticSize.XY,
+			Size = function()
+				return if scaleLong() then UDim2.new(1, -4, 1, -4) else UDim2.fromOffset(0, 0)
+			end,
+			AutomaticSize = function()
+				return if scaleLong() then Enum.AutomaticSize.None else Enum.AutomaticSize.XY
+			end,
+			TextScaled = scaleLong,
 			Text = function()
 				return Kbd.label(key())
 			end,
@@ -279,11 +331,22 @@ local spec: Component.Spec = {
 				return not hasImage()
 			end,
 			Tags = { "ui-kbd-text" },
+			Element.new("UITextSizeConstraint", {
+				MaxTextSize = function()
+					return if scaleLong() then 12 else 100
+				end,
+				MinTextSize = function()
+					return if scaleLong() then 7 else 1
+				end,
+			}),
 		})
 		local glyph = Element.new("ImageLabel", {
 			Name = "Glyph",
 			Size = function()
 				local px = math.round(Kbd.glyphSize * (Kbd.scale[density()] or 1))
+				if isCircle() then
+					px = math.min(px, circlePx())
+				end
 				return UDim2.fromOffset(px, px)
 			end,
 			ScaleType = Enum.ScaleType.Fit,
@@ -305,12 +368,20 @@ local spec: Component.Spec = {
 		h.text, h.glyph = text, glyph
 
 		return Element.new("Frame", {
-			Size = UDim2.fromOffset(0, 0),
-			AutomaticSize = Enum.AutomaticSize.XY,
+			Size = function()
+				if isCircle() then
+					local px = circlePx()
+					return UDim2.fromOffset(px, px)
+				end
+				return UDim2.fromOffset(0, 0)
+			end,
+			AutomaticSize = function()
+				return if isCircle() then Enum.AutomaticSize.None else Enum.AutomaticSize.XY
+			end,
 			Visible = function()
 				return visible() and Kbd.label(key()) ~= ""
 			end,
-			Tags = { "ui-kbd" :: any, ["ui-kbd-glyph"] = hasImage },
+			Tags = { "ui-kbd" :: any, ["ui-kbd-glyph"] = hasImage, ["ui-kbd-circle"] = isCircle },
 			Element.new("UIListLayout", {
 				SortOrder = Enum.SortOrder.LayoutOrder,
 				FillDirection = Enum.FillDirection.Horizontal,
@@ -319,7 +390,8 @@ local spec: Component.Spec = {
 			}),
 			Element.new("UISizeConstraint", {
 				MinSize = function()
-					local px = math.round(Kbd.glyphSize * (Kbd.scale[density()] or 1))
+					local s = Kbd.scale[density()] or 1
+					local px = math.round((if isCircle() then baseCircleSize() else Kbd.glyphSize) * s)
 					return Vector2.new(px, px)
 				end,
 			}),
@@ -330,6 +402,16 @@ local spec: Component.Spec = {
 }
 
 function Kbd.new(props: { [string]: any }?)
+	if props and (props.variant == "circle" or props.variant == "circular" or props.shape == "circular") then
+		local out = table.clone(props)
+		if out.variant == "circle" or out.variant == "circular" then
+			out.shape = "circle"
+			out.variant = "color"
+		elseif out.shape == "circular" then
+			out.shape = "circle"
+		end
+		return Component.mount(spec, out)
+	end
 	return Component.mount(spec, props)
 end
 

@@ -88,6 +88,23 @@ local function finish(
 	return gui
 end
 
+-- Where something in the world is: a BasePart's position, an Attachment's world position, a
+-- Model's pivot, or a Vector3 as it is. Nil for anything else.
+function World.positionOf(target: any): Vector3?
+	if typeof(target) == "Vector3" then
+		return target
+	elseif typeof(target) ~= "Instance" then
+		return nil
+	elseif target:IsA("BasePart") then
+		return target.Position
+	elseif target:IsA("Attachment") then
+		return target.WorldPosition
+	elseif target:IsA("Model") then
+		return target:GetPivot().Position
+	end
+	return nil
+end
+
 function World.surface(app: any, name: string, options: { [string]: any }?): SurfaceGui
 	local opts: { [string]: any } = options or {}
 	local adornee = opts.adornee

@@ -30,7 +30,7 @@ check a name exists before you use it, and find the page that explains it.
 
 `Lucy.useDensity`, `useMetric`, `useResponsive`, `useBackHandler`,
 `useFocusScope`, `useFocusZone`, `useHoldArrows`, `useSize`, `useFit`, `useHasVisibleChild`, `useUiSound`, `useTable`, `useSort`, `useWhile`, `useCountdown`,
-`useDrag`, `useReveal`, `useCount`, `useRequest` and `useIntersect`. See
+`useDrag`, `useReveal`, `useCount`, `useRequest`, `useIntersect`, `useDelayGroup`, `useDismiss`, `useFocus`, `useHover`, `usePress` and `useProximity`. See
 the [composables reference](composables/index.md).
 
 ## Animation
@@ -92,10 +92,10 @@ the [composables reference](composables/index.md).
 
 `Lucy.Accordion`, `Alert`, `Arrow`, `Attribution`, `Avatar`, `Badge`, `Button`, `Checkbox`,
 `Collapsible`, `DataGrid`, `Dialog`, `Effect`, `Gradient`, `Grid`, `Icon`, `Image`, `InlineConfirm`,
-`Input`, `Item`, `Kbd`, `Leaderboard`, `Marquee`, `Menu`, `NumberField`, `Panel`, `Pressable`, `Progress`,
+`Input`, `Item`, `Kbd`, `Leaderboard`, `Marquee`, `Menu`, `NumberField`, `Panel`, `Pressable`, `Progress`, `Prompt`,
 `RadioGroup`, `ScrollArea`, `Select`, `Separator`, `Sheet`, `Skeleton`,
 `Slider`, `Slot`, `SortButton`, `Spinner`, `Stack`, `Switch`, `Table`, `Tabs`, `Text`, `Toaster`,
-`Toggle`, `ToggleGroup`, `Tour` and `Waveform`. Each has a page under [Components](../components/index.md).
+`Toggle`, `ToggleGroup`, `Tooltip`, `Tour` and `Waveform`. Each has a page under [Components](../components/index.md).
 `Lucy.PanelCorner` is the top right corner of a dialog or sheet (the close button and the
 [`corner` slot](../components/dialog.md#the-corner)), for panels built by hand.
 

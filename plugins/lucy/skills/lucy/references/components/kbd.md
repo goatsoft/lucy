@@ -49,6 +49,8 @@ Kbd only shows the key. Binding the key to an action is up to your game.
 | `touch` | string | | yes | Shown on touch, such as `"Tap"`. Without it, nothing shows on touch. A device with no keyboard (a phone or tablet on its own) always counts as touch, even after a key press, unless a controller is in use. One with a keyboard paired shows its keys |
 | `action` | string | | yes | An [action](../guide/actions.md)'s name: its keys stand in for `keyboard` and `gamepad`, and follow a rebind. Define the action first |
 | `variant` | string | `"color"` | yes | `color` gives face buttons their controller colours; `mono` draws every button in the text colour |
+| `shape` | string | `"default"` | yes | `"default"` for a rounded key cap, or `"circle"` for a circular key cap |
+| `size` | number | `24` | | Circle diameter in pixels when `shape = "circle"` |
 | `visible` | boolean | `true` | yes | Shows or hides it |
 
 It also takes the [props every component takes](index.md#using-a-component).
@@ -89,6 +91,21 @@ local key = Lucy.ref(Enum.KeyCode.One)
 
 Lucy.Kbd.new({ keyboard = key, Parent = emoteSlot })
 key(Enum.KeyCode.Two)
+```
+
+A circular key cap (used inside [Progress](progress.md#circular) rings and world [Prompt](prompt.md) hints):
+
+```luau
+Lucy.Stack.new({
+    direction = "horizontal",
+    gap = "Space2",
+    align = "center",
+    children = {
+        Lucy.Kbd.new({ keyboard = Enum.KeyCode.E, shape = "circle" }),
+        Lucy.Text.new({ text = "Play a set", variant = "muted", autoWidth = true }),
+    },
+    Parent = parent,
+})
 ```
 
 ## Preview

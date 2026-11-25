@@ -245,8 +245,29 @@ local function watchedLucy(made)
 			if type(value) == "table" and type(rawget(value, "new")) == "function" then
 				if not wrapped[key] then
 					local proxy = {
-						new = function(...)
-							local handle = value.new(...)
+						new = function(props, ...)
+							if
+								not S._world
+								and (key == "Prompt" or key == "Tooltip")
+								and type(props) == "table"
+							then
+								local t = props.target
+								if type(t) == "table" and t._lucyMockWorld then
+									local cloned = table.clone(props)
+									cloned.target = nil
+									if
+										key == "Prompt"
+										and (cloned.hold or 0) > 0
+										and cloned.progress == nil
+									then
+										cloned.progress = 0.45
+									elseif key == "Tooltip" and cloned.open == nil then
+										cloned.open = true
+									end
+									props = cloned
+								end
+							end
+							local handle = value.new(props, ...)
 							table.insert(made, handle)
 							return handle
 						end,
@@ -535,7 +556,21 @@ local function fixtures(lucy, slot)
 	do
 		f[name] = slot
 	end
-	f.row, f.toolbar = row, row
+	f.row, f.toolbar, f.shopRow = row, row, row
+	f.boothSheet = { open = function() end }
+	f.queueTrack = function() end
+	if not S._world then
+		local mockTarget = { _lucyMockWorld = true }
+		f.workspace = setmetatable({
+			Booth = { Console = mockTarget },
+			DanceFloor = mockTarget,
+			Wardrobe = { Mirror = mockTarget },
+			Crew = {
+				Kai = { Head = mockTarget },
+				Nova = { Head = mockTarget },
+			},
+		}, { __index = workspace })
+	end
 	return f
 end
 

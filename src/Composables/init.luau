@@ -23,6 +23,12 @@
 			local typed = Lucy.useReveal(line, { rate = 34 })    -- typed.visible(): characters shown
 			local xp = Lucy.useCount(xpRef, { seconds = 0.8 })   -- xp.value(): counting up to it
 			local board = Lucy.useRequest(h.app, "boards.get", args) -- board.data(), board.loading()
+			local hover = Lucy.useHover(button, { delay = 0.5 }) -- hover.active(): the pointer is over it
+			local focus = Lucy.useFocus(h.app, button)            -- focus.active(): gamepad focus is on it
+			local held = Lucy.usePress(card, { mode = "hold" })  -- held.active(): pressed down (or "toggle")
+			local near = Lucy.useProximity(h.app, booth, { distance = 10 }) -- near.active(), near.distance()
+			Lucy.useDismiss(h.app, open, { inside = { tip } })   -- Back or a press outside closes it
+			local group = Lucy.useDelayGroup(h.app)              -- tooltips share one delay
 			...
 		end
 
@@ -35,11 +41,19 @@ local useFocusZone = require(script.useFocusZone)
 local useDrag = require(script.useDrag)
 local useReveal = require(script.useReveal)
 local useCount = require(script.useCount)
+local useDelayGroup = require(script.useDelayGroup)
+local useHover = require(script.useHover)
+local usePress = require(script.usePress)
+local useProximity = require(script.useProximity)
 export type FocusZone = useFocusZone.FocusZone
 export type DragOptions = useDrag.DragOptions
 export type Drag = useDrag.Drag
 export type Reveal = useReveal.Reveal
 export type Count = useCount.Count
+export type DelayGroup = useDelayGroup.DelayGroup
+export type Hover = useHover.Hover
+export type Press = usePress.Press
+export type Proximity = useProximity.Proximity
 
 return {
 	useDensity = require(script.useDensity),
@@ -62,4 +76,10 @@ return {
 	useCount = useCount,
 	useRequest = require(script.useRequest),
 	useIntersect = require(script.useIntersect),
+	useDelayGroup = useDelayGroup,
+	useHover = useHover,
+	useFocus = require(script.useFocus),
+	usePress = usePress,
+	useProximity = useProximity,
+	useDismiss = require(script.useDismiss),
 }

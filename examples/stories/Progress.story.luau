@@ -34,6 +34,37 @@ return {
 					return `steps = 10: tier {value() // 10}, {value() % 10 * 10}% of the way to the next`
 				end,
 			}),
+			Lucy.Stack.new({
+				direction = "horizontal",
+				gap = "Space4",
+				justify = "center",
+				align = "center",
+				children = {
+					Lucy.Progress.new({
+						shape = "circle",
+						size = 36,
+						value = smooth,
+						children = {
+							Lucy.Kbd.new({ keyboard = Enum.KeyCode.E, shape = "circle" }),
+						},
+					}),
+					Lucy.Progress.new({
+						shape = "circle",
+						size = 40,
+						value = smooth,
+						variant = "success",
+						children = {
+							Lucy.Text.new({
+								variant = "small",
+								autoWidth = true,
+								text = function()
+									return `{math.round(smooth())}%`
+								end,
+							}),
+						},
+					}),
+				},
+			}),
 		}
 	end,
 }

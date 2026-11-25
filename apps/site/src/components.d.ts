@@ -23,7 +23,6 @@ declare module 'vue' {
     ILxEyeFilled: typeof import('~icons/lucide-extended/eye-filled')['default']
     ILxFileCodeFilled: typeof import('~icons/lucide-extended/file-code-filled')['default']
     ILxHouseDuotone: typeof import('~icons/lucide-extended/house-duotone')['default']
-    ILxHouseFilled: typeof import('~icons/lucide-extended/house-filled')['default']
     ILxMonitorDuotone: typeof import('~icons/lucide-extended/monitor-duotone')['default']
     ILxMoonDuotone: typeof import('~icons/lucide-extended/moon-duotone')['default']
     ILxSunDuotone: typeof import('~icons/lucide-extended/sun-duotone')['default']

@@ -103,6 +103,14 @@ Lucy.hydrate(screen.Title) { Tags = { "stage-title" } }
 It can't take clicks unless it is in the player's PlayerGui; make the
 interactive parts with `createSurface` instead.
 
+## Tooltips and interaction prompts in the world
+
+Attach a [Tooltip](../components/tooltip.md) to a `BasePart`, `Attachment` or
+`Model` for name tags and proximity hints, or use [Prompt](../components/prompt.md)
+to replace Roblox's `ProximityPrompt` with themed key caps and hold progress
+bars. See [Prompts and proximity](../recipes/proximity-interactions.md) for
+the full Club Lucy setup.
+
 ## Next
 
 - [Build screens with scenes](scenes.md)

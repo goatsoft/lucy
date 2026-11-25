@@ -26,3 +26,6 @@ and change. They use only what the guides explain, and link to them as they go.
 - [Leaderboards](leaderboards.md): Best combo and Hype boards, all time and this
   week, in a dialog with a tab per board and your own rank, and a top 5 on the
   wall
+- [Prompts and proximity](proximity-interactions.md): the DJ Booth hold
+  prompt, a Dance Floor proximity hint that triggers the radial dance menu,
+  gated VIP mirror prompts and crew name tags

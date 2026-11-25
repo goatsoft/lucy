@@ -115,6 +115,12 @@ local Lucy = {
 	useCount = Composables.useCount,
 	useRequest = Composables.useRequest,
 	useIntersect = Composables.useIntersect,
+	useDelayGroup = Composables.useDelayGroup,
+	useHover = Composables.useHover,
+	useFocus = Composables.useFocus,
+	usePress = Composables.usePress,
+	useProximity = Composables.useProximity,
+	useDismiss = Composables.useDismiss,
 
 	-- Animation (Core/Animate)
 	spring = Animate.spring,
@@ -190,6 +196,7 @@ local Lucy = {
 	PanelCorner = require(Components.PanelCorner),
 	Pressable = require(Components.Pressable),
 	Progress = require(Components.Progress),
+	Prompt = require(Components.Prompt),
 	RadioGroup = require(Components.RadioGroup),
 	ScrollArea = require(Components.ScrollArea),
 	Select = require(Components.Select),
@@ -207,6 +214,7 @@ local Lucy = {
 	Toaster = require(Components.Toaster),
 	Toggle = require(Components.Toggle),
 	ToggleGroup = require(Components.ToggleGroup),
+	Tooltip = require(Components.Tooltip),
 	Tour = require(Components.Tour),
 	Waveform = require(Components.Waveform),
 }

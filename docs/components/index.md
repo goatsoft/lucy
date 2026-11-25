@@ -64,8 +64,10 @@ Every component, grouped by what it does.
 | [Alert](alert.md) | A box that calls attention to a message |
 | [Arrow](arrow.md) | A big arrow that points at something on screen, grows in and bounces |
 | [Dialog](dialog.md) | A modal window, and alert dialogs that ask for a yes or no |
+| [Prompt](prompt.md) | A world interaction prompt with key caps, hold progress and ProximityPrompt restyling |
 | [Sheet](sheet.md) | A panel from the side of the screen, a drawer from the bottom on touch |
 | [Toaster](toaster.md) | Toast notifications through `app.toast` |
+| [Tooltip](tooltip.md) | A floating label or card beside a control or over a part, on hover, focus, press, proximity or always |
 | [Tour](tour.md) | A guided walk through your game's own UI, one step at a time |
 
 ## Display, motion and media
@@ -204,5 +206,5 @@ walkthrough, rules and performance notes, see
 
 ## Roadmap
 
-After 0.1.0: Tooltip, Carousel, Field, Empty, `toast.promise`, pausing toasts
+After 0.1.0: Carousel, Field, Empty, `toast.promise`, pausing toasts
 on hover.

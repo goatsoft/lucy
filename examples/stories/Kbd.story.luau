@@ -39,6 +39,10 @@ return {
 						"Map, one colour",
 						{ keyboard = Enum.KeyCode.M, gamepad = Enum.KeyCode.ButtonY, variant = "mono" }
 					),
+					row(
+						"Hold ring key cap",
+						{ keyboard = Enum.KeyCode.E, gamepad = Enum.KeyCode.ButtonX, shape = "circle" }
+					),
 					Lucy.Button.new({
 						text = "Join",
 						hint = { keyboard = Enum.KeyCode.E, gamepad = Enum.KeyCode.DPadUp },

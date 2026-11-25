@@ -185,6 +185,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Panel](references/components/panel.md): A card with a header, content and footer.
 - [Pressable](references/components/pressable.md): A surface the player can click that holds anything, such as a card in a shop.
 - [Progress](references/components/progress.md): A bar that fills from 0 to a maximum.
+- [Prompt](references/components/prompt.md): An interaction prompt in the world with a key for the player's device, action text, hold progress and ProximityPrompt restyling.
 - [Radio Group](references/components/radio-group.md): A list of options where the player picks exactly one.
 - [Scroll Area](references/components/scroll-area.md): A region that scrolls when its content does not fit.
 - [Select](references/components/select.md): A button that opens a list of options to pick one from.
@@ -203,6 +204,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Toaster](references/components/toaster.md): Toast notifications through app.toast.
 - [Toggle Group](references/components/toggle-group.md): A row of toggles where the player picks one or several.
 - [Toggle](references/components/toggle.md): A button that stays pressed until it is clicked again.
+- [Tooltip](references/components/tooltip.md): A floating label or card beside a control or over a part, shown on hover, focus, press, proximity or always.
 - [Tour](references/components/tour.md): A guided walk through your game's own UI, one step at a time.
 - [Waveform](references/components/waveform.md): A row of columns from levels, for a song's loudness, an equaliser or a meter.
 <!-- /generated:components -->
@@ -235,15 +237,21 @@ they are exact; this page only says where things are and what agents get wrong.
 - [useBackHandler](references/reference/composables/use-back-handler.md): Intercepts back inputs while active, calling your function.
 - [useCount](references/reference/composables/use-count.md): Counts a number smoothly up or down to a target value with easing.
 - [useCountdown](references/reference/composables/use-countdown.md): Synchronised countdown of whole seconds remaining until a timestamp.
+- [useDelayGroup](references/reference/composables/use-delay-group.md): Shares an open delay and warm skip window across tooltips so only one opens at a time.
 - [useDensity](references/reference/composables/use-density.md): Returns a getter for the current device density profile.
+- [useDismiss](references/reference/composables/use-dismiss.md): Closes floating content on Back (B, Backspace) or on a press outside it.
 - [useDrag](references/reference/composables/use-drag.md): Follows a mouse or touch drag starting from a GUI element.
 - [useFit](references/reference/composables/use-fit.md): Scales something down to the width its parent has, for words and rows that must not run out of a card.
 - [useFocusScope](references/reference/composables/use-focus-scope.md): Traps keyboard and gamepad focus inside a container while active.
 - [useFocusZone](references/reference/composables/use-focus-zone.md): A group of HUD controls nothing selects until the player steps in with a key; B steps out.
+- [useFocus](references/reference/composables/use-focus.md): Tracks whether keyboard or gamepad focus is on a control or inside it.
 - [useHasVisibleChild](references/reference/composables/use-has-visible-child.md): Follows whether any child of a frame has Visible on, so a slot whose contents all hide can drop out of its layout.
 - [useHoldArrows](references/reference/composables/use-hold-arrows.md): Keeps the gamepad's selection on a control while it takes the arrows itself, such as a grabbed clip.
+- [useHover](references/reference/composables/use-hover.md): Tracks pointer hover over a target with open and close delays and safe crossing.
 - [useIntersect](references/reference/composables/use-intersect.md): Whether something has been scrolled near yet, for building it only then.
 - [useMetric](references/reference/composables/use-metric.md): Computes a control size token in pixels following density.
+- [usePress](references/reference/composables/use-press.md): Tracks hold, long-press or toggle presses on a control.
+- [useProximity](references/reference/composables/use-proximity.md): Tracks whether the local character is within a stud distance of a world target.
 - [useRequest](references/reference/composables/use-request.md): Asks the server with app.server:call and keeps the answer, the loading flag and any error as state, asking again when its arguments change.
 - [useResponsive](references/reference/composables/use-responsive.md): Returns a getter for a responsive value keyed by device, input mode, breakpoint or orientation.
 - [useReveal](references/reference/composables/use-reveal.md): Types text out character by character for dialogue and narrative lines.
@@ -264,6 +272,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Recipes](references/recipes/index.md): Where each part of a game goes, then whole pieces from Club Lucy you can copy into a game and change: a HUD, a pause menu, audio settings that save, an emote shop and saved player data.
 - [Leaderboards](references/recipes/leaderboards.md): Best combo and Hype boards kept in DataStores, all time and this week, a Leaderboards dialog with a tab per board and the dancer's own rank, and a top 5 every player sees.
 - [Pause menu](references/recipes/pause-menu.md): A pause menu that opens on B or Backspace and from a button, with a dimmed backdrop, options on top, a confirm before leaving, and gameplay keys off while it is open.
+- [Prompts and proximity](references/recipes/proximity-interactions.md): Open the DJ Booth deck, trigger the Dance Floor radial menu from an input hint, gate the VIP mirror and hang crew tags in the world.
 - [Save player data](references/recipes/save-data.md): Each dancer's coins and best combo loaded into the server's store when they join and saved as they change, with a Top dancers board that every player sees.
 - [Settings menu that saves](references/recipes/settings.md): Music, sound effects and crowd volume sliders and a theme picker bound to app state, loaded when the player joins and saved when they leave.
 - [Shop](references/recipes/shop.md): An Emote Shop dialog with a grid of dances, Buy buttons that grey out when the player can't afford them, a confirm before buying, a hotkey and a HUD button.

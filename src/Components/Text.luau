@@ -60,6 +60,16 @@ Text.variants = {
 	small = { TextSize = "$TextSm", FontFace = "$FontSansMedium" },
 	muted = { TextSize = "$TextSm", FontFace = "$FontSans", TextColor3 = "$MutedForeground" },
 	label = { TextSize = "$TextSm", FontFace = "$FontSansMedium" },
+	default = { TextColor3 = "$Foreground" },
+	primary = { TextColor3 = "$Color" },
+	secondary = { TextColor3 = "$SecondaryForeground" },
+	destructive = { TextColor3 = "$Destructive" },
+	success = { TextColor3 = "$Success" },
+	warning = { TextColor3 = "$Warning" },
+	info = { TextColor3 = "$Info" },
+	inverse = { TextColor3 = "$Background" },
+	outline = { TextColor3 = "$Foreground" },
+	overlay = { TextColor3 = "$OverlayFillForeground" },
 }
 
 local ALIGN = {
@@ -124,6 +134,16 @@ local spec: Component.Spec = {
 		local p: Component.Props = h.props
 		check(h:get("variant")) -- an unknown variant fails the mount
 		local variant, align = h:ref("variant"), h:ref("align")
+		local initialVariant = h:get("variant")
+		local explicitVariant = Reactive.ref(p.variant ~= nil)
+		Reactive.watch(variant, function(name)
+			if name ~= initialVariant then
+				explicitVariant(true)
+			end
+		end)
+		h.explicitVariant = function(): boolean
+			return explicitVariant()
+		end
 		local autoWidth = Composables.useResponsive(h.app, p.autoWidth)
 		local fitting = p.fit ~= nil and p.fit ~= false
 		local wrap = if p.wrap ~= nil then Composables.useResponsive(h.app, p.wrap) else nil
@@ -208,6 +228,11 @@ local spec: Component.Spec = {
 					local name = variant()
 					check(name)
 					return "ui-text-variant-" .. name
+				end,
+				["ui-text-default-variant"] = function(): boolean
+					local name = variant()
+					local def = Text.variants[name]
+					return not (explicitVariant() and def ~= nil and def.TextColor3 ~= nil)
 				end,
 			},
 		}) :: TextLabel

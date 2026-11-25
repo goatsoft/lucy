@@ -117,4 +117,73 @@ return function()
 			end).to.throw()
 		end)
 	end)
+
+	describe("circle", function()
+		local app, cleanup, gui
+		beforeEach(function()
+			app, cleanup = Harness.app()
+			gui = Harness.mount(app)
+		end)
+		afterEach(function()
+			cleanup()
+		end)
+
+		it("computes half-ring sweep angles from a fraction", function()
+			local r0, l0 = Progress.ringAngles(0)
+			expect(r0).to.equal(0)
+			expect(l0).to.equal(180)
+			local r25, l25 = Progress.ringAngles(0.25)
+			expect(r25).to.equal(90)
+			expect(l25).to.equal(180)
+			local r50, l50 = Progress.ringAngles(0.5)
+			expect(r50).to.equal(180)
+			expect(l50).to.equal(180)
+			local r75, l75 = Progress.ringAngles(0.75)
+			expect(r75).to.equal(180)
+			expect(l75).to.equal(270)
+			local r100, l100 = Progress.ringAngles(1)
+			expect(r100).to.equal(180)
+			expect(l100).to.equal(360)
+		end)
+
+		it("draws a circular ring that fills from value and wraps centred children", function()
+			local Reactive = require(script.Parent.Parent.Core.Reactive)
+			local Kbd = require(script.Parent.Kbd)
+			local val = Reactive.ref(25)
+			local kbd = Kbd.new({ app = app, keyboard = Enum.KeyCode.E, shape = "circle" })
+			local ring = Progress.new({
+				app = app,
+				Parent = gui,
+				shape = "circle",
+				size = 36,
+				value = val,
+				max = 100,
+				variant = "success",
+				children = { kbd },
+			})
+			Harness.flush()
+			expect(ring.Instance:HasTag("ui-progress-circle")).to.equal(true)
+			expect(ring.Instance.Size).to.equal(UDim2.fromOffset(36, 36))
+			expect(ring.rightGradient.Rotation).to.be.near(90, 0.01)
+			expect(ring.leftHalf.Visible).to.equal(false)
+			expect(kbd.Instance:IsDescendantOf(ring.Instance)).to.equal(true)
+			expect(Harness.colorEq(Harness.styled(ring.rightStroke, "Color"), app.theme:resolve("Success"))).to.equal(
+				true
+			)
+
+			val(75)
+			expect(ring.rightGradient.Rotation).to.be.near(180, 0.01)
+			expect(ring.leftHalf.Visible).to.equal(true)
+			expect(ring.leftGradient.Rotation).to.be.near(270, 0.01)
+
+			local shorthand = Progress.new({
+				app = app,
+				Parent = gui,
+				variant = "circle",
+				value = 50,
+			})
+			expect(shorthand:get("shape")).to.equal("circle")
+			expect(shorthand.Instance:HasTag("ui-progress-circle")).to.equal(true)
+		end)
+	end)
 end

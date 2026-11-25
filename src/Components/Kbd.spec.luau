@@ -172,4 +172,39 @@ return function()
 		expect(kbd.Instance.Visible).to.equal(true)
 		expect(kbd.text.Text).to.equal("G")
 	end)
+
+	it("supports a circular shape and size", function()
+		app.input:setMode("keyboard")
+		local kbd = Kbd.new({
+			app = app,
+			Parent = gui,
+			keyboard = Enum.KeyCode.E,
+			shape = "circle",
+			size = 28,
+		})
+		Harness.flush()
+		expect(kbd.Instance:HasTag("ui-kbd-circle")).to.equal(true)
+		expect(kbd.Instance.AutomaticSize).to.equal(Enum.AutomaticSize.None)
+		expect(kbd.Instance.Size).to.equal(UDim2.fromOffset(28, 28))
+		local cornerRadius = nil
+		for _, rule in Kbd.rules do
+			if rule.selector == ".ui-kbd.ui-kbd-circle::UICorner" then
+				cornerRadius = rule.properties.CornerRadius
+			end
+		end
+		expect(cornerRadius).to.equal("$RadiusFull")
+
+		local shorthand = Kbd.new({
+			app = app,
+			Parent = gui,
+			keyboard = Enum.KeyCode.F,
+			variant = "circle",
+		})
+		expect(shorthand.Instance:HasTag("ui-kbd-circle")).to.equal(true)
+		expect(shorthand:get("shape")).to.equal("circle")
+
+		expect(function()
+			Kbd.new({ app = app, Parent = gui, keyboard = Enum.KeyCode.E, shape = "triangle" })
+		end).to.throw()
+	end)
 end
