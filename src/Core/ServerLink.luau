@@ -66,17 +66,8 @@ function ServerLink.new(app: any, options: any): ServerLink
 			local folder = parent:WaitForChild(name)
 			local sync = folder:WaitForChild("Sync") :: RemoteEvent
 			local call = folder:WaitForChild("Call") :: RemoteFunction
-			local stream = folder:FindFirstChild("Stream") :: UnreliableRemoteEvent?
 			if self.destroyed then
 				return
-			end
-			if stream then
-				table.insert(
-					self._connections,
-					stream.OnClientEvent:Connect(function(name, ...)
-						self:_stream(name, ...)
-					end)
-				)
 			end
 			table.insert(
 				self._connections,
@@ -91,12 +82,25 @@ function ServerLink.new(app: any, options: any): ServerLink
 				call = function(requestName: string, ...)
 					return call:InvokeServer(requestName, ...)
 				end,
-				stream = if stream
-					then function(requestName: string, ...)
-						stream:FireServer(requestName, ...)
-					end
-					else nil,
 			})
+			-- The unreliable channel on its own: it may replicate after Sync and Call, and an
+			-- older server has none, so the reliable link never waits for it
+			local stream = folder:WaitForChild("Stream", math.huge) :: UnreliableRemoteEvent?
+			if not stream or self.destroyed then
+				return
+			end
+			table.insert(
+				self._connections,
+				stream.OnClientEvent:Connect(function(name, ...)
+					self:_stream(name, ...)
+				end)
+			)
+			local transport = self._transport
+			if transport then
+				transport.stream = function(requestName: string, ...)
+					stream:FireServer(requestName, ...)
+				end
+			end
 		end)
 	end
 	return self
