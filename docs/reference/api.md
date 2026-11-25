@@ -73,6 +73,9 @@ the [composables reference](composables/index.md).
 |---|---|---|
 | `Lucy.Server` | The server's store, sent to each player's App at `server.*`, and requests from them: `Lucy.Server.new(options)` | [The server](server.md) |
 | `Lucy.DataQueue` | DataStore requests paced to the engine's limits, with cached reads and a flush on close: `Lucy.DataQueue.new(options)` | [The data queue](data-queue.md) |
+| `Lucy.Profiles` | Players' saved data, held by one server at a time so trades cannot duplicate items, with purchase receipts granted once: `Lucy.Profiles.new(queue, name, options)` | [The data queue](data-queue.md) |
+| `Lucy.Check` | Checks for what a client sends, for `server:handle`'s `check` option: `Lucy.Check.string({ max = 24 })` | [The server](server.md) |
+| `Lucy.Services` | A game's modules started in the order they need each other: `Lucy.Services.new()` | [The server](server.md) |
 | `Lucy.Boards` | Leaderboards on the server: all time, this week and today, each player's rank, names, the request and published rows: `Lucy.Boards.new(options)` | [Boards](boards.md) |
 
 ## Themes and colour

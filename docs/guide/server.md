@@ -68,13 +68,18 @@ replaces anything you write there. Keep your own UI state elsewhere.
 ## Requests
 
 Players ask the server to do things with requests. Handle each one by name, and
-check everything that arrives: a client can send anything.
+say what it may be sent: a client can send anything, as often as it likes.
+`check` lists a check for each argument and `rate` how often one player may ask;
+the handler only runs when both pass. Make the server with `strict = true` and
+every handler must have a `check`.
 
 ```luau
 -- Server
+local Check = Lucy.Check
+
 server:handle("buy", function(player, itemId)
     local item = ITEMS[itemId]
-    if type(itemId) ~= "string" or not item then
+    if not item then
         return false
     end
     local me = server:player(player)
@@ -85,7 +90,7 @@ server:handle("buy", function(player, itemId)
         return coins - item.price
     end)
     return true
-end)
+end, { check = { Check.string({ max = 32 }) }, rate = { perSecond = 2 } })
 ```
 
 ```luau

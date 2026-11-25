@@ -191,6 +191,24 @@ return function()
 		server:destroy()
 	end)
 
+	it("works with a strict server, which checks the boards.get request", function()
+		local server = Server.new({
+			transport = { send = function() end },
+			players = false,
+			autoFlush = false,
+			strict = true,
+		})
+		make({ server = server })
+		server:_join(NOVA)
+		boards:post(NOVA, "combo", 40)
+		expect((server:_request(NOVA, "boards.get", "combo", "week"))).to.equal(true)
+		expect((server:_request(NOVA, "boards.get", { "combo" }))).to.equal(false)
+		expect((server:_request(NOVA, "boards.get", "combo", "decade"))).to.equal(false)
+		boards:destroy()
+		boards = nil
+		server:destroy()
+	end)
+
 	it("publishes a board's top rows to the server's state, and again on refresh", function()
 		local server =
 			Server.new({ transport = { send = function() end }, players = false, autoFlush = false })

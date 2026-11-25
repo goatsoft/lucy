@@ -165,8 +165,66 @@ Specs can pass `service` (a fake DataStoreService), `clock`, `wait`, `spawn`,
 `warn`, `inStudio` (whether to act as Studio) and `autoRun = false` (step with
 `queue:step()`), so every step is deterministic.
 
+## Profiles: one server at a time
+
+A game with trading, or money that moves between players, needs each player's
+data held by one server at a time. Otherwise a player who leaves and joins
+another server at once loads what the first has not saved yet, and keeps both
+copies of whatever they just traded away. `Lucy.Profiles` does this on top of
+the queue.
+
+```luau
+local queue = Lucy.DataQueue.new()
+local profiles = Lucy.Profiles.new(queue, "Profiles", {
+    template = function()
+        return { coins = 0, moves = {} }
+    end,
+})
+
+Players.PlayerAdded:Connect(function(player)
+    local profile, why = profiles:load(`u{player.UserId}`) -- yields
+    if profile and not player.Parent then
+        profile:release() -- they left while it loaded: let it go, or it stays claimed
+        return
+    end
+    if not profile then
+        player:Kick(if why == "in use" then "Your data is still saving. Join again in a moment." else "Could not load your data.")
+        return
+    end
+    profile.data.coins += 10 -- change data in place; it saves every minute
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    local profile = profiles:get(`u{player.UserId}`)
+    if profile then
+        profile:release() -- the last save, and let it go
+    end
+end)
+
+profiles.onLost = function(profile)
+    -- another server took it over (this one stalled): the player is on two servers
+end
+```
+
+| | |
+|---|---|
+| `profiles:load(key)` | Yields. Claims the profile for this server and answers it, or `nil, "in use"` when another server still holds it after a few tries, or `nil, "failed"` |
+| `profiles:get(key)` | The profile this server holds, or `nil` |
+| `profile.data` | The game's data. Change it in place |
+| `profile:save()` | Queues a save. Every held profile saves every `autosave` seconds by itself |
+| `profile:release()` | The last save, letting another server load it |
+| `profile:await(timeout?)` | Yields until every save so far has landed; `false` if time ran out or the profile was lost |
+| `profiles:receipt(profile, purchaseId, grant)` | For `ProcessReceipt`: runs `grant(data)` once per purchase, and answers `true` once that is saved. `grant` gets a copy of the data and must not wait (yield): its changes and the purchase land together, and one that waits or errors changes nothing and answers `false`, so Roblox asks again |
+| `profiles:close(timeout?)` | Releases every held profile and waits for the saves; what runs when the server closes |
+| `Lucy.Profiles.commit({ a, b })` | Saves every profile given and waits for all of them: tell players a trade is done only when it answers `true` |
+
+A claim older than `stale` seconds (autosave times three, plus a minute) is a
+server that stopped, and is taken over. Options: `template`, `reconcile(data)`
+to fill fields added since, `autosave` (60), `stale`, `tries` (6) and `wait`
+(2.5) for loads that find the profile held, `receipts` (100 remembered).
+
 ## What it does not do
 
-It does not lock sessions. If two servers can write the same player's data at
-once (trading, money moved between players) use `update`, and handle what you
-find in it.
+DataStores cannot write two keys as one, so `commit` makes the gap between a
+trade's two saves as short as it can, while both profiles are held here so
+nobody can load either side elsewhere.

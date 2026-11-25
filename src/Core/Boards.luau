@@ -121,9 +121,14 @@ function Boards.new(options: { [string]: any }): any
 
 	local request = if options.request == nil then "boards.get" else options.request
 	if self.server and request then
+		local Check = require(script.Parent.Check)
 		self.stopRequest = self.server:handle(request, function(player: any, id: any, period: any)
 			return self:get(id, period, player)
-		end)
+		end, {
+			-- checked, so a strict server takes it; a board read can reach the DataStore, so it is slow
+			check = { Check.string({ max = 64 }), Check.optional(Check.oneOf(Boards.periods)) },
+			rate = { perSecond = 2, burst = 6 },
+		})
 	end
 	return self
 end
