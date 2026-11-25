@@ -125,8 +125,12 @@ Once a frame (or every `flushRate` seconds), the server compares what changed
 with what was last sent and sends only the differences. `shared` is compared
 once for everyone; a player's own part only when it changed. Tables that did not change are skipped whole,
 so a large tree costs little while it is still. A player gets everything when
-their App says it is ready. Write related values in `server.state:batch` so
-players never see half a change.
+their App says it is ready. A player who has left is never added back by a late
+ready, and a ready player gets everything again at most once at once and then
+once every ten seconds, so a client sending ready in a loop cannot make the
+server send the whole state each time (dropped readies go to `onReject` as
+`"ready"`). Write related values in `server.state:batch` so players never see
+half a change.
 
 ## Starting a game's services
 
