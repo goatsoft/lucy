@@ -16,7 +16,7 @@
 		Check.boolean
 		Check.string({ min?, max? })      length in bytes; max defaults to 200
 		Check.number({ min?, max?, integer? })  never NaN or infinite
-		Check.vector({ max? })            a Vector3 whose length is at most max
+		Check.vector({ max? })            a finite Vector3 whose length is at most max
 		Check.instance(className?)        an Instance that IsA className
 		Check.oneOf({ "a", "b" })         one of these values
 		Check.optional(check)             nil, or passes check
@@ -87,10 +87,12 @@ function Check.vector(options: { max: number? }?): Check
 			return false, `should be a Vector3, not {typeof(value)}`
 		end
 		local v = value :: Vector3
-		if v.X ~= v.X or v.Y ~= v.Y or v.Z ~= v.Z then
-			return false, "should not be NaN"
+		local length = v.Magnitude
+		-- NaN in any part makes the length NaN; an infinite part makes it infinite
+		if length ~= length or length == math.huge then
+			return false, "should be finite"
 		end
-		if v.Magnitude > max then
+		if length > max then
 			return false, `should be at most {max} long`
 		end
 		return true
@@ -148,14 +150,17 @@ function Check.array(check: Check, max: number?): Check
 				return false, "should be a list"
 			end
 		end
-		if count ~= #value then
-			return false, "should be a list with no holes"
+		-- n distinct whole keys, every one from 1 to n: no holes (# alone can stop at any border)
+		for key in value do
+			if key > count then
+				return false, "should be a list with no holes"
+			end
 		end
 		if count > limit then
 			return false, `should have at most {limit} items`
 		end
-		for i, item in value do
-			local ok, why = check(item)
+		for i = 1, count do
+			local ok, why = check(value[i])
 			if not ok then
 				return false, `item {i} {why}`
 			end

@@ -32,6 +32,9 @@ return function()
 		expect((v(Vector3.new(1, 2, 3)))).to.equal(true)
 		expect((v(Vector3.new(100, 0, 0)))).to.equal(false)
 		expect((v(Vector3.new(0 / 0, 0, 0)))).to.equal(false)
+		-- no max given: still never infinite
+		expect((Check.vector()(Vector3.new(math.huge, 0, 0)))).to.equal(false)
+		expect((Check.vector()(Vector3.new(0, -math.huge, 0)))).to.equal(false)
 		expect((v({ X = 1 }))).to.equal(false)
 	end)
 
@@ -41,6 +44,9 @@ return function()
 		expect((list({ 1, 2, 3, 4 }))).to.equal(false)
 		expect((list({ 1, "x" }))).to.equal(false)
 		expect((list({ [1] = 1, [3] = 3 }))).to.equal(false)
+		-- # can report 4 here; a hole at 2 must still fail
+		local long = Check.array(Check.number(), 10)
+		expect((long({ [1] = 1, [3] = 3, [4] = 4, [1000] = 1000 }))).to.equal(false)
 		expect((list(setmetatable({}, {})))).to.equal(false)
 
 		local map = Check.map(Check.string(), Check.boolean, 2)
