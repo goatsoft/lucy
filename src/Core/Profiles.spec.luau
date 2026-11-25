@@ -46,6 +46,7 @@ return function()
 			autoRun = false,
 			bindToClose = false,
 			keyGap = 0,
+			retryDelay = 0,
 			wait = function() end,
 			warn = function() end,
 		})
@@ -231,6 +232,44 @@ return function()
 		profiles.queue:flush(1)
 		-- the claim from load, but not the trade's cash
 		expect(service.data.Profiles.u1.data).to.equal(nil)
+	end)
+
+	it("writes a release that gave up again before loading the key, instead of refusing for good", function()
+		local service = fakeService()
+		local profiles = server(service, "A")
+		local first = assert(profiles:load("u1"))
+		first.data.cash = 9
+		service.failures = 100 -- DataStores down: every try of the release fails
+		first:release()
+		profiles.queue:flush(1)
+		service.failures = 0 -- and back
+		local again = assert(profiles:load("u1"))
+		expect(again.data.cash).to.equal(9)
+	end)
+
+	it("lets go only once a purchase being granted is in the last save", function()
+		local service = fakeService()
+		local profiles = server(service, "A")
+		local profile = assert(profiles:load("u1"))
+		local answer
+		task.spawn(function()
+			answer = profiles:receipt(profile, "purchase-3", function(data)
+				task.wait()
+				task.wait()
+				data.cash += 25
+			end)
+		end)
+		profile:release() -- the player leaves mid grant
+		expect(profiles:receipt(profile, "purchase-4", function() end)).to.equal(false)
+		while answer == nil or profile.active do -- the grant, then the release it held back
+			task.wait()
+		end
+		profiles.queue:flush(1)
+		expect(answer).to.equal(true)
+		local record = service.data.Profiles.u1
+		expect(record.data.cash).to.equal(25)
+		expect(record.receipts[1]).to.equal("purchase-3")
+		expect(record.session).to.equal(nil)
 	end)
 
 	it("gives the same profile to a second load on the same server", function()

@@ -66,6 +66,7 @@ export type Profile = typeof(setmetatable(
 		lost: boolean,
 		profiles: any,
 		_granting: { [string]: boolean },
+		_releasing: boolean,
 	},
 	Profile
 ))
@@ -100,6 +101,8 @@ function Profiles.new(queue: any, name: string, options: { [string]: any }?): an
 		time = opts.time or os.time,
 		sleep = opts.sleep or task.wait,
 		held = {} :: { [string]: Profile },
+		-- released here, the last write not yet known to have landed: retried before a new load
+		released = {} :: { [string]: Profile },
 		onLost = nil :: ((profile: Profile) -> ())?,
 		destroyed = false,
 		_connection = nil :: RBXScriptConnection?,
@@ -123,6 +126,8 @@ function Profiles.new(queue: any, name: string, options: { [string]: any }?): an
 	end
 	return self
 end
+
+local sendRelease: (profile: any) -> ()
 
 local function newData(self: any): any
 	local template = self.template
@@ -195,10 +200,22 @@ function Profiles.load(self: any, key: string): (Profile?, string?)
 		return existing
 	end
 	-- A release of this key from this server (a quick leave and rejoin) must land first, or the
-	-- claim would read the data from before it and the release would then clear the new claim
-	if not self.handle:await(key, self.tries * self.wait + 30) then
-		return nil, "in use"
+	-- claim would read the data from before it and the release would then clear the new claim.
+	-- A release whose writes all gave up (DataStores down) is written again now, not left to
+	-- block the key for good.
+	local waitFor = self.tries * self.wait + 30
+	if not self.handle:await(key, waitFor) then
+		local released = self.released[key]
+		if released and self:_gaveUp(key) then
+			sendRelease(released)
+			if not self.handle:await(key, waitFor) then
+				return nil, if self:_gaveUp(key) then "failed" else "in use"
+			end
+		else
+			return nil, if self:_gaveUp(key) then "failed" else "in use"
+		end
 	end
+	self.released[key] = nil
 	if self.held[key] then
 		return self.held[key]
 	end
@@ -224,6 +241,7 @@ function Profiles.load(self: any, key: string): (Profile?, string?)
 		lost = false,
 		profiles = self,
 		_granting = {},
+		_releasing = false,
 	}, Profile) :: any
 	self.held[key] = profile
 	return profile
@@ -234,15 +252,20 @@ function Profiles.get(self: any, key: string): Profile?
 	return self.held[key]
 end
 
-local function write(profile: Profile, release: boolean)
+-- Whether every write to key so far gave up (none waiting or on its way)
+function Profiles._gaveUp(self: any, key: string): boolean
+	local handle = self.handle
+	local target = handle.versions[key] or 0
+	return target > 0
+		and (handle.gaveUp[key] or 0) >= target
+		and (handle.landed[key] or 0) < target
+		and not handle.writes[key]
+		and not handle.inFlight[key]
+end
+
+-- Queues the update that writes profile (and, with release, lets it go)
+local function send(profile: Profile, release: boolean)
 	local self = profile.profiles
-	if not profile.active then
-		return -- released or lost: never written again
-	end
-	if release then
-		profile.active = false
-		self.held[profile.key] = nil
-	end
 	self.handle:update(profile.key, function(old: any)
 		-- Only load takes over a profile. A save writes only while the stored claim is still this
 		-- server's: another server's claim (fresh or stale) or none at all (another server took it
@@ -279,6 +302,34 @@ local function write(profile: Profile, release: boolean)
 	end)
 end
 
+-- Writes a released profile's last save again (its first try gave up)
+sendRelease = function(profile: any)
+	if not profile.lost then
+		send(profile, true)
+	end
+end
+
+local function write(profile: Profile, release: boolean)
+	local self = profile.profiles
+	if not profile.active then
+		return -- released or lost: never written again
+	end
+	if release then
+		profile.active = false
+		self.held[profile.key] = nil
+		self.released[profile.key] = profile
+	end
+	send(profile, release)
+	if release then
+		-- Forget it once the last save has landed; kept while it has not, so a load can retry it
+		task.spawn(function()
+			if self.handle:await(profile.key) and self.released[profile.key] == profile then
+				self.released[profile.key] = nil
+			end
+		end)
+	end
+end
+
 -- Queues a save (the DataQueue paces it). Also keeps this server's claim fresh.
 function Profile.save(self: Profile)
 	write(self, false)
@@ -287,7 +338,22 @@ end
 -- The last save, letting the profile go so another server can load it. The profile is no
 -- longer held: drop references to it.
 function Profile.release(self: Profile)
-	write(self, true)
+	if self._releasing or not self.active then
+		return
+	end
+	if next(self._granting) == nil then
+		write(self, true)
+		return
+	end
+	-- A purchase is being granted (grant yielded): its reward and PurchaseId must be in the last
+	-- save, so let go once it is done. No new receipt starts meanwhile.
+	self._releasing = true
+	task.spawn(function()
+		while next(self._granting) ~= nil do
+			task.wait(0.05)
+		end
+		write(self, true)
+	end)
 end
 
 -- Yields until every save so far has landed (true), or `timeout` seconds pass (false). False
@@ -302,8 +368,8 @@ end
 -- if it is not saved yet (answer NotProcessedYet; Roblox asks again, and it is not granted
 -- twice).
 function Profiles.receipt(self: any, profile: Profile, purchaseId: string, grant: (data: any) -> ()): boolean
-	if not profile.active then
-		return false
+	if not profile.active or profile._releasing then
+		return false -- NotProcessedYet: Roblox asks again, wherever the player is next
 	end
 	-- Another call for this purchase is granting it (grant yielded): wait for it, never grant twice
 	while profile._granting[purchaseId] do
