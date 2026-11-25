@@ -70,7 +70,7 @@ const more = [
   { icon: Bot, title: 'Ready for agents', text: 'Agent skills and an MCP server to inspect UI trees or take screenshots.', to: '/docs/guide/agents' },
 ] as const
 
-const install = 'Lucy = "goatsoft/lucy@0.1.0"'
+const install = 'Lucy = "goatsoft/lucy@0.2.0"'
 </script>
 
 <template>

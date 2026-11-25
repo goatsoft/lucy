@@ -46,7 +46,7 @@ and theme switches run no Luau.
 
 ```toml
 [dependencies]
-Lucy = "goatsoft/lucy@0.1.0"
+Lucy = "goatsoft/lucy@0.2.0"
 ```
 
 Run `wally install`. The examples below expect Lucy at
