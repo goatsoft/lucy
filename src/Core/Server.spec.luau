@@ -307,6 +307,30 @@ return function()
 		end)
 	end)
 
+	it("sends everything again for a repeated ready only now and then", function()
+		local now = 0
+		local t = fakeTransport()
+		local s = Server.new({
+			transport = t,
+			players = false,
+			autoFlush = false,
+			clock = function()
+				return now
+			end,
+		})
+		local a = player(1)
+		s:_join(a)
+		for _ = 1, 50 do
+			s:_ready(a)
+		end
+		-- the first, and one repeat (an App that said ready while it was being made)
+		expect(#t.sent[a]).to.equal(2)
+		now += 10
+		s:_ready(a) -- an App made again gets everything after a pause
+		expect(#t.sent[a]).to.equal(3)
+		s:destroy()
+	end)
+
 	it("streams to one ready player or to every ready player", function()
 		local streamed = {}
 		local t = fakeTransport()

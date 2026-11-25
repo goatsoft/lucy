@@ -128,6 +128,9 @@ export type Server = typeof(setmetatable(
 
 local DEFAULT_RATE: Rate = { perSecond = 30, burst = 30 }
 local MAX_NAME = 64
+-- How often a ready player may ask for everything again: one repeat at once (an App that said
+-- ready while it was still being made says it again), then one every ten seconds
+local READY_RATE: Rate = { perSecond = 0.1, burst = 2 }
 
 local function join(path: string, key: any): string
 	local text = tostring(key)
@@ -410,9 +413,23 @@ end
 -- The player's App is listening: send everything they may see.
 function Server._ready(self: Server, player: any)
 	if not self._players[player] then
+		-- A late "ready" from a player who has left must not bring them back
+		if typeof(player) == "Instance" and not player.Parent then
+			return
+		end
 		self:_join(player)
 	end
 	local entry = self._players[player]
+	-- Everything again only now and then: a client sending "ready" in a loop would otherwise
+	-- make the server send the whole state each time (an App made again gets it after a pause)
+	-- (the first ready takes the token too, so a repeat waits a full interval)
+	if not self:_take(entry, "lucy:ready", READY_RATE) and entry.ready then
+		local onReject = self.onReject
+		if onReject then
+			task.spawn(onReject, player, "ready", "too many requests")
+		end
+		return
+	end
 	entry.ready = true
 	entry.dirty = false
 	entry.lastShared = self.state:get("shared")
