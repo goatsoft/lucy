@@ -221,7 +221,14 @@ end
 A claim older than `stale` seconds (autosave times three, plus a minute) is a
 server that stopped, and is taken over. Options: `template`, `reconcile(data)`
 to fill fields added since, `autosave` (60), `stale`, `tries` (6) and `wait`
-(2.5) for loads that find the profile held, `receipts` (100 remembered).
+(2.5) for loads that find the profile held, `receipts` (100 remembered), and
+`jobId`, what a claim is made in the name of: the server's JobId live, and in
+Studio (which has none) an id made once per session, so two Studio sessions
+never share a claim.
+
+Loads of one key at the same moment share one claim and get the same profile.
+A load after this server released the key waits for that last save to land
+first, and writes it again if every try gave up while DataStores were down.
 
 ## What it does not do
 

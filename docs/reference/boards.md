@@ -90,7 +90,10 @@ local answer = app.server:call("boards.get", "combo", "week")
 ```
 
 The request checks the board and the period against the list, and the server
-passes the asking player, so `answer.me` is always theirs. A board or period the
+passes the asking player, so `answer.me` is always theirs. It is registered
+with checks (a board name of at most 64 bytes, a period from `Boards.periods`)
+and a rate of 2 a second, so it works on a `strict` server; a read can reach
+the DataStore, so a client cannot ask faster. A board or period the
 game doesn't keep is an error. The client gets it as a failed call.
 [useRequest](composables/use-request.md) keeps that answer as state for a
 Leaderboard.

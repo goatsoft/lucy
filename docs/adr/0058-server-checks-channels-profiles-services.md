@@ -55,6 +55,32 @@ ProfileStore (and ProfileService before it) is the usual answer to dupes.
   refuses a loop or a missing need, runs every `init` (which must not yield)
   and then every `start` on its own thread, isolating a failing start.
 
+## Changed in review (PR #5)
+
+The review of PR #5 made these part of the decision:
+
+- **Grants never yield.** `receipt` runs `grant` on a copy of the data; one that
+  yields is closed and one that errors is dropped, changing nothing. On success
+  its changes and the PurchaseId go into the profile in one step with no yield
+  between, so no save holds one without the other. This also removes any
+  release held back by a grant, so `close` (what BindToClose runs) is just
+  release everything and flush.
+- **A save writes only under this server's own claim**; a missing claim (taken
+  over and let go) marks the profile lost too. Only `load` takes over a claim.
+- **Loads:** one in flight load per key; a load waits for this server's own
+  release of the key, writes it again if it gave up, and claims afresh past a
+  lost copy's write that gave up. A receipt whose save gave up is saved again on
+  Roblox's retry. `commit` checks every profile before saving any.
+- **Studio claims** use an id made once per session, not a shared `"studio"`.
+- **Ready:** a ready from a player who left is ignored; repeated readies get
+  everything again at most once at once and then once every ten seconds.
+- **Checks:** vectors must be finite with or without `max`; lists must have
+  keys exactly 1..n and stop at their limit; a rate under one a second keeps a
+  burst of at least one. `Boards` registers `boards.get` with checks and a rate
+  so it works on a strict server.
+- **ServerLink** attaches `Stream` whenever it replicates. **Services** closes
+  an init that yielded before raising.
+
 ## Consequences
 
 - Old handlers keep working: without `check` nothing is checked, but they get
