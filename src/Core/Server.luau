@@ -426,7 +426,8 @@ end
 -- One token from the player's bucket for `name`: false when they ask too often.
 function Server._take(self: Server, entry: PlayerEntry, name: string, rate: Rate): boolean
 	local now = self._clock()
-	local burst = rate.burst or rate.perSecond
+	-- at least one: a rate under one a second still lets a request through now and then
+	local burst = math.max(1, rate.burst or rate.perSecond)
 	local bucket = entry.buckets[name]
 	if not bucket then
 		bucket = { tokens = burst, at = now }

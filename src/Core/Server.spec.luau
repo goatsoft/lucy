@@ -265,6 +265,16 @@ return function()
 			expect((checked:_request(a, "fire"))).to.equal(true)
 		end)
 
+		it("lets a rate under one a second through now and then", function()
+			local a = player(1)
+			checked:_join(a)
+			checked:handle("save", function() end, { check = {}, rate = { perSecond = 0.5 } })
+			expect((checked:_request(a, "save"))).to.equal(true)
+			expect((checked:_request(a, "save"))).to.equal(false)
+			now += 2
+			expect((checked:_request(a, "save"))).to.equal(true)
+		end)
+
 		it("keeps the reason a handler failed on the server", function()
 			local a = player(1)
 			checked:_join(a)
