@@ -280,6 +280,93 @@ return function()
 		end
 	end)
 
+	it("saves a granted purchase again when Roblox retries after the save gave up", function()
+		local service = fakeService()
+		local profiles = server(service, "A")
+		local profile = assert(profiles:load("u1"))
+		service.failures = 100 -- DataStores down
+		expect(profiles:receipt(profile, "purchase-7", function(data)
+			data.cash += 5
+		end)).to.equal(false)
+		service.failures = 0 -- back; Roblox asks again
+		local grants = 0
+		expect(profiles:receipt(profile, "purchase-7", function()
+			grants += 1
+		end)).to.equal(true)
+		expect(grants).to.equal(0)
+		local record = service.data.Profiles.u1
+		expect(record.data.cash).to.equal(5)
+		expect(record.receipts[1]).to.equal("purchase-7")
+	end)
+
+	it("gives loads of one key at the same time one claim and one profile", function()
+		local service = fakeService()
+		local store = service:GetDataStore("Profiles")
+		local claims = 0
+		local update = store.UpdateAsync
+		function store:UpdateAsync(key: string, fn: (any) -> any)
+			claims += 1
+			task.wait() -- a real request takes time
+			return update(self, key, fn)
+		end
+		local original = service.GetDataStore
+		function service:GetDataStore(name: string)
+			if name == "Profiles" then
+				return store
+			end
+			return original(self, name)
+		end
+		local profiles = server(service, "A")
+		local got = {}
+		for i = 1, 3 do
+			task.spawn(function()
+				got[i] = profiles:load("u1")
+			end)
+		end
+		while not (got[1] and got[2] and got[3]) do
+			task.wait()
+		end
+		expect(claims).to.equal(1)
+		expect(got[1] == got[2] and got[2] == got[3]).to.equal(true)
+	end)
+
+	it("claims afresh when what gave up was a lost copy, instead of failing for good", function()
+		local service = fakeService()
+		-- A store whose UpdateAsync can run the function and then fail to commit (as Roblox's can)
+		local store = service:GetDataStore("Profiles")
+		local update = store.UpdateAsync
+		local failAfter = 0
+		function store:UpdateAsync(key: string, fn: (any) -> any)
+			if failAfter > 0 then
+				failAfter -= 1
+				fn(service.data.Profiles[key])
+				error("fake commit failed")
+			end
+			return update(self, key, fn)
+		end
+		local original = service.GetDataStore
+		function service:GetDataStore(name: string)
+			return if name == "Profiles" then store else original(self, name)
+		end
+		local a = server(service, "A", { stale = 100 })
+		local b = server(service, "B", { stale = 100 })
+		local old = assert(a:load("u1"))
+		now += 101
+		local fresh = assert(b:load("u1"))
+		fresh:release()
+		fresh:await(1)
+		-- A's save finds the claim gone (lost) and then every try fails to commit: gave up
+		failAfter = 100
+		old:save()
+		a.queue:flush(1)
+		expect(old.lost).to.equal(true)
+		failAfter = 0
+		local again, why = a:load("u1")
+		expect(why).to.equal(nil)
+		expect(again).never.to.equal(nil)
+		expect(again).never.to.equal(old)
+	end)
+
 	it("gives the same profile to a second load on the same server", function()
 		local profiles = server(fakeService(), "A")
 		local first = profiles:load("u1")

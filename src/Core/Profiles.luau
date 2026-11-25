@@ -105,6 +105,7 @@ function Profiles.new(queue: any, name: string, options: { [string]: any }?): an
 		time = opts.time or os.time,
 		sleep = opts.sleep or task.wait,
 		held = {} :: { [string]: Profile },
+		_loading = {} :: { [string]: { done: boolean, profile: Profile?, why: string? } },
 		-- released here, the last write not yet known to have landed: retried before a new load
 		released = {} :: { [string]: Profile },
 		onLost = nil :: ((profile: Profile) -> ())?,
@@ -124,7 +125,9 @@ function Profiles.new(queue: any, name: string, options: { [string]: any }?): an
 	end
 	if opts.bindToClose ~= false then
 		game:BindToClose(function()
-			self:close(queue.closeTimeout)
+			if not self.destroyed then
+				self:close(queue.closeTimeout)
+			end
 		end)
 	end
 	return self
@@ -198,6 +201,28 @@ end
 -- Loads and holds the profile at key (yields). (profile) or (nil, "in use" | "failed").
 -- Loading a key this server already holds answers the same profile.
 function Profiles.load(self: any, key: string): (Profile?, string?)
+	-- One load per key at a time: a second caller waits for the first one's answer instead of
+	-- claiming again (which could bring back a profile released in between)
+	local inflight = self._loading[key]
+	if inflight then
+		while not inflight.done do
+			task.wait(0.05)
+		end
+		return inflight.profile, inflight.why
+	end
+	local state = { done = false, profile = nil :: Profile?, why = nil :: string? }
+	self._loading[key] = state
+	local ok, profile, why = pcall(self._load, self, key)
+	if not ok then
+		self.queue.warn(`[Lucy] Profiles: loading "{key}" failed: {profile}`)
+		profile, why = nil, "failed"
+	end
+	state.profile, state.why, state.done = profile, why, true
+	self._loading[key] = nil
+	return profile, why
+end
+
+function Profiles._load(self: any, key: string): (Profile?, string?)
 	local waitFor = self.tries * self.wait + 30
 	local existing = self.held[key]
 	if existing then
@@ -209,14 +234,16 @@ function Profiles.load(self: any, key: string): (Profile?, string?)
 	-- block the key for good.
 	if not self.handle:await(key, waitFor) then
 		local released = self.released[key]
-		if released and self:_gaveUp(key) then
+		if released and not released.lost and self:_gaveUp(key) then
 			sendRelease(released)
 			if not self.handle:await(key, waitFor) then
 				return nil, if self:_gaveUp(key) then "failed" else "in use"
 			end
-		else
-			return nil, if self:_gaveUp(key) then "failed" else "in use"
+		elseif not self:_gaveUp(key) then
+			return nil, "in use" -- still being written: time ran out
 		end
+		-- Otherwise what gave up was a copy that is lost (another server took it): nothing of
+		-- ours to write, so claim afresh
 	end
 	self.released[key] = nil
 	if self.held[key] then
@@ -389,6 +416,9 @@ function Profiles.receipt(self: any, profile: Profile, purchaseId: string, grant
 		while #profile.receipts > self.receiptLimit do
 			table.remove(profile.receipts, 1)
 		end
+		profile:save()
+	elseif self:_gaveUp(profile.key) then
+		-- granted, but its save gave up (DataStores down): save again for Roblox's retry
 		profile:save()
 	end
 	return profile:await(15)
