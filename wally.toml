@@ -1,7 +1,7 @@
 [package]
 name = "goatsoft/lucy"
 description = "Lucy: a UI and app framework for Roblox, built on Universal Styling"
-version = "0.2.0"
+version = "0.3.0"
 license = "MIT"
 authors = ["GOATsoft"]
 registry = "https://github.com/UpliftGames/wally-index"

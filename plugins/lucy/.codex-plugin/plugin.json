@@ -1,6 +1,6 @@
 {
   "name": "lucy",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Build Roblox game UI with Lucy: components, app state, styling, input, hotkeys and icons.",
   "author": {
     "name": "GOATsoft",

@@ -32,7 +32,7 @@ lune run ~/Projects/Lucy/scripts/add -- button dialog --from ~/Projects/Lucy --o
 
 ```toml [wally.toml]
 [dependencies]
-Lucy = "goatsoft/lucy@0.2.0"
+Lucy = "goatsoft/lucy@0.3.0"
 ```
 
 ## Create the App
