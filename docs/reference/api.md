@@ -49,6 +49,7 @@ the [composables reference](composables/index.md).
 | Name | What it is | More |
 |---|---|---|
 | `Lucy.Aura` | Effects worn on characters or at points: `Aura.follow(app, options)` on the client, `Aura.wear` and `Aura.take` on the server (players by Player or UserId, kept as `u<UserId>`: `Aura.idOf`), `Aura.new` for one, `Aura.register` for your own types | [Auras](../guide/auras.md) |
+| `Lucy.Binder` | Binds behaviour to every `Instance` carrying a `CollectionService` tag with per-instance `Maid` cleanup and optional `ancestor` scoping: `Lucy.Binder.new(tag, fn, options)` | [Tag binder](binder.md) |
 
 ## Images
 

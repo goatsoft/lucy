@@ -1254,6 +1254,11 @@ end
 -- Restyles every Roblox ProximityPrompt in the game using ProximityPromptService.
 function Prompt.restyle(app: any, options: { [string]: any }?): () -> ()
 	local active: { [ProximityPrompt]: () -> () } = {}
+	local filter: ((ProximityPrompt) -> boolean)? = if options then options.filter else nil
+	local promptOptions: { [string]: any }? = if options then table.clone(options) else nil
+	if promptOptions then
+		promptOptions.filter = nil
+	end
 	local function applyCustom(instance: Instance)
 		if instance:IsA("ProximityPrompt") then
 			instance.Style = Enum.ProximityPromptStyle.Custom
@@ -1267,7 +1272,10 @@ function Prompt.restyle(app: any, options: { [string]: any }?): () -> ()
 		if active[raw] then
 			return
 		end
-		local _, stop = Prompt.restyleOne(app, raw, options)
+		if filter and not filter(raw) then
+			return
+		end
+		local _, stop = Prompt.restyleOne(app, raw, promptOptions)
 		active[raw] = stop
 	end)
 	local hiddenConn = ProximityPromptService.PromptHidden:Connect(function(raw: ProximityPrompt)

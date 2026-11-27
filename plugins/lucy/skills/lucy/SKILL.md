@@ -231,6 +231,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Accessibility](references/reference/accessibility.md): What Lucy does so players can read, reach and use your UI, the contrast it promises, the Roblox accessibility settings it follows, and Lucy.Preferences.
 - [Everything on Lucy](references/reference/api.md): Every name the Lucy module exports, what it is for, and the page that explains it.
 - [The app](references/reference/app.md): Lucy.App.new and every option it takes, the parts an App holds, and its methods.
+- [Tag binder](references/reference/binder.md): Lucy.Binder binds behaviour to CollectionService tags with automatic Maid cleanup, optional ancestor scoping, and StreamingEnabled safety.
 - [Boards](references/reference/boards.md): Lucy.Boards keeps a game's leaderboards on the server, all time, this week and today, with each player's own rank, their names, the request a client asks with, and rows published for everyone. Every method and option.
 - [Colours](references/reference/colors.md): Every colour Lucy ships, as tokens you can use in rules and themes, and the shades each named colour gets.
 - [Composables](references/reference/composables/index.md): State over time and behaviour shared between components. Every Lucy.use* composable.

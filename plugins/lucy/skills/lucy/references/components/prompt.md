@@ -97,8 +97,15 @@ it shows:
 ```luau
 Lucy.Prompt.restyle(app, {
     variant = "overlay",
+    filter = function(raw)
+        return not shouldHide(raw)
+    end,
 })
 ```
+
+Pass an optional `filter(raw)` function to skip drawing specific prompts on the client (for
+example, hiding a vehicle's seat prompts while already seated) without changing `raw.Enabled`
+or `raw.Style`.
 
 To restyle one prompt on its own, call `local prompt, stop = Lucy.Prompt.restyleOne(app, proximityPrompt, options)`.
 

@@ -633,6 +633,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/binder': RouteRecordInfo<
+      '/docs/reference/binder',
+      '/docs/reference/binder',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/boards': RouteRecordInfo<
       '/docs/reference/boards',
       '/docs/reference/boards',
@@ -1581,6 +1588,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/app.md': {
       routes:
         | '/docs/reference/app'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/binder.md': {
+      routes:
+        | '/docs/reference/binder'
       views:
         | never
       pathParamNames:
