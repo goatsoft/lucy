@@ -590,16 +590,17 @@ local spec: Component.Spec = {
 							then "primary"
 							elseif choice.variant == "destructive" then "destructive"
 							else "default"
+						local isDisabled = choice.disabled == true
 						table.insert(nextItems, {
 							id = `dialogue-choice-{choice.id}`,
 							content = content,
-							variant = itemVariant,
-							disabled = choice.disabled == true,
-							onClick = function()
-								if choice.disabled ~= true then
+							variant = if isDisabled then "muted" else itemVariant,
+							disabled = isDisabled,
+							onClick = if isDisabled
+								then nil
+								else function()
 									handleChoose(choice.id)
-								end
-							end,
+								end,
 						})
 					end
 				elseif s.canAdvance or s.isEnd then

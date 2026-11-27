@@ -116,7 +116,11 @@ local itemRules: { Component.Rule } = {
 	{
 		selector = ".ui-list-item-disabled",
 		priority = DISABLED,
-		properties = { TextColor3 = "$MutedForeground" },
+		properties = {
+			TextColor3 = "$MutedForeground",
+			TextTransparency = 0.45,
+			BackgroundTransparency = 1,
+		},
 	},
 	{
 		selector = ".ui-list-item-disabled:Hover",
@@ -159,7 +163,10 @@ local markerRules: { Component.Rule } = {
 	{
 		selector = ".ui-list-item-disabled > .ui-list-marker",
 		priority = DISABLED,
-		properties = { TextColor3 = "$MutedForeground" },
+		properties = {
+			TextColor3 = "$MutedForeground",
+			TextTransparency = 0.45,
+		},
 	},
 }
 
@@ -258,26 +265,30 @@ local spec: Component.Spec = {
 						else { content = entry }
 					local clickable = type(itemSpec.onClick) == "function"
 					local disabled = itemSpec.disabled == true
+					local interactive = clickable and not disabled
 
 					local row: GuiObject
 					local conn: RBXScriptConnection? = nil
-					if clickable then
+					if interactive then
 						local btn = Instance.new("TextButton")
 						btn.Text = ""
 						btn.AutoButtonColor = false
-						btn.Active = not disabled
-						btn.Selectable = not disabled
+						btn.Active = true
+						btn.Selectable = true
 						if app and app.selectionRing then
 							btn.SelectionImageObject = app.selectionRing
 						end
 						btn:AddTag("ui-list-item-clickable")
-						if not disabled and itemSpec.onClick then
-							local cb = itemSpec.onClick
+						local cb = itemSpec.onClick
+						if cb then
 							conn = btn.Activated:Connect(cb)
 						end
 						row = btn
 					else
-						row = Instance.new("Frame")
+						local frame = Instance.new("Frame")
+						frame.Active = false
+						frame.Selectable = false
+						row = frame
 					end
 
 					row.Name = itemSpec.id or `Item{i}`
@@ -295,10 +306,11 @@ local spec: Component.Spec = {
 					end
 
 					local pad = Instance.new("UIPadding")
-					pad.PaddingLeft = UDim.new(0, if clickable then 8 else 2)
-					pad.PaddingRight = UDim.new(0, if clickable then 8 else 2)
-					pad.PaddingTop = UDim.new(0, if clickable then 5 else 2)
-					pad.PaddingBottom = UDim.new(0, if clickable then 5 else 2)
+					local padded = clickable or disabled
+					pad.PaddingLeft = UDim.new(0, if padded then 8 else 2)
+					pad.PaddingRight = UDim.new(0, if padded then 8 else 2)
+					pad.PaddingTop = UDim.new(0, if padded then 5 else 2)
+					pad.PaddingBottom = UDim.new(0, if padded then 5 else 2)
 					pad.Parent = row
 
 					local rowLayout = Instance.new("UIListLayout")
