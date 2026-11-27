@@ -81,6 +81,14 @@ local itemRules: { Component.Rule } = {
 		},
 	},
 	{
+		selector = ".ui-list-item-clickable.ui-focus-visible",
+		priority = STATE + 5,
+		properties = {
+			BackgroundColor3 = "$Accent",
+			BackgroundTransparency = 0.2,
+		},
+	},
+	{
 		selector = ".ui-list-item-size-sm",
 		priority = VARIANT,
 		properties = { TextSize = "$TextXs" },
@@ -93,7 +101,7 @@ local itemRules: { Component.Rule } = {
 	{
 		selector = ".ui-list-item-variant-primary",
 		priority = VARIANT,
-		properties = { TextColor3 = "$Color" },
+		properties = { TextColor3 = "$Foreground", FontFace = "$FontSansSemibold" },
 	},
 	{
 		selector = ".ui-list-item-variant-destructive",
@@ -141,7 +149,7 @@ local markerRules: { Component.Rule } = {
 	{
 		selector = ".ui-list-item-variant-primary > .ui-list-marker",
 		priority = VARIANT,
-		properties = { TextColor3 = "$Color" },
+		properties = { TextColor3 = "$Foreground", FontFace = "$FontSansSemibold" },
 	},
 	{
 		selector = ".ui-list-item-variant-destructive > .ui-list-marker",
@@ -259,6 +267,9 @@ local spec: Component.Spec = {
 						btn.AutoButtonColor = false
 						btn.Active = not disabled
 						btn.Selectable = not disabled
+						if app and app.selectionRing then
+							btn.SelectionImageObject = app.selectionRing
+						end
 						btn:AddTag("ui-list-item-clickable")
 						if not disabled and itemSpec.onClick then
 							local cb = itemSpec.onClick

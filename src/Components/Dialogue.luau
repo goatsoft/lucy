@@ -328,12 +328,12 @@ local spec: Component.Spec = {
 		local rowLayout = Instance.new("UIListLayout")
 		rowLayout.FillDirection = Enum.FillDirection.Horizontal
 		rowLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-		rowLayout.Padding = UDim.new(0, 16)
+		rowLayout.Padding = UDim.new(0, 20)
 		rowLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		rowLayout.Parent = panel
 
-		-- Round portrait frame (56x56 by default)
-		local portraitSize = props.portraitSize or 56
+		-- Round portrait frame (96x96 by default so the NPC face reads clearly)
+		local portraitSize = props.portraitSize or 96
 		local portraitBox = Instance.new("Frame")
 		portraitBox.Name = "Portrait"
 		portraitBox.Size = UDim2.fromOffset(portraitSize, portraitSize)
@@ -349,7 +349,7 @@ local spec: Component.Spec = {
 		local rightCol = Instance.new("Frame")
 		rightCol.Name = "Content"
 		rightCol.BackgroundTransparency = 1
-		rightCol.Size = UDim2.new(1, -(portraitSize + 16), 0, 0)
+		rightCol.Size = UDim2.new(1, -(portraitSize + 20), 0, 0)
 		rightCol.AutomaticSize = Enum.AutomaticSize.Y
 		rightCol.LayoutOrder = 2
 		rightCol.Parent = panel
@@ -606,6 +606,7 @@ local spec: Component.Spec = {
 					choiceMarker("chevron")
 					table.insert(nextItems, {
 						id = "dialogue-continue",
+						marker = ">",
 						content = if s.isEnd then leaveLabel else continueLabel,
 						variant = "primary",
 						disabled = false,
@@ -619,8 +620,38 @@ local spec: Component.Spec = {
 					})
 				end
 				choiceItems(nextItems)
+
+				-- Move gamepad/keyboard focus onto the first selectable choice on each new node
+				if app and app.input then
+					task.defer(function()
+						if not isOpen() then
+							return
+						end
+						for _, child in choicesRow:GetChildren() do
+							if child:IsA("TextButton") and child.Selectable and child.Active then
+								app.input:focus(child)
+								break
+							end
+						end
+					end)
+				end
 			end)
 		end)
+
+		local function firstFocusableChoice(): GuiObject?
+			for _, child in choicesRow:GetChildren() do
+				if child:IsA("TextButton") and child.Selectable and child.Active then
+					return child
+				end
+			end
+			return nil
+		end
+
+		-- Capture keyboard and controller focus inside the dialogue panel while open
+		Composables.useFocusScope(app, isOpen, {
+			root = panel,
+			defaultFocus = firstFocusableChoice,
+		})
 
 		-- Back handler (B / Backspace): skips typing first, then closes when allowed
 		Composables.useBackHandler(app, function(): boolean
