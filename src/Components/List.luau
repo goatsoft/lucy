@@ -88,7 +88,7 @@ local itemRules: { Component.Rule } = {
 	{
 		selector = ".ui-list-item-size-lg",
 		priority = VARIANT,
-		properties = { TextSize = "$TextMd" },
+		properties = { TextSize = "$TextBase" },
 	},
 	{
 		selector = ".ui-list-item-variant-primary",
@@ -136,7 +136,7 @@ local markerRules: { Component.Rule } = {
 	{
 		selector = ".ui-list-item-size-lg > .ui-list-marker",
 		priority = VARIANT,
-		properties = { TextSize = "$TextMd" },
+		properties = { TextSize = "$TextBase" },
 	},
 	{
 		selector = ".ui-list-item-variant-primary > .ui-list-marker",
@@ -345,6 +345,8 @@ local spec: Component.Spec = {
 		return root
 	end,
 }
+
+Component.define(spec)
 
 function List.new(props: { [string]: any }): any
 	return Component.mount(spec, props)

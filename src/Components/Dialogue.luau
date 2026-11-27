@@ -124,7 +124,7 @@ local rules: { Component.Rule } = {
 			BackgroundTransparency = 1,
 			TextColor3 = "$CardForeground",
 			FontFace = "$FontSans",
-			TextSize = "$TextMd",
+			TextSize = "$TextBase",
 		},
 	},
 	-- Variants
