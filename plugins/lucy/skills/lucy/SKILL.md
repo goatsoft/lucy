@@ -168,6 +168,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Collapsible](references/components/collapsible.md): A header that shows or hides what is under it.
 - [DataGrid](references/components/data-grid.md): A table the player can sort by pressing its headers.
 - [Dialog](references/components/dialog.md): A modal window, and alert dialogs that ask for a yes or no.
+- [Dialogue](references/components/dialogue.md): A themed NPC conversation panel with an actor portrait, typewriter text, branching responses and locked choices, paired with Lucy.DialogueTree.
 - [Effect](references/components/effect.md): An animated celebration behind a reward or a level up, in types you can add to.
 - [Gradient](references/components/gradient.md): One of the theme's gradients on a frame, a panel or a button.
 - [Grid](references/components/grid.md): Rows of equal cells, such as shop items or emotes.
@@ -179,6 +180,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [Item](references/components/item.md): A row in a list, with media, a title, a description and actions.
 - [Kbd](references/components/kbd.md): The key to press, for the player's keyboard or controller.
 - [Leaderboard](references/components/leaderboard.md): Players ranked as a podium, with your own place pinned at the bottom.
+- [List](references/components/list.md): Bulleted, numbered, chevron or plain vertical lists whose rows take any Lucy Slot content and optional click handlers.
 - [Marquee](references/components/marquee.md): One line of text that scrolls back and forth, or round like a ticker, when it is too long to fit.
 - [Menu](references/components/menu.md): Actions that open as a list, a ring or a fan and close once one is picked.
 - [Number Field](references/components/number-field.md): A number with minus and plus buttons, typed or stepped.
@@ -263,6 +265,7 @@ they are exact; this page only says where things are and what agents get wrong.
 - [useWhile](references/reference/composables/use-while.md): Runs a setup function while a condition is true, cleaning it up when false.
 - [The data queue](references/reference/data-queue.md): Lucy.DataQueue paces DataStore requests to the engine's limits, caches reads, keeps leaderboards and writes what is pending when the server closes. Every method and option.
 - [Devtools](references/reference/devtools.md): Look at a running UI in Studio, and press, set and focus things the way a player would, from the command bar or a coding agent.
+- [Dialogue trees](references/reference/dialogue-tree.md): Lucy.DialogueTree is a pure Luau branching conversation engine with a Blackboard, Priority Stack entry routing, Hub and Spokes, Branch and Bottleneck, and static validation.
 - [The server](references/reference/server.md): Lucy.Server and app.server, every option and method, which paths reach which players, and how changes travel.
 - [The store](references/reference/store.md): How app.state works, what it holds, every method, and the rules for reading, writing and following it.
 - [Theming](references/reference/theming.md): Every theme option, colour token, primitive and density value, the Tokens helpers, app.theme's methods and how style rules work.

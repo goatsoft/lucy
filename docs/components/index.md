@@ -54,6 +54,7 @@ Every component, grouped by what it does.
 | [DataGrid](data-grid.md) | A table the player can sort by pressing its headers |
 | [Item](item.md) | A row in a list, with media, a title, a description and actions |
 | [Leaderboard](leaderboard.md) | Ranked players with medals for the top three and the player's own row pinned |
+| [List](list.md) | Bulleted, numbered or clickable vertical list whose rows take any Slot content |
 | [SortButton](sort-button.md) | A column heading that sorts a list when pressed |
 | [Table](table.md) | Rows and columns for leaderboards, friends lists and inventories |
 
@@ -64,6 +65,7 @@ Every component, grouped by what it does.
 | [Alert](alert.md) | A box that calls attention to a message |
 | [Arrow](arrow.md) | A big arrow that points at something on screen, grows in and bounces |
 | [Dialog](dialog.md) | A modal window, and alert dialogs that ask for a yes or no |
+| [Dialogue](dialogue.md) | An NPC conversation panel with portrait, typewriter text and branching choices |
 | [Prompt](prompt.md) | A world interaction prompt with key caps, hold progress and ProximityPrompt restyling |
 | [Sheet](sheet.md) | A panel from the side of the screen, a drawer from the bottom on touch |
 | [Toaster](toaster.md) | Toast notifications through `app.toast` |

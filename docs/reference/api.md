@@ -50,6 +50,7 @@ the [composables reference](composables/index.md).
 |---|---|---|
 | `Lucy.Aura` | Effects worn on characters or at points: `Aura.follow(app, options)` on the client, `Aura.wear` and `Aura.take` on the server (players by Player or UserId, kept as `u<UserId>`: `Aura.idOf`), `Aura.new` for one, `Aura.register` for your own types | [Auras](../guide/auras.md) |
 | `Lucy.Binder` | Binds behaviour to every `Instance` carrying a `CollectionService` tag with per-instance `Maid` cleanup and optional `ancestor` scoping: `Lucy.Binder.new(tag, fn, options)` | [Tag binder](binder.md) |
+| `Lucy.DialogueTree` | Pure Luau branching dialogue engine with Blackboard, Priority Stack entry routing, Hub and Spokes, locked choices and validation: `Lucy.DialogueTree.new(tree, blackboard)` | [Dialogue trees](dialogue-tree.md) |
 
 ## Images
 
@@ -100,8 +101,8 @@ the [composables reference](composables/index.md).
 ## Components
 
 `Lucy.Accordion`, `Alert`, `Arrow`, `Attribution`, `Avatar`, `Badge`, `Button`, `Checkbox`,
-`Collapsible`, `DataGrid`, `Dialog`, `Effect`, `Gradient`, `Grid`, `Icon`, `Image`, `InlineConfirm`,
-`Input`, `Item`, `Kbd`, `Leaderboard`, `Marquee`, `Menu`, `NumberField`, `Panel`, `Pressable`, `Progress`, `Prompt`,
+`Collapsible`, `DataGrid`, `Dialog`, `Dialogue`, `Effect`, `Gradient`, `Grid`, `Icon`, `Image`, `InlineConfirm`,
+`Input`, `Item`, `Kbd`, `Leaderboard`, `List`, `Marquee`, `Menu`, `NumberField`, `Panel`, `Pressable`, `Progress`, `Prompt`,
 `RadioGroup`, `ScrollArea`, `Select`, `Separator`, `Sheet`, `Skeleton`,
 `Slider`, `Slot`, `SortButton`, `Spinner`, `Stack`, `Switch`, `Table`, `Tabs`, `Text`, `Toaster`,
 `Toggle`, `ToggleGroup`, `Tooltip`, `Tour` and `Waveform`. Each has a page under [Components](../components/index.md).

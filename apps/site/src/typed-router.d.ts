@@ -164,6 +164,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/components/dialogue': RouteRecordInfo<
+      '/docs/components/dialogue',
+      '/docs/components/dialogue',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/components/effect': RouteRecordInfo<
       '/docs/components/effect',
       '/docs/components/effect',
@@ -237,6 +244,13 @@ declare module 'vue-router/auto-routes' {
     '/docs/components/leaderboard': RouteRecordInfo<
       '/docs/components/leaderboard',
       '/docs/components/leaderboard',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/docs/components/list': RouteRecordInfo<
+      '/docs/components/list',
+      '/docs/components/list',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -857,6 +871,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/docs/reference/dialogue-tree': RouteRecordInfo<
+      '/docs/reference/dialogue-tree',
+      '/docs/reference/dialogue-tree',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/docs/reference/server': RouteRecordInfo<
       '/docs/reference/server',
       '/docs/reference/server',
@@ -1057,6 +1078,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    '../../docs/components/dialogue.md': {
+      routes:
+        | '/docs/components/dialogue'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     '../../docs/components/effect.md': {
       routes:
         | '/docs/components/effect'
@@ -1140,6 +1169,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/components/leaderboard.md': {
       routes:
         | '/docs/components/leaderboard'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/components/list.md': {
+      routes:
+        | '/docs/components/list'
       views:
         | never
       pathParamNames:
@@ -1844,6 +1881,14 @@ declare module 'vue-router/auto-routes' {
     '../../docs/reference/devtools.md': {
       routes:
         | '/docs/reference/devtools'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    '../../docs/reference/dialogue-tree.md': {
+      routes:
+        | '/docs/reference/dialogue-tree'
       views:
         | never
       pathParamNames:
