@@ -655,7 +655,7 @@ local spec: Component.Spec = {
 		})
 
 		-- Back handler (B / Backspace): skips typing first, then closes when allowed
-		Composables.useBackHandler(app, function(): boolean
+		Composables.useBackHandler(app, isOpen, function(): boolean
 			local s = currentSnap()
 			if not s then
 				return false
@@ -669,7 +669,7 @@ local spec: Component.Spec = {
 				return true
 			end
 			return true
-		end, isOpen)
+		end)
 
 		if props.Parent then
 			panel.Parent = props.Parent
