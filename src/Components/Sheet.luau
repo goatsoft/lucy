@@ -31,6 +31,9 @@
 			dockSlide = true,         -- with dock: false appears and goes without sliding
 			minWidth = nil,           -- with dock: how narrow it may go when the screen is short of
 			                          -- room; it then scrolls sideways (default: width, never narrower)
+			scroll = true,            -- false: the body does not scroll; it is a frame as tall as the
+			                          -- room the sheet has, and the children choose what scrolls (a
+			                          -- ScrollArea with a UIFlexItem Fill takes what is left)
 			width = 360,              -- the panel's width, at most 90% of the screen
 			presentation = "auto",    -- auto | panel | drawer
 			fill = false,             -- true: always as tall as it may be, whatever the body holds (a
@@ -416,15 +419,32 @@ local spec: Component.Spec = {
 			local squeezable = type(p.dock) == "string"
 				and type(p.minWidth) == "number"
 				and p.minWidth < (p.width or Overlay.panelWidth)
-			local body = ScrollArea.new({
-				app = app,
-				direction = if squeezable then "both" else nil,
-				maxHeight = bodyCap,
-				minHeight = if p.fill then bodyCap else nil,
-				children = p.children,
-				layoutOrder = 3,
-				name = "Body",
-			})
+			local body: any
+			if p.scroll == false then
+				-- A fixed body: as tall as the room the sheet has; the children say what scrolls
+				local frame = Element.new("Frame", {
+					Name = "Body",
+					BackgroundTransparency = 1,
+					LayoutOrder = 3,
+					ClipsDescendants = true,
+					Size = function(): UDim2
+						local cap = bodyCap()
+						return UDim2.new(1, 0, 0, if cap == math.huge then 0 else cap)
+					end,
+				})
+				Component.adopt(frame, p.children)
+				body = { Instance = frame, content = frame, frame = frame }
+			else
+				body = ScrollArea.new({
+					app = app,
+					direction = if squeezable then "both" else nil,
+					maxHeight = bodyCap,
+					minHeight = if p.fill then bodyCap else nil,
+					children = p.children,
+					layoutOrder = 3,
+					name = "Body",
+				})
+			end
 			-- Several children stack, as in a Dialog's body.
 			Component.list({ Padding = UDim.new(0, gap), Parent = body.content })
 			-- In a panel the body takes all the height between the header and the footer

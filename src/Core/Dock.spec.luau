@@ -229,6 +229,34 @@ return function()
 		expect(dock.overlay.scrim:HasTag("ui-overlay-clear")).to.equal(true)
 	end)
 
+	it("gives a sheet with scroll = false a fixed body, and a filling child the rest of it", function()
+		local top = Instance.new("Frame")
+		top.Name = "Top"
+		top.Size = UDim2.new(1, 0, 0, 100)
+		local rest = Instance.new("Frame")
+		rest.Name = "Rest"
+		rest.Size = UDim2.fromScale(1, 0)
+		local grow = Instance.new("UIFlexItem")
+		grow.FlexMode = Enum.UIFlexMode.Fill
+		grow.Parent = rest
+		local sheet = Sheet.new({
+			app = app,
+			dock = "fixed",
+			width = 300,
+			scroll = false,
+			children = { top, rest },
+		})
+		sheet:open()
+		expect(Harness.waitFor(function()
+			return settled(sheet) and rest.AbsoluteSize.Y > 0
+		end, 1)).to.equal(true)
+		expect(top:FindFirstAncestorWhichIsA("ScrollingFrame")).to.equal(nil)
+		local body = top.Parent :: Frame
+		expect(body.Name).to.equal("Body")
+		local bottom = rest.AbsolutePosition.Y + rest.AbsoluteSize.Y
+		expect(math.abs(bottom - (body.AbsolutePosition.Y + body.AbsoluteSize.Y)) <= 2).to.equal(true)
+	end)
+
 	describe("fit", function()
 		local function item(width: number, minWidth: number, pin: boolean, order: number)
 			return { width = width, minWidth = minWidth, pin = pin, order = order }

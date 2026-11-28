@@ -51,6 +51,7 @@ settings:open()
 | `dockPin` | boolean | `false` | | With `dock`: holds this sheet at its edge; sheets opened after it open inward beside it |
 | `dockSlide` | boolean | `true` | | With `dock`: `false` opens and closes the docked sheet immediately without sliding |
 | `minWidth` | number | `width` | | With `dock`: how narrow the sheet may go when the screen is short of room; it then scrolls sideways |
+| `scroll` | boolean | `true` | | `false`: the body does not scroll; it is as tall as the room the sheet has, and the children choose what scrolls (a ScrollArea with a `UIFlexItem` set to Fill takes what is left) |
 | `width` | number | `360` | | The panel's width in pixels, at most 90% of the screen |
 | `presentation` | string | `"auto"` | | `auto`, `panel` or `drawer` |
 | `fill` | boolean | `false` | | Always as tall as it may be, whatever the body holds, so a sheet with tabs never grows or shrinks between them (a drawer on touch most of all) |
