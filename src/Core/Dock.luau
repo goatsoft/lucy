@@ -338,6 +338,16 @@ local function make(app: any, name: string): DockState
 			tags = { "ui-dock" },
 		})
 
+		-- A sheet opened with the mouse or touch, then a gamepad or keys picked up (a title menu
+		-- before the player touches the pad): select the newest, so the first press moves in it
+		local mode = app.state:ref("input.mode")
+		Reactive.watch(mode, function()
+			if not dock or not app.input or not app.input:isNavigating() or app.input:focused() ~= nil then
+				return
+			end
+			focusOn(app, newest(dock))
+		end)
+
 		dock = {
 			name = name,
 			members = {},

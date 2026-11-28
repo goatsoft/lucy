@@ -87,6 +87,38 @@ return function()
 		expect(bag.frame:IsDescendantOf(scope.root)).to.equal(true)
 	end)
 
+	it("selects the newest sheet when a gamepad is picked up after it opened", function()
+		-- A title menu, opened before the player touches the pad
+		app.input:setMode("mouse")
+		local start = button("Start")
+		local menu = Sheet.new({ app = app, id = "menu", dock = "menu", width = 300, children = { start } })
+		menu:open()
+		expect(Harness.waitFor(function()
+			return settled(menu)
+		end)).to.equal(true)
+		expect(app.input:focused()).to.equal(nil)
+		app.input:setMode("gamepad")
+		expect(Harness.waitFor(function()
+			return app.input:focused() == start
+		end, 1)).to.equal(true)
+	end)
+
+	it("leaves the focus alone when a gamepad is picked up with something already selected", function()
+		app.input:setMode("keyboard")
+		local start, quit = button("Start"), button("Quit")
+		local menu =
+			Sheet.new({ app = app, id = "menu", dock = "menu", width = 300, children = { start, quit } })
+		menu:open()
+		expect(Harness.waitFor(function()
+			return settled(menu) and app.input:focused() == start
+		end, 1)).to.equal(true)
+		task.wait(Dock.slideTime + 0.05) -- the opening's own selection is done
+		app.input:focus(quit)
+		app.input:setMode("gamepad")
+		task.wait(0.4)
+		expect(app.input:focused()).to.equal(quit)
+	end)
+
 	it("closes the newest on back, then the next", function()
 		local boot, bag = pair()
 		boot:open()
