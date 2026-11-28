@@ -22,6 +22,9 @@
 				{ text = "Done" },
 			},
 			side = "right",           -- left | right (the panel; touch always uses the bottom)
+			dock = nil,               -- a name: sheets in the same dock open side by side from one edge,
+			                          -- the newest at the edge, pushing the others over (Core/Dock); one
+			                          -- backdrop and one focus scope for them all; always a panel
 			width = 360,              -- the panel's width, at most 90% of the screen
 			presentation = "auto",    -- auto | panel | drawer
 			fill = false,             -- true: always as tall as it may be, whatever the body holds (a
@@ -72,6 +75,7 @@
 local Button = require(script.Parent.Button)
 local Component = require(script.Parent.Parent.Core.Component)
 local Deferred = require(script.Parent.Parent.Core.Deferred)
+local Dock = require(script.Parent.Parent.Core.Dock)
 local Composables = require(script.Parent.Parent.Composables)
 local Element = require(script.Parent.Parent.Core.Element)
 local Heading = require(script.Parent.Heading)
@@ -520,41 +524,55 @@ local spec: Component.Spec = {
 				})
 			end
 
-			local overlay = Overlay.use(app, {
-				open = shown,
-				content = framed.frame,
-				returnFocus = p.returnFocus,
-				presentation = p.presentation or "auto",
-				prefer = "panel",
-				panelSide = p.side,
-				width = p.width,
-				modal = modal,
-				-- A non modal sheet takes focus only when told what to focus
-				focus = p.defaultFocus ~= nil,
-				scrim = if p.scrim == false then false else nil,
-				dismissible = dismissible,
-				closeOnOutside = closeOnOverlay,
-				host = host,
-				measureFirst = true,
-				id = h.id,
-				name = "Sheet",
-				tags = { "ui-sheet" },
-				defaultFocus = function()
-					local chosen = p.defaultFocus
-					if type(chosen) == "function" then
-						chosen = chosen(h)
-					end
-					if chosen ~= nil then
-						return chosen
-					end
-					local first = Overlay.firstSelectable(body.content)
-					if first then
-						return first
-					end
-					local last = actionHandles[#actionHandles]
-					return if last then last.Instance else (h.closeButton and h.closeButton.Instance)
-				end,
-			})
+			local function firstFocus(): any
+				local chosen = p.defaultFocus
+				if type(chosen) == "function" then
+					chosen = chosen(h)
+				end
+				if chosen ~= nil then
+					return chosen
+				end
+				local first = Overlay.firstSelectable(body.content)
+				if first then
+					return first
+				end
+				local last = actionHandles[#actionHandles]
+				return if last then last.Instance else (h.closeButton and h.closeButton.Instance)
+			end
+			-- In a dock the dock places it beside the others, in its one overlay
+			local overlay: any = if type(p.dock) == "string"
+				then Dock.join(app, p.dock, {
+					open = shown,
+					content = framed.frame,
+					width = p.width,
+					side = p.side,
+					dismissible = dismissible,
+					defaultFocus = firstFocus,
+					id = h.id,
+				})
+				else nil
+			overlay = overlay
+				or Overlay.use(app, {
+					open = shown,
+					content = framed.frame,
+					returnFocus = p.returnFocus,
+					presentation = p.presentation or "auto",
+					prefer = "panel",
+					panelSide = p.side,
+					width = p.width,
+					modal = modal,
+					-- A non modal sheet takes focus only when told what to focus
+					focus = p.defaultFocus ~= nil,
+					scrim = if p.scrim == false then false else nil,
+					dismissible = dismissible,
+					closeOnOutside = closeOnOverlay,
+					host = host,
+					measureFirst = true,
+					id = h.id,
+					name = "Sheet",
+					tags = { "ui-sheet" },
+					defaultFocus = firstFocus,
+				})
 			overlayRef(overlay)
 
 			h.overlay, h.content, h.body, h.footer, h.actions =

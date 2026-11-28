@@ -47,6 +47,7 @@ settings:open()
 | `trigger` | button, handle or list | | | What opens it. Hovered or focused, it warms (it does not open) |
 | `ahead` | overlays or function | | | Overlays warmed when this one opens, such as a sheet opened from inside it |
 | `side` | string | `"right"` | | `left` or `right`: the edge the panel comes from |
+| `dock` | string | | | A name: sheets with the same dock open side by side from one edge, the newest at the edge, and slide the others over. See [Side by side](#side-by-side) |
 | `width` | number | `360` | | The panel's width in pixels, at most 90% of the screen |
 | `presentation` | string | `"auto"` | | `auto`, `panel` or `drawer` |
 | `fill` | boolean | `false` | | Always as tall as it may be, whatever the body holds, so a sheet with tabs never grows or shrinks between them (a drawer on touch most of all) |
@@ -194,6 +195,43 @@ Lucy.Sheet.new({
     children = crewRows,
 })
 ```
+
+## Side by side
+
+Give sheets the same `dock` and they open next to each other instead of on top
+of each other. Each slides in at the edge of the screen and pushes the ones
+already open over by its width; when it closes it slides out and they slide
+back. The newest is always at the edge. A player can use them all at once:
+there is one backdrop for the dock, the gamepad moves from one sheet to the
+next, Back closes the newest, and a press outside closes them all.
+
+The coat check in Club Lucy: the locker opens on its own at the counter, and
+opening your backpack while it is open slides the backpack in at the edge and
+pushes the locker over, so you can move things between them.
+
+```luau
+local locker = Lucy.Sheet.new({
+    id = "locker",
+    title = "Locker",
+    dock = "coat-check",
+    width = 320,
+    children = lockerSlots,
+})
+local backpack = Lucy.Sheet.new({
+    id = "backpack",
+    title = "Backpack",
+    dock = "coat-check",
+    width = 420,
+    children = backpackSlots,
+})
+
+locker:open()
+backpack:toggle() -- the locker slides over to make room
+```
+
+The dock opens from the side its first sheet asks for. Docked sheets are
+always panels, on touch too, and with reduced motion they appear and move
+without sliding.
 
 ## Preview
 
