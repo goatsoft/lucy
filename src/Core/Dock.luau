@@ -224,7 +224,7 @@ local function make(app: any, name: string): DockState
 		local room = Reactive.ref(0)
 
 		local frame = Element.new("Frame", {
-			Name = "Dock",
+			Name = "Edges",
 			BackgroundTransparency = 1,
 			Size = UDim2.fromScale(0, 1),
 		}) :: Frame

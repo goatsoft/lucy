@@ -323,6 +323,8 @@ end
 
 -- While something is dragged: the ScrollingFrame in `within` (or `within` itself) that holds
 -- `point` (screen pixels) scrolls toward the edges `point` is near. Returns whether it moved.
+-- It moves a scroller even with ScrollingEnabled off: a drag often turns the player's own
+-- scrolling off so the drag does not scroll the list, and this is the scroll it wants.
 function Scroll.edge(within: Instance, point: Vector2, dt: number): boolean
 	local list: { ScrollingFrame } = {}
 	if within:IsA("ScrollingFrame") then
@@ -335,7 +337,7 @@ function Scroll.edge(within: Instance, point: Vector2, dt: number): boolean
 	end
 	local moved = false
 	for _, scroller in list do
-		if not scroller.Visible or not scroller.ScrollingEnabled then
+		if not scroller.Visible then
 			continue
 		end
 		local at = scroller.AbsolutePosition
