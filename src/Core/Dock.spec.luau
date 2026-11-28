@@ -257,6 +257,21 @@ return function()
 		expect(math.abs(bottom - (body.AbsolutePosition.Y + body.AbsoluteSize.Y)) <= 2).to.equal(true)
 	end)
 
+	it("follows a width given as a ref", function()
+		local Reactive = require(script.Parent.Reactive)
+		local wide = Reactive.ref(300)
+		local sheet = Sheet.new({ app = app, dock = "grow", width = wide, children = { button("A") } })
+		sheet:open()
+		expect(Harness.waitFor(function()
+			return settled(sheet)
+		end, 1)).to.equal(true)
+		local before = sheet.frame.AbsoluteSize.X
+		wide(400)
+		expect(Harness.waitFor(function()
+			return math.abs(sheet.frame.AbsoluteSize.X - before * 4 / 3) <= 2
+		end, 1)).to.equal(true)
+	end)
+
 	describe("fit", function()
 		local function item(width: number, minWidth: number, pin: boolean, order: number)
 			return { width = width, minWidth = minWidth, pin = pin, order = order }

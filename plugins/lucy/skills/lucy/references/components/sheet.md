@@ -50,7 +50,7 @@ settings:open()
 | `dock` | string | | | A name: sheets with the same dock open side by side from the edges, each at its `side`, the newest at the edge pushing the others over. One dock is open at a time. See [Side by side](#side-by-side) |
 | `dockPin` | boolean | `false` | | With `dock`: holds this sheet at its edge; sheets opened after it open inward beside it |
 | `dockSlide` | boolean | `true` | | With `dock`: `false` opens and closes the docked sheet immediately without sliding |
-| `minWidth` | number | `width` | | With `dock`: how narrow the sheet may go when the screen is short of room; it then scrolls sideways |
+| `minWidth` | number | `width` | | With `dock`: how narrow the sheet may go when the screen is short of room; it then scrolls sideways. `width` and `minWidth` may be refs or getters, so a sheet can grow with the screen |
 | `scroll` | boolean | `true` | | `false`: the body does not scroll; it is as tall as the room the sheet has, and the children choose what scrolls (a ScrollArea with a `UIFlexItem` set to Fill takes what is left) |
 | `width` | number | `360` | | The panel's width in pixels, at most 90% of the screen |
 | `presentation` | string | `"auto"` | | `auto`, `panel` or `drawer` |

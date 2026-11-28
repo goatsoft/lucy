@@ -373,17 +373,17 @@ local spec: Component.Spec = {
 			end
 			actionsRow.Visible = #actionHandles > 0
 			local hasActions = #actionHandles > 0
-			-- With build the slots fill on open, so whether they show is followed, not fixed here
-			local footerFilled = if building then Composables.useHasVisibleChild(footerSlot) else nil
+			-- Whether the footer shows is followed, not fixed here: with build the slots fill on open,
+			-- and a footer's children may show for one input and hide for another (a game's controller
+			-- hints): a footer with nothing visible in it and no actions takes no room
+			local footerFilled = Composables.useHasVisibleChild(footerSlot)
 			local function hasFooter(): boolean
-				return hasActions or p.footer ~= nil or (footerFilled ~= nil and footerFilled())
+				return hasActions or footerFilled()
 			end
+			Element.hydrate(footer, { Visible = hasFooter })
+			Element.hydrate(footerSlot, { Visible = footerFilled })
 			if building then
-				Element.hydrate(footer, { Visible = hasFooter })
-				Element.hydrate(footerSlot, { Visible = footerFilled })
 				Element.hydrate(headerSlot, { Visible = Composables.useHasVisibleChild(headerSlot) })
-			else
-				footer.Visible = hasFooter()
 			end
 
 			-- In a drawer the body may use what the overlay offers, less the header, footer, padding
@@ -416,9 +416,9 @@ local spec: Component.Spec = {
 				return math.max(0, math.floor(overlay.maxHeight() - used))
 			end
 			-- A docked sheet that may be squeezed scrolls sideways as well (ADR 0062)
-			local squeezable = type(p.dock) == "string"
-				and type(p.minWidth) == "number"
-				and p.minWidth < (p.width or Overlay.panelWidth)
+			local wantWidth: number = Reactive.toValue(p.width or Overlay.panelWidth)
+			local leastWidth: number? = if p.minWidth ~= nil then Reactive.toValue(p.minWidth) else nil
+			local squeezable = type(p.dock) == "string" and leastWidth ~= nil and leastWidth < wantWidth
 			local body: any
 			if p.scroll == false then
 				-- A fixed body: as tall as the room the sheet has; the children say what scrolls

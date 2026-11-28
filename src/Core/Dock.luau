@@ -6,9 +6,10 @@
 		local member = Dock.join(app, "loot", {
 			open = shown,          -- the sheet's open ref; back and outside presses write false
 			content = frame,       -- the sheet's frame (Core/PanelFrame)
-			width = 360,           -- its width
+			width = 360,           -- its width (a number, ref or getter: it may follow the screen)
 			minWidth = 280,        -- how narrow it may go when the screen is short of room; it then
-			                       -- scrolls sideways (default: width, it never shrinks)
+			                       -- scrolls sideways (default: width, it never shrinks); a number,
+			                       -- ref or getter
 			side = "right",        -- the edge this sheet docks to: left | right
 			pin = false,           -- true: it holds its place at its edge, and sheets opened after it
 			                       -- open inward beside it; false: the newest is at the edge
@@ -57,8 +58,8 @@ Dock.keptReach = 24 -- a kept frame this near the screen's top or bottom counts 
 type Member = {
 	open: Reactive.Ref<boolean>,
 	content: GuiObject,
-	width: number,
-	minWidth: number,
+	width: () -> number,
+	minWidth: () -> number,
 	side: string,
 	pin: boolean,
 	scrim: boolean,
@@ -361,8 +362,8 @@ local function widthsOf(dock: DockState): { [Member]: number }
 		if shown > 0 then
 			table.insert(list, member)
 			table.insert(items, {
-				width = member.width * shown,
-				minWidth = member.minWidth * shown,
+				width = member.width() * shown,
+				minWidth = member.minWidth() * shown,
 				pin = member.pin,
 				order = member.order,
 			})
@@ -449,8 +450,15 @@ function Dock.join(app: any, name: string, options: { [string]: any }): Joined
 	local side = if options.side == "left" then "left" else "right"
 	local left = side == "left"
 	local content: GuiObject = options.content
-	local width: number = options.width or Overlay.panelWidth
-	local minWidth: number = math.min(options.minWidth or width, width)
+	-- Its width and how narrow it may go: numbers, refs or getters (followed where they are read)
+	local function width(): number
+		return Reactive.toValue(options.width or Overlay.panelWidth) :: number
+	end
+	local function minWidth(): number
+		local wide = width()
+		local least = if options.minWidth ~= nil then Reactive.toValue(options.minWidth) :: number else wide
+		return math.min(least, wide)
+	end
 	local animate = options.slide ~= false
 	local progress = Instance.new("NumberValue")
 	local shown = Reactive.ref(0)
@@ -488,7 +496,7 @@ function Dock.join(app: any, name: string, options: { [string]: any }): Joined
 		end,
 		Size = function(): UDim2
 			local s = shown()
-			local full = if s > 0 then now() / s else width
+			local full = if s > 0 then now() / s else width()
 			local top, bottom = room()
 			return UDim2.new(0, math.floor(full + 0.5), 1, -(top + bottom))
 		end,
@@ -603,7 +611,7 @@ function Dock.join(app: any, name: string, options: { [string]: any }): Joined
 		end,
 		width = function(): number
 			local s = shown()
-			return if s > 0 then now() / s else width
+			return if s > 0 then now() / s else width()
 		end,
 		place = overlay.place,
 		close = function(_reason: string?)
