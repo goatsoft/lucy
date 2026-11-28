@@ -186,4 +186,61 @@ return function()
 			expect(shorthand.Instance:HasTag("ui-progress-circle")).to.equal(true)
 		end)
 	end)
+
+	describe("stars", function()
+		local app, cleanup, gui
+		beforeEach(function()
+			app, cleanup = Harness.app()
+			gui = Harness.mount(app)
+		end)
+		afterEach(function()
+			cleanup()
+		end)
+
+		it("computes per-star fill fractions", function()
+			expect(Progress.starFill(0, 5, 5, 1)).to.equal(0)
+			expect(Progress.starFill(2.5, 5, 5, 1)).to.equal(1)
+			expect(Progress.starFill(2.5, 5, 5, 2)).to.equal(1)
+			expect(Progress.starFill(2.5, 5, 5, 3)).to.equal(0.5)
+			expect(Progress.starFill(2.5, 5, 5, 4)).to.equal(0)
+			expect(Progress.starFill(50, 100, 4, 2)).to.equal(1)
+			expect(Progress.starFill(50, 100, 4, 3)).to.equal(0)
+			expect(Progress.starFill(10, 0, 5, 1)).to.equal(0)
+			expect(Progress.starFill(10, 10, 0, 1)).to.equal(0)
+		end)
+
+		it("draws a row of stars that fill reactively and take the variant colour", function()
+			local Reactive = require(script.Parent.Parent.Core.Reactive)
+			local rating = Reactive.ref(2.5)
+			local meter = Progress.new({
+				app = app,
+				Parent = gui,
+				shape = "stars",
+				count = 5,
+				max = 5,
+				value = rating,
+				size = "lg",
+				variant = "warning",
+			})
+			Harness.flush()
+			expect(meter.Instance:HasTag("ui-progress-stars")).to.equal(true)
+			expect(#meter.stars).to.equal(5)
+			expect(meter.stars[1].Size).to.equal(UDim2.fromOffset(28, 28))
+			expect((meter.stars[2]:FindFirstChild("FillClip") :: Frame).Size).to.equal(UDim2.fromScale(1, 1))
+			expect((meter.stars[3]:FindFirstChild("FillClip") :: Frame).Size).to.equal(
+				UDim2.fromScale(0.5, 1)
+			)
+			expect((meter.stars[4]:FindFirstChild("FillClip") :: Frame).Size).to.equal(UDim2.fromScale(0, 1))
+
+			local fillLabel = meter.stars[1]:FindFirstChild("Fill", true) :: TextLabel
+			expect(Harness.colorEq(Harness.styled(fillLabel, "TextColor3"), app.theme:resolve("Warning"))).to.equal(
+				true
+			)
+
+			rating(4)
+			expect((meter.stars[3]:FindFirstChild("FillClip") :: Frame).Size).to.equal(UDim2.fromScale(1, 1))
+			expect((meter.stars[4]:FindFirstChild("FillClip") :: Frame).Size).to.equal(UDim2.fromScale(1, 1))
+			expect((meter.stars[5]:FindFirstChild("FillClip") :: Frame).Size).to.equal(UDim2.fromScale(0, 1))
+		end)
+	end)
 end

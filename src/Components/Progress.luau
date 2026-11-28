@@ -24,9 +24,11 @@ local Slot = require(script.Parent.Slot)
 
 local Progress = {}
 
-Progress.shapes = { "bar", "circle" }
+Progress.shapes = { "bar", "circle", "stars" }
 Progress.sizes = { sm = 28, md = 34, lg = 40 }
+Progress.starSizes = { sm = 16, md = 22, lg = 28 }
 Progress.defaultCircleSize = 34
+Progress.defaultStarSize = 22
 
 -- Hard transparency cut at 0.5 so rotating UIGradient sweeps each half-ring cleanly.
 local RING_CUT = NumberSequence.new({
@@ -111,7 +113,32 @@ for variant, colour in COLOURS do
 		priority = 10,
 		properties = { Color = colour },
 	})
+	table.insert(rules, {
+		selector = `.ui-progress-variant-{variant} >> .ui-progress-star-fill`,
+		priority = 10,
+		properties = { TextColor3 = colour },
+	})
 end
+-- Star meter (shape = "stars"): a row of n stars that fill smoothly left-to-right
+table.insert(rules, {
+	selector = ".ui-progress-star-track",
+	priority = 0,
+	properties = {
+		BackgroundTransparency = 1,
+		TextColor3 = "$MutedForeground",
+		TextTransparency = 0.65,
+		FontFace = "$FontDisplay",
+	},
+})
+table.insert(rules, {
+	selector = ".ui-progress-star-fill",
+	priority = 0,
+	properties = {
+		BackgroundTransparency = 1,
+		TextColor3 = "$Color",
+		FontFace = "$FontDisplay",
+	},
+})
 -- Stepped (steps = n): numbered markers over the bar, lit up to the value
 table.insert(rules, {
 	selector = ".ui-progress-step",
@@ -181,6 +208,18 @@ function Progress.stepFraction(value: number, steps: number): number
 	return math.clamp((value - 0.5) / steps, 0, 1)
 end
 
+-- Star meter: fill fraction (0..1) for star `index` out of `count` stars
+function Progress.starFill(value: number, max: number, count: number, index: number): number
+	if max <= 0 or count <= 0 then
+		return 0
+	end
+	local perStar = max / count
+	if perStar <= 0 then
+		return 0
+	end
+	return math.clamp(value / perStar - (index - 1), 0, 1)
+end
+
 -- Built once and shared by every mount (h.props holds each mount's props).
 local spec: Component.Spec = {
 	kind = "progress",
@@ -197,6 +236,78 @@ local spec: Component.Spec = {
 			local v = variant()
 			checkVariant(v)
 			return variantTag[v]
+		end
+		if shape() == "stars" then
+			local count = math.max(1, math.floor(tonumber(p.count) or tonumber(p.max) or 5))
+			local gap = tonumber(p.gap) or 4
+			local starSize: number
+			if type(p.size) == "number" then
+				starSize = p.size
+			elseif type(p.size) == "string" and Progress.starSizes[p.size] then
+				starSize = Progress.starSizes[p.size]
+			else
+				starSize = Progress.defaultStarSize
+			end
+			local starGlyph = if type(p.glyph) == "string" and #p.glyph > 0 then p.glyph else "\u{2605}"
+			local starChildren: { any } = {
+				Element.new("UIListLayout", {
+					FillDirection = Enum.FillDirection.Horizontal,
+					VerticalAlignment = Enum.VerticalAlignment.Center,
+					Padding = UDim.new(0, gap),
+					SortOrder = Enum.SortOrder.LayoutOrder,
+				}),
+			}
+			h.stars = {}
+			for i = 1, count do
+				local starIndex = i
+				local fillClip = Element.new("Frame", {
+					Name = "FillClip",
+					BackgroundTransparency = 1,
+					ClipsDescendants = true,
+					Size = function(): UDim2
+						local f = Progress.starFill(value(), max(), count, starIndex)
+						return UDim2.fromScale(f, 1)
+					end,
+					ZIndex = 2,
+					Element.new("TextLabel", {
+						Name = "Fill",
+						Size = UDim2.fromOffset(starSize, starSize),
+						Text = starGlyph,
+						TextSize = starSize,
+						TextXAlignment = Enum.TextXAlignment.Center,
+						TextYAlignment = Enum.TextYAlignment.Center,
+						Tags = { "ui-progress-star-fill" },
+					}),
+				})
+				local cell = Element.new("Frame", {
+					Name = `Star{i}`,
+					BackgroundTransparency = 1,
+					Size = UDim2.fromOffset(starSize, starSize),
+					LayoutOrder = i,
+					Element.new("TextLabel", {
+						Name = "Track",
+						Size = UDim2.fromOffset(starSize, starSize),
+						Text = starGlyph,
+						TextSize = starSize,
+						TextXAlignment = Enum.TextXAlignment.Center,
+						TextYAlignment = Enum.TextYAlignment.Center,
+						ZIndex = 1,
+						Tags = { "ui-progress-star-track" },
+					}),
+					fillClip,
+				})
+				h.stars[i] = cell
+				table.insert(starChildren, cell)
+			end
+			local totalWidth = count * starSize + math.max(0, count - 1) * gap
+			return Element.new("Frame", {
+				Name = "Stars",
+				Size = UDim2.fromOffset(totalWidth, starSize),
+				BackgroundTransparency = 1,
+				Visible = h:ref("visible"),
+				Tags = { "ui-progress-stars" :: any, variantTagNow },
+				starChildren,
+			})
 		end
 		if shape() == "circle" then
 			local function frac(): number

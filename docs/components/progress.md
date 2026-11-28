@@ -41,8 +41,11 @@ app.state:set("ui.hype.value", 75)
 | `value` | number | `0` | yes | How full the bar is. Kept between 0 and `max` |
 | `max` | number | `100` | yes | The value of a full bar |
 | `variant` | string | `"default"` | yes | The bar's colour: `default`, `success`, `warning` or `destructive` |
-| `shape` | string | `"bar"` | | `"bar"` for a horizontal bar, or `"circle"` for a ring that fills clockwise |
-| `size` | number or string | `34` | | Ring diameter in pixels (`sm` `28`, `md` `34`, `lg` `40`), with `shape = "circle"` |
+| `shape` | string | `"bar"` | | `"bar"` for a horizontal bar, `"circle"` for a ring that fills clockwise, or `"stars"` for a row of stars that fill left to right |
+| `size` | number or string | `34` / `22` | | Diameter in pixels with `shape = "circle"` (`sm` `28`, `md` `34`, `lg` `40`), or star size in pixels with `shape = "stars"` (`sm` `16`, `md` `22`, `lg` `28`) |
+| `count` | number | `max` or `5` | | Number of stars, with `shape = "stars"` |
+| `gap` | number | `4` | | Gap in pixels between stars, with `shape = "stars"` |
+| `glyph` | string | `"★"` | | Character drawn for each star, with `shape = "stars"` |
 | `thickness` | number | `$StrokeThick` | | Ring stroke thickness in pixels, with `shape = "circle"` |
 | `trackVisible` | boolean or getter | `true` | | Shows or hides the ring track while keeping `children` visible |
 | `children` / `content` | any | | | Components centred inside the ring (such as a circular [Kbd](kbd.md)) |
@@ -159,6 +162,23 @@ Lucy.Stack.new({
             },
         }),
     },
+    Parent = parent,
+})
+```
+
+## Stars
+
+With `shape = "stars"`, Progress draws a row of `count` stars that fill smoothly
+left to right from `0` to `max`, including partial stars:
+
+```luau
+Lucy.Progress.new({
+    shape = "stars",
+    count = 5,
+    max = 5,
+    value = 3.5,
+    size = "md",
+    variant = "warning",
     Parent = parent,
 })
 ```
