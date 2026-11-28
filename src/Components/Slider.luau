@@ -21,14 +21,15 @@
 		})
 		slider:setValue(75)
 
-	Mouse and touch drag the thumb or press anywhere on the track. With focus on
-	it, the arrows along its axis change it (left and right, or up and down when
-	vertical; up is more) on keyboard and gamepad, faster while held; the other
-	arrows move focus as usual (InputManager.nudge). The engine is told not to
-	move gamepad selection along that axis.
+	Mouse and touch drag the thumb or press anywhere on the track. On keyboard
+	and gamepad, focusing the slider rings the whole control and arrows move
+	focus freely; pressing A (or Enter/Space) grabs the thumb so arrows along
+	its axis change the value (faster while held) and navigation stays locked
+	on the slider. Pressing B (or Backspace, or A again) commits and returns
+	to normal navigation.
 
 	State keys: value, min, max, step, orientation, size, disabled, visible.
-	Events: "select" with the value, once per drag or held arrow that changed it.
+	Events: "select" with the value, once per drag or adjustment that changed it.
 ]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -60,9 +61,10 @@ Slider.valueHeight = 20 -- room for the value under a vertical slider
 Slider.fastAfter = 12
 Slider.fastParts = 25
 
--- The focus ring goes round the thumb (the halo), not the whole row: the row is a ring host
--- (ui-ring-host), so it gets no ring of its own
+-- Focused on the whole control until the player grabs the thumb (A / Enter), when the
+-- control becomes a ring host (ui-ring-host) and the thumb's halo takes the focus ring.
 local rules: { Component.Rule } = {
+	{ selector = ".ui-slider::UICorner", priority = 0, properties = { CornerRadius = "$RadiusSm" } },
 	{
 		selector = ".ui-slider-track",
 		priority = 0,
@@ -111,7 +113,7 @@ local rules: { Component.Rule } = {
 		},
 	},
 	{
-		selector = ".ui-slider.ui-focus-visible >> .ui-slider-ring",
+		selector = ".ui-slider.ui-slider-adjusting >> .ui-slider-ring",
 		priority = 20,
 		properties = { Transparency = 0 },
 	},
@@ -213,7 +215,7 @@ local function screenPoint(input: InputObject, object: Instance): Vector2
 	return point
 end
 
-local STOP, ESCAPE = Enum.SelectionBehavior.Stop, Enum.SelectionBehavior.Escape
+local ESCAPE = Enum.SelectionBehavior.Escape
 local TOP_LEFT, BOTTOM_LEFT = Vector2.zero, Vector2.new(0, 1)
 local CENTRE = Vector2.new(0.5, 0.5)
 
@@ -267,11 +269,15 @@ local spec: Component.Spec = {
 		local function enabled(): boolean
 			return not disabled()
 		end
-		-- Pointer over it (mouse only, set by _pointer) or dragging it.
+		-- Pointer over it (mouse only, set by _pointer), dragging it, or adjusting the thumb on pad/keys.
 		local hovered, pressing = Reactive.ref(false), Reactive.ref(false)
-		h._hovered, h._pressing = hovered, pressing
+		local adjusting = Reactive.ref(false)
+		h._hovered, h._pressing, h._adjusting = hovered, pressing, adjusting
 		local function hover(): boolean
 			return not disabled() and (hovered() or pressing())
+		end
+		local function isAdjusting(): boolean
+			return not disabled() and adjusting()
 		end
 		-- The control's thickness across its axis: the thumb with room for the
 		-- focus ring, at least a small control's height.
@@ -410,11 +416,26 @@ local spec: Component.Spec = {
 		end
 		Reactive.onCleanup(stopListening)
 
-		local function alongX(): Enum.SelectionBehavior
-			return if vertical() then ESCAPE else STOP
-		end
-		local function alongY(): Enum.SelectionBehavior
-			return if vertical() then STOP else ESCAPE
+		-- B / Backspace exits thumb adjustment without closing an enclosing sheet or dialog.
+		Composables.useBackHandler(h.app, isAdjusting, function()
+			h:setAdjusting(false)
+			return true
+		end)
+		-- Losing focus or becoming disabled exits adjustment and commits.
+		local focusRef = h.app.input:focusRef()
+		Reactive.watch(focusRef, function(focused)
+			if adjusting() and focused ~= h.Instance then
+				h:setAdjusting(false)
+			end
+		end)
+		Reactive.watch(disabled, function(isDisabled)
+			if isDisabled and adjusting() then
+				h:setAdjusting(false)
+			end
+		end)
+
+		local function lockSelf(): GuiObject?
+			return if isAdjusting() then h.Instance else nil
 		end
 
 		return Element.new("TextButton", {
@@ -432,13 +453,22 @@ local spec: Component.Spec = {
 			Visible = h:ref("visible"),
 			Interactable = enabled,
 			Selectable = enabled,
-			SelectionBehaviorLeft = alongX,
-			SelectionBehaviorRight = alongX,
-			SelectionBehaviorUp = alongY,
-			SelectionBehaviorDown = alongY,
+			-- While adjusting the thumb, lock all four directions to this button so gamepad
+			-- navigation cannot jump away; otherwise leave them free for normal navigation.
+			NextSelectionLeft = lockSelf,
+			NextSelectionRight = lockSelf,
+			NextSelectionUp = lockSelf,
+			NextSelectionDown = lockSelf,
+			SelectionBehaviorLeft = ESCAPE,
+			SelectionBehaviorRight = ESCAPE,
+			SelectionBehaviorUp = ESCAPE,
+			SelectionBehaviorDown = ESCAPE,
 			Tags = {
 				"ui-slider" :: any,
-				"ui-ring-host",
+				-- Whole control gets the focus ring until the thumb is grabbed; then the thumb's
+				-- halo takes over and the outer ring hides.
+				["ui-ring-host"] = isAdjusting,
+				["ui-slider-adjusting"] = isAdjusting,
 				-- Orientation and size in one binding: they rarely change.
 				function()
 					local o, s = orientation(), size()
@@ -449,6 +479,14 @@ local spec: Component.Spec = {
 				["ui-disabled"] = disabled,
 				["ui-slider-hover"] = hover,
 			},
+			[Element.on("Activated")] = function()
+				if h.destroyed or h:get("disabled") then
+					return
+				end
+				if h.app.input:isNavigating() then
+					h:setAdjusting(not h._adjusting())
+				end
+			end :: any,
 			[Element.on("MouseEnter")] = function()
 				h:_pointer(true)
 			end :: any,
@@ -501,7 +539,7 @@ function Slider.new(props: { [string]: any }?)
 
 	-- Where a gesture started, to commit only when it changed something.
 	local dragFrom: number? = nil
-	local holdFrom: number? = nil
+	local adjustFrom: number? = nil
 
 	local function commit(h, from: number)
 		local value = h:get("value")
@@ -512,6 +550,37 @@ function Slider.new(props: { [string]: any }?)
 		local onCommit = h.props.onValueCommit
 		if onCommit then
 			onCommit(value, h)
+		end
+	end
+
+	-- Whether the thumb is currently grabbed for keyboard/gamepad adjustment.
+	function handle.adjusting(h): boolean
+		return h._adjusting() == true
+	end
+
+	-- Enters or leaves keyboard/gamepad thumb adjustment, committing on exit.
+	function handle.setAdjusting(h, on: boolean)
+		if on and (h.destroyed or h:get("disabled")) then
+			on = false
+		end
+		local was = h._adjusting() == true
+		if on == was then
+			return
+		end
+		if on then
+			adjustFrom = h:get("value")
+			h._adjusting(true)
+		else
+			local from = adjustFrom
+			adjustFrom = nil
+			h._adjusting(false)
+			if from ~= nil and not h.destroyed then
+				commit(h, from)
+			end
+		end
+		-- Swap between outer control focus ring and inner thumb halo immediately while focused.
+		if not h.destroyed and h.app.input:focused() == h.Instance and h.app.input:isNavigating() then
+			h.app.input:_drawRing(h.Instance)
 		end
 	end
 
@@ -574,10 +643,11 @@ function Slider.new(props: { [string]: any }?)
 	--[[
 		An arrow along the slider's axis (InputManager.nudge): dx and dy are -1, 0
 		or 1 in screen terms (dy = -1 is up). `count` is how many times the arrow
-		has fired while held. Returns whether it was taken.
+		has fired while held. Only active while the thumb is grabbed (setAdjusting(true));
+		otherwise returns false so arrows navigate freely.
 	]]
 	function handle.nudge(h, dx: number, dy: number, count: number?): boolean
-		if h.destroyed or h:get("disabled") then
+		if h.destroyed or h:get("disabled") or not h._adjusting() then
 			return false
 		end
 		local direction
@@ -596,9 +666,6 @@ function Slider.new(props: { [string]: any }?)
 		if type(value) ~= "number" then
 			value = min
 		end
-		if holdFrom == nil then
-			holdFrom = value
-		end
 		local stride = if step > 0 then step else (max - min) / 100
 		if (count or 1) > Slider.fastAfter then
 			stride = math.max(stride, stride * math.floor((max - min) / stride / Slider.fastParts))
@@ -607,14 +674,8 @@ function Slider.new(props: { [string]: any }?)
 		return true
 	end
 
-	-- The held arrow was let go.
-	function handle.release(h)
-		local from = holdFrom
-		holdFrom = nil
-		if from ~= nil and not h.destroyed then
-			commit(h, from)
-		end
-	end
+	-- The held arrow was let go (commit happens when exiting adjustment mode).
+	function handle.release(_h) end
 
 	return handle
 end

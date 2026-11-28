@@ -3,10 +3,11 @@
 
 Picks a number between a minimum and a maximum, for settings such as volume or
 camera speed. Drag the thumb or press anywhere on the track with a mouse or a
-finger. With the slider focused, the arrows along it change the value on
-keyboard and gamepad, one step at a time and faster while held; the other
-arrows move focus as usual. It can lie flat or stand up, and grows on touch and
-console.
+finger. On keyboard and gamepad, focusing the slider rings the whole control and
+the arrows move focus freely; press A (or Enter) to grab the thumb so the arrows
+along it change the value (faster while held), then press B (or A again) to
+commit and return to normal navigation. It can lie flat or stand up, and grows
+on touch and console.
 
 ```luau
 Lucy.Stack.new({
