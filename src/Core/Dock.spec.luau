@@ -119,4 +119,40 @@ return function()
 		end)).to.equal(true)
 		expect(math.abs(rightEdge(a.frame) - rightEdge(b.frame)) <= 2).to.equal(true)
 	end)
+
+	it(
+		"places an appended sheet on the inner side and opens without sliding when dockSlide is false",
+		function()
+			local menu = Sheet.new({
+				app = app,
+				id = "menu",
+				dock = "left-nav",
+				side = "left",
+				width = 240,
+				children = { button("Items") },
+			})
+			local detail = Sheet.new({
+				app = app,
+				id = "detail",
+				dock = "left-nav",
+				side = "left",
+				width = 320,
+				dockAppend = true,
+				dockSlide = false,
+				children = { button("Equip") },
+			})
+			menu:open()
+			expect(Harness.waitFor(function()
+				return settled(menu)
+			end, 1)).to.equal(true)
+			detail:open()
+			expect(Harness.waitFor(function()
+				return settled(detail)
+					and math.abs(rightEdge(menu.frame) - detail.frame.AbsolutePosition.X) <= 2
+			end, 1)).to.equal(true)
+			detail:close()
+			expect(detail:get("open")).to.equal(false)
+			expect(menu:get("open")).to.equal(true)
+		end
+	)
 end

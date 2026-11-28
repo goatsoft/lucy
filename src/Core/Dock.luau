@@ -273,6 +273,8 @@ function Dock.join(app: any, name: string, options: { [string]: any }): Joined
 
 	local content: GuiObject = options.content
 	local width: number = options.width or Overlay.panelWidth
+	local append = options.append == true
+	local animateSlide = options.slide ~= false
 	local progress = Instance.new("NumberValue")
 	local shown = Reactive.ref(0)
 	local holder = Element.new("Frame", {
@@ -286,8 +288,9 @@ function Dock.join(app: any, name: string, options: { [string]: any }): Joined
 		end,
 	}) :: Frame
 	-- The panel keeps its full width inside, from the dock's own edge, so it slides out from there
-	content.AnchorPoint = Vector2.new(if left then 1 else 0, 0)
-	content.Position = UDim2.fromScale(if left then 1 else 0, 0)
+	local pinRight = if append then not left else left
+	content.AnchorPoint = Vector2.new(if pinRight then 1 else 0, 0)
+	content.Position = UDim2.fromScale(if pinRight then 1 else 0, 0)
 	content.Size = UDim2.new(0, width, 1, 0)
 	content.Parent = holder
 	holder.Parent = dock.row
@@ -317,20 +320,42 @@ function Dock.join(app: any, name: string, options: { [string]: any }): Joined
 		if isNowOpen and not previous then
 			dock.nextOrder += 1
 			member.order = dock.nextOrder
-			-- the newest sits at the edge: last in the row on the right, first on the left
-			holder.LayoutOrder = if left then -member.order else member.order
+			-- Default: newest sits at the outer edge (first on left, last on right).
+			-- With append = true: newest sits on the inner side (to the right of existing sheets on a left dock).
+			holder.LayoutOrder = if left
+				then (if append then member.order else -member.order)
+				else (if append then -member.order else member.order)
 			member.closing(false)
 			holder.Visible = true
-			slide(member, 1)
+			if animateSlide then
+				slide(member, 1)
+			else
+				if member.tween then
+					member.tween:Cancel()
+					member.tween = nil
+				end
+				member.progress.Value = 1
+			end
 			focusOn(app, member)
 		elseif not isNowOpen and previous then
 			member.closing(true)
-			slide(member, 0, function()
+			local function finishClose()
 				if not isOpen(member) then
 					member.closing(false)
 					holder.Visible = false
+					dock.overlay.place()
 				end
-			end)
+			end
+			if animateSlide then
+				slide(member, 0, finishClose)
+			else
+				if member.tween then
+					member.tween:Cancel()
+					member.tween = nil
+				end
+				member.progress.Value = 0
+				finishClose()
+			end
 			-- focus goes to the newest still open
 			local focused = app.input and app.input:focused()
 			if focused and focused:IsDescendantOf(holder) then

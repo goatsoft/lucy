@@ -48,6 +48,8 @@ settings:open()
 | `ahead` | overlays or function | | | Overlays warmed when this one opens, such as a sheet opened from inside it |
 | `side` | string | `"right"` | | `left` or `right`: the edge the panel comes from |
 | `dock` | string | | | A name: sheets with the same dock open side by side from one edge, the newest at the edge, and slide the others over. See [Side by side](#side-by-side) |
+| `dockAppend` | boolean | `false` | | With `dock`: opens on the inner side of the existing docked sheets instead of at the screen edge |
+| `dockSlide` | boolean | `true` | | With `dock`: `false` opens and closes the docked sheet immediately without sliding |
 | `width` | number | `360` | | The panel's width in pixels, at most 90% of the screen |
 | `presentation` | string | `"auto"` | | `auto`, `panel` or `drawer` |
 | `fill` | boolean | `false` | | Always as tall as it may be, whatever the body holds, so a sheet with tabs never grows or shrinks between them (a drawer on touch most of all) |
@@ -231,7 +233,9 @@ backpack:toggle() -- the locker slides over to make room
 
 The dock opens from the side its first sheet asks for. Docked sheets are
 always panels, on touch too, and with reduced motion they appear and move
-without sliding.
+without sliding. Set `dockAppend = true` on a sub-sheet to place it on the inner
+side of the menu instead of pushing the menu inward, and `dockSlide = false` to
+appear and close without a slide tween.
 
 ## Preview
 
