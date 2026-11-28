@@ -238,11 +238,17 @@ end
 	Takes over gamepad/keyboard selection visuals for `object` and its selectable
 	descendants: the engine's white ring is replaced by the app's blank image and
 	our themed ".ui-focus-visible" ring is drawn instead (see InputManager).
+	An object that already has a selection image of its own keeps it: a game that
+	draws its own ring for something (a grid cell ringing the whole item on it)
+	wins, and InputManager leaves such an object to the engine.
 ]]
 function Component.claimSelection(app: any, object: Instance)
 	local function claim(target: Instance)
 		if target:IsA("GuiObject") then
-			target.SelectionImageObject = app.selectionImage
+			local own: GuiObject? = target.SelectionImageObject :: any -- nil when none is set
+			if own == nil or own == app.selectionImage then
+				target.SelectionImageObject = app.selectionImage
+			end
 		end
 	end
 	claim(object)

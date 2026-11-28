@@ -22,6 +22,23 @@ return function()
 		end)
 	end)
 
+	describe("claimSelection", function()
+		it("gives selectables the app's blank image but leaves one a game set itself", function()
+			local app = { selectionImage = Instance.new("Frame") }
+			local root = Instance.new("Frame")
+			local plain = Instance.new("TextButton")
+			plain.Parent = root
+			local own = Instance.new("TextButton")
+			local ring = Instance.new("Frame")
+			own.SelectionImageObject = ring
+			own.Parent = root
+			Component.claimSelection(app, root)
+			expect(plain.SelectionImageObject).to.equal(app.selectionImage)
+			expect(own.SelectionImageObject).to.equal(ring)
+			root:Destroy()
+		end)
+	end)
+
 	describe("setVariant", function()
 		it("replaces the previous tag for the same key", function()
 			local frame = Instance.new("Frame")
