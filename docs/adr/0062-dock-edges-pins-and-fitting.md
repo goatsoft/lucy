@@ -52,14 +52,14 @@ pushing the others in. Two games now lean on it and found its limits (JB, 2026-1
    sheet that it overlaps at the top or bottom edge of the screen stops short of it (the dock's
    `maxHeight` and top inset leave its room), so the sheet's own content is never hidden under it.
    `app:keep` returns a function that stops it.
-9. **A fixed body.** `scroll = false` on a Sheet makes its body a frame as tall as the room the
-   sheet has, instead of a ScrollArea, so the children decide what scrolls: Crime Spree's
-   inventory keeps its equipment still and scrolls only the bag.
 8. **Dragging near an edge scrolls.** `Scroll.edge(frame, point, dt)` scrolls the ScrollingFrame
    under `point` (screen pixels) toward any edge it is within `Scroll.edgeZone` (32 px) of, faster
    nearer the edge, and returns whether it moved. A game's drag and drop calls it every frame
    while something is held, so an item can be carried to a part of a sheet that is scrolled out
    of view.
+9. **A fixed body.** `scroll = false` on a Sheet makes its body a frame as tall as the room the
+   sheet has, instead of a ScrollArea, so the children decide what scrolls: Crime Spree's
+   inventory keeps its equipment still and scrolls only the bag.
 
 ## Consequences
 
