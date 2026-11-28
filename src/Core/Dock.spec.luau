@@ -190,6 +190,45 @@ return function()
 		expect(bag.frame:IsDescendantOf(scope.root)).to.equal(true)
 	end)
 
+	it("drops the dimmed backdrop when every open sheet sets scrim = false", function()
+		local menu = Sheet.new({
+			app = app,
+			id = "menu",
+			dock = "menu",
+			side = "left",
+			width = 240,
+			scrim = false,
+			children = { button("Play") },
+		})
+		local modalSub = Sheet.new({
+			app = app,
+			id = "modal-sub",
+			dock = "menu",
+			side = "left",
+			width = 300,
+			children = { button("OK") },
+		})
+		menu:open()
+		expect(Harness.waitFor(function()
+			return settled(menu)
+		end, 1)).to.equal(true)
+		local dock = (app :: any)._lucyDocks.menu
+		expect(dock.overlay.scrim:HasTag("ui-overlay-scrim")).to.equal(false)
+		expect(dock.overlay.scrim:HasTag("ui-overlay-clear")).to.equal(true)
+
+		modalSub:open()
+		expect(Harness.waitFor(function()
+			return settled(modalSub)
+		end, 1)).to.equal(true)
+		expect(dock.overlay.scrim:HasTag("ui-overlay-scrim")).to.equal(true)
+
+		modalSub:close()
+		expect(Harness.waitFor(function()
+			return not dock.overlay.scrim:HasTag("ui-overlay-scrim")
+		end, 1)).to.equal(true)
+		expect(dock.overlay.scrim:HasTag("ui-overlay-clear")).to.equal(true)
+	end)
+
 	describe("fit", function()
 		local function item(width: number, minWidth: number, pin: boolean, order: number)
 			return { width = width, minWidth = minWidth, pin = pin, order = order }

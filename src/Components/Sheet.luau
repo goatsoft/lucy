@@ -560,6 +560,7 @@ local spec: Component.Spec = {
 					side = p.side,
 					pin = p.dockPin,
 					slide = p.dockSlide,
+					scrim = p.scrim,
 					dismissible = dismissible,
 					defaultFocus = firstFocus,
 					id = h.id,

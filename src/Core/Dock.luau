@@ -13,6 +13,7 @@
 			pin = false,           -- true: it holds its place at its edge, and sheets opened after it
 			                       -- open inward beside it; false: the newest is at the edge
 			slide = true,          -- false: appears and goes without sliding
+			scrim = true,          -- false: drop the dimmed backdrop when every open sheet sets it
 			dismissible = true,
 			defaultFocus = fn,     -- what to select when it opens
 			id = "bag",
@@ -60,6 +61,7 @@ type Member = {
 	minWidth: number,
 	side: string,
 	pin: boolean,
+	scrim: boolean,
 	dismissible: boolean,
 	defaultFocus: (() -> any)?,
 	holder: Frame,
@@ -290,6 +292,18 @@ local function make(app: any, name: string): DockState
 			presentation = "panel",
 			prefer = "panel",
 			modal = true,
+			scrim = function(): boolean
+				version()
+				if not dock then
+					return false
+				end
+				for _, member in dock.members do
+					if (member.open() or member.closing()) and member.scrim then
+						return true
+					end
+				end
+				return false
+			end,
 			dismissible = true,
 			-- The frame spans the screen: only the sheets in it count as inside it
 			solid = false,
@@ -489,6 +503,7 @@ function Dock.join(app: any, name: string, options: { [string]: any }): Joined
 		minWidth = minWidth,
 		side = side,
 		pin = options.pin == true,
+		scrim = options.scrim ~= false,
 		dismissible = options.dismissible ~= false,
 		defaultFocus = options.defaultFocus,
 		holder = holder,
