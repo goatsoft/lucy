@@ -268,21 +268,17 @@ local spec: Component.Spec = {
 					local interactive = clickable and not disabled
 
 					local row: GuiObject
-					local conn: RBXScriptConnection? = nil
 					if interactive then
-						local btn = Instance.new("TextButton")
-						btn.Text = ""
-						btn.AutoButtonColor = false
-						btn.Active = true
-						btn.Selectable = true
-						if app and app.selectionRing then
-							btn.SelectionImageObject = app.selectionRing
-						end
-						btn:AddTag("ui-list-item-clickable")
 						local cb = itemSpec.onClick
-						if cb then
-							conn = btn.Activated:Connect(cb)
-						end
+						local btn = Element.new("TextButton")({
+							Text = "",
+							AutoButtonColor = false,
+							Active = true,
+							Selectable = true,
+							SelectionImageObject = if app then app.selectionRing else nil,
+							[Element.on("Activated")] = cb,
+						}) :: TextButton
+						btn:AddTag("ui-list-item-clickable")
 						row = btn
 					else
 						local frame = Instance.new("Frame")
@@ -351,9 +347,6 @@ local spec: Component.Spec = {
 					row.Parent = root
 
 					table.insert(rowCleanups, function()
-						if conn then
-							conn:Disconnect()
-						end
 						row:Destroy()
 					end)
 				end
