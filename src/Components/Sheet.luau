@@ -22,9 +22,15 @@
 				{ text = "Done" },
 			},
 			side = "right",           -- left | right (the panel; touch always uses the bottom)
-			dock = nil,               -- a name: sheets in the same dock open side by side from one edge,
-			                          -- the newest at the edge, pushing the others over (Core/Dock); one
-			                          -- backdrop and one focus scope for them all; always a panel
+			dock = nil,               -- a name: sheets in the same dock open side by side from the edges,
+			                          -- each at its `side`, the newest at the edge, pushing the others
+			                          -- over (Core/Dock); one backdrop and one focus scope for them all;
+			                          -- always a panel; one dock open at a time
+			dockPin = false,          -- with dock: true holds this sheet at its edge; sheets opened
+			                          -- after it open inward beside it (a menu and its sub-sheets)
+			dockSlide = true,         -- with dock: false appears and goes without sliding
+			minWidth = nil,           -- with dock: how narrow it may go when the screen is short of
+			                          -- room; it then scrolls sideways (default: width, never narrower)
 			width = 360,              -- the panel's width, at most 90% of the screen
 			presentation = "auto",    -- auto | panel | drawer
 			fill = false,             -- true: always as tall as it may be, whatever the body holds (a
@@ -406,8 +412,13 @@ local spec: Component.Spec = {
 				end
 				return math.max(0, math.floor(overlay.maxHeight() - used))
 			end
+			-- A docked sheet that may be squeezed scrolls sideways as well (ADR 0062)
+			local squeezable = type(p.dock) == "string"
+				and type(p.minWidth) == "number"
+				and p.minWidth < (p.width or Overlay.panelWidth)
 			local body = ScrollArea.new({
 				app = app,
+				direction = if squeezable then "both" else nil,
 				maxHeight = bodyCap,
 				minHeight = if p.fill then bodyCap else nil,
 				children = p.children,
@@ -545,8 +556,9 @@ local spec: Component.Spec = {
 					open = shown,
 					content = framed.frame,
 					width = p.width,
+					minWidth = p.minWidth,
 					side = p.side,
-					append = p.dockAppend,
+					pin = p.dockPin,
 					slide = p.dockSlide,
 					dismissible = dismissible,
 					defaultFocus = firstFocus,

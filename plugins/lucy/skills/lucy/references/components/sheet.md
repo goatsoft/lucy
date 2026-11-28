@@ -47,9 +47,10 @@ settings:open()
 | `trigger` | button, handle or list | | | What opens it. Hovered or focused, it warms (it does not open) |
 | `ahead` | overlays or function | | | Overlays warmed when this one opens, such as a sheet opened from inside it |
 | `side` | string | `"right"` | | `left` or `right`: the edge the panel comes from |
-| `dock` | string | | | A name: sheets with the same dock open side by side from one edge, the newest at the edge, and slide the others over. See [Side by side](#side-by-side) |
-| `dockAppend` | boolean | `false` | | With `dock`: opens on the inner side of the existing docked sheets instead of at the screen edge |
+| `dock` | string | | | A name: sheets with the same dock open side by side from the edges, each at its `side`, the newest at the edge pushing the others over. One dock is open at a time. See [Side by side](#side-by-side) |
+| `dockPin` | boolean | `false` | | With `dock`: holds this sheet at its edge; sheets opened after it open inward beside it |
 | `dockSlide` | boolean | `true` | | With `dock`: `false` opens and closes the docked sheet immediately without sliding |
+| `minWidth` | number | `width` | | With `dock`: how narrow the sheet may go when the screen is short of room; it then scrolls sideways |
 | `width` | number | `360` | | The panel's width in pixels, at most 90% of the screen |
 | `presentation` | string | `"auto"` | | `auto`, `panel` or `drawer` |
 | `fill` | boolean | `false` | | Always as tall as it may be, whatever the body holds, so a sheet with tabs never grows or shrinks between them (a drawer on touch most of all) |
@@ -231,11 +232,29 @@ locker:open()
 backpack:toggle() -- the locker slides over to make room
 ```
 
-The dock opens from the side its first sheet asks for. Docked sheets are
-always panels, on touch too, and with reduced motion they appear and move
-without sliding. Set `dockAppend = true` on a sub-sheet to place it on the inner
-side of the menu instead of pushing the menu inward, and `dockSlide = false` to
-appear and close without a slide tween.
+Each sheet docks to its own `side`, so a dock can have sheets on both edges with
+one backdrop and one focus scope. At an edge the newest sheet sits outermost and
+pushes the others in; a sheet with `dockPin = true` holds its place and sheets
+opened after it open inward beside it (a menu and its sub-sheets). Opening a
+sheet in one dock closes the app's other docks. Docked sheets are always panels,
+on touch too, and with reduced motion (or `dockSlide = false`) they appear and
+move without sliding.
+
+```luau
+local menu = Lucy.Sheet.new({ id = "menu", dock = "menu", side = "left", dockPin = true, width = 280 })
+local settings = Lucy.Sheet.new({ id = "settings", dock = "menu", side = "left", width = 420 })
+menu:open()
+settings:open() -- opens beside the menu; the menu stays at the edge
+```
+
+On a small screen the open sheets share the width. When they do not fit, they
+give way (unpinned before pinned, the oldest first) down to each sheet's
+`minWidth`, and a squeezed sheet scrolls sideways. Nothing is scaled down, so
+what is sized for touch stays that size. A frame kept with `app:keep(frame)`
+(the player's health, say) stays in sight above the dock, and a sheet under or
+over it stops short of it. While dragging inside a sheet, call
+`Lucy.Scroll.edge(sheet.frame, point, dt)` every frame to scroll toward an edge
+the pointer is near.
 
 ## Preview
 

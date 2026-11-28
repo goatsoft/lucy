@@ -1,4 +1,5 @@
 return function()
+	local Dock = require(script.Parent.Dock)
 	local Sheet = require(script.Parent.Parent.Components.Sheet)
 	local Harness = require(script.Parent.Parent.Testing.Harness)
 
@@ -109,50 +110,119 @@ return function()
 		end, 1)).to.equal(true)
 	end)
 
-	it("keeps sheets in different docks apart", function()
+	it("opens one dock at a time: opening a sheet closes the other docks", function()
 		local a = Sheet.new({ app = app, dock = "one", width = 300 })
 		local b = Sheet.new({ app = app, dock = "two", width = 300 })
 		a:open()
-		b:open()
 		expect(Harness.waitFor(function()
-			return settled(a) and settled(b)
+			return settled(a)
 		end)).to.equal(true)
-		expect(math.abs(rightEdge(a.frame) - rightEdge(b.frame)) <= 2).to.equal(true)
+		b:open()
+		expect(a:get("open")).to.equal(false)
+		expect(b:get("open")).to.equal(true)
 	end)
 
-	it(
-		"places an appended sheet on the inner side and opens without sliding when dockSlide is false",
-		function()
-			local menu = Sheet.new({
-				app = app,
-				id = "menu",
-				dock = "left-nav",
-				side = "left",
-				width = 240,
-				children = { button("Items") },
-			})
-			local detail = Sheet.new({
-				app = app,
-				id = "detail",
-				dock = "left-nav",
-				side = "left",
-				width = 320,
-				dockAppend = true,
-				dockSlide = false,
-				children = { button("Equip") },
-			})
-			menu:open()
-			expect(Harness.waitFor(function()
-				return settled(menu)
-			end, 1)).to.equal(true)
-			detail:open()
-			expect(Harness.waitFor(function()
-				return settled(detail)
-					and math.abs(rightEdge(menu.frame) - detail.frame.AbsolutePosition.X) <= 2
-			end, 1)).to.equal(true)
-			detail:close()
-			expect(detail:get("open")).to.equal(false)
-			expect(menu:get("open")).to.equal(true)
+	it("holds a pinned sheet at its edge and opens later ones beside it, without sliding", function()
+		local menu = Sheet.new({
+			app = app,
+			id = "menu",
+			dock = "left-nav",
+			side = "left",
+			dockPin = true,
+			width = 240,
+			children = { button("Items") },
+		})
+		local detail = Sheet.new({
+			app = app,
+			id = "detail",
+			dock = "left-nav",
+			side = "left",
+			width = 320,
+			dockSlide = false,
+			children = { button("Equip") },
+		})
+		menu:open()
+		expect(Harness.waitFor(function()
+			return settled(menu)
+		end, 1)).to.equal(true)
+		local root = menu.frame:FindFirstAncestorWhichIsA("LayerCollector") :: ScreenGui
+		local screenLeft = root.AbsolutePosition.X
+		detail:open()
+		expect(Harness.waitFor(function()
+			return settled(detail)
+				and math.abs(menu.frame.AbsolutePosition.X - screenLeft) <= 2
+				and math.abs(rightEdge(menu.frame) - detail.frame.AbsolutePosition.X) <= 2
+		end, 1)).to.equal(true)
+		detail:close()
+		expect(detail:get("open")).to.equal(false)
+		expect(menu:get("open")).to.equal(true)
+	end)
+
+	it("docks each sheet to its own side, one backdrop for both edges", function()
+		local crate = Sheet.new({
+			app = app,
+			id = "crate",
+			dock = "loot",
+			side = "left",
+			width = 300,
+			children = { button("Take") },
+		})
+		local bag = Sheet.new({
+			app = app,
+			id = "bag",
+			dock = "loot",
+			side = "right",
+			width = 300,
+			children = { button("Drop") },
+		})
+		crate:open()
+		bag:open()
+		expect(Harness.waitFor(function()
+			return settled(crate) and settled(bag)
+		end, 1)).to.equal(true)
+		local root = bag.frame:FindFirstAncestorWhichIsA("LayerCollector") :: ScreenGui
+		expect(Harness.waitFor(function()
+			return math.abs(crate.frame.AbsolutePosition.X - root.AbsolutePosition.X) <= 2
+				and math.abs(rightEdge(bag.frame) - (root.AbsolutePosition.X + root.AbsoluteSize.X)) <= 2
+		end, 1)).to.equal(true)
+		local scope = app.input:topScope()
+		expect(crate.frame:IsDescendantOf(scope.root)).to.equal(true)
+		expect(bag.frame:IsDescendantOf(scope.root)).to.equal(true)
+	end)
+
+	describe("fit", function()
+		local function item(width: number, minWidth: number, pin: boolean, order: number)
+			return { width = width, minWidth = minWidth, pin = pin, order = order }
 		end
-	)
+
+		it("leaves widths alone when they fit", function()
+			local w = Dock.fit({ item(300, 200, false, 1), item(400, 300, false, 2) }, 800)
+			expect(w[1]).to.equal(300)
+			expect(w[2]).to.equal(400)
+		end)
+
+		it("squeezes the oldest unpinned sheet first, down to its minWidth", function()
+			local w = Dock.fit({ item(414, 300, false, 1), item(528, 420, false, 2) }, 760)
+			expect(w[1]).to.equal(300)
+			expect(w[2]).to.equal(460)
+		end)
+
+		it("squeezes unpinned sheets before pinned ones", function()
+			local w = Dock.fit({ item(300, 200, true, 1), item(400, 300, false, 2) }, 650)
+			expect(w[1]).to.equal(300)
+			expect(w[2]).to.equal(350)
+		end)
+
+		it("never squeezes a sheet that has no minWidth below its width", function()
+			local w = Dock.fit({ item(300, 300, false, 1), item(400, 200, false, 2) }, 600)
+			expect(w[1]).to.equal(300)
+			expect(w[2]).to.equal(300)
+		end)
+
+		it("shares the room by minWidth when even those do not fit", function()
+			local w = Dock.fit({ item(400, 300, false, 1), item(400, 100, false, 2) }, 200)
+			expect(w[1]).to.equal(150)
+			expect(w[2]).to.equal(50)
+		end)
+	end)
 end

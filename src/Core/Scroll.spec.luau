@@ -414,4 +414,37 @@ return function()
 			expect(app.input:focused()).to.equal(further)
 		end)
 	end)
+
+	describe("edge", function()
+		it("does not scroll outside the edge zone", function()
+			expect(Scroll.edgeStep(32, 32, 1)).to.equal(0)
+			expect(Scroll.edgeStep(100, 32, 1)).to.equal(0)
+		end)
+
+		it("scrolls faster nearer the edge", function()
+			local far = Scroll.edgeStep(24, 32, 1)
+			local near = Scroll.edgeStep(4, 32, 1)
+			expect(far > 0).to.equal(true)
+			expect(near > far).to.equal(true)
+			expect(Scroll.edgeStep(0, 32, 1)).to.equal(Scroll.edgeSpeed)
+		end)
+
+		it("scrolls a frame toward the edge a point is near", function()
+			local app, cleanup = Harness.app({ theme = "light" })
+			local gui = Harness.mount(app)
+			local scroller = Instance.new("ScrollingFrame")
+			scroller.Size = UDim2.fromOffset(200, 200)
+			scroller.CanvasSize = UDim2.fromOffset(200, 800)
+			scroller.Parent = gui
+			Harness.flush()
+			local at = scroller.AbsolutePosition
+			local size = scroller.AbsoluteWindowSize
+			local moved = Scroll.edge(gui, at + Vector2.new(size.X / 2, size.Y - 2), 0.1)
+			expect(moved).to.equal(true)
+			expect(scroller.CanvasPosition.Y > 0).to.equal(true)
+			local still = Scroll.edge(gui, at + Vector2.new(size.X / 2, size.Y / 2), 0.1)
+			expect(still).to.equal(false)
+			cleanup()
+		end)
+	end)
 end

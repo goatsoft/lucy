@@ -20,6 +20,9 @@
 		                                -- the nearest scroller that scrolls that way, left and
 		                                -- right the nearest that scrolls sideways; returns the
 		                                -- scrollers it moved
+		Scroll.edgeStep(distance, zone, dt) -- pure: how far a drag this near an edge scrolls
+		Scroll.edge(within, point, dt)  -- while dragging: scrolls the scroller in `within` under
+		                                -- `point` (screen pixels) toward an edge it is near (ADR 0062)
 
 	The engine scrolls to the gamepad selection by itself, but focus moved by Lucy
 	(Tab, arrow keys) does not, so InputManager.markFocus calls reveal while the
@@ -303,6 +306,63 @@ function Scroll.whenNear(object: GuiObject, callback: () -> (), overscan: number
 	}
 	look()
 	return stop
+end
+
+-- How near an edge (px) a drag starts scrolling toward it, and how fast it goes at the edge
+Scroll.edgeZone = 32
+Scroll.edgeSpeed = 900 -- px a second, at the very edge; nothing at the zone's inner end
+
+-- Pure: how far (px) one axis scrolls in dt for a point `distance` px inside its edge
+function Scroll.edgeStep(distance: number, zone: number, dt: number): number
+	if distance >= zone then
+		return 0
+	end
+	local depth = 1 - math.max(distance, 0) / zone
+	return Scroll.edgeSpeed * depth * depth * dt
+end
+
+-- While something is dragged: the ScrollingFrame in `within` (or `within` itself) that holds
+-- `point` (screen pixels) scrolls toward the edges `point` is near. Returns whether it moved.
+function Scroll.edge(within: Instance, point: Vector2, dt: number): boolean
+	local list: { ScrollingFrame } = {}
+	if within:IsA("ScrollingFrame") then
+		table.insert(list, within)
+	end
+	for _, object in within:GetDescendants() do
+		if object:IsA("ScrollingFrame") then
+			table.insert(list, object)
+		end
+	end
+	local moved = false
+	for _, scroller in list do
+		if not scroller.Visible or not scroller.ScrollingEnabled then
+			continue
+		end
+		local at = scroller.AbsolutePosition
+		local size = scroller.AbsoluteWindowSize
+		local rel = point - at
+		if rel.X < 0 or rel.Y < 0 or rel.X > size.X or rel.Y > size.Y then
+			continue
+		end
+		local canvas = scroller.AbsoluteCanvasSize
+		local maxX = math.max(0, canvas.X - size.X)
+		local maxY = math.max(0, canvas.Y - size.Y)
+		if maxX <= 0 and maxY <= 0 then
+			continue
+		end
+		local scale = Scroll.scaleOf(scroller)
+		local zone = Scroll.edgeZone * scale
+		local dx = Scroll.edgeStep(size.X - rel.X, zone, dt) - Scroll.edgeStep(rel.X, zone, dt)
+		local dy = Scroll.edgeStep(size.Y - rel.Y, zone, dt) - Scroll.edgeStep(rel.Y, zone, dt)
+		local now = scroller.CanvasPosition
+		local x = if maxX > 0 then math.clamp(now.X + dx, 0, maxX) else now.X
+		local y = if maxY > 0 then math.clamp(now.Y + dy, 0, maxY) else now.Y
+		if x ~= now.X or y ~= now.Y then
+			scroller.CanvasPosition = Vector2.new(x, y)
+			moved = true
+		end
+	end
+	return moved
 end
 
 return Scroll

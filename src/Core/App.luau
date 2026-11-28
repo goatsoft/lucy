@@ -58,6 +58,7 @@ local Actions = require(script.Parent.Actions)
 local AppState = require(script.Parent.AppState)
 local Context = require(script.Parent.Context)
 local InputManager = require(script.Parent.InputManager)
+local Kept = require(script.Parent.Kept)
 local Maid = require(script.Parent.Maid)
 local Preferences = require(script.Parent.Preferences)
 local Quiet = require(script.Parent.Quiet)
@@ -106,6 +107,7 @@ export type App = typeof(setmetatable(
 App.portalOrder = {
 	test = 400,
 	modal = 900,
+	kept = 920, -- frames kept in sight over a modal overlay (app:keep, ADR 0062)
 	tour = 950,
 	toast = 1000,
 }
@@ -348,6 +350,13 @@ function App.modalOpen(self: App): boolean
 	-- Modal scenes count too: a pushed pause menu is as modal as a dialog.
 	local scenes: any = self.scenes -- nil while App.new is still running
 	return scenes ~= nil and scenes:modalCount() > 0
+end
+
+-- Keeps a frame in sight over any modal overlay (ADR 0062): while one is open the frame is
+-- lifted above it, in the same place on the screen, and docked sheets leave its room. Returns
+-- a function that stops keeping it.
+function App.keep(self: App, frame: GuiObject): () -> ()
+	return Kept.keep(self, frame)
 end
 
 -- The app made with setCurrent (the default), so another script can reach the

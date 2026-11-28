@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-28
+- **Amended by:** ADR 0062 (an edge per sheet, pins, one dock at a time, fitting, kept UI)
 
 ## Context
 
